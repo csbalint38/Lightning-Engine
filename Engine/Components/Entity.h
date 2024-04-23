@@ -4,12 +4,20 @@
 #include "ComponentsCommonHeaders.h"
 
 namespace lightning {
+  #define INIT_INFO(component) namespace component { struct InitInfo; }
+  
+  INIT_INFO(transform);
 
-  struct EntityInfo
-  {
-    /* data */
-  };
+  #undef INIT_INFO
 
-  u32 create_game_entity(const EntityInfo& info);
-  void remove_game_entity(u32 id);
+  namespace game_entity {
+    struct EntityInfo
+    {
+      transform::InitInfo* transform{ nullptr };
+    };
+
+    entity_id create_game_entity(const EntityInfo& info);
+    void remove_game_entity(entity_id id);
+    bool is_alive(entity_id id);
+  }
 }

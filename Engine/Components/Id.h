@@ -42,10 +42,12 @@ namespace internal {
   struct IdBase {
     constexpr explicit IdBase(id_type id) : _id{ id } {}
     constexpr operator id_type() const { return _id; }
-  }
-  private:
-    id_type _id;
+    
+    private:
+      id_type _id;
+  };
 }
+
 #define DEFINE_TYPED_ID(name)                   \
   struct name final : id::internal::IdBase {    \
     constexpr explicit name(id::id_type id)     \
@@ -54,5 +56,6 @@ namespace internal {
   };
 #else
 #define DEFINE_TYPED_ID(name) using name = id::id_type
+#endif
 
 }
