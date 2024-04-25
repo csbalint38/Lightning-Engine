@@ -16,8 +16,8 @@ namespace lightning {
       transform::InitInfo* transform{ nullptr };
     };
 
-    entity_id create_game_entity(const EntityInfo& info);
-    void remove_game_entity(entity_id id);
-    bool is_alive(entity_id id);
+    Entity create_game_entity(const EntityInfo& info);
+    void remove_game_entity(Entity entity);
+    bool is_alive(Entity entity);
   }
 }

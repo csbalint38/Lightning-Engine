@@ -5,36 +5,37 @@
 namespace Lightning::id {
   using id_type = u32;
 
-  constexpr u32 generation_bits{ 8 };
-  constexpr u32 index_bits{sizeof(id_type) * 8 - generation_bits};
-  constexpr id_type index_mask{ (id_type{1} << index_bits) - 1 };
-  constexpr id_type generation_mask{ (id_type{1} << generation_bits) - 1 };
-  constexpr id_type id_mask{ id_type{-1} };
+  namespace internal {
+    constexpr u32 generation_bits{ 8 };
+    constexpr u32 index_bits{sizeof(id_type) * 8 - generation_bits};
+    constexpr id_type index_mask{ (id_type{1} << index_bits) - 1 };
+    constexpr id_type generation_mask{ (id_type{1} << generation_bits) - 1 };
+  }
+  constexpr id_type invalid_id{ id_type(-1) };
+  constexpr u32 min_deleted_elements{ 1024 };
 
   using generation_type = std::conditional_t<generation_bits <= 16, std::conditional_t<generation_bits <= 8, u8, u16>, u32>;
   static_assert(sizeof(generatin_type) * 8 >= generation_bits);
   static_assert((sizeof(id_type) - sizeof(generation_type)) > 0);
 
-  inline bool
-  is_valid(id_type id) {
-    return id != id_mask;
+  constexpr bool is_valid(id_type id) {
+    return id != invalid_id;
   }
 
-  inline id_type
-  index(id_type id) {
-    return id & index_mask;
+  constexpr id_type index(id_type id) {
+    id_type index{ id & internal::index_mask };
+    assert(index != internal::index_mask)
+    return index;
   }
 
-  inline id_type
-  generation(id_type id) {
-    return (id >> index_bits) & generation_mask;
+  constexpr id_type generation(id_type id) {
+    return (id >> index_bits) & internal::generation_mask;
   }
 
-  inline id_type
-  new_generation(id_type id) {
+  constexpr id_type new_generation(id_type id) {
     const id_type generation{ id::generation(id) + 1 };
-    assert(generation < 255);
-    return index(id) | (generation << index_bits);
+    assert(generation < (((u64)1 << internal::generation_bits)-1));
+    return index(id) | (generation << internal::index_bits);
   }
 
 #if _DEBUG
@@ -52,7 +53,7 @@ namespace internal {
   struct name final : id::internal::IdBase {    \
     constexpr explicit name(id::id_type id)     \
       : IdBase{ id } {}                         \
-    constexpr name() : IdBase{ id::id_mask } {} \
+    constexpr name() : IdBase{ 0 } {}           \
   };
 #else
 #define DEFINE_TYPED_ID(name) using name = id::id_type
