@@ -1,1 +1,1 @@
-# Lightning-engine-GUI
+# Lightning Engine
