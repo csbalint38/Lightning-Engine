@@ -2,6 +2,8 @@
 
 #pragma once
 
+#pragma warning(disable: 4530) // Disable warnings
+
 // C/C++ headers
 #include <stdint.h>
 #include <assert.h>
