@@ -1,6 +1,8 @@
 // Id.h
 
-#include "CommonHeaders.h"
+#pragma once
+
+#include "..\Common\CommonHeaders.h"
 
 namespace Lightning::id {
   using id_type = u32;
@@ -15,7 +17,7 @@ namespace Lightning::id {
   constexpr u32 min_deleted_elements{ 1024 };
 
   using generation_type = std::conditional_t<generation_bits <= 16, std::conditional_t<generation_bits <= 8, u8, u16>, u32>;
-  static_assert(sizeof(generatin_type) * 8 >= generation_bits);
+  static_assert(sizeof(generation_type) * 8 >= generation_bits);
   static_assert((sizeof(id_type) - sizeof(generation_type)) > 0);
 
   constexpr bool is_valid(id_type id) {
@@ -24,12 +26,12 @@ namespace Lightning::id {
 
   constexpr id_type index(id_type id) {
     id_type index{ id & internal::index_mask };
-    assert(index != internal::index_mask)
+    assert(index != internal::index_mask);
     return index;
   }
 
   constexpr id_type generation(id_type id) {
-    return (id >> index_bits) & internal::generation_mask;
+    return (id >> internal::index_bits) & internal::generation_mask;
   }
 
   constexpr id_type new_generation(id_type id) {
