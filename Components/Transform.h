@@ -10,6 +10,6 @@ namespace lightning::transform {
         f32 scale[3]{1.f, 1.f, 1.f};
     };
 
-    transform_id create_transform(const InitInfo& info, game_entity::entity_id entity_id);
-    void remove_transform(transform_id id);
+    Component create_transform(const InitInfo& info, game_entity::Entity entity);
+    void remove_transform(Component component);
 }

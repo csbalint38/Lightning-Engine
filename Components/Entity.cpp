@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "Transform.h"
 
 namespace lightning::game_entity {
 
@@ -6,6 +7,8 @@ namespace lightning::game_entity {
 
         util::vector<id::generation_type> generations;
         util::deque<entity_id> free_ids;
+       
+        util::vector<transform::Component> transforms;
     }
 
     Entity create_game_entity(const EntityInfo& info) {
@@ -15,19 +18,25 @@ namespace lightning::game_entity {
         entity_id id;
 
         if(free_ids.size() > id::min_deleted_elements) {
-        id = free_ids.front();
-        assert(!is_alive(Entity{ id }));
-        free_ids.pop_front();
-        id = entity_id{ id::new_generation(id) };
-        ++generations[id::index(id)];
+            id = free_ids.front();
+            assert(!is_alive(Entity{ id }));
+            free_ids.pop_front();
+            id = entity_id{ id::new_generation(id) };
+            ++generations[id::index(id)];
         }
         else {
-        id = entity_id{ (id::id_type)generations.size() };
-        generations.push_back(0);
+            id = entity_id{ (id::id_type)generations.size() };
+            generations.push_back(0);
+
+            transforms.emplace_back();
         }
 
         const Entity new_entity{ id };
         const id::id_type index{ id::index(id) };
+
+        assert(!transforms[index].is_valid());
+        transforms[index] = transform::create_transform(*info.transform, new_entity);
+        if (!transforms[index].is_valid()) return {};
 
         return new_entity;
     }
@@ -36,7 +45,9 @@ namespace lightning::game_entity {
         const id::id_type index{ id::index(id) };
         assert(is_alive(entity));
         if (is_alive(entity)) {
-        free_ids.push_back(id);
+            transform::remove_transform(transforms[index]);
+            transforms[index] = {};
+            free_ids.push_back(id);
         }
     }
     bool is_alive(Entity entity) {
@@ -44,7 +55,13 @@ namespace lightning::game_entity {
         const id::id_type index{ id::index(id) };
         assert(index < generations.size());
         assert(generations[index] == id::generation(id));
-        return (generations[index] == id::generation(id));
+        return (generations[index] == id::generation(id) && transforms[index].is_valid());
+    }
+
+    transform::Component Entity::transform() const {
+        assert(is_alive(*this));
+        const id::id_type index{ id::index(_id) };
+        return transforms[index];
     }
 }
 
