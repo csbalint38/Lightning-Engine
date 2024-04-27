@@ -1,4 +1,6 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
+#pragma comment(lib, "engine.lib")
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <crtdbg.h>
