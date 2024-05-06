@@ -7,6 +7,7 @@ namespace lightning {
     #define INIT_INFO(component) namespace component { struct InitInfo; }
   
     INIT_INFO(transform);
+    INIT_INFO(script);
 
     #undef INIT_INFO
 
@@ -14,10 +15,11 @@ namespace lightning {
         struct EntityInfo
         {
         transform::InitInfo* transform{ nullptr };
+        script::InitInfo* script{ nullptr };
         };
 
-        Entity create_game_entity(const EntityInfo& info);
-        void remove_game_entity(Entity entity);
-        bool is_alive(Entity entity);
+        Entity create(const EntityInfo& info);
+        void remove(entity_id id);
+        bool is_alive(entity_id id);
     }
 }
