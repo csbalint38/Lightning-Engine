@@ -31,6 +31,7 @@ namespace lightning::game_entity {
             generations.push_back(0);
 
             transforms.emplace_back();
+            scripts.emplace_back();
         }
 
         const Entity new_entity{ id };
@@ -53,6 +54,12 @@ namespace lightning::game_entity {
     void remove(entity_id  id) {
         const id::id_type index{ id::index(id) };
         assert(is_alive(id));
+
+        if (scripts[index].is_valid()) {
+            script::remove(scripts[index]);
+            scripts[index] = {};
+        }
+
         transform::remove(transforms[index]);
         transforms[index] = {};
         free_ids.push_back(id);

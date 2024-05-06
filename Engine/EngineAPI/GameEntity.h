@@ -52,7 +52,7 @@ namespace lightning {
 			#define REGISTER_SCRIPT(TYPE)																													\
 			class TYPE;																																		\
 			namespace {																																		\
-				const u8 _reg##TYPE{																														\
+				const u8 _reg_##TYPE{																														\
 					lightning::script::detail::register_script(lightning::script::detail::string_hash()(#TYPE), &lightning::script::detail::create_script<TYPE>)			\
 				};																																			\
 			}
