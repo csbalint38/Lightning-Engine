@@ -8,6 +8,6 @@ namespace lightning::script {
         detail::script_creator script_creator;
     };
 
-    Component create(const InitInfo& info, game_entity::Entity entity);
+    Component create(InitInfo info, game_entity::Entity entity);
     void remove(Component component);
 }

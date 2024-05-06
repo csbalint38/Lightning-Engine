@@ -8,7 +8,7 @@ namespace lightning::transform {
 		util::vector<math::v3> scales;
 	}
 
-	Component create(const InitInfo& info, game_entity::Entity entity) {
+	Component create(InitInfo info, game_entity::Entity entity) {
 		assert(entity.is_valid());
 		const id::id_type entity_index{ id::index(entity.get_id()) };
 

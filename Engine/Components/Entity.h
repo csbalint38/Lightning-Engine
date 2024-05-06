@@ -18,7 +18,7 @@ namespace lightning {
         script::InitInfo* script{ nullptr };
         };
 
-        Entity create(const EntityInfo& info);
+        Entity create(EntityInfo info);
         void remove(entity_id id);
         bool is_alive(entity_id id);
     }

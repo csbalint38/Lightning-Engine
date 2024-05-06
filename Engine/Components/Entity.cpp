@@ -13,7 +13,7 @@ namespace lightning::game_entity {
         util::vector<script::Component> scripts;
     }
 
-    Entity create(const EntityInfo& info) {
+    Entity create(EntityInfo info) {
         assert(info.transform);
         if (!info.transform) return Entity{};
 

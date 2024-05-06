@@ -1,5 +1,7 @@
 #pragma once
 
+#include<string>
+
 #include "..\Components\ComponentsCommonHeaders.h"
 #include "TransformComponent.h"
 #include "ScriptComponent.h"
@@ -36,6 +38,9 @@ namespace lightning {
 		namespace detail {
 			using script_ptr = std::unique_ptr<EntityScript>;
 			using script_creator = script_ptr(*)(game_entity::Entity entity);
+			using string_hash = std::hash<std::string>;
+
+			u8 register_script(size_t, script_creator);
 
 			template<class ScriptClass>
 			script_ptr create_script(game_entity::Entity entity) {
@@ -43,5 +48,13 @@ namespace lightning {
 				return std::make_unique<ScriptClass>(entity);
 			}
 		}
+
+			#define REGISTER_SCRIPT(TYPE)																													\
+			class TYPE;																																		\
+			namespace {																																		\
+				const u8 _reg##TYPE{																														\
+					lightning::script::detail::register_script(lightning::script::detail::string_hash()(#TYPE), &lightning::script::detail::create_script<TYPE>)			\
+				};																																			\
+			}
 	}
 }
