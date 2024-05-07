@@ -8,7 +8,7 @@ namespace lightning::transform {
 		util::vector<math::v3> scales;
 	}
 
-	Component create_transform(const InitInfo& info, game_entity::Entity entity) {
+	Component create(InitInfo info, game_entity::Entity entity) {
 		assert(entity.is_valid());
 		const id::id_type entity_index{ id::index(entity.get_id()) };
 
@@ -26,7 +26,7 @@ namespace lightning::transform {
 		return Component(transform_id{ (id::id_type)positions.size() - 1 });
 	}
 
-	void remove_transform(Component component) {
+	void remove(Component component) {
 		assert(component.is_valid());
 	}
 

@@ -46,10 +46,10 @@ EDITOR_INTERFACE id::id_type create_game_entity(EntityDescriptor* entity) {
 	transform::InitInfo transform_info{ desc.transform.to_InitInfo() };
 	game_entity::EntityInfo entity_info{ &transform_info };
 
-	return game_entity::create_game_entity(entity_info).get_id();
+	return game_entity::create(entity_info).get_id();
 }
 
 EDITOR_INTERFACE void remove_game_entity(id::id_type id) {
 	assert(id::is_valid(id));
-	game_entity::remove_game_entity(entity_from_id(id));
+	game_entity::remove(game_entity::entity_id{ id });
 }

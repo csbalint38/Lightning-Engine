@@ -1,13 +1,11 @@
 #pragma once
 #include "ComponentsCommonHeaders.h"
 
-namespace lightning::transform {
+namespace lightning::script {
 
     struct InitInfo
     {
-        f32 position[3]{};
-        f32 rotation[4]{};
-        f32 scale[3]{1.f, 1.f, 1.f};
+        detail::script_creator script_creator;
     };
 
     Component create(InitInfo info, game_entity::Entity entity);
