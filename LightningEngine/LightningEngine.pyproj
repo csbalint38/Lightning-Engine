@@ -23,15 +23,22 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Common\Primitives.py" />
     <Compile Include="Config.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Descriptors\GameEntity.py" />
+    <Compile Include="Descriptors\TransformComponent.py" />
     <Compile Include="Engine.py" />
     <Compile Include="Exceptions\ConfigException.py" />
     <Compile Include="main.py" />
+    <Compile Include="Utilities\Vector3.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />
+    <Folder Include="Descriptors\" />
+    <Folder Include="Common\" />
+    <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="engine.ini" />
