@@ -11,10 +11,17 @@ namespace lightning::script {
 
 		using script_registry = std::unordered_map<size_t, detail::script_creator>;
 
-		script_registry& registery() {
+		script_registry& registry() {
 			static script_registry script_reg;
 			return script_reg;
 		};
+
+		#ifdef USE_WITH_EDITOR
+		util::vector<std::string>& script_names() {
+			static util::vector<std::string> names;
+			return names;
+		}
+		#endif
 
 		bool exists(script_id id) {
 			assert(id::is_valid(id));
@@ -27,10 +34,23 @@ namespace lightning::script {
 
 	namespace detail {
 		u8 register_script(size_t tag, script_creator func) {
-			bool result{ registery().insert(script_registry::value_type{tag, func}).second };
+			bool result{ registry().insert(script_registry::value_type{tag, func}).second };
 			assert(result);
 			return result;
 		}
+
+		script_creator get_script_creator(size_t tag) {
+			auto script = lightning::script::registry().find(tag);
+			assert(script != lightning::script::registry().end() && script->first == tag);
+			return script->second;
+		}
+
+		#ifdef USE_WITH_EDITOR
+		u8 add_script_name(const char* name) {
+			script_names.emplace_back(name);
+			return true;
+		}
+		#endif
 	}
 
 	Component create(InitInfo info, game_entity::Entity entity) {
@@ -71,3 +91,17 @@ namespace lightning::script {
 		id_mapping[id::index(id)] = id::invalid_id;
 	}
 }
+
+#ifdef USE_WITH_EDITOR
+#include <atlsafe.h>
+
+extern "C" __declspec(dllexport)
+LPSAFEAARRAY get_script_names() {
+	const u32 size{ (u32)lightning::script::script_names().size() };
+	if (!size) return nullptr;
+	for (u32 i{ 0 }; i < size; ++i) {
+		names.setAt(i, A2BSTR_EX(lightning::script::script_names()[i].c_str()), false);
+	}
+	return names.Detach();
+}
+#endif

@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <typeinfo>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 #if defined(_WIN64)
