@@ -31,3 +31,4 @@ class ProjectBrowserDialog(GUI.Window):
             self._btn_open_project.set_state(True)
         else:
             if self._btn_open_project.get_state():
+                pass
