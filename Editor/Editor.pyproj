@@ -22,17 +22,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Editor.py" />
+    <Compile Include="GameProject\OpenProject.py" />
     <Compile Include="GameProject\ProjectBrowserDialog.py" />
-    <Compile Include="GUI\Container.py" />
-    <Compile Include="GUI\Font.py" />
-    <Compile Include="GUI\ScrolleableContainer.py" />
-    <Compile Include="GUI\ToggleButton.py" />
-    <Compile Include="GUI\Window.py" />
-    <Compile Include="GUI\__init__.py" />
+    <Compile Include="LightningGUI\Container.py" />
+    <Compile Include="LightningGUI\Font.py" />
+    <Compile Include="LightningGUI\ScrolleableContainer.py" />
+    <Compile Include="LightningGUI\ToggleButton.py" />
+    <Compile Include="LightningGUI\Window.py" />
+    <Compile Include="LightningGUI\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GameProject\" />
-    <Folder Include="GUI\" />
+    <Folder Include="LightningGUI\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
