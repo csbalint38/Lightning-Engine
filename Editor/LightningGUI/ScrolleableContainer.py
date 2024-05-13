@@ -6,19 +6,19 @@ class ScrollableContainer(Container):
         super().__init__(master, **kwargs)
         
         self._canvas = tkinter.Canvas(self, borderwidth=0, background="white")
-        self._viewport = tkinter.Frame(self._canvas, background="white")
+        self.viewport = tkinter.Frame(self._canvas, background="white")
         self._vsb = tkinter.Scrollbar(self, orient="vertical", command=self._canvas.yview)
-        self._canvas.configure(yscrollcommand=self.vsb.set)
+        self._canvas.configure(yscrollcommand=self._vsb.set)
         
         self._vsb.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         self._canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
-        self._canvas_window = self._canvas.create_window((4, 4), window=self._viewport, anchor="nw", tags="self._viewport")
+        self._canvas_window = self._canvas.create_window((4, 4), window=self.viewport, anchor="nw", tags="self.viewport")
         
-        self._viewport.bind("<Configure>", self.on_frame_configure)
+        self.viewport.bind("<Configure>", self.on_frame_configure)
         self._canvas.bind("<Configure>", self.on_canvas_configure)
         
-        self._viewport.bind("<Enter>", self.on_enter)
-        self._viewport.bind("<Leave>", self.on_leave)
+        self.viewport.bind("<Enter>", self.on_enter)
+        self.viewport.bind("<Leave>", self.on_leave)
         
         self.on_frame_configure(None)
         
@@ -45,11 +45,11 @@ class ScrollableContainer(Container):
             self._canvas.bind_all("<Button-4>", self.on_mousewheel)
             self._canvas.bind_all("<Button-5>", self.on_mousewheel)
         else:
-            self._canvas.bind_all("<Mousewheel>", self.on_mousewheel)
+            self._canvas.bind_all("<MouseWheel>", self.on_mousewheel)
             
     def on_leave(self, _) -> None:
         if platform.system() == "Linux":
-            self._canvas.unbind_all("<Button-4>", self.on_mousewheel)
-            self._canvas.unbind_all("<Button-5>", self.on_mousewheel)
+            self._canvas.unbind_all("<Button-4>")
+            self._canvas.unbind_all("<Button-5>")
         else:
-            self._canvas.unbind_all("<Mousewheel>", self.on_mousewheel)
+            self._canvas.unbind_all("<MouseWheel>")
