@@ -17,13 +17,13 @@ namespace {
 		transform::InitInfo to_InitInfo() {
 			using namespace DirectX;
 			transform::InitInfo info{};
-			memcpy(&info.position[0], &position[0], sizeof(f32) * _countof(position));
-			memcpy(&info.scale[0], &position[0], sizeof(f32) * _countof(position));
+			memcpy(&info.position[0], &position[0], sizeof(position));
+			memcpy(&info.scale[0], &position[0], sizeof(position));
 			XMFLOAT3A rot{ &rotation[0] };
 			XMVECTOR quat{ XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3A(&rot)) };
 			XMFLOAT4A rot_quat{};
 			XMStoreFloat4A(&rot_quat, quat);
-			memcpy(&info.rotation[0], &rot_quat.x, sizeof(f32) * _countof(info.rotation));
+			memcpy(&info.rotation[0], &rot_quat.x, sizeof(info.rotation));
 			return info;
 		}
 	};
