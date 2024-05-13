@@ -22,10 +22,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Editor.py" />
+    <Compile Include="GameProject\NewProject.py" />
     <Compile Include="GameProject\OpenProject.py" />
     <Compile Include="GameProject\ProjectBrowserDialog.py" />
     <Compile Include="LightningGUI\Container.py" />
     <Compile Include="LightningGUI\Font.py" />
+    <Compile Include="LightningGUI\Image.py" />
     <Compile Include="LightningGUI\ScrolleableContainer.py" />
     <Compile Include="LightningGUI\ToggleButton.py" />
     <Compile Include="LightningGUI\Window.py" />
