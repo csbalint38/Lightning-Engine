@@ -5,6 +5,8 @@
 
 #if !defined(SHIPPING)
 #include <fstream>
+#include <filesystem>
+#include <Windows.h>
 
 namespace lightning::content {
 	namespace {
@@ -68,6 +70,12 @@ namespace lightning::content {
 	}
 
 	bool load_game() {
+		wchar_t path[MAX_PATH];
+		const u32 length{ GetModuleFileNameW(0, &path[0], MAX_PATH) };
+		if (!length || GetLastError() == ERROR_INSUFFICIENT_BUFFER) return false;
+		std::filesystem::path p{ path };
+		SetCurrentDirectoryW(p.parent_path().wstring().c_str());
+
 		std::ifstream game("game.bin", std::ios::in | std::ios::binary);
 		util::vector<u8> buffer(std::istreambuf_iterator<char>(game), {});
 		assert(buffer.size());
