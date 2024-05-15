@@ -46,7 +46,7 @@ namespace lightning::platform {
 		}
 
 		WindowInfo& get_from_handle(window_handle handle) {
-			const window_id id{ (id::id_type)GetWindowLongPtr(handle, GWLP_USERDATA) };
+			const window_id id{ (id::id_type)GetWindowLongPtrW(handle, GWLP_USERDATA) };
 			return get_from_id(id);
 		}
 
@@ -57,10 +57,30 @@ namespace lightning::platform {
 				case WM_DESTROY:
 					get_from_handle(hwnd).is_closed = true;
 					break;
+				case WM_EXITSIZEMOVE:
+					info = &get_from_handle(hwnd);
+					break;
+				case WM_SIZE:
+					if (wparam == SIZE_MAXIMIZED) {
+						info = &get_from_handle(hwnd);
+					}
+					break;
+				case WM_SYSCOMMAND:
+					if (wparam == SC_RESTORE) {
+						info = &get_from_handle(hwnd);
+					}
+					break;
+				default:
+					break;
 			}
 
-			LONG_PTR long_ptr{ GetWindowLongPtr(hwnd, 0) };
-			return long_ptr ? (hwnd, msg, wparam, lparam) : DefWindowProc(hwnd, msg, wparam, lparam);
+			if (info) {
+				assert(info->hwnd);
+				GetClientRect(info->hwnd, info->is_fullscreen ? &info->fullscreen_area : &info->client_area);
+			}
+
+			LONG_PTR long_ptr{ GetWindowLongPtrW(hwnd, 0) };
+			return long_ptr ? ((window_proc)long_ptr)(hwnd, msg, wparam, lparam) : DefWindowProcW(hwnd, msg, wparam, lparam);
 		}
 
 		void resize_window(const WindowInfo& info, const RECT& area) {
@@ -97,12 +117,12 @@ namespace lightning::platform {
 				info.top_left.x = rect.left;
 				info.top_left.y = rect.top;
 				info.style = 0;
-				SetWindowLongPtr(info.hwnd, GWL_STYLE, info.style);
+				SetWindowLongPtrW(info.hwnd, GWL_STYLE, info.style);
 				ShowWindow(info.hwnd, SW_MAXIMIZE);
 			}
 			else {
 				info.style = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
-				SetWindowLongPtr(info.hwnd, GWL_STYLE, info.style);
+				SetWindowLongPtrW(info.hwnd, GWL_STYLE, info.style);
 				resize_window(info, info.client_area);
 				ShowWindow(info.hwnd, SW_SHOWNORMAL);
 			}
@@ -169,10 +189,11 @@ namespace lightning::platform {
 		info.hwnd = CreateWindowExW(0, wc.lpszClassName, caption, info.style, left, top, width, height, parent, NULL, NULL, NULL);
 
 		if (info.hwnd) {
+			SetLastError(0);
 			const window_id id{ add_to_windows(info) };
-			SetWindowLongPtr(info.hwnd, GWLP_USERDATA, (LONG_PTR)id);
+			SetWindowLongPtrW(info.hwnd, GWLP_USERDATA, (LONG_PTR)id);
 
-			if (callback) SetWindowLongPtr(info.hwnd, 0, (LONG_PTR)callback);
+			if (callback) SetWindowLongPtrW(info.hwnd, 0, (LONG_PTR)callback);
 			assert(GetLastError() == 0);
 
 			ShowWindow(info.hwnd, SW_SHOWNORMAL);
