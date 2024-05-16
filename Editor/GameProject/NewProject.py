@@ -31,7 +31,7 @@ class NewProject(LightningGUI.Container, NewProjectView):
             self._lb_projects.add_item(template.ProjectType, "./diamond.png")
         
         self._c_image = LightningGUI.Container(self._c_info)
-        self._img_scr = LightningGUI.Image(self._c_image, "./diamond.png", size=(320, 200))
+        self._lb_projects.toggle_selection(self._lb_projects.items[0][1])
         
         self._c_input = LightningGUI.Container(self, bg="red")
         self._c_name = LightningGUI.Container(self._c_input)
@@ -49,8 +49,6 @@ class NewProject(LightningGUI.Container, NewProjectView):
         self._lb_projects.pack_propagate(0)
         self._lb_projects.pack(side=tkinter.LEFT, padx=(0, 60))
         self._c_image.pack(expand=True)
-        self._img_scr.pack_propagate(0)
-        self._img_scr.pack(side=tkinter.LEFT)
         
         self._c_input.pack(expand=True, fill=tkinter.X, padx=30)
         self._c_name.pack(fill=tkinter.X, expand=True)
@@ -72,8 +70,9 @@ class NewProject(LightningGUI.Container, NewProjectView):
             self._sv_path.set(self.controller.name)
             
     def change_screenshot(self) -> None:
-        self._c_image.winfo_children()[0].destroy()
-        self._new_image=LightningGUI.Image(self._c_image, "./water.png", size=(320, 200))
-        self._new_image.pack_propagate(0)
-        self._new_image.pack(side=tkinter.LEFT)
+        if len(self._c_image.winfo_children()) > 0:
+            self._c_image.winfo_children()[0].destroy()
+        self._img_scs=LightningGUI.Image(self._c_image, "./water.png", size=(320, 200))
+        self._img_scs.pack_propagate(0)
+        self._img_scs.pack(side=tkinter.LEFT)
        
