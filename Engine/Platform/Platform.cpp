@@ -175,7 +175,7 @@ namespace lightning::platform {
 		RegisterClassExW(&wc);
 
 		WindowInfo info{};
-		info.client_area.right = (init_info && init_info->width) ? info.client_area.right + init_info->width : info.client_area.right;
+		info.client_area.right = (init_info && init_info->width) ? info.client_area.left + init_info->width : info.client_area.right;
 		info.client_area.bottom = (init_info && init_info->height) ? info.client_area.top + init_info->height : info.client_area.bottom;
 		RECT rect{ info.client_area };
 		
