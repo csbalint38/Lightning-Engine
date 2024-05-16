@@ -21,6 +21,7 @@ LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 				PostQuitMessage(0);
 				return 0;
 			}
+			break;
 		}
 		case WM_SYSCHAR:
 			if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN)) {
