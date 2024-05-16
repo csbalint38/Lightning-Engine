@@ -30,15 +30,16 @@ class ScrollableContainer(Container):
         self._canvas.itemconfig(self._canvas_window, width=canvas_width)
         
     def on_mousewheel(self, event: tkinter.Event) -> None:
-        if platform.system() == "Windows":
-            self._canvas.yview_scroll(int(-1 * (event.delta / 120)), tkinter.UNITS)
-        elif platform.system() == "Darwin":
-            self._canvas.yview_scroll(int(-1 * event.delta), tkinter.UNITS)
-        else:
-            if event.num == 4:
-                self._canvas.yview_scroll(-1, tkinter.UNITS)
-            elif event.num == 5:
-                self._canvas.yview_scroll(1, tkinter.UNITS)
+        if self._canvas.winfo_height() < self._canvas.bbox("all")[3]:
+            if platform.system() == "Windows":
+                self._canvas.yview_scroll(int(-1 * (event.delta / 120)), tkinter.UNITS)
+            elif platform.system() == "Darwin":
+                self._canvas.yview_scroll(int(-1 * event.delta), tkinter.UNITS)
+            else:
+                if event.num == 4:
+                    self._canvas.yview_scroll(-1, tkinter.UNITS)
+                elif event.num == 5:
+                    self._canvas.yview_scroll(1, tkinter.UNITS)
                 
     def on_enter(self, _) -> None:
         if platform.system() == "Linux":
