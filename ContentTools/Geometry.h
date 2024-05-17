@@ -3,12 +3,22 @@
 
 namespace lightning::tools {
 
+	struct Vertex {
+		math::v4 tangent{};
+		math::v3 position{};
+		math::v3 normal{};
+		math::v2 uv{};
+	};
+
 	struct Mesh {
 		util::vector<math::v3> positions;
 		util::vector<math::v3> normals;
 		util::vector<math::v4> tangents;
 		util::vector<util::vector<math::v2>> uv_sets;
 		util::vector<u32> raw_indicies;
+
+		util::vector<Vertex> verticies;
+		util::vector<u32> indicies;
 	};
 
 	struct LodGroup {
@@ -35,4 +45,7 @@ namespace lightning::tools {
 		u32 buffer_size;
 		GeometryImportSettings settings;
 	};
+
+	void process_scene(Scene& scene, const GeometryImportSettings& settings);
+	void pack_data(const Scene& scene, SceneData& data);
 }
