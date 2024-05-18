@@ -1,5 +1,3 @@
-#include <Windows.h>
-
 #include "Common.h"
 #include "CommonHeaders.h"
 #include "..\Engine\Components\Script.h"
@@ -7,12 +5,14 @@
 #include "..\Platform\PlatformTypes.h"
 #include "..\Platform\Platform.h"
 
-#ifndef WIN32_MEAN_AND_LEAN
-#define WIN32_MEAN_AND_LEAN
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
 
-using namespace lightning;
+#include <Windows.h>
+#include <atlsafe.h>
 
+using namespace lightning;
 
 namespace {
 	HMODULE game_code_dll{ nullptr };
@@ -60,7 +60,7 @@ EDITOR_INTERFACE u32 create_renderer_surface(HWND host, s32 width, s32 height) {
 	return (u32)surfaces.size() - 1;
 }
 
-EDITOR_INTERFACE u32 remove_renderer_surface(u32 id) {
+EDITOR_INTERFACE void remove_renderer_surface(u32 id) {
 	assert(id < surfaces.size());
 	platform::remove_window(surfaces[id].window.get_id());
 }

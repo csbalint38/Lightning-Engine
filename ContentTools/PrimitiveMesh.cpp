@@ -88,6 +88,8 @@ namespace lightning::tools {
 			const u32 num_indicies{ 3 * 2 * horizontal_count * vertical_count };
 			assert(m.raw_indicies.size() == num_indicies);
 
+			m.uv_sets.resize(1);
+
 			for (u32 i{ 0 }; i < num_indicies; ++i) {
 				m.uv_sets[0].emplace_back(uvs[m.raw_indicies[i]]);
 			}

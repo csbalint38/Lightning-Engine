@@ -3,6 +3,17 @@
 
 namespace lightning::tools {
 
+	namespace packed_vertex {
+		struct VertexStatic {
+			math::v3 position;
+			u8 reserved[3];
+			u8 t_sign;
+			u16 normal[2];
+			u16 tangent[2];
+			math::v2 uv;
+		};
+	}
+
 	struct Vertex {
 		math::v4 tangent{};
 		math::v3 position{};
@@ -19,6 +30,11 @@ namespace lightning::tools {
 
 		util::vector<Vertex> verticies;
 		util::vector<u32> indicies;
+
+		std::string name;
+		util::vector<packed_vertex::VertexStatic> packed_verticies_static;
+		f32 lod_treshold{ -1.f };
+		u32 lod_id{ u32_invalid_id };
 	};
 
 	struct LodGroup {
