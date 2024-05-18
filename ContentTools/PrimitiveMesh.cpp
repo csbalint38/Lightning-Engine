@@ -130,15 +130,24 @@ namespace lightning::tools {
 
 			c = 0;
 			m.raw_indicies.resize(num_indicies);
+			util::vector<v2> uvs(num_indicies);
+			const f32 inv_theta_count{ 1.f / theta_count };
+			const f32 inv_phi_count{ 1.f / phi_count };
 
 			for (u32 i{ 0 }; i < phi_count - 1; ++i) {
+				uvs[c] = { (2 * i + 1) * .5f * inv_phi_count, 1.f };
 				m.raw_indicies[c++] = 0;
+				uvs[c] = { i * inv_phi_count, 1.f - inv_theta_count };
 				m.raw_indicies[c++] = i + 1;
+				uvs[c] = { (i + 1) * inv_phi_count, 1.f - inv_theta_count };
 				m.raw_indicies[c++] = i + 2;
 			}
 
+			uvs[c] = { 1.f - .5f * inv_phi_count, 1.f };
 			m.raw_indicies[c++] = 0;
+			uvs[c] = { 1.f - inv_phi_count, 1.f - inv_theta_count};
 			m.raw_indicies[c++] = phi_count;
+			uvs[c] = { 1.f, 1.f - inv_theta_count };
 			m.raw_indicies[c++] = 1;
 
 			for (u32 i{ 0 }; i < theta_count - 2; ++i) {
@@ -150,12 +159,18 @@ namespace lightning::tools {
 						1 + (j + 1) + i * phi_count,
 					};
 
+					uvs[c] = { j * inv_phi_count, 1.f - (i + 1) * inv_theta_count };
 					m.raw_indicies[c++] = index[0];
+					uvs[c] = { j * inv_phi_count, 1.f - (i + 2) * inv_theta_count };
 					m.raw_indicies[c++] = index[1];
+					uvs[c] = { (j + 1) * inv_phi_count, 1.f - (i + 2) * inv_theta_count };
 					m.raw_indicies[c++] = index[2];
 
+					uvs[c] = { j * inv_phi_count, 1.f - (i + 1) * inv_theta_count };
 					m.raw_indicies[c++] = index[0];
+					uvs[c] = { (j + 1) * inv_phi_count, 1.f - (i + 2) * inv_theta_count };
 					m.raw_indicies[c++] = index[2];
+					uvs[c] = { (j + 1) * inv_phi_count, 1.f - (i + 1) * inv_theta_count };
 					m.raw_indicies[c++] = index[3];
 				}
 				const u32 index[4]{
@@ -164,28 +179,42 @@ namespace lightning::tools {
 					1 + (i + 1) * phi_count,
 					1 + i * phi_count,
 				};
+
+				uvs[c] = { 1.f - inv_phi_count, 1.f - (i + 1) * inv_theta_count };
 				m.raw_indicies[c++] = index[0];
+				uvs[c] = { 1.f - inv_phi_count, 1.f - (i + 2) * inv_theta_count };
 				m.raw_indicies[c++] = index[1];
+				uvs[c] = { 1.f, 1.f - (i + 2) * inv_theta_count };
 				m.raw_indicies[c++] = index[2];
 
+				uvs[c] = { 1.f - inv_phi_count, 1.f - (i + 1) * inv_theta_count };
 				m.raw_indicies[c++] = index[0];
+				uvs[c] = { 1.f, 1.f - (i + 2) * inv_theta_count };
 				m.raw_indicies[c++] = index[2];
+				uvs[c] = { 1.f, 1.f - (i + 1) * inv_theta_count };
 				m.raw_indicies[c++] = index[3];
 			}
 
 			const u32 south_pole_index{ (u32)m.positions.size() - 1 };
 			for (u32 i{ 0 }; i < phi_count - 1; ++i) {
+				uvs[c] = { (2 * i + 1) * .5f * inv_phi_count, 0.f };
 				m.raw_indicies[c++] = south_pole_index;
+				uvs[c] = { (i + 1) * inv_phi_count, inv_theta_count };
 				m.raw_indicies[c++] = south_pole_index - phi_count + i + 1;
+				uvs[c] = { i * inv_phi_count, inv_theta_count };
 				m.raw_indicies[c++] = south_pole_index - phi_count + i;
 			}
 
+			uvs[c] = { 1.f - .5f * inv_phi_count, 0.f };
 			m.raw_indicies[c++] = south_pole_index;
+			uvs[c] = { 1.f, inv_theta_count };
 			m.raw_indicies[c++] = south_pole_index - phi_count;
+			uvs[c] = { 1.f - inv_phi_count, inv_theta_count };
 			m.raw_indicies[c++] = south_pole_index - 1;
 
-			m.uv_sets.resize(1);
-			m.uv_sets[0].resize(m.raw_indicies.size());
+			assert(c == num_indicies);
+
+			m.uv_sets.emplace_back(uvs);
 
 			return m;
 		}
