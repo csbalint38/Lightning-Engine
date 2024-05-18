@@ -3,6 +3,7 @@
 
 namespace lightning::math {
 	constexpr float PI = 3.14159274101257324219f;
+	constexpr float TWO_PI = 2.f * PI;
 	constexpr float EPSILON = 1e-5f;
 	
 	#if defined(_WIN64)

@@ -150,6 +150,95 @@ namespace lightning::tools {
 
 			pack_verticies_static(m);
 		}
+		u64 get_mesh_size(const Mesh& m) {
+			const u64 num_verticies{ m.verticies.size() };
+			const u64 vertex_buffer_size(sizeof(packed_vertex::VertexStatic) * num_verticies);
+			const u64 index_size{ (num_verticies < (1 << 16)) ? sizeof(u16) : sizeof(u32) };
+			const u64 index_buffer_size{ index_size * m.indicies.size() };
+			constexpr u64 su32{ sizeof(u32) };
+			const u64 size{
+				su32 +					// name length
+				m.name.size() +			// mesh name string size
+				su32 +					// lod id
+				su32 +					// vertex size
+				su32 +					// number of verticies
+				su32 +					// index size (16 bit || 32 bit)
+				su32 +					// number of indicies
+				sizeof(f32) +			// LOD threshold
+				vertex_buffer_size +	// room for verticies
+				index_buffer_size		// room for indicies
+			};
+			return size;
+		}
+
+		u64 get_scene_size(const Scene& scene) {
+			constexpr u64 su32{ sizeof(u32) };
+			u64 size{
+				su32 +					// scene name length
+				scene.name.size() +		// scene name string size
+				su32					// number of LODs
+			};
+
+			for (auto& lod : scene.lod_groups) {
+				u64 lod_size{
+					su32 +				// LOD name length
+					lod.name.size() +	// LOD name string size
+					su32				// number of mashes in this LOD
+				};
+
+				for (auto& m : lod.meshes) {
+					lod_size += get_mesh_size(m);
+				}
+				size += lod_size;
+			}
+			return size;
+		}
+
+		void pack_mesh_data(const Mesh& m, u8* const buffer, u64& at) {
+			constexpr u64 su32{ sizeof(u32) };
+			u32 s{ 0 };
+
+			s = (u32)m.name.size();
+			memcpy(&buffer[at], &s, su32);								// write mesh name size
+			at += su32;
+			memcpy(&buffer[at], m.name.c_str(), s);						// write mesh name
+			at += s;
+			s = m.lod_id;
+			memcpy(&buffer[at], &s, su32);								// write LOD id
+			at += su32;
+
+			constexpr u32 vertex_size{ sizeof(packed_vertex::VertexStatic) };
+			s = vertex_size;
+			memcpy(&buffer[at], &s, su32);								// write vertex size
+			at += su32;
+			const u32 num_verticies{ (u32)m.verticies.size() };
+			s = num_verticies;
+			memcpy(&buffer[at], &s, su32);								// write number of verticies
+			at += su32;
+			const u32 index_size{ (num_verticies < (1 << 16)) ? sizeof(u16) : sizeof(u32) };
+			s = index_size;
+			memcpy(&buffer[at], &s, su32);								// write index size (16 bit || 32 bit)
+			at += su32;
+			const u32 num_indicies{ (u32)m.indicies.size() };
+			s = num_indicies;
+			memcpy(&buffer[at], &s, su32);								// write number of indicies
+			at += su32;
+			memcpy(&buffer[at], &m.lod_treshold, sizeof(f32));			// wite LOD threshold
+			at += sizeof(f32);
+			s = vertex_size * num_verticies;
+			memcpy(&buffer[at], m.packed_verticies_static.data(), s);	// write vertex data
+			at += s;
+			s = index_size * num_indicies;
+			void* data{ (void*)m.indicies.data() };
+			util::vector<u16> indicies;
+			if (index_size == sizeof(u16)) {
+				indicies.resize(num_indicies);
+				for (u32 i{ 0 }; i < num_indicies; ++i) indicies[i] = (u16)m.indicies[i];
+				data = (void*)indicies.data();
+			}
+			memcpy(&buffer[at], data, s);								// write index data
+			at += s;
+		}
 	}
 
 	void process_scene(Scene& scene, const GeometryImportSettings& settings) {
@@ -160,5 +249,39 @@ namespace lightning::tools {
 		}
 	}
 
-	void pack_data(const Scene& scene, SceneData& data) {};
+	void pack_data(const Scene& scene, SceneData& data) {
+		constexpr u64 su32{ sizeof(u32) };
+		const u64 scene_size{ get_scene_size(scene) };
+		data.buffer_size = (u32)scene_size;
+		data.buffer = (u8*)CoTaskMemAlloc(scene_size);
+		assert(data.buffer);
+
+		u8* const buffer{ data.buffer };
+		u64 at{ 0 };
+		u32 s{ 0 };
+
+		s = (u32)scene.name.size();
+		memcpy(&buffer[at], &s, su32);					// write scene name length
+		at += su32;
+		memcpy(&buffer[at], scene.name.c_str(), s);		// write scene name
+		at += s;
+		s = (u32)scene.lod_groups.size();
+		memcpy(&buffer[at], &s, su32);					// write number of LODs
+		at += su32;
+
+		for (auto& lod : scene.lod_groups) {
+			s = (u32)lod.name.size();
+			memcpy(&buffer[at], &s, su32);				// write LOD name size
+			at += su32;
+			memcpy(&buffer[at], lod.name.c_str(), s);	// write LOD name
+			at += s;
+			s = (u32)lod.meshes.size();
+			memcpy(&buffer[at], &s, su32);				// write number of meshes in LOD
+			at += su32;
+
+			for (auto& m : lod.meshes) {
+				pack_mesh_data(m, buffer, at);
+			}
+		}
+	};
 }

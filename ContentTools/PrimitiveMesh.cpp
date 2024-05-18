@@ -4,6 +4,7 @@
 namespace lightning::tools {
 	namespace {
 		using namespace math;
+		using namespace DirectX;
 		using primitive_mesh_creator = void(*)(Scene&, const PrimitiveInitInfo& info);
 
 		void create_plane(Scene& scene, const PrimitiveInitInfo& info);
@@ -97,6 +98,98 @@ namespace lightning::tools {
 			return m;
 		}
 
+		Mesh create_uv_sphere(const PrimitiveInitInfo& info) {
+			const u32 phi_count{ clamp(info.segments[Axis::x], 3u, 64u) };
+			const u32 theta_count{ clamp(info.segments[Axis::y], 2u, 64u) };
+			const f32 theta_step{ PI / theta_count };
+			const f32 phi_step{ TWO_PI / phi_count };
+			const u32 num_indicies{ 2 * 3 * phi_count + 2 * 3 * phi_count * (theta_count - 2) };
+			const u32 num_verticies{ 2 + phi_count + (theta_count - 1) };
+
+			Mesh m{};
+			m.name = "uv_sphere";
+			m.positions.resize(num_verticies);
+
+			u32 c{ 0 };
+			m.positions[c++] = { 0.f, info.size.y, 0.f };
+
+			for (u32 i{ 1 }; i <= (theta_count - 1); ++i) {
+				const f32 theta{ i * theta_step };
+
+				for (u32 j{ 0 }; j < phi_count; ++j) {
+					const f32 phi{ j * phi_step };
+					m.positions[c++] = {
+						info.size.x * XMScalarSin(theta) * XMScalarCos(phi),
+						info.size.y * XMScalarCos(theta),
+						-info.size.z * XMScalarSin(theta) * XMScalarSin(phi)
+					};
+				}
+			}
+			m.positions[c++] = { 0.f, -info.size.y, 0.f };
+			assert(c == num_verticies);
+
+			c = 0;
+			m.raw_indicies.resize(num_indicies);
+
+			for (u32 i{ 0 }; i < phi_count - 1; ++i) {
+				m.raw_indicies[c++] = 0;
+				m.raw_indicies[c++] = i + 1;
+				m.raw_indicies[c++] = i + 2;
+			}
+
+			m.raw_indicies[c++] = 0;
+			m.raw_indicies[c++] = phi_count;
+			m.raw_indicies[c++] = 1;
+
+			for (u32 i{ 0 }; i < theta_count - 2; ++i) {
+				for (u32 j{ 0 }; j < (phi_count - 1); ++j) {
+					const u32 index[4]{
+						1 + j + i * phi_count,
+						1 + j + (i + 1) * phi_count,
+						1 + (j + 1) + (i + 1) * phi_count,
+						1 + (j + 1) + i * phi_count,
+					};
+
+					m.raw_indicies[c++] = index[0];
+					m.raw_indicies[c++] = index[1];
+					m.raw_indicies[c++] = index[2];
+
+					m.raw_indicies[c++] = index[0];
+					m.raw_indicies[c++] = index[2];
+					m.raw_indicies[c++] = index[3];
+				}
+				const u32 index[4]{
+					phi_count + i * phi_count,
+					phi_count + (i + 1) * phi_count,
+					1 + (i + 1) * phi_count,
+					1 + i * phi_count,
+				};
+				m.raw_indicies[c++] = index[0];
+				m.raw_indicies[c++] = index[1];
+				m.raw_indicies[c++] = index[2];
+
+				m.raw_indicies[c++] = index[0];
+				m.raw_indicies[c++] = index[2];
+				m.raw_indicies[c++] = index[3];
+			}
+
+			const u32 south_pole_index{ (u32)m.positions.size() - 1 };
+			for (u32 i{ 0 }; i < phi_count - 1; ++i) {
+				m.raw_indicies[c++] = south_pole_index;
+				m.raw_indicies[c++] = south_pole_index - phi_count + i + 1;
+				m.raw_indicies[c++] = south_pole_index - phi_count + i;
+			}
+
+			m.raw_indicies[c++] = south_pole_index;
+			m.raw_indicies[c++] = south_pole_index - phi_count;
+			m.raw_indicies[c++] = south_pole_index - 1;
+
+			m.uv_sets.resize(1);
+			m.uv_sets[0].resize(m.raw_indicies.size());
+
+			return m;
+		}
+
 		void create_plane(Scene& scene, const PrimitiveInitInfo& info) {
 			LodGroup lod{};
 			lod.name = "plane";
@@ -105,7 +198,12 @@ namespace lightning::tools {
 		};
 
 		void create_cube(Scene& scene, const PrimitiveInitInfo& info) {};
-		void create_uv_sphere(Scene& scene, const PrimitiveInitInfo& info) {};
+		void create_uv_sphere(Scene& scene, const PrimitiveInitInfo& info) {
+			LodGroup lod{};
+			lod.name = "uv_sphere";
+			lod.meshes.emplace_back(create_uv_sphere(info));
+			scene.lod_groups.emplace_back(lod);
+		};
 		void create_ico_sphere(Scene& scene, const PrimitiveInitInfo& info) {};
 		void create_cylinder(Scene& scene, const PrimitiveInitInfo& info) {};
 		void create_capsule(Scene& scene, const PrimitiveInitInfo& info) {};
