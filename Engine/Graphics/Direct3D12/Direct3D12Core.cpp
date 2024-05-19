@@ -4,63 +4,112 @@ using namespace Microsoft::WRL;
 
 namespace lightning::graphics::direct3d12::core {
 	namespace {
-		ID3D12Device10* main_device;
-		IDXGIFactory7* dxgi_factory;
-
-		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
-
 		class D3D12Command {
-			explicit D3D12Command(ID3D12Device10* const device, D3D12_COMMAND_LIST_TYPE type) {
-				HRESULT hr{ S_OK };
-				D3D12_COMMAND_QUEUE_DESC desc{};
-				desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-				desc.NodeMask = 0;
-				desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-				desc.Type = type;
-				DXCall(hr = device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_cmd_queue)));
-				if (FAILED(hr)) goto _error;
-				NAME_D3D12_OBJECT(_cmd_queue, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"DFX Command Queue" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Queue" : L"Command Queue");
-
-				for (u32 i{0}; i<FRAME_BUFFER_COUNT;++i) {
-					CommandFrame& frame{ _cmd_frames[i] };
-					DXCall(hr = device->CreateCommandAllocator(type, IID_PPV_ARGS(&frame.cmd_allocator)));
+			public:
+				D3D12Command() = default;
+				DISABLE_COPY_AND_MOVE(D3D12Command);
+				explicit D3D12Command(ID3D12Device10* const device, D3D12_COMMAND_LIST_TYPE type) {
+					HRESULT hr{ S_OK };
+					D3D12_COMMAND_QUEUE_DESC desc{};
+					desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+					desc.NodeMask = 0;
+					desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+					desc.Type = type;
+					DXCall(hr = device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_cmd_queue)));
 					if (FAILED(hr)) goto _error;
-					NAME_D3D12_OBJECT_INDEXED(_cmd_queue, i, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"DFX Command Allocator" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Allocator" : L"Command Allocator");
+					NAME_D3D12_OBJECT(_cmd_queue, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Queue" : type ==	D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Queue" : L"Command Queue");
+
+					for (u32 i{0}; i<FRAME_BUFFER_COUNT;++i) {
+						CommandFrame& frame{ _cmd_frames[i] };
+						DXCall(hr = device->CreateCommandAllocator(type, IID_PPV_ARGS(&frame.cmd_allocator)));
+						if (FAILED(hr)) goto _error;
+						NAME_D3D12_OBJECT_INDEXED(_cmd_queue, i, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Allocator" : type ==	D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Allocator" : L"Command Allocator");
+					}
+
+					DXCall(hr = device->CreateCommandList(0, type, _cmd_frames[0].cmd_allocator, nullptr, IID_PPV_ARGS(&_cmd_list)));
+					if (FAILED(hr)) goto _error;
+					DXCall(_cmd_list->Close());
+
+					NAME_D3D12_OBJECT(_cmd_list, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command List" : type ==		D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command List" : L"Command List");
+
+					DXCall(hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence)));
+					if (FAILED(hr)) goto _error;
+					NAME_D3D12_OBJECT(_fence, L"D3D12 Fence");
+
+					_fence_event = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+					assert(_fence_event);
+
+					return;
+
+					_error:
+						release();
 				}
 
-				DXCall(hr = device->CreateCommandList(0, type, _cmd_frames[0].cmd_allocator, nullptr, IID_PPV_ARGS(&_cmd_list)));
-				if (FAILED(hr)) goto _error;
-				DXCall(_cmd_list->Close());
+				~D3D12Command() {
+					assert(!_cmd_queue && !_cmd_list && !_fence);
+				}
 
-				NAME_D3D12_OBJECT(_cmd_list, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"DFX Command List" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command List" : L"Command List");
+				void begin_frame() {
+					CommandFrame& frame{ _cmd_frames[_frame_index] };
+					frame.wait(_fence_event, _fence);
+					DXCall(frame.cmd_allocator->Reset());
+					DXCall(_cmd_list->Reset(frame.cmd_allocator, nullptr));
+				}
 
-				_error:
-					release();
-			}
+				void end_frame() {
+					DXCall(_cmd_list->Close());
+					ID3D12CommandList* const cmd_lists[]{ _cmd_list };
+					_cmd_queue->ExecuteCommandLists(_countof(cmd_lists), &cmd_lists[0]);
 
-			void begin_frame() {
-				CommandFrame& frame{ _cmd_frames[_frame_index] };
-				frame.wait();
-				DXCall(frame.cmd_allocator->Reset());
-				DXCall(_cmd_list->Reset(frame.cmd_allocator, nullptr));
-			}
+					u64& fence_value{ _fence_value };
+					++fence_value;
+					CommandFrame& frame{ _cmd_frames[_frame_index] };
+					frame.fence_value = fence_value;
 
-			void end_frame() {
-				DXCall(_cmd_list->Close());
-				ID3D12CommandList* const cmd_lists[]{ _cmd_list };
-				_cmd_queue->ExecuteCommandLists(_countof(cmd_lists), &cmd_lists[0]);
+					_cmd_queue->Signal(_fence, fence_value);
 
-				_frame_index = (_frame_index + 1) % FRAME_BUFFER_COUNT;
-			}
+					_frame_index = (_frame_index + 1) % FRAME_BUFFER_COUNT;
+				}
 
-			void release() {};
+				void flush() {
+					for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+						_cmd_frames[i].wait(_fence_event, _fence);
+					}
+					_frame_index = 0;
+				}
+
+				void release() {
+					flush();
+					core::release(_fence);
+					_fence_value = 0;
+
+					CloseHandle(_fence_event);
+					_fence_event = nullptr;
+
+					core::release(_cmd_queue);
+					core::release(_cmd_list);
+
+					for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+						_cmd_frames[i].release();
+					}
+				}
+
+				constexpr ID3D12CommandQueue* const command_queue() const { return _cmd_queue; }
+				constexpr ID3D12GraphicsCommandList7* const command_list() const { return _cmd_list; }
+				constexpr u32 frame_index() const { return _frame_index; }
 
 			private:
 				struct CommandFrame {
 					ID3D12CommandAllocator* cmd_allocator{ nullptr };
+					u64 fence_value{ 0 };
 
-					void wait() {
+					void wait(HANDLE fence_event, ID3D12Fence1* fence) {
+						assert(fence && fence_event);
 
+						if (fence->GetCompletedValue() < fence_value) {
+							DXCall(fence->SetEventOnCompletion(fence_value, fence_event));
+							WaitForSingleObject(fence_event, INFINITE);
+						}
 					}
 
 					void release() {
@@ -70,9 +119,18 @@ namespace lightning::graphics::direct3d12::core {
 
 				ID3D12CommandQueue* _cmd_queue{ nullptr };
 				ID3D12GraphicsCommandList7* _cmd_list{ nullptr };
+				ID3D12Fence1* _fence{ nullptr };
+				u64 _fence_value{ 0 };
 				CommandFrame _cmd_frames[FRAME_BUFFER_COUNT]{};
+				HANDLE _fence_event{ nullptr };
 				u32 _frame_index{ 0 };
 		};
+
+		ID3D12Device10* main_device{ nullptr };
+		IDXGIFactory7* dxgi_factory{ nullptr };
+		D3D12Command gfx_command;
+
+		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
 
 		bool failed_init() {
 			shutdown();
@@ -141,6 +199,9 @@ namespace lightning::graphics::direct3d12::core {
 		DXCall(hr = D3D12CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
 		if (FAILED(hr)) return failed_init();
 
+		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+		if (!gfx_command.command_queue()) return failed_init();
+
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 
 		#ifdef _DEBUG
@@ -158,6 +219,8 @@ namespace lightning::graphics::direct3d12::core {
 	}
 
 	void shutdown() {
+
+		gfx_command.release();
 		release(dxgi_factory);
 
 		#ifdef _DEBUG
@@ -182,8 +245,8 @@ namespace lightning::graphics::direct3d12::core {
 	}
 
 	void render() {
-		begin_frame();
-
-		end_frame();
+		gfx_command.begin_frame();
+		ID3D12GraphicsCommandList7* cmd_list{gfx_command.command_list()};
+		gfx_command.end_frame();
 	}
 }

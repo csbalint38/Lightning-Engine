@@ -1,10 +1,9 @@
-#ifdef TEST_RENDERER
+#include "..\Engine\Platform\Platform.h"
+#include "..\Engine\Platform\PlatformTypes.h"
+#include "..\Graphics\Renderer.h"
+#include "TestRenderer.h"
 
-	#include "..\Engine\Platform\Platform.h"
-	#include "..\Engine\Platform\PlatformTypes.h"
-	#include "..\Graphics\Renderer.h"
-	#include "TestRenderer.h"
-
+#if TEST_RENDERER
 	using namespace lightning;
 
 	graphics::RenderSurface _surfaces[4];
@@ -62,6 +61,7 @@
 
 	void EngineTest::run() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		graphics::render();
 	}
 
 	void EngineTest::shutdown() {
