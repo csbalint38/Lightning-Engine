@@ -6,5 +6,6 @@ namespace lightning::graphics {
 	struct PlatformInterface {
 		bool(*initialize)(void);
 		void(*shutdown)(void);
+		void(*render)(void);
 	};
 }

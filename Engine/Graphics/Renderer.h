@@ -15,9 +15,10 @@ namespace lightning::graphics {
 	enum class GraphicsPlatform : u32 {
 		DIRECT3D12 = 0,
 		VULKAN = 1,
-		OPEN_GL,
+		OPEN_GL = 2,
 	};
 
 	bool initialize(GraphicsPlatform platform);
 	void shutdown();
+	void render();
 }

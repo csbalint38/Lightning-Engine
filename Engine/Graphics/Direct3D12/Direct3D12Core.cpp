@@ -9,6 +9,71 @@ namespace lightning::graphics::direct3d12::core {
 
 		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
 
+		class D3D12Command {
+			explicit D3D12Command(ID3D12Device10* const device, D3D12_COMMAND_LIST_TYPE type) {
+				HRESULT hr{ S_OK };
+				D3D12_COMMAND_QUEUE_DESC desc{};
+				desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+				desc.NodeMask = 0;
+				desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+				desc.Type = type;
+				DXCall(hr = device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_cmd_queue)));
+				if (FAILED(hr)) goto _error;
+				NAME_D3D12_OBJECT(_cmd_queue, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"DFX Command Queue" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Queue" : L"Command Queue");
+
+				for (u32 i{0}; i<FRAME_BUFFER_COUNT;++i) {
+					CommandFrame& frame{ _cmd_frames[i] };
+					DXCall(hr = device->CreateCommandAllocator(type, IID_PPV_ARGS(&frame.cmd_allocator)));
+					if (FAILED(hr)) goto _error;
+					NAME_D3D12_OBJECT_INDEXED(_cmd_queue, i, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"DFX Command Allocator" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Allocator" : L"Command Allocator");
+				}
+
+				DXCall(hr = device->CreateCommandList(0, type, _cmd_frames[0].cmd_allocator, nullptr, IID_PPV_ARGS(&_cmd_list)));
+				if (FAILED(hr)) goto _error;
+				DXCall(_cmd_list->Close());
+
+				NAME_D3D12_OBJECT(_cmd_list, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"DFX Command List" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command List" : L"Command List");
+
+				_error:
+					release();
+			}
+
+			void begin_frame() {
+				CommandFrame& frame{ _cmd_frames[_frame_index] };
+				frame.wait();
+				DXCall(frame.cmd_allocator->Reset());
+				DXCall(_cmd_list->Reset(frame.cmd_allocator, nullptr));
+			}
+
+			void end_frame() {
+				DXCall(_cmd_list->Close());
+				ID3D12CommandList* const cmd_lists[]{ _cmd_list };
+				_cmd_queue->ExecuteCommandLists(_countof(cmd_lists), &cmd_lists[0]);
+
+				_frame_index = (_frame_index + 1) % FRAME_BUFFER_COUNT;
+			}
+
+			void release() {};
+
+			private:
+				struct CommandFrame {
+					ID3D12CommandAllocator* cmd_allocator{ nullptr };
+
+					void wait() {
+
+					}
+
+					void release() {
+						core::release(cmd_allocator);
+					}
+				};
+
+				ID3D12CommandQueue* _cmd_queue{ nullptr };
+				ID3D12GraphicsCommandList7* _cmd_list{ nullptr };
+				CommandFrame _cmd_frames[FRAME_BUFFER_COUNT]{};
+				u32 _frame_index{ 0 };
+		};
+
 		bool failed_init() {
 			shutdown();
 			return false;
@@ -114,5 +179,11 @@ namespace lightning::graphics::direct3d12::core {
 		#endif
 
 		release(main_device);
+	}
+
+	void render() {
+		begin_frame();
+
+		end_frame();
 	}
 }

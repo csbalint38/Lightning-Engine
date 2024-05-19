@@ -8,5 +8,6 @@ namespace lightning::graphics::direct3d12 {
 	void get_platform_interface(PlatformInterface& pi) {
 		pi.initialize = core::initialize;
 		pi.shutdown = core::shutdown;
+		pi.render = core::render;
 	}
 }
