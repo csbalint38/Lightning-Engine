@@ -249,4 +249,8 @@ namespace lightning::graphics::direct3d12::core {
 		ID3D12GraphicsCommandList7* cmd_list{gfx_command.command_list()};
 		gfx_command.end_frame();
 	}
+
+	ID3D12Device10* const device() {
+		return main_device;
+	}
 }

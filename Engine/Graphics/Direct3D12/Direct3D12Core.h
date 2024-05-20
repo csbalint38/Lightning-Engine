@@ -12,4 +12,6 @@ namespace lightning::graphics::direct3d12::core {
 			resource = nullptr;
 		}
 	}
+
+	ID3D12Device10* const device();
 }
