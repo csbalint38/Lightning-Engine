@@ -1,4 +1,5 @@
 #include "Direct3D12Core.h"
+#include "Direct3D12Resources.h"
 
 using namespace Microsoft::WRL;
 
@@ -114,6 +115,7 @@ namespace lightning::graphics::direct3d12::core {
 
 					void release() {
 						core::release(cmd_allocator);
+						fence_value = 0;
 					}
 				};
 
@@ -129,6 +131,14 @@ namespace lightning::graphics::direct3d12::core {
 		ID3D12Device10* main_device{ nullptr };
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
+		DescriptorHeap rtv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
+		DescriptorHeap dsv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
+		DescriptorHeap srv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
+		DescriptorHeap uav_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
+
+		util::vector<IUnknown*> deferred_releases[FRAME_BUFFER_COUNT]{};
+		u32 deferred_release_flag[FRAME_BUFFER_COUNT]{};
+		std::mutex deferred_releases_mutex{};
 
 		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
 
@@ -166,6 +176,31 @@ namespace lightning::graphics::direct3d12::core {
 
 			return feature_level_info.MaxSupportedFeatureLevel;
 		}
+
+		void __declspec(noinline) process_deferred_releases(u32 frame_idx) {
+			std::lock_guard lock{ deferred_releases_mutex };
+			deferred_release_flag[frame_idx] = 0;
+
+			rtv_desc_heap.process_deferred_free(frame_idx);
+			dsv_desc_heap.process_deferred_free(frame_idx);
+			srv_desc_heap.process_deferred_free(frame_idx);
+			uav_desc_heap.process_deferred_free(frame_idx);
+
+			util::vector<IUnknown*>& resources{ deferred_releases[frame_idx] };
+			if (!resources.empty()) {
+				for (auto& resource : resources) release(resource);
+				resources.clear();
+			}
+		}
+	}
+
+	namespace detail {
+		void deferred_release(IUnknown* resource) {
+			const u32 frame_idx{ current_frame_index() };
+			std::lock_guard lock{ deferred_releases_mutex };
+			deferred_releases[frame_idx].push_back(resource);
+			set_deferred_release_flag();
+		};
 	}
 
 	bool initialize() {
@@ -176,8 +211,12 @@ namespace lightning::graphics::direct3d12::core {
 		#ifdef _DEBUG 
 		{
 			ComPtr<ID3D12Debug6> debug_interface;
-			DXCall(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)));
-			debug_interface->EnableDebugLayer();
+			if SUCCEEDED((D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)))) {
+				debug_interface->EnableDebugLayer();
+			}
+			else {
+				OutputDebugString("Warning: D3D12 Debug interface is not available. Verify that Graphics Tools optional feature is installed in this system.\n");
+			}
 			dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
 		#endif
@@ -199,11 +238,6 @@ namespace lightning::graphics::direct3d12::core {
 		DXCall(hr = D3D12CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
 		if (FAILED(hr)) return failed_init();
 
-		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
-		if (!gfx_command.command_queue()) return failed_init();
-
-		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
-
 		#ifdef _DEBUG
 		{
 			ComPtr<ID3D12InfoQueue> info_queue;
@@ -215,13 +249,42 @@ namespace lightning::graphics::direct3d12::core {
 		}
 		#endif
 
+		bool result{ true };
+
+		result &= rtv_desc_heap.initialize(512, false);
+		result &= dsv_desc_heap.initialize(512, false);
+		result &= srv_desc_heap.initialize(4096, true);
+		result &= uav_desc_heap.initialize(512, false);
+		if (!result) return failed_init();
+
+		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+		if (!gfx_command.command_queue()) return failed_init();
+
+		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
+		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");
+		NAME_D3D12_OBJECT(dsv_desc_heap.heap(), L"DSV Descriptor Heap");
+		NAME_D3D12_OBJECT(srv_desc_heap.heap(), L"SRV Descriptor Heap");
+		NAME_D3D12_OBJECT(uav_desc_heap.heap(), L"UAV Descriptor Heap");
+
 		return true;
 	}
 
 	void shutdown() {
 
 		gfx_command.release();
+
+		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+			process_deferred_releases(i);
+		}
+
 		release(dxgi_factory);
+
+		rtv_desc_heap.release();
+		dsv_desc_heap.release();
+		srv_desc_heap.release();
+		uav_desc_heap.release();
+
+		process_deferred_releases(0);
 
 		#ifdef _DEBUG
 		{
@@ -247,10 +310,23 @@ namespace lightning::graphics::direct3d12::core {
 	void render() {
 		gfx_command.begin_frame();
 		ID3D12GraphicsCommandList7* cmd_list{gfx_command.command_list()};
+
+		const u32 frame_idx{ current_frame_index() };
+		if (deferred_release_flag[frame_idx]) {
+			process_deferred_releases(frame_idx);
+		}
+
 		gfx_command.end_frame();
 	}
 
 	ID3D12Device10* const device() {
 		return main_device;
+	}
+
+	u32 current_frame_index() {
+		return gfx_command.frame_index();
+	}
+	void set_deferred_release_flag() {
+		deferred_release_flag[current_frame_index()] = 1;
 	}
 }

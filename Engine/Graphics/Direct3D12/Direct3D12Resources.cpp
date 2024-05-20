@@ -13,9 +13,6 @@ namespace lightning::graphics::direct3d12 {
 			is_shader_visible = false;
 		}
 
-		ID3D12Device10* const device{ core::device() };
-		assert(device);
-
 		release();
 
 		ID3D12Device10* const device{ core::device() };
@@ -35,7 +32,8 @@ namespace lightning::graphics::direct3d12 {
 		_capacity = capacity;
 		_size = 0;
 
-		for (u32 i{}; i < capacity; ++i) _free_handles[i] = i;
+		for (u32 i{ 0 }; i < capacity; ++i) _free_handles[i] = i;
+		DEBUG_OP(for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) assert(_deferred_free_indicies[i].empty()));
 
 		_descriptor_size = device->GetDescriptorHandleIncrementSize(_type);
 		_cpu_start = _heap->GetCPUDescriptorHandleForHeapStart();
@@ -45,7 +43,23 @@ namespace lightning::graphics::direct3d12 {
 	}
 
 	void DescriptorHeap::release() {
+		assert(!_size);
+		core::deferred_release(_heap);
+	}
 
+	void DescriptorHeap::process_deferred_free(u32 frame_idx) {
+		std::lock_guard mutex{ _mutex };
+		assert(frame_idx < FRAME_BUFFER_COUNT);
+
+		util::vector<u32>& indicies{ _deferred_free_indicies[frame_idx] };
+
+		if (!indicies.empty()) {
+			for (auto index : indicies) {
+				--_size;
+				_free_handles[_size] = index;
+			}
+			indicies.clear();
+		}
 	}
 
 	DescriptorHandle DescriptorHeap::allocate() {
@@ -79,8 +93,11 @@ namespace lightning::graphics::direct3d12 {
 		const u32 index{ (u32)(handle.cpu.ptr - _cpu_start.ptr) / _descriptor_size };
 		assert(handle.index == index);
 
+		const u32 frame_idx{ core::current_frame_index() };
+		_deferred_free_indicies[frame_idx].push_back(index);
+		core::set_deferred_release_flag();
+
 		handle = {};
 	}
-
-	#pragma endregion
 }
+	#pragma endregion

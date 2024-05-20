@@ -28,6 +28,7 @@ namespace lightning::graphics::direct3d12 {
 
 			bool initialize(u32 capacity, bool is_shader_visible);
 			void release();
+			void process_deferred_free(u32 frame_ids);
 
 			[[nodiscard]] DescriptorHandle allocate();
 			void free(DescriptorHandle& handle);
@@ -46,6 +47,7 @@ namespace lightning::graphics::direct3d12 {
 			D3D12_CPU_DESCRIPTOR_HANDLE _cpu_start{};
 			D3D12_GPU_DESCRIPTOR_HANDLE _gpu_start{};
 			std::unique_ptr<u32[]> _free_handles{};
+			util::vector<u32> _deferred_free_indicies[FRAME_BUFFER_COUNT]{};
 			std::mutex _mutex{};
 			u32 _capacity{ 0 };
 			u32 _size{ 0 };
