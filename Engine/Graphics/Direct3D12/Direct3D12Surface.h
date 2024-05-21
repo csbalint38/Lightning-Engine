@@ -67,9 +67,7 @@ namespace lightning::graphics::direct3d12 {
 			}
 			#endif
 
-			~D3D12Surface() {
-				release();
-			}
+			~D3D12Surface() { release(); }
 
 			void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format);
 			void present() const;

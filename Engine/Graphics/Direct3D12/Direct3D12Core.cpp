@@ -143,7 +143,7 @@ namespace lightning::graphics::direct3d12::core {
 		u32 deferred_release_flag[FRAME_BUFFER_COUNT]{};
 		std::mutex deferred_releases_mutex{};
 
-		constexpr DXGI_FORMAT render_target_format{ DXGI_FORMAT_B8G8R8X8_UNORM_SRGB };
+		constexpr DXGI_FORMAT render_target_format{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };
 		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
 
 		bool failed_init() {

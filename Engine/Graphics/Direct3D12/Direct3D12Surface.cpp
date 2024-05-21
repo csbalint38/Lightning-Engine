@@ -4,7 +4,7 @@
 namespace lightning::graphics::direct3d12 {
 	namespace {
 		constexpr DXGI_FORMAT to_non_srgb(DXGI_FORMAT format) {
-			//if (format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) return DXGI_FORMAT_R8G8B8A8_UNORM;
+		if (format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) return DXGI_FORMAT_R8G8B8A8_UNORM;
 			return DXGI_FORMAT_R8G8B8A8_UNORM;
 		}
 	}
@@ -39,6 +39,8 @@ namespace lightning::graphics::direct3d12 {
 		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
 			_render_target_data[i].rtv = core::rtv_heap().allocate();
 		}
+
+		finalize();
 	}
 
 	void D3D12Surface::present() const {
