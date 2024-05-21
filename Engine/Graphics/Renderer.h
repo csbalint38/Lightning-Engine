@@ -4,8 +4,24 @@
 #include "..\Platform\Window.h"
 
 namespace lightning::graphics {
+
+	DEFINE_TYPED_ID(surface_id);
 	
-	class Surface {};
+	class Surface {
+		private:
+			surface_id _id;
+
+		public:
+			constexpr explicit Surface(surface_id id) : _id{ id } {}
+			constexpr Surface() = default;
+			constexpr surface_id get_id() const { return _id; }
+			constexpr bool is_valid() const { return id::is_valid(_id); }
+
+			void resize(u32 width, u32 height) const;
+			u32 width() const;
+			u32 height() const;
+			void render() const;
+	};
 
 	struct RenderSurface {
 		platform::Window window{};
@@ -21,4 +37,7 @@ namespace lightning::graphics {
 	bool initialize(GraphicsPlatform platform);
 	void shutdown();
 	void render();
+
+	Surface create_surface(platform::Window window);
+	void remove_surface(surface_id id);
 }

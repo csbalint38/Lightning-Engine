@@ -1,6 +1,7 @@
 #pragma once
 #include "CommonHeaders.h"
 #include "Graphics/Renderer.h"
+#include "Platform/Window.h"
 
 #include <dxgi1_6.h>
 #include <d3d12.h>
@@ -10,7 +11,7 @@
 #pragma comment(lib, "d3d12.lib")
 
 namespace lightning::graphics::direct3d12 {
-	constexpr u32 FRAME_BUFFER_COUNT{ 3 };
+	constexpr u32 FRAME_BUFFER_COUNT{ 3 }; // MIN: 2
 }
 
 #ifdef _DEBUG

@@ -1,5 +1,4 @@
 #include "Direct3D12Core.h"
-#include "Direct3D12Resources.h"
 
 using namespace Microsoft::WRL;
 
@@ -140,6 +139,7 @@ namespace lightning::graphics::direct3d12::core {
 		u32 deferred_release_flag[FRAME_BUFFER_COUNT]{};
 		std::mutex deferred_releases_mutex{};
 
+		constexpr DXGI_FORMAT render_target_format{ DXGI_FORMAT_B8G8R8X8_UNORM_SRGB };
 		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
 
 		bool failed_init() {
@@ -319,13 +319,14 @@ namespace lightning::graphics::direct3d12::core {
 		gfx_command.end_frame();
 	}
 
-	ID3D12Device10* const device() {
-		return main_device;
-	}
+	ID3D12Device10* const device() { return main_device; }
+	DescriptorHeap& rtv_heap() { return rtv_desc_heap; }
+	DescriptorHeap& dsv_heap() { return dsv_desc_heap; }
+	DescriptorHeap& srv_heap() { return srv_desc_heap; }
+	DescriptorHeap& uav_heap() { return uav_desc_heap; }
+	DXGI_FORMAT default_render_target_format() { return render_target_format; }
+	u32 current_frame_index() { return gfx_command.frame_index(); }
 
-	u32 current_frame_index() {
-		return gfx_command.frame_index();
-	}
 	void set_deferred_release_flag() {
 		deferred_release_flag[current_frame_index()] = 1;
 	}
