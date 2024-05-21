@@ -4,8 +4,8 @@
 namespace lightning::graphics::direct3d12 {
 	namespace {
 		constexpr DXGI_FORMAT to_non_srgb(DXGI_FORMAT format) {
-			//if (format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) return DXGI_FORMAT_R8G8B8A8_UNORM;
-			return DXGI_FORMAT_R8G8B8A8_UNORM;
+			if (format == DXGI_FORMAT_R8G8B8A8_UNORM_SRGB) return DXGI_FORMAT_R8G8B8A8_UNORM;
+			return format;
 		}
 	}
 

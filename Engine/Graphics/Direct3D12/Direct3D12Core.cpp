@@ -1,6 +1,4 @@
 #include "Direct3D12Core.h"
-#include "Direct3D12Resources.h"
-#include "Direct3D12Surface.h"
 
 using namespace Microsoft::WRL;
 
@@ -132,8 +130,6 @@ namespace lightning::graphics::direct3d12::core {
 		ID3D12Device10* main_device{ nullptr };
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
-		util::vector<D3D12Surface> surfaces;
-
 		DescriptorHeap rtv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
 		DescriptorHeap dsv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
 		DescriptorHeap srv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
@@ -311,6 +307,18 @@ namespace lightning::graphics::direct3d12::core {
 		release(main_device);
 	}
 
+	void render() {
+		gfx_command.begin_frame();
+		ID3D12GraphicsCommandList7* cmd_list{gfx_command.command_list()};
+
+		const u32 frame_idx{ current_frame_index() };
+		if (deferred_release_flag[frame_idx]) {
+			process_deferred_releases(frame_idx);
+		}
+
+		gfx_command.end_frame();
+	}
+
 	ID3D12Device10* const device() { return main_device; }
 	DescriptorHeap& rtv_heap() { return rtv_desc_heap; }
 	DescriptorHeap& dsv_heap() { return dsv_desc_heap; }
@@ -321,40 +329,5 @@ namespace lightning::graphics::direct3d12::core {
 
 	void set_deferred_release_flag() {
 		deferred_release_flag[current_frame_index()] = 1;
-	}
-
-	Surface create_surface(platform::Window window) {
-		surfaces.emplace_back(window);
-		surface_id id{ (u32)surfaces.size() - 1 };
-		surfaces[id].create_swap_chain(dxgi_factory, gfx_command.command_queue(), render_target_format);
-		return Surface{ id };
-	}
-
-	void remove_surface(surface_id id) {
-		gfx_command.flush();
-		surfaces[id].~D3D12Surface();
-	}
-
-	void resize_surface(surface_id id, u32 width, u32 height) {
-		gfx_command.flush();
-		surfaces[id].resize();
-	}
-
-	u32 surface_width(surface_id id) { return surfaces[id].width(); }
-	u32 surface_height(surface_id id) { return surfaces[id].height(); }
-
-	void render_surface(surface_id id) {
-		gfx_command.begin_frame();
-		ID3D12GraphicsCommandList7* cmd_list{ gfx_command.command_list() };
-
-		const u32 frame_idx{ current_frame_index() };
-		if (deferred_release_flag[frame_idx]) {
-			process_deferred_releases(frame_idx);
-		}
-
-		const D3D12Surface& surface{ surfaces[id] };
-		surface.present();
-
-		gfx_command.end_frame();
 	}
 }
