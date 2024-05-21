@@ -36,9 +36,11 @@
 
 	void create_render_surface(graphics::RenderSurface& surface, platform::WindowInitInfo info) {
 		surface.window = platform::create_window(&info);
+		surface.surface = graphics::create_surface(surface.window);
 	}
 
 	void destroy_render_surface(graphics::RenderSurface& surface) {
+		graphics::remove_surface(surface.surface.get_id());
 		platform::remove_window(surface.window.get_id());
 	}
 
@@ -46,10 +48,10 @@
 		bool result { graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12) };
 		if (!result) return result;
 		platform::WindowInitInfo info[]{
-			{&win_proc, nullptr, L"TestWindow1", 100, 100, 800, 800},
-			{&win_proc, nullptr, L"TestWindow2", 150, 150, 400, 800},
-			{&win_proc, nullptr, L"TestWindow3", 200, 200, 800, 400},
-			{&win_proc, nullptr, L"TestWindow4", 250, 250, 400, 400}
+			{&win_proc, nullptr, L"TestWindow1", 100, 100, 800, 400},
+			{&win_proc, nullptr, L"TestWindow2", 100, 100, 800, 400},
+			{&win_proc, nullptr, L"TestWindow3", 100, 100, 800, 400},
+			{&win_proc, nullptr, L"TestWindow4", 100, 100, 800, 400}
 		};
 		static_assert(_countof(_surfaces) == _countof(info));
 
@@ -61,7 +63,11 @@
 
 	void EngineTest::run() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		graphics::render();
+		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
+			if (_surfaces[i].surface.is_valid()) {
+				_surfaces[i].surface.render();
+			}
+		}
 	}
 
 	void EngineTest::shutdown() {

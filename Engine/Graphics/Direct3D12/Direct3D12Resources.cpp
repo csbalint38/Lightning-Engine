@@ -69,6 +69,7 @@ namespace lightning::graphics::direct3d12 {
 
 		const u32 index{ _free_handles[_size] };
 		const u32 offset{ index * _descriptor_size };
+		++_size;
 
 		DescriptorHandle handle;
 		handle.cpu.ptr = _cpu_start.ptr + offset;
