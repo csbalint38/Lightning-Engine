@@ -11,7 +11,7 @@ namespace lightning::platform {
 
 		public:
 			constexpr explicit Window(window_id id) : _id{ id } {}
-			constexpr Window() = default;
+			Window() = default;
 			constexpr window_id get_id() const { return _id; }
 			constexpr bool is_valid() const { return id::is_valid(_id); }
 
