@@ -1,14 +1,13 @@
 #pragma once
 #include "Direct3D12CommonHeaders.h"
 
-namespace lightning::graphics::direct3d12{
+namespace lightning::graphics::direct3d12 {
 	class DescriptorHeap;
 }
 
 namespace lightning::graphics::direct3d12::core {
 	bool initialize();
 	void shutdown();
-	void render();
 
 	template<typename T> constexpr void release(T*& resource) {
 		if (resource) {
@@ -36,4 +35,11 @@ namespace lightning::graphics::direct3d12::core {
 	DXGI_FORMAT default_render_target_format();
 	u32 current_frame_index();
 	void set_deferred_release_flag();
+
+	Surface create_surface(platform::Window window);
+	void remove_surface(surface_id id);
+	void resize_surface(surface_id id, u32 width, u32 height);
+	u32 surface_width(surface_id id);
+	u32 surface_height(surface_id id);
+	void render_surface(surface_id id);
 }

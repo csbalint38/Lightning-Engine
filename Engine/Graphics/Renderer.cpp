@@ -26,10 +26,6 @@ namespace lightning::graphics {
 		gfx.shutdown();
 	}
 
-	void render() {
-		gfx.render();
-	}
-
 	Surface create_surface(platform::Window window) {
 		return gfx.surface.create(window);
 	}
