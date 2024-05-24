@@ -7,7 +7,7 @@
 	using namespace lightning;
 
 	graphics::RenderSurface _surfaces[4];
-
+	TimeIt timer;
 	void destroy_render_surface(graphics::RenderSurface& surface);
 
 	LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -25,7 +25,7 @@
 					}
 				}
 				if (all_closed) {
-					//PostQuitMessage(0);
+					PostQuitMessage(0);
 					return 0;
 				}
 			}
@@ -76,12 +76,14 @@
 	}
 
 	void EngineTest::run() {
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		timer.begin();
+		//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			if (_surfaces[i].surface.is_valid()) {
 				_surfaces[i].surface.render();
 			}
 		}
+		timer.end();
 	}
 
 	void EngineTest::shutdown() {

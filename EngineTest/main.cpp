@@ -29,9 +29,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				DispatchMessage(&msg);
 				is_running &= (msg.message != WM_QUIT);
 			}
-
 			test.run();
-}
+		}
 	}
 	test.shutdown();
 	return 0;
