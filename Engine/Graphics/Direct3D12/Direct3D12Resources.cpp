@@ -48,7 +48,7 @@ namespace lightning::graphics::direct3d12 {
 	}
 
 	void DescriptorHeap::process_deferred_free(u32 frame_idx) {
-		std::lock_guard mutex{ _mutex };
+		std::lock_guard lock{ _mutex };
 		assert(frame_idx < FRAME_BUFFER_COUNT);
 
 		util::vector<u32>& indicies{ _deferred_free_indicies[frame_idx] };

@@ -9,7 +9,7 @@ namespace lightning::graphics {
 	
 	class Surface {
 		private:
-			surface_id _id;
+			surface_id _id{ id::invalid_id };
 
 		public:
 			constexpr explicit Surface(surface_id id) : _id{ id } {}
@@ -36,7 +36,6 @@ namespace lightning::graphics {
 
 	bool initialize(GraphicsPlatform platform);
 	void shutdown();
-	void render();
 
 	Surface create_surface(platform::Window window);
 	void remove_surface(surface_id id);

@@ -7,11 +7,11 @@ namespace lightning::platform {
 
 	class Window {
 		private:
-			window_id _id;
+			window_id _id{ id::invalid_id };
 
 		public:
 			constexpr explicit Window(window_id id) : _id{ id } {}
-			Window() = default;
+			constexpr Window() = default;
 			constexpr window_id get_id() const { return _id; }
 			constexpr bool is_valid() const { return id::is_valid(_id); }
 

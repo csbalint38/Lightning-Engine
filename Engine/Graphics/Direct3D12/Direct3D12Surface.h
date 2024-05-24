@@ -10,13 +10,6 @@ namespace lightning::graphics::direct3d12 {
 				DescriptorHandle rtv{};
 			};
 
-			IDXGISwapChain4* _swap_chain{ nullptr };
-			RenderTargetData _render_target_data[FRAME_BUFFER_COUNT]{};
-			platform::Window _window{};
-			mutable u32 _current_bb_index{ 0 };
-			D3D12_VIEWPORT _viewport{};
-			D3D12_RECT _scissor_rect{};
-
 			#if USE_STL_VECTOR
 			constexpr void move(D3D12Surface& o) {
 				_swap_chain = o._swap_chain;
@@ -39,8 +32,15 @@ namespace lightning::graphics::direct3d12 {
 			}
 			#endif
 
-			void release();
 			void finalize();
+			void release();
+
+			IDXGISwapChain4* _swap_chain{ nullptr };
+			RenderTargetData _render_target_data[FRAME_BUFFER_COUNT]{};
+			platform::Window _window{};
+			mutable u32 _current_bb_index{ 0 };
+			D3D12_VIEWPORT _viewport{};
+			D3D12_RECT _scissor_rect{};
 
 		public:
 			explicit D3D12Surface(platform::Window window) : _window{ window } {
@@ -74,7 +74,7 @@ namespace lightning::graphics::direct3d12 {
 			void resize();
 			constexpr u32 width() const { return (u32)_viewport.Width; }
 			constexpr u32 height() const { return (u32)_viewport.Height; }
-			constexpr ID3D12Resource2* const back_buffer() const { return _render_target_data[_current_bb_index].resource; }
+			constexpr ID3D12Resource2 *const back_buffer() const { return _render_target_data[_current_bb_index].resource; }
 			constexpr D3D12_CPU_DESCRIPTOR_HANDLE rtv() const{ return _render_target_data[_current_bb_index].rtv.cpu; }
 			constexpr const D3D12_VIEWPORT& viewport() const { return _viewport; }
 			constexpr const D3D12_RECT& scissor_rect() const { return _scissor_rect; }

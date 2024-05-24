@@ -204,7 +204,7 @@ namespace lightning::graphics::direct3d12::core {
 			std::lock_guard lock{ deferred_releases_mutex };
 			deferred_releases[frame_idx].push_back(resource);
 			set_deferred_release_flag();
-		};
+		}
 	}
 
 	bool initialize() {

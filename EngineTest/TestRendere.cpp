@@ -8,30 +8,42 @@
 
 	graphics::RenderSurface _surfaces[4];
 
+	void destroy_render_surface(graphics::RenderSurface& surface);
+
 	LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		switch (msg) {
-		case WM_DESTROY: {
-			bool all_closed{ true };
-			for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
-				if (!_surfaces[i].window.is_closed()) {
-					all_closed = false;
+			case WM_DESTROY: {
+				bool all_closed{ true };
+				for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
+					if (_surfaces[i].window.is_valid()) {
+						if (_surfaces[i].window.is_closed()) {
+							destroy_render_surface(_surfaces[i]);
+						}
+						else {
+							all_closed = false;
+						}
+					}
+				}
+				if (all_closed) {
+					//PostQuitMessage(0);
+					return 0;
 				}
 			}
-			if (all_closed) {
-				PostQuitMessage(0);
-				return 0;
-			}
 			break;
+			case WM_SYSCHAR:
+				if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN)) {
+					platform::Window win{ platform::window_id{(id::id_type)GetWindowLongPtrW(hwnd, GWLP_USERDATA)} };
+					win.set_fullscreen(!win.is_fullscreen());
+					return 0;
+				}
+				break;
+			case WM_KEYDOWN:
+				if (wparam == VK_ESCAPE) {
+					PostMessage(hwnd, WM_CLOSE, 0, 0);
+					return 0;
+				}
 		}
-		case WM_SYSCHAR:
-			if (wparam == VK_RETURN && (HIWORD(lparam) & KF_ALTDOWN)) {
-				platform::Window win{ platform::window_id{(id::id_type)GetWindowLongPtrW(hwnd, GWLP_USERDATA)} };
-				win.set_fullscreen(!win.is_fullscreen());
-				return 0;
-			}
-			break;
-		}
-		return DefWindowProcW(hwnd, msg, wparam, lparam);
+		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 
 	void create_render_surface(graphics::RenderSurface& surface, platform::WindowInitInfo info) {
@@ -40,8 +52,10 @@
 	}
 
 	void destroy_render_surface(graphics::RenderSurface& surface) {
-		graphics::remove_surface(surface.surface.get_id());
-		platform::remove_window(surface.window.get_id());
+		graphics::RenderSurface temp{ surface };
+		surface = {};
+		if (temp.surface.is_valid()) graphics::remove_surface(temp.surface.get_id());
+		if (temp.surface.is_valid()) platform::remove_window(temp.window.get_id());
 	}
 
 	bool EngineTest::initialize() {
