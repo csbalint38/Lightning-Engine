@@ -34,3 +34,5 @@ namespace lightning::util {
 namespace lightning::util {
   
 }
+
+#include "FreeList.h"

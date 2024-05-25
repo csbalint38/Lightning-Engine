@@ -16,28 +16,8 @@ namespace lightning::platform {
 			bool is_closed{ false };
 		};
 
-		util::vector<WindowInfo> windows;
-		util::vector<u32> available_slots;
-
-		u32 add_to_windows(WindowInfo info) {
-			u32 id{ u32_invalid_id };
-			if (available_slots.empty()) {
-				id = (u32)windows.size();
-				windows.emplace_back(info);
-			}
-			else {
-				id = available_slots.back();
-				available_slots.pop_back();
-				assert(id != u32_invalid_id);
-				windows[id] = info;
-			}
-			return id;
-		}
-
-		void remove_from_windows(u32 id) {
-			assert(id < windows.size());
-			available_slots.emplace_back(id);
-		}
+		util::free_list<WindowInfo> windows;
+		
 
 		WindowInfo& get_from_id(window_id id) {
 			assert(id < windows.size());
@@ -190,7 +170,7 @@ namespace lightning::platform {
 
 		if (info.hwnd) {
 			DEBUG_OP(SetLastError(0));
-			const window_id id{ add_to_windows(info) };
+			const window_id id{ windows.add(info) };
 			SetWindowLongPtrW(info.hwnd, GWLP_USERDATA, (LONG_PTR)id);
 
 			if (callback) SetWindowLongPtrW(info.hwnd, 0, (LONG_PTR)callback);
@@ -207,7 +187,7 @@ namespace lightning::platform {
 	void remove_window(window_id id) {
 		WindowInfo& info{ get_from_id(id) };
 		DestroyWindow(info.hwnd);
-		remove_from_windows(id);
+		windows.remove(id);
 	}
 
 	#else
