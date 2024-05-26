@@ -68,6 +68,8 @@ namespace lightning::graphics::direct3d12 {
 
 	class D3D12Texture {
 		public:
+			constexpr static u32 max_mips{ 14 };
+
 			D3D12Texture() = default;
 			explicit D3D12Texture(D3D12TextureInitInfo info);
 			DISABLE_COPY(D3D12Texture);
@@ -83,6 +85,8 @@ namespace lightning::graphics::direct3d12 {
 				}
 				return *this;
 			}
+
+			~D3D12Texture() { release(); }
 
 			void release();
 			constexpr ID3D12Resource2* const resource() const { return _resource; }
@@ -102,5 +106,81 @@ namespace lightning::graphics::direct3d12 {
 				_srv = o._srv;
 				o.reset();
 			}
+	};
+
+	class D3D12RenderTexture {
+		public:
+			D3D12RenderTexture() = default;
+			explicit D3D12RenderTexture(D3D12TextureInitInfo info);
+			DISABLE_COPY(D3D12RenderTexture);
+			constexpr D3D12RenderTexture(D3D12RenderTexture&& o) : _texture{ std::move(o._texture) }, _mip_count{ o._mip_count } {
+				for (u32 i{ 0 }; i < _mip_count; ++i) _rtv[i] = o._rtv[1];
+				o.reset();
+			}
+
+			constexpr D3D12RenderTexture& operator=(D3D12RenderTexture&& o) {
+				assert(this != &o);
+				if (this != &o) {
+					release();
+					move(o);
+				}
+				return *this;
+			}
+
+			~D3D12RenderTexture() { release(); }
+
+			void release();
+			constexpr u32 mip_count() const { return _mip_count; }
+			constexpr D3D12_CPU_DESCRIPTOR_HANDLE rtv(u32 mip_index) const { return _rtv[mip_index].cpu; }
+			constexpr DescriptorHandle srv() const { return _texture.srv(); }
+			constexpr ID3D12Resource* const resource() const { return _texture.resource(); }
+
+		private:
+			constexpr void move(D3D12RenderTexture& o) {
+				_texture = std::move(o._texture);
+				_mip_count = o._mip_count;
+				for (u32 i{ 0 }; i < _mip_count; ++i) _rtv[i] = o._rtv[i];
+				o.reset();
+			}
+
+			constexpr void reset() {
+				for (u32 i{ 0 }; i < _mip_count; ++i) _rtv[i] = {};
+				_mip_count = 0;
+			}
+
+			D3D12Texture _texture{};
+			DescriptorHandle _rtv[D3D12Texture::max_mips]{};
+			u32 _mip_count{ 0 };
+	};
+
+	class D3D12DepthBuffer {
+		public:
+			D3D12DepthBuffer() = default;
+			explicit D3D12DepthBuffer(D3D12TextureInitInfo info);
+			DISABLE_COPY(D3D12DepthBuffer);
+			constexpr D3D12DepthBuffer(D3D12DepthBuffer&& o) : _texture{ std::move(o._texture) }, _dsv{ o._dsv } {
+				o._dsv = {};
+			}
+
+			constexpr D3D12DepthBuffer& operator=(D3D12DepthBuffer&& o) {
+				assert(this != &o);
+				if (this != &o) {
+					_texture = std::move(o._texture);
+					_dsv = o._dsv;
+					o._dsv = {};
+				}
+				return *this;
+			}
+
+			~D3D12DepthBuffer() { release(); }
+
+			void release();
+			constexpr D3D12_CPU_DESCRIPTOR_HANDLE dsv() const { return _dsv.cpu; }
+			constexpr DescriptorHandle srv() const { return _texture.srv(); }
+			constexpr ID3D12Resource* const resource() const { return _texture.resource(); }
+
+		private:
+			D3D12Texture _texture{};
+			DescriptorHandle _dsv{};
 	};
 }
