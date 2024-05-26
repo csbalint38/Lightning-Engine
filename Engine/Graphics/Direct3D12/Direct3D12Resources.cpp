@@ -1,5 +1,6 @@
 #include "Direct3D12Resources.h"
 #include "Direct3D12Core.h"
+#include "Direct3D12Helpers.h"
 
 namespace lightning::graphics::direct3d12 {
 
@@ -100,5 +101,36 @@ namespace lightning::graphics::direct3d12 {
 
 		handle = {};
 	}
-}
 	#pragma endregion
+	#pragma region D3D12_TEXTURE
+	D3D12Texture::D3D12Texture(D3D12TextureInitInfo info) {
+		auto* const device{ core::device() };
+		assert(device);
+
+		D3D12_CLEAR_VALUE* const clear_value{
+			(info.desc && info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET || info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? &info.clear_value : nullptr
+		};
+
+		if (info.resource) {
+			_resource = info.resource;
+		}
+		else if (info.heap && info.desc) {
+			assert(!info.resource);
+			DXCall(device->CreatePlacedResource2(info.heap, info.allocation_info.Offset, info.desc, info.initial_state, clear_value, 1, info.format, IID_PPV_ARGS(&_resource)));
+		}
+		else if (info.desc) {
+			assert(!info.heap && !info.resource);
+
+			DXCall(device->CreateCommittedResource3(&d3dx::heap_properties.default_heap, D3D12_HEAP_FLAG_NONE, info.desc, info.initial_state, clear_value, nullptr, 1, info.format, IID_PPV_ARGS(&_resource)));
+		}
+
+		assert(_resource);
+		_srv = core::srv_heap().allocate();
+		device->CreateShaderResourceView(_resource, info.srv_desc, _srv.cpu);
+	}
+
+	void D3D12Texture::release() {
+		core::srv_heap().free(_srv);
+		core::deferred_release(_resource);
+	}
+}

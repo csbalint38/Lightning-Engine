@@ -1,6 +1,10 @@
 #pragma once
 #include "CommonHeaders.h"
 
+#if USE_STL_VECTOR
+#pragma message("WARNING: using util::free_list with std::vector result in duplicate calls to class constructor!")
+#endif
+
 namespace lightning::util {
 	template<typename T> class free_list {
 		static_assert(sizeof(T) >= sizeof(u32));
@@ -13,6 +17,9 @@ namespace lightning::util {
 
 		~free_list() { 
 			assert(!_size);
+			#if USE_STL_VECTOR
+			memset(_array.data(), 0, _array.size() * sizeof(T));
+			#endif		
 		}
 
 		template<class... params>
@@ -50,7 +57,7 @@ namespace lightning::util {
 			return _array.size();
 		}
 
-		constexpr u32 empty() const {
+		constexpr bool empty() const {
 			return _size == 0;
 		}
 
@@ -77,7 +84,12 @@ namespace lightning::util {
 			}
 		}
 
+		#if USE_STL_VECTOR
 		util::vector<T> _array;
+		#else
+		util::vector<T, false> _array;
+		#endif
+
 		u32 _next_free_index{ u32_invalid_id };
 		u32 _size{ 0 };
 	};

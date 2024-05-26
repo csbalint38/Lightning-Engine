@@ -54,4 +54,53 @@ namespace lightning::graphics::direct3d12 {
 			u32 _descriptor_size{};
 			const D3D12_DESCRIPTOR_HEAP_TYPE _type{};
 	};
+
+	struct D3D12TextureInitInfo {
+		ID3D12Heap1* heap{ nullptr };
+		ID3D12Resource2* resource{ nullptr };
+		D3D12_SHADER_RESOURCE_VIEW_DESC* srv_desc{ nullptr };
+		D3D12_RESOURCE_DESC1* desc{ nullptr };
+		D3D12_RESOURCE_ALLOCATION_INFO1 allocation_info{};
+		D3D12_BARRIER_LAYOUT initial_state{};
+		D3D12_CLEAR_VALUE clear_value{};
+		DXGI_FORMAT format[1];
+	};
+
+	class D3D12Texture {
+		public:
+			D3D12Texture() = default;
+			explicit D3D12Texture(D3D12TextureInitInfo info);
+			DISABLE_COPY(D3D12Texture);
+			constexpr D3D12Texture(D3D12Texture&& o) : _resource{ o._resource }, _srv{ o._srv } {
+				o.reset();
+			}
+
+			constexpr D3D12Texture& operator=(D3D12Texture&& o) {
+				assert(this != &o);
+				if (this != &o) {
+					release();
+					move(o);
+				}
+				return *this;
+			}
+
+			void release();
+			constexpr ID3D12Resource2* const resource() const { return _resource; }
+			constexpr DescriptorHandle srv() const { return _srv; }
+
+		private:
+			ID3D12Resource2* _resource{ nullptr };
+			DescriptorHandle _srv;
+
+			constexpr void reset() {
+				_resource = nullptr;
+				_srv = {};
+			}
+
+			constexpr void move(D3D12Texture& o) {
+				_resource = o._resource;
+				_srv = o._srv;
+				o.reset();
+			}
+	};
 }

@@ -19,7 +19,7 @@ namespace lightning::graphics::direct3d12 {
 
 		DXGI_SWAP_CHAIN_DESC1 desc{};
 		desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-		desc.BufferCount = FRAME_BUFFER_COUNT;
+		desc.BufferCount = buffer_count;
 		desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		desc.Flags = _allow_tearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 		desc.Format = to_non_srgb(format);
@@ -40,7 +40,7 @@ namespace lightning::graphics::direct3d12 {
 
 		_current_bb_index = _swap_chain->GetCurrentBackBufferIndex();
 
-		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+		for (u32 i{ 0 }; i < buffer_count; ++i) {
 			_render_target_data[i].rtv = core::rtv_heap().allocate();
 		}
 
@@ -58,7 +58,7 @@ namespace lightning::graphics::direct3d12 {
 	}
 
 	void D3D12Surface::finalize() {
-		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+		for (u32 i{ 0 }; i < buffer_count; ++i) {
 			RenderTargetData& data{ _render_target_data[i] };
 			assert(!data.resource);
 			DXCall(_swap_chain->GetBuffer(i, IID_PPV_ARGS(&data.resource)));
@@ -84,7 +84,7 @@ namespace lightning::graphics::direct3d12 {
 	}
 
 	void D3D12Surface::release() {
-		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+		for (u32 i{ 0 }; i < buffer_count; ++i) {
 			RenderTargetData& data{ _render_target_data[i] };
 			core::release(data.resource);
 			core::rtv_heap().free(data.rtv);

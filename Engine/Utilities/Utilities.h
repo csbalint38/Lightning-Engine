@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_STL_VECTOR 1
+#define USE_STL_VECTOR 0
 #define USE_STL_DEQUE 1
 
 #if USE_STL_VECTOR
@@ -10,8 +10,7 @@ namespace lightning::util {
     template<typename T>
     using vector = typename std::vector<T>;
 
-    template<typename T>
-    void erease_unordered(std::vector<T>& v, size_t index) {
+    template<typename T> void erease_unordered(T& v, size_t index) {
         if (v.size() > 1) {
             std::iter_swap(v.begin() + index, v.end() - 1);
             v.pop_back();
@@ -19,6 +18,13 @@ namespace lightning::util {
         else {
             v.clear();
         }
+    }
+}
+#else 
+#include "Vector.h"
+namespace lightning::util {
+    template<typename T> void erease_unordered(T& v, size_t index) {
+        v.erease_unordered(index);
     }
 }
 #endif

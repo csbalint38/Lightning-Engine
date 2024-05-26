@@ -129,10 +129,12 @@ namespace lightning::graphics::direct3d12::core {
 				u32 _frame_index{ 0 };
 		};
 
+		using surface_collection = util::free_list<D3D12Surface>;
+
 		ID3D12Device10* main_device{ nullptr };
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
-		util::vector<D3D12Surface> surfaces;
+		surface_collection surfaces;
 
 		DescriptorHeap rtv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
 		DescriptorHeap dsv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
@@ -324,15 +326,14 @@ namespace lightning::graphics::direct3d12::core {
 	}
 
 	Surface create_surface(platform::Window window) {
-		surfaces.emplace_back(window);
-		surface_id id{ (u32)surfaces.size() - 1 };
+		surface_id id{ surfaces.add(window) };
 		surfaces[id].create_swap_chain(dxgi_factory, gfx_command.command_queue(), render_target_format);
 		return Surface{ id };
 	}
 
 	void remove_surface(surface_id id) {
 		gfx_command.flush();
-		surfaces[id].~D3D12Surface();
+		surfaces.remove(id);
 	}
 
 	void resize_surface(surface_id id, u32 width, u32 height) {
