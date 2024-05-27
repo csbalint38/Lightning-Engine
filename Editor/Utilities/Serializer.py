@@ -1,6 +1,7 @@
-import dataclasses
 from xml.dom.minidom import Document, parse, Element
 from typing import TypeVar, Type, Any
+
+from Utilities.Serializable import Serializable
 
 T = TypeVar('T')
 
@@ -14,26 +15,25 @@ class Serializer():
         Serializer.build_xml(root, document, obj)
         
         with open(path, 'w', encoding='UTF-8') as file:
-            print(path)
             document.writexml(file, indent="", addindent="\t", newl="\n")
         
     @staticmethod
     def build_xml(parent, document: Document, obj: T) -> None:
-        if dataclasses.is_dataclass(obj):
-            for key in dataclasses.asdict(obj):
-                tag = document.createElement(key)
+        if isinstance(obj, Serializable):
+            for field in obj.data_members:
+                tag = document.createElement(field["name"])
                 parent.appendChild(tag)
-                Serializer.build_xml(tag, document, getattr(obj, key))
+                Serializer.build_xml(tag, document, getattr(obj, field["field"]))
         elif isinstance(obj, list):
             for element in obj:
                 tag = document.createElement(type(element).__name__)
                 Serializer.build_xml(tag, document, element)
                 parent.appendChild(tag)
         elif isinstance(obj, dict):
-            for key in obj:
+            for key, value in obj.items():
                 tag = document.createElement(key)
                 parent.appendChild(tag)
-                Serializer.build_xml(tag, document, obj[key])
+                Serializer.build_xml(tag, document, value)
         else:
             data = str(obj)
             tag = document.createTextNode(data)
@@ -47,13 +47,12 @@ class Serializer():
     
     @staticmethod
     def parse_xml(cls: Type[T], node: Element) -> Any:
-        if dataclasses.is_dataclass(cls):
-            fields = {field.name: field.type for field in dataclasses.fields(cls)}
+        if issubclass(cls, Serializable):
             kwargs = {}
-            for key, field_type in fields.items():
-                element = node.getElementsByTagName(key)[0]
-                value = Serializer.parse_xml(field_type, element)
-                kwargs[key] = value
+            for field in cls.data_members:
+                element = node.getElementsByTagName(field["name"])
+                value = Serializer.parse_xml(field["type"], element[0])
+                kwargs[field["field"][1:]] = value
             return cls(**kwargs)
         elif cls is list:
             elements = node.childNodes

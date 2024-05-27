@@ -1,5 +1,5 @@
 import tkinter
-from typing import Tuple
+from typing import Tuple, Self
 
 class Window(tkinter.Tk):
     def __init__(self, size: Tuple[int, int], title: str, resizable: bool  = True, centered: bool = False) -> None:
@@ -13,6 +13,9 @@ class Window(tkinter.Tk):
         self.resizable(self._resizable, self._resizable)
         
         self.center_window() if centered else self.geometry(f"{self._size[0]}x{self._size[1]}")
+        
+    def get_window(self) -> Self:
+        return self
         
     def center_window(self) -> None:
         width = self.winfo_screenwidth()

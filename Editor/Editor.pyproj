@@ -26,8 +26,10 @@
     <Compile Include="GameProject\NewProject.py" />
     <Compile Include="GameProject\Controllers\NewProjectController.py" />
     <Compile Include="GameProject\OpenProject.py" />
+    <Compile Include="GameProject\Project.py" />
     <Compile Include="GameProject\ProjectBrowserDialog.py" />
-    <Compile Include="GameProject\Dataclasses\ProjectTemplate.py" />
+    <Compile Include="GameProject\ProjectTemplate.py" />
+    <Compile Include="GameProject\Scene.py" />
     <Compile Include="LightningGUI\Container.py" />
     <Compile Include="LightningGUI\Font.py" />
     <Compile Include="LightningGUI\Image.py" />
@@ -38,13 +40,14 @@
     <Compile Include="LightningGUI\Utilities\Observable.py" />
     <Compile Include="LightningGUI\Window.py" />
     <Compile Include="LightningGUI\__init__.py" />
+    <Compile Include="ProjectTemplate.py" />
+    <Compile Include="Utilities\Serializable.py" />
     <Compile Include="Utilities\Serializer.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="GameProject\" />
     <Folder Include="GameProject\Abstracts\" />
     <Folder Include="GameProject\Controllers\" />
-    <Folder Include="GameProject\Dataclasses\" />
     <Folder Include="LightningGUI\" />
     <Folder Include="LightningGUI\Utilities\" />
     <Folder Include="Utilities\" />
