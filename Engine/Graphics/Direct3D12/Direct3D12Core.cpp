@@ -1,10 +1,13 @@
 #include "Direct3D12Core.h"
 #include "Direct3D12Resources.h"
 #include "Direct3D12Surface.h"
+#include "Direct3D12Helpers.h"
 
 using namespace Microsoft::WRL;
 
 namespace lightning::graphics::direct3d12::core {
+	void create_root_signature();
+	void create_root_signature2();
 	namespace {
 		class D3D12Command {
 			public:
@@ -19,20 +22,20 @@ namespace lightning::graphics::direct3d12::core {
 					desc.Type = type;
 					DXCall(hr = device->CreateCommandQueue(&desc, IID_PPV_ARGS(&_cmd_queue)));
 					if (FAILED(hr)) goto _error;
-					NAME_D3D12_OBJECT(_cmd_queue, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Queue" : type ==	D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Queue" : L"Command Queue");
+					NAME_D3D12_OBJECT(_cmd_queue, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Queue" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Queue" : L"Command Queue");
 
-					for (u32 i{0}; i<FRAME_BUFFER_COUNT;++i) {
+					for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
 						CommandFrame& frame{ _cmd_frames[i] };
 						DXCall(hr = device->CreateCommandAllocator(type, IID_PPV_ARGS(&frame.cmd_allocator)));
 						if (FAILED(hr)) goto _error;
-						NAME_D3D12_OBJECT_INDEXED(_cmd_queue, i, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Allocator" : type ==	D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Allocator" : L"Command Allocator");
+						NAME_D3D12_OBJECT_INDEXED(_cmd_queue, i, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command Allocator" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command Allocator" : L"Command Allocator");
 					}
 
 					DXCall(hr = device->CreateCommandList(0, type, _cmd_frames[0].cmd_allocator, nullptr, IID_PPV_ARGS(&_cmd_list)));
 					if (FAILED(hr)) goto _error;
 					DXCall(_cmd_list->Close());
 
-					NAME_D3D12_OBJECT(_cmd_list, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command List" : type ==		D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command List" : L"Command List");
+					NAME_D3D12_OBJECT(_cmd_list, type == D3D12_COMMAND_LIST_TYPE_DIRECT ? L"GFX Command List" : type == D3D12_COMMAND_LIST_TYPE_COMPUTE ? L"Compute Command List" : L"Command List");
 
 					DXCall(hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_fence)));
 					if (FAILED(hr)) goto _error;
@@ -45,7 +48,7 @@ namespace lightning::graphics::direct3d12::core {
 
 					_error:
 						release();
-				}
+					}
 
 				~D3D12Command() {
 					assert(!_cmd_queue && !_cmd_list && !_fence);
@@ -214,7 +217,7 @@ namespace lightning::graphics::direct3d12::core {
 
 		u32 dxgi_factory_flags{ 0 };
 
-		#ifdef _DEBUG 
+#ifdef _DEBUG 
 		{
 			ComPtr<ID3D12Debug6> debug_interface;
 			if SUCCEEDED((D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)))) {
@@ -225,13 +228,13 @@ namespace lightning::graphics::direct3d12::core {
 			}
 			dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
-		#endif
+#endif
 
 		HRESULT hr{ S_OK };
 		DXCall(hr = CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
 
 		if (FAILED(hr)) return failed_init();
-		
+
 		ComPtr<IDXGIAdapter4> main_adapter;
 		main_adapter.Attach(determine_main_adapter());
 		if (!main_adapter) return failed_init();
@@ -271,6 +274,9 @@ namespace lightning::graphics::direct3d12::core {
 		NAME_D3D12_OBJECT(dsv_desc_heap.heap(), L"DSV Descriptor Heap");
 		NAME_D3D12_OBJECT(srv_desc_heap.heap(), L"SRV Descriptor Heap");
 		NAME_D3D12_OBJECT(uav_desc_heap.heap(), L"UAV Descriptor Heap");
+
+		create_root_signature(); // TO_BE_REMOVED
+		create_root_signature2(); // TO_BE_REMOVED
 
 		return true;
 	}
@@ -357,5 +363,133 @@ namespace lightning::graphics::direct3d12::core {
 		surface.present();
 
 		gfx_command.end_frame();
+	}
+
+	void create_root_signature() {
+		HRESULT hr{ S_OK };
+
+		D3D12_ROOT_PARAMETER1 params[3];
+		{
+			auto& param = params[0];
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			D3D12_ROOT_CONSTANTS constants{};
+			constants.Num32BitValues = 2;
+			constants.ShaderRegister = 0;
+			constants.RegisterSpace = 0;
+			param.Constants = constants;
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		}
+		{
+			auto& param = params[1];
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			D3D12_ROOT_DESCRIPTOR1 desc{};
+			desc.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_NONE;
+			desc.ShaderRegister = 0;
+			desc.RegisterSpace = 0;
+			param.Descriptor = desc;
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		}
+		{
+			auto& param = params[2];
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			D3D12_ROOT_DESCRIPTOR_TABLE1 table{};
+			table.NumDescriptorRanges = 1;
+			D3D12_DESCRIPTOR_RANGE1 range{};
+			range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+			range.NumDescriptors = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			range.BaseShaderRegister = 0;
+			range.RegisterSpace = 0;
+			table.pDescriptorRanges = &range;
+			param.DescriptorTable = table;
+			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		}
+
+		D3D12_STATIC_SAMPLER_DESC sampler_desc{};
+		sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler_desc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		D3D12_ROOT_SIGNATURE_DESC1 desc{};
+		desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+		desc.NumParameters = _countof(params);
+		desc.pParameters = &params[0];
+		desc.NumStaticSamplers = 1;
+		desc.pStaticSamplers = &sampler_desc;
+
+		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc{};
+		rs_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+		rs_desc.Desc_1_1 = desc;
+
+		ID3D10Blob* root_sg_blob{ nullptr };
+		ID3D10Blob* error_blob{ nullptr };
+
+		if (FAILED(hr = D3D12SerializeVersionedRootSignature(&rs_desc, &root_sg_blob, &error_blob))) {
+			DEBUG_OP(const char* error_msg{ error_blob ? (const char*)error_blob->GetBufferPointer() : "" });
+			DEBUG_OP(OutputDebugStringA(error_msg));
+		}
+
+		assert(root_sg_blob);
+		ID3D12RootSignature* root_sg{ nullptr };
+		DXCall(hr = device()->CreateRootSignature(0, root_sg_blob->GetBufferPointer(), root_sg_blob->GetBufferSize(), IID_PPV_ARGS(&root_sg)));
+		
+		release(root_sg_blob);
+		release(error_blob);
+		release(root_sg);
+	}
+
+	void create_root_signature2() {
+		d3dx::D3D12DescriptorRange range{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND, 0 };
+		d3dx::D3D12RootParameter params[3]{};
+		params[0].as_constants(2, D3D12_SHADER_VISIBILITY_PIXEL, 0);
+		params[1].as_cbv(D3D12_SHADER_VISIBILITY_PIXEL, 1);
+		params[2].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &range, 1);
+
+		d3dx::D3D12RootSignatureDesc root_sig_desc{ &params[0], _countof(params) };
+		ID3D12RootSignature* root_sig{ root_sig_desc.create() };
+
+		release(root_sig);
+	}
+
+	ID3D12RootSignature* _root_signature;
+	D3D12_SHADER_BYTECODE _vs{};
+
+	void crete_pipeline_state_object() {
+
+		struct {
+			struct alignas(void*) {
+				const D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type{ D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE };
+				ID3D12RootSignature* root_signature;
+			} root_sig;
+			struct alignas(void*) {
+				const D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type{ D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS };
+				D3D12_SHADER_BYTECODE vs_code{};
+			} vs;
+		} stream;
+
+		stream.root_sig.root_signature = _root_signature;
+		stream.vs.vs_code = _vs;
+
+		D3D12_PIPELINE_STATE_STREAM_DESC desc{};
+		desc.pPipelineStateSubobjectStream = &stream;
+		desc.SizeInBytes = sizeof(stream);
+		ID3D12PipelineState* pso{ nullptr };
+
+		device()->CreatePipelineState(&desc, IID_PPV_ARGS(&pso));
+
+		release(pso);
+	}
+
+	void create_pipeline_object2() {
+		struct {
+			d3dx::d3d12_pipeline_state_subobject_root_signature root_sig{ _root_signature };
+			d3dx::d3d12_pipeline_state_subobject_vs vs{ _vs };
+		} stream;
+
+		auto pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
+
+		release(pso);
 	}
 }

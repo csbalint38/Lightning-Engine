@@ -173,7 +173,7 @@ namespace lightning::graphics::direct3d12 {
 		D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
 		if (info.desc->Format == DXGI_FORMAT_D32_FLOAT) {
 			info.desc->Format == DXGI_FORMAT_R32_TYPELESS;
-			srv_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+			srv_desc.Format == DXGI_FORMAT_R32_TYPELESS;
 		}
 
 		srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
