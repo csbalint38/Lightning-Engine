@@ -46,3 +46,7 @@
 #include "..\Utilities\Utilities.h"
 #include "..\Utilities\MathTypes.h"
 #include "Id.h"
+
+#ifdef DOMAIN
+#undef DOMAIN
+#endif

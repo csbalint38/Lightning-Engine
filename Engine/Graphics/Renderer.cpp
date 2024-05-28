@@ -4,6 +4,10 @@
 
 namespace lightning::graphics {
 	namespace {
+		constexpr const char* engine_shader_paths[]{
+			"./shaders/d3d12/shaders.bin"
+		};
+
 		PlatformInterface gfx{};
 
 		bool set_platform_interface(GraphicsPlatform platform) {
@@ -14,26 +18,22 @@ namespace lightning::graphics {
 				default:
 					return false;
 			}
+			assert(gfx.platform == platform);
 			return true;
 		}
 	}
 
-	bool initialize(GraphicsPlatform platform) {
-		return set_platform_interface(platform) && gfx.initialize();
-	}
-
-	void shutdown() {
-		gfx.shutdown();
-	}
-
-	Surface create_surface(platform::Window window) {
-		return gfx.surface.create(window);
-	}
+	bool initialize(GraphicsPlatform platform) { return set_platform_interface(platform) && gfx.initialize(); }
+	void shutdown() { gfx.shutdown(); }
+	Surface create_surface(platform::Window window) { return gfx.surface.create(window); }
 
 	void remove_surface(surface_id id) {
 		assert(id::is_valid(id));
 		gfx.surface.remove(id);
 	}
+
+	const char* get_engine_shaders_path() { return engine_shader_paths[(u32)gfx.platform]; }
+	const char* get_engine_shaders_path(GraphicsPlatform platform) { return engine_shader_paths[(u32)platform]; }
 
 	void Surface::resize(u32 width, u32 height) const {
 		assert(is_valid());

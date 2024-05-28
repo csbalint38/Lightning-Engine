@@ -15,5 +15,7 @@ namespace lightning::graphics::direct3d12 {
 		pi.surface.width = core::surface_width;
 		pi.surface.height = core::surface_height;
 		pi.surface.render = core::render_surface;
+
+		pi.platform = GraphicsPlatform::DIRECT3D12;
 	}
 }

@@ -16,5 +16,7 @@ namespace lightning::graphics {
 			u32 (*height)(surface_id);
 			void (*render)(surface_id);
 		} surface;
+
+		GraphicsPlatform platform = (GraphicsPlatform)-1;
 	};
 }

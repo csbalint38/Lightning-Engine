@@ -2,6 +2,7 @@
 #include "..\Engine\Platform\PlatformTypes.h"
 #include "..\Graphics\Renderer.h"
 #include "TestRenderer.h"
+#include "ShaderCompilation.h"
 
 #if TEST_RENDERER
 	using namespace lightning;
@@ -59,8 +60,15 @@
 	}
 
 	bool EngineTest::initialize() {
-		bool result { graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12) };
-		if (!result) return result;
+
+		while (!comple_shaders()) {
+			if (MessageBox(nullptr, "Failed to compile engine shaders", "Shader Compilation Error", MB_RETRYCANCEL) != IDRETRY) {
+				return false;
+			}
+		}
+
+		if(!graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12)) return false;
+
 		platform::WindowInitInfo info[]{
 			{&win_proc, nullptr, L"TestWindow1", 100, 100, 800, 400},
 			{&win_proc, nullptr, L"TestWindow2", 100, 100, 800, 400},
@@ -72,7 +80,7 @@
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			create_render_surface(_surfaces[i], info[i]);
 		}
-		return result;
+		return true;
 	}
 
 	void EngineTest::run() {
