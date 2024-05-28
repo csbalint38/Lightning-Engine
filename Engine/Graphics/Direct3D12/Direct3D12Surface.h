@@ -6,6 +6,7 @@ namespace lightning::graphics::direct3d12 {
 	class D3D12Surface {
 		public:
 			constexpr static u32 buffer_count{ 3 };
+			constexpr static DXGI_FORMAT default_back_buffer_format{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };
 
 			explicit D3D12Surface(platform::Window window) : _window{ window } {
 				assert(window.handle());
@@ -35,7 +36,7 @@ namespace lightning::graphics::direct3d12 {
 
 			~D3D12Surface() { release(); }
 
-			void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format);
+			void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue, DXGI_FORMAT format = default_back_buffer_format);
 			void present() const;
 			void resize();
 			constexpr u32 width() const { return (u32)_viewport.Width; }
@@ -83,6 +84,7 @@ namespace lightning::graphics::direct3d12 {
 			IDXGISwapChain4* _swap_chain{ nullptr };
 			RenderTargetData _render_target_data[buffer_count]{};
 			platform::Window _window{};
+			DXGI_FORMAT _format{ default_back_buffer_format };
 			mutable u32 _current_bb_index{ 0 };
 			u32 _allow_tearing{ 0 };
 			u32 _present_flags{ 0 };

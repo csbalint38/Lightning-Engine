@@ -6,14 +6,12 @@
 using namespace Microsoft::WRL;
 
 namespace lightning::graphics::direct3d12::core {
-	void create_root_signature();
-	void create_root_signature2();
 	namespace {
 		class D3D12Command {
 			public:
 				D3D12Command() = default;
 				DISABLE_COPY_AND_MOVE(D3D12Command);
-				explicit D3D12Command(ID3D12Device10* const device, D3D12_COMMAND_LIST_TYPE type) {
+				explicit D3D12Command(id3d12_device* const device, D3D12_COMMAND_LIST_TYPE type) {
 					HRESULT hr{ S_OK };
 					D3D12_COMMAND_QUEUE_DESC desc{};
 					desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -100,7 +98,7 @@ namespace lightning::graphics::direct3d12::core {
 				}
 
 				constexpr ID3D12CommandQueue* const command_queue() const { return _cmd_queue; }
-				constexpr ID3D12GraphicsCommandList7* const command_list() const { return _cmd_list; }
+				constexpr id3d12_graphics_command_lsit* const command_list() const { return _cmd_list; }
 				constexpr u32 frame_index() const { return _frame_index; }
 
 			private:
@@ -124,7 +122,7 @@ namespace lightning::graphics::direct3d12::core {
 				};
 
 				ID3D12CommandQueue* _cmd_queue{ nullptr };
-				ID3D12GraphicsCommandList7* _cmd_list{ nullptr };
+				id3d12_graphics_command_lsit* _cmd_list{ nullptr };
 				ID3D12Fence1* _fence{ nullptr };
 				u64 _fence_value{ 0 };
 				CommandFrame _cmd_frames[FRAME_BUFFER_COUNT]{};
@@ -134,7 +132,7 @@ namespace lightning::graphics::direct3d12::core {
 
 		using surface_collection = util::free_list<D3D12Surface>;
 
-		ID3D12Device10* main_device{ nullptr };
+		id3d12_device* main_device{ nullptr };
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
 		surface_collection surfaces;
@@ -275,9 +273,6 @@ namespace lightning::graphics::direct3d12::core {
 		NAME_D3D12_OBJECT(srv_desc_heap.heap(), L"SRV Descriptor Heap");
 		NAME_D3D12_OBJECT(uav_desc_heap.heap(), L"UAV Descriptor Heap");
 
-		create_root_signature(); // TO_BE_REMOVED
-		create_root_signature2(); // TO_BE_REMOVED
-
 		return true;
 	}
 
@@ -319,12 +314,11 @@ namespace lightning::graphics::direct3d12::core {
 		release(main_device);
 	}
 
-	ID3D12Device10* const device() { return main_device; }
+	id3d12_device* const device() { return main_device; }
 	DescriptorHeap& rtv_heap() { return rtv_desc_heap; }
 	DescriptorHeap& dsv_heap() { return dsv_desc_heap; }
 	DescriptorHeap& srv_heap() { return srv_desc_heap; }
 	DescriptorHeap& uav_heap() { return uav_desc_heap; }
-	DXGI_FORMAT default_render_target_format() { return render_target_format; }
 	u32 current_frame_index() { return gfx_command.frame_index(); }
 
 	void set_deferred_release_flag() {
@@ -352,7 +346,7 @@ namespace lightning::graphics::direct3d12::core {
 
 	void render_surface(surface_id id) {
 		gfx_command.begin_frame();
-		ID3D12GraphicsCommandList7* cmd_list{ gfx_command.command_list() };
+		id3d12_graphics_command_lsit* cmd_list{ gfx_command.command_list() };
 
 		const u32 frame_idx{ current_frame_index() };
 		if (deferred_release_flag[frame_idx]) {
@@ -363,133 +357,5 @@ namespace lightning::graphics::direct3d12::core {
 		surface.present();
 
 		gfx_command.end_frame();
-	}
-
-	void create_root_signature() {
-		HRESULT hr{ S_OK };
-
-		D3D12_ROOT_PARAMETER1 params[3];
-		{
-			auto& param = params[0];
-			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-			D3D12_ROOT_CONSTANTS constants{};
-			constants.Num32BitValues = 2;
-			constants.ShaderRegister = 0;
-			constants.RegisterSpace = 0;
-			param.Constants = constants;
-			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		}
-		{
-			auto& param = params[1];
-			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			D3D12_ROOT_DESCRIPTOR1 desc{};
-			desc.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_NONE;
-			desc.ShaderRegister = 0;
-			desc.RegisterSpace = 0;
-			param.Descriptor = desc;
-			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-		}
-		{
-			auto& param = params[2];
-			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			D3D12_ROOT_DESCRIPTOR_TABLE1 table{};
-			table.NumDescriptorRanges = 1;
-			D3D12_DESCRIPTOR_RANGE1 range{};
-			range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-			range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
-			range.NumDescriptors = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-			range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-			range.BaseShaderRegister = 0;
-			range.RegisterSpace = 0;
-			table.pDescriptorRanges = &range;
-			param.DescriptorTable = table;
-			param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-		}
-
-		D3D12_STATIC_SAMPLER_DESC sampler_desc{};
-		sampler_desc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		sampler_desc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		sampler_desc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
-		sampler_desc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-		D3D12_ROOT_SIGNATURE_DESC1 desc{};
-		desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
-		desc.NumParameters = _countof(params);
-		desc.pParameters = &params[0];
-		desc.NumStaticSamplers = 1;
-		desc.pStaticSamplers = &sampler_desc;
-
-		D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc{};
-		rs_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
-		rs_desc.Desc_1_1 = desc;
-
-		ID3D10Blob* root_sg_blob{ nullptr };
-		ID3D10Blob* error_blob{ nullptr };
-
-		if (FAILED(hr = D3D12SerializeVersionedRootSignature(&rs_desc, &root_sg_blob, &error_blob))) {
-			DEBUG_OP(const char* error_msg{ error_blob ? (const char*)error_blob->GetBufferPointer() : "" });
-			DEBUG_OP(OutputDebugStringA(error_msg));
-		}
-
-		assert(root_sg_blob);
-		ID3D12RootSignature* root_sg{ nullptr };
-		DXCall(hr = device()->CreateRootSignature(0, root_sg_blob->GetBufferPointer(), root_sg_blob->GetBufferSize(), IID_PPV_ARGS(&root_sg)));
-		
-		release(root_sg_blob);
-		release(error_blob);
-		release(root_sg);
-	}
-
-	void create_root_signature2() {
-		d3dx::D3D12DescriptorRange range{ D3D12_DESCRIPTOR_RANGE_TYPE_SRV, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND, 0 };
-		d3dx::D3D12RootParameter params[3]{};
-		params[0].as_constants(2, D3D12_SHADER_VISIBILITY_PIXEL, 0);
-		params[1].as_cbv(D3D12_SHADER_VISIBILITY_PIXEL, 1);
-		params[2].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &range, 1);
-
-		d3dx::D3D12RootSignatureDesc root_sig_desc{ &params[0], _countof(params) };
-		ID3D12RootSignature* root_sig{ root_sig_desc.create() };
-
-		release(root_sig);
-	}
-
-	ID3D12RootSignature* _root_signature;
-	D3D12_SHADER_BYTECODE _vs{};
-
-	void crete_pipeline_state_object() {
-
-		struct {
-			struct alignas(void*) {
-				const D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type{ D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE };
-				ID3D12RootSignature* root_signature;
-			} root_sig;
-			struct alignas(void*) {
-				const D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type{ D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_VS };
-				D3D12_SHADER_BYTECODE vs_code{};
-			} vs;
-		} stream;
-
-		stream.root_sig.root_signature = _root_signature;
-		stream.vs.vs_code = _vs;
-
-		D3D12_PIPELINE_STATE_STREAM_DESC desc{};
-		desc.pPipelineStateSubobjectStream = &stream;
-		desc.SizeInBytes = sizeof(stream);
-		ID3D12PipelineState* pso{ nullptr };
-
-		device()->CreatePipelineState(&desc, IID_PPV_ARGS(&pso));
-
-		release(pso);
-	}
-
-	void create_pipeline_object2() {
-		struct {
-			d3dx::d3d12_pipeline_state_subobject_root_signature root_sig{ _root_signature };
-			d3dx::d3d12_pipeline_state_subobject_vs vs{ _vs };
-		} stream;
-
-		auto pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
-
-		release(pso);
 	}
 }

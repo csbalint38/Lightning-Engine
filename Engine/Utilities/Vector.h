@@ -18,14 +18,8 @@ namespace lightning::util {
 				*this = o;
 			}
 
-			constexpr vector(const vector&& o) : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data } {
+			constexpr vector(vector&& o) : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data } {
 				o.reset();
-			}
-
-			template<typename it, typename = std::enable_if_t<std::_Is_iterator_v<it>>> constexpr explicit vector(it first, it last) {
-				for (; first != last; ++first) {
-					emplace_back(*first);
-				}
 			}
 
 			constexpr vector& operator=(const vector& o) {
@@ -75,7 +69,7 @@ namespace lightning::util {
 			}
 
 			constexpr void resize(u64 new_size) {
-				static_assert(std::is_default_constructible_v<T>, "Type must be default-consdtructible.");
+				static_assert(std::is_default_constructible<T>::value, "Type must be default-consdtructible.");
 
 				if (new_size > _size) {
 					reserve(new_size);
@@ -93,7 +87,7 @@ namespace lightning::util {
 			}
 
 			constexpr void resize(u64 new_size, const T& value) {
-				static_assert(std::is_copy_constructible_v<T>, "Type must be copy-consdtructible.");
+				static_assert(std::is_copy_constructible<T>::value, "Type must be copy-consdtructible.");
 
 				if (new_size > _size) {
 					reserve(new_size);

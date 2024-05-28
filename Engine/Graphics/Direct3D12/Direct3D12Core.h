@@ -27,12 +27,11 @@ namespace lightning::graphics::direct3d12::core {
 		}
 	}
 
-	ID3D12Device10* const device();
+	id3d12_device* const device();
 	DescriptorHeap& rtv_heap();
 	DescriptorHeap& dsv_heap();
 	DescriptorHeap& srv_heap();
 	DescriptorHeap& uav_heap();
-	DXGI_FORMAT default_render_target_format();
 	u32 current_frame_index();
 	void set_deferred_release_flag();
 
