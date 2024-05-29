@@ -61,7 +61,7 @@
 
 	bool EngineTest::initialize() {
 
-		while (!comple_shaders()) {
+		while (!compile_shaders()) {
 			if (MessageBox(nullptr, "Failed to compile engine shaders", "Shader Compilation Error", MB_RETRYCANCEL) != IDRETRY) {
 				return false;
 			}

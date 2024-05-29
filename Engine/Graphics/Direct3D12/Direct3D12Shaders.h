@@ -20,6 +20,7 @@ namespace lightning::graphics::direct3d12::shaders {
 	struct EngineShader {
 		enum Id : u32 {
 			FULLSCREEN_TRIANGLE_VS = 0,
+			FILL_COLOR_PS = 1,
 
 			count
 		};

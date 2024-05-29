@@ -1,6 +1,5 @@
 #pragma once
 #include "Direct3D12CommonHeaders.h"
-#include "Direct3D12Resources.h"
 
 namespace lightning::graphics::direct3d12 {
 	class D3D12Surface {

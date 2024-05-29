@@ -59,3 +59,6 @@ namespace lightning::graphics::direct3d12 {
 #define NAME_D3D12_OBJECT(x, name)
 #define NAME_D3D12_OBJECT_INDEXED(x, n, name)
 #endif
+
+#include "Direct3D12Helpers.h"
+#include "Direct3D12Resources.h"
