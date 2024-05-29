@@ -1,6 +1,7 @@
 #include "Direct3D12Core.h"
 #include "Direct3D12Surface.h"
 #include "Direct3D12Shaders.h"
+#include "Direct3D12GPass.h"
 
 using namespace Microsoft::WRL;
 
@@ -265,7 +266,7 @@ namespace lightning::graphics::direct3d12::core {
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 		if (!gfx_command.command_queue()) return failed_init();
 
-		if (!shaders::initialize()) return failed_init();
+		if (!(shaders::initialize() && gpass::initialize())) return failed_init();
 
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");
@@ -284,6 +285,7 @@ namespace lightning::graphics::direct3d12::core {
 			process_deferred_releases(i);
 		}
 
+		gpass::shutdown();
 		shaders::shutdown();
 
 		release(dxgi_factory);

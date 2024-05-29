@@ -117,12 +117,12 @@ namespace lightning::graphics::direct3d12 {
 		}
 		else if (info.heap && info.desc) {
 			assert(!info.resource);
-			DXCall(device->CreatePlacedResource2(info.heap, info.allocation_info.Offset, info.desc, info.initial_state, clear_value, 1, info.format, IID_PPV_ARGS(&_resource)));
+			DXCall(device->CreatePlacedResource(info.heap, info.allocation_info.Offset, info.desc, info.initial_state, clear_value, IID_PPV_ARGS(&_resource)));
 		}
 		else if (info.desc) {
 			assert(!info.heap && !info.resource);
 
-			DXCall(device->CreateCommittedResource3(&d3dx::heap_properties.default_heap, D3D12_HEAP_FLAG_NONE, info.desc, info.initial_state, clear_value, nullptr, 1, info.format, IID_PPV_ARGS(&_resource)));
+			DXCall(device->CreateCommittedResource(&d3dx::heap_properties.default_heap, D3D12_HEAP_FLAG_NONE, info.desc, info.initial_state, clear_value, IID_PPV_ARGS(&_resource)));
 		}
 
 		assert(_resource);
@@ -173,7 +173,7 @@ namespace lightning::graphics::direct3d12 {
 		D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
 		if (info.desc->Format == DXGI_FORMAT_D32_FLOAT) {
 			info.desc->Format = DXGI_FORMAT_R32_TYPELESS;
-			srv_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+			srv_desc.Format = DXGI_FORMAT_R32_FLOAT;
 		}
 
 		srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

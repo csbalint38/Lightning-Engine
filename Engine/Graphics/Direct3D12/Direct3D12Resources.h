@@ -59,9 +59,9 @@ namespace lightning::graphics::direct3d12 {
 		ID3D12Heap1* heap{ nullptr };
 		ID3D12Resource2* resource{ nullptr };
 		D3D12_SHADER_RESOURCE_VIEW_DESC* srv_desc{ nullptr };
-		D3D12_RESOURCE_DESC1* desc{ nullptr };
+		D3D12_RESOURCE_DESC* desc{ nullptr };
 		D3D12_RESOURCE_ALLOCATION_INFO1 allocation_info{};
-		D3D12_BARRIER_LAYOUT initial_state{};
+		D3D12_RESOURCE_STATES initial_state{};
 		D3D12_CLEAR_VALUE clear_value{};
 		DXGI_FORMAT format[1];
 	};

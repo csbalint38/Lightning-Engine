@@ -23,10 +23,10 @@ namespace lightning::transform {
 			positions.emplace_back(info.position);
 			scales.emplace_back(info.scale);
 		}
-		return Component(transform_id{ (id::id_type)positions.size() - 1 });
+		return Component{ transform_id{ entity.get_id()} };
 	}
 
-	void remove(Component component) {
+	void remove([[maybe_unused]]Component component) {
 		assert(component.is_valid());
 	}
 

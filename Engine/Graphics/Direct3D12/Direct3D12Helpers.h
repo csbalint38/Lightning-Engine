@@ -12,6 +12,79 @@ namespace lightning::graphics::direct3d12::d3dx {
 		};
 	} heap_properties;
 
+	constexpr struct {
+		const D3D12_RASTERIZER_DESC no_cull{
+			D3D12_FILL_MODE_SOLID,
+			D3D12_CULL_MODE_NONE,
+			0,
+			0,
+			0,
+			0,
+			1,
+			1,
+			0,
+			0,
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+		};
+
+		const D3D12_RASTERIZER_DESC backface_cull{
+			D3D12_FILL_MODE_SOLID,
+			D3D12_CULL_MODE_BACK,
+			0,
+			0,
+			0,
+			0,
+			1,
+			1,
+			0,
+			0,
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+		};
+
+		const D3D12_RASTERIZER_DESC frontface_cull{
+			D3D12_FILL_MODE_SOLID,
+			D3D12_CULL_MODE_FRONT,
+			0,
+			0,
+			0,
+			0,
+			1,
+			1,
+			0,
+			0,
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+		};
+
+		const D3D12_RASTERIZER_DESC wireframe{
+			D3D12_FILL_MODE_WIREFRAME,
+			D3D12_CULL_MODE_NONE,
+			0,
+			0,
+			0,
+			0,
+			1,
+			1,
+			0,
+			0,
+			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+		};
+
+	} rasterizer_state;
+
+	constexpr struct {
+		const D3D12_DEPTH_STENCIL_DESC1 disabled{
+			0,
+			D3D12_DEPTH_WRITE_MASK_ZERO,
+			D3D12_COMPARISON_FUNC_LESS_EQUAL,
+			0,
+			0,
+			0,
+			{},
+			{},
+			0
+		};
+	} depth_state;
+
 	ID3D12RootSignature* create_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& desc);
 
 	struct D3D12DescriptorRange : public D3D12_DESCRIPTOR_RANGE1 {
@@ -64,6 +137,8 @@ namespace lightning::graphics::direct3d12::d3dx {
 		}
 	};
 
+	#pragma warning(push)
+	#pragma warning(disable: 4324)
 	template<D3D12_PIPELINE_STATE_SUBOBJECT_TYPE type, typename T> class alignas(void*) D3D12PipelineStateSubobject {
 		public:
 			D3D12PipelineStateSubobject() = default;
@@ -95,7 +170,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 	PSS(ib_strip_cut_value, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_IB_STRIP_CUT_VALUE, D3D12_INDEX_BUFFER_STRIP_CUT_VALUE);
 	PSS(primitive_topology, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_PRIMITIVE_TOPOLOGY, D3D12_PRIMITIVE_TOPOLOGY_TYPE);
 	PSS(render_target_formats, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_RENDER_TARGET_FORMATS, D3D12_RT_FORMAT_ARRAY);
-	PSS(septh_stencil_format, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL_FORMAT, DXGI_FORMAT);
+	PSS(depth_stencil_format, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_DEPTH_STENCIL_FORMAT, DXGI_FORMAT);
 	PSS(sample_desc, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_SAMPLE_DESC, DXGI_SAMPLE_DESC);
 	PSS(node_mask, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_NODE_MASK, u32);
 	PSS(cached_pso, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_CACHED_PSO, D3D12_CACHED_PIPELINE_STATE);
