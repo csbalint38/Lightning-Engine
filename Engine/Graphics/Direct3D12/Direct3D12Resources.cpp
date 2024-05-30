@@ -109,7 +109,7 @@ namespace lightning::graphics::direct3d12 {
 		assert(device);
 
 		D3D12_CLEAR_VALUE* const clear_value{
-			(info.desc && info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET || info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? &info.clear_value : nullptr
+			(info.desc && (info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET || info.desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)) ? &info.clear_value : nullptr
 		};
 
 		if (info.resource) {

@@ -2,6 +2,19 @@
 #include "Direct3D12Core.h"
 
 namespace lightning::graphics::direct3d12::d3dx {
+
+	void transition_resource(id3d12_graphics_command_lsit* cmd_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER_FLAGS flags, u32 subresource) {
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = flags;
+		barrier.Transition.pResource = resource;
+		barrier.Transition.StateBefore = before;
+		barrier.Transition.StateAfter = after;
+		barrier.Transition.Subresource = subresource;
+
+		cmd_list->ResourceBarrier(1, &barrier);
+	}
+
 	ID3D12RootSignature* create_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& desc) {
 		D3D12_VERSIONED_ROOT_SIGNATURE_DESC versioned_desc{};
 		versioned_desc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;

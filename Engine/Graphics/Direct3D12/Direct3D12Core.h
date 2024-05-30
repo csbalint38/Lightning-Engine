@@ -2,7 +2,10 @@
 #include "Direct3D12CommonHeaders.h"
 
 namespace lightning::graphics::direct3d12 {
-	class DescriptorHeap;
+	struct D3D12FrameInfo {
+		u32 surface_width{};
+		u32 surface_height{};
+	};
 }
 
 namespace lightning::graphics::direct3d12::core {

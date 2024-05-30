@@ -59,10 +59,12 @@ namespace lightning::graphics::direct3d12::core {
 					DXCall(_cmd_list->Reset(frame.cmd_allocator, nullptr));
 				}
 
-				void end_frame() {
+				void end_frame(const D3D12Surface& surface) {
 					DXCall(_cmd_list->Close());
 					ID3D12CommandList* const cmd_lists[]{ _cmd_list };
 					_cmd_queue->ExecuteCommandLists(_countof(cmd_lists), &cmd_lists[0]);
+
+					surface.present();
 
 					u64& fence_value{ _fence_value };
 					++fence_value;
@@ -136,6 +138,7 @@ namespace lightning::graphics::direct3d12::core {
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
 		surface_collection surfaces;
+		d3dx::D3D12ResourceBarrier resource_barriers{};
 
 		DescriptorHeap rtv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
 		DescriptorHeap dsv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
@@ -363,8 +366,36 @@ namespace lightning::graphics::direct3d12::core {
 		}
 
 		const D3D12Surface& surface{ surfaces[id] };
-		surface.present();
+		ID3D12Resource* const current_back_buffer{ surface.back_buffer() };
 
-		gfx_command.end_frame();
+		D3D12FrameInfo frame_info{
+			surface.width(),
+			surface.height()
+		};
+
+		gpass::set_size({ frame_info.surface_width, frame_info.surface_height });
+		d3dx::D3D12ResourceBarrier& barriers{ resource_barriers };
+
+		cmd_list->RSSetViewports(1, &surface.viewport());
+		cmd_list->RSSetScissorRects(1, &surface.scissor_rect());
+
+		gpass::add_transitions_for_depth_prepass(barriers);
+		barriers.apply(cmd_list);
+		gpass::set_render_targets_for_depth_prepass(cmd_list);
+		gpass::depth_prepass(cmd_list, frame_info);
+
+		gpass::add_transitions_for_gpass(barriers);
+		barriers.apply(cmd_list);
+		gpass::set_render_targets_for_gpass(cmd_list);
+		gpass::render(cmd_list, frame_info);
+
+		d3dx::transition_resource(cmd_list, current_back_buffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		gpass::add_transitions_for_post_process(barriers);
+		barriers.apply(cmd_list);
+
+		d3dx::transition_resource(cmd_list, current_back_buffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+		gfx_command.end_frame(surface);
 	}
 }
