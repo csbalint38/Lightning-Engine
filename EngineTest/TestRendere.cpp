@@ -9,7 +9,11 @@
 
 	graphics::RenderSurface _surfaces[4];
 	TimeIt timer;
+
+	bool is_restarting{ false };
 	void destroy_render_surface(graphics::RenderSurface& surface);
+	bool test_initialize();
+	void test_shutdown();
 
 	LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 		switch (msg) {
@@ -25,7 +29,7 @@
 						}
 					}
 				}
-				if (all_closed) {
+				if (all_closed && !is_restarting) {
 					PostQuitMessage(0);
 					return 0;
 				}
@@ -43,6 +47,11 @@
 					PostMessage(hwnd, WM_CLOSE, 0, 0);
 					return 0;
 				}
+				else if (wparam == VK_F11) {
+					is_restarting = true;
+					test_shutdown();
+					test_initialize();
+				}
 		}
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
@@ -59,29 +68,40 @@
 		if (temp.window.is_valid()) platform::remove_window(temp.window.get_id());
 	}
 
-	bool EngineTest::initialize() {
-
+	bool test_initialize() {
 		while (!compile_shaders()) {
 			if (MessageBox(nullptr, "Failed to compile engine shaders", "Shader Compilation Error", MB_RETRYCANCEL) != IDRETRY) {
 				return false;
 			}
 		}
 
-		if(!graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12)) return false;
+		if (!graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12)) return false;
 
 		platform::WindowInitInfo info[]{
-			{&win_proc, nullptr, L"TestWindow1", 100, 100, 800, 400},
-			{&win_proc, nullptr, L"TestWindow2", 100, 100, 800, 400},
-			{&win_proc, nullptr, L"TestWindow3", 100, 100, 800, 400},
-			{&win_proc, nullptr, L"TestWindow4", 100, 100, 800, 400}
+			{&win_proc, nullptr, L"TestWindow1", 100, 100, 400, 400},
+			{&win_proc, nullptr, L"TestWindow2", 150, 150, 800, 400},
+			{&win_proc, nullptr, L"TestWindow3", 200, 200, 400, 400},
+			{&win_proc, nullptr, L"TestWindow4", 250, 250, 800, 600}
 		};
 		static_assert(_countof(_surfaces) == _countof(info));
 
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			create_render_surface(_surfaces[i], info[i]);
 		}
+
+		is_restarting = false;
+
 		return true;
 	}
+
+	void test_shutdown() {
+		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
+			destroy_render_surface(_surfaces[i]);
+		}
+		graphics::shutdown();
+	}
+
+	bool EngineTest::initialize() { return test_initialize(); }
 
 	void EngineTest::run() {
 		timer.begin();
@@ -94,10 +114,5 @@
 		timer.end();
 	}
 
-	void EngineTest::shutdown() {
-		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
-			destroy_render_surface(_surfaces[i]);
-		}
-		graphics::shutdown();
-	}
+	void EngineTest::shutdown() { test_shutdown(); }
 #endif

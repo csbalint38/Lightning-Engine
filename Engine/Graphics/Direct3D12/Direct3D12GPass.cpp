@@ -5,6 +5,14 @@
 namespace lightning::graphics::direct3d12::gpass {
 	namespace {
 
+		struct GpassRootParamIndicies {
+			enum : u32 {
+				ROOT_CONSTANTS,
+
+				count
+			};
+		};
+
 		constexpr DXGI_FORMAT main_buffer_format{ DXGI_FORMAT_R16G16B16A16_FLOAT };
 		constexpr DXGI_FORMAT depth_buffer_format{ DXGI_FORMAT_D32_FLOAT };
 		constexpr math::u32v2 initial_dimensions{ 100, 100 };
@@ -62,20 +70,21 @@ namespace lightning::graphics::direct3d12::gpass {
 				info.clear_value.DepthStencil.Stencil = 0;
 
 				gpass_depth_buffer = D3D12DepthBuffer{ info };
-
-				NAME_D3D12_OBJECT(gpass_main_buffer.resource(), L"GPass Main Buffer");
-				NAME_D3D12_OBJECT(gpass_depth_buffer.resource(), L"GPass Depth Buffer");
 			}
+
+			NAME_D3D12_OBJECT(gpass_main_buffer.resource(), L"GPass Main Buffer");
+			NAME_D3D12_OBJECT(gpass_depth_buffer.resource(), L"GPass Depth Buffer");
 
 			return gpass_main_buffer.resource() && gpass_depth_buffer.resource();
 		}
 
-		bool create_gpass_root_signature() {
+		bool create_gpass_pso_and_root_signature() {
 			assert(!gpass_root_sig && !gpass_pso);
 
-			d3dx::D3D12RootParameter parameters[1]{};
-			parameters[0].as_constants(1, D3D12_SHADER_VISIBILITY_PIXEL, 1);
-			const d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], _countof(parameters) };
+			using idx = GpassRootParamIndicies;
+			d3dx::D3D12RootParameter parameters[idx::count]{};
+			parameters[idx::ROOT_CONSTANTS].as_constants(3, D3D12_SHADER_VISIBILITY_PIXEL, 1);
+			const d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], idx::count };
 			gpass_root_sig = root_signature.create();
 			assert(gpass_root_sig);
 			NAME_D3D12_OBJECT(gpass_root_sig, L"GPass Root Signature");
@@ -105,7 +114,7 @@ namespace lightning::graphics::direct3d12::gpass {
 	}
 
 	bool initialize() {
-		return create_buffers(initial_dimensions) && create_gpass_root_signature();
+		return create_buffers(initial_dimensions) && create_gpass_pso_and_root_signature();
 	}
 
 	void shutdown() {
@@ -118,25 +127,34 @@ namespace lightning::graphics::direct3d12::gpass {
 		core::release(gpass_pso);
 	}
 
+	const D3D12RenderTexture& main_buffer() { return gpass_main_buffer; }
+	const D3D12DepthBuffer& depth_buffer() { return gpass_depth_buffer; }
+
 	void set_size(math::u32v2 size) {
-		math::u32v2 d{ dimensions };
+		math::u32v2& d{ dimensions };
 		if (size.x > d.x || size.y > d.y) {
 			d = { std::max(size.x, d.x), std::max(size.y, d.y) };
 			create_buffers(d);
 		}
 	}
 
-	void depth_prepass(id3d12_graphics_command_lsit* cmd_list, const D3D12FrameInfo& info) {
+	void depth_prepass(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
 
 	}
 
-	void render(id3d12_graphics_command_lsit* cmd_list, const D3D12FrameInfo& info) {
+	void render(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
 		cmd_list->SetGraphicsRootSignature(gpass_root_sig);
 		cmd_list->SetPipelineState(gpass_pso);
 
 		static u32 frame{ 0 };
-		++frame;
-		cmd_list->SetGraphicsRoot32BitConstant(0, frame, 0);
+		struct {
+			f32 width;
+			f32 height;
+			u32 frame;
+		} constants{ (f32)info.surface_width, (f32)info.surface_height, ++frame };
+
+		using idx = GpassRootParamIndicies;
+		cmd_list->SetGraphicsRoot32BitConstants(idx::ROOT_CONSTANTS, 3, &constants, 0);
 
 		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		cmd_list->DrawInstanced(3, 1, 0, 0);
@@ -155,13 +173,13 @@ namespace lightning::graphics::direct3d12::gpass {
 		barriers.add(gpass_main_buffer.resource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 
-	void set_render_targets_for_depth_prepass(id3d12_graphics_command_lsit* cmd_list) {
+	void set_render_targets_for_depth_prepass(id3d12_graphics_command_list* cmd_list) {
 		const D3D12_CPU_DESCRIPTOR_HANDLE dsv{ gpass_depth_buffer.dsv() };
 		cmd_list->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.f, 0, 0, nullptr);
 		cmd_list->OMSetRenderTargets(0, nullptr, 0, &dsv);
 	}
 
-	void set_render_targets_for_gpass(id3d12_graphics_command_lsit* cmd_list) {
+	void set_render_targets_for_gpass(id3d12_graphics_command_list* cmd_list) {
 		const D3D12_CPU_DESCRIPTOR_HANDLE rtv{ gpass_main_buffer.rtv(0) };
 		const D3D12_CPU_DESCRIPTOR_HANDLE dsv{ gpass_depth_buffer.dsv() };
 

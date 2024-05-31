@@ -28,15 +28,15 @@ class TimeIt {
 
 		void end() {
 			auto dt = clock::now() - _start;
-			_ms_avg += ((float)std::chrono::duration_cast<std::chrono::microseconds>(dt).count() - _ms_avg) / (float)_counter;
+			_ms_avg += ((float)std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() - _ms_avg) / (float)_counter;
 			++_counter;
 
 			if (std::chrono::duration_cast<std::chrono::seconds>(clock::now() - _seconds).count() >= 1) {
-				OutputDebugString("Avg. frame (ms): ");
-				OutputDebugString(std::to_string(_ms_avg).c_str());
-				OutputDebugString((" " + std::to_string(_counter)).c_str());
-				OutputDebugString(" fps");
-				OutputDebugString("\n");
+				OutputDebugStringA("Avg. frame (ms): ");
+				OutputDebugStringA(std::to_string(_ms_avg).c_str());
+				OutputDebugStringA((" " + std::to_string(_counter)).c_str());
+				OutputDebugStringA(" fps");
+				OutputDebugStringA("\n");
 				_ms_avg = 0.f;
 				_counter = 1;
 				_seconds = clock::now();

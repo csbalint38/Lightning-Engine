@@ -18,7 +18,7 @@
 namespace lightning::graphics::direct3d12 {
 	constexpr u32 FRAME_BUFFER_COUNT{ 3 }; // MIN: 2
 	using id3d12_device = ID3D12Device10;
-	using id3d12_graphics_command_lsit = ID3D12GraphicsCommandList7;
+	using id3d12_graphics_command_list = ID3D12GraphicsCommandList7;
 }
 
 #ifdef _DEBUG

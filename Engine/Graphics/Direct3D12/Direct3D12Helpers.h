@@ -128,7 +128,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 				++_offset;
 			}
 
-			void apply(id3d12_graphics_command_lsit* cmd_list) {
+			void apply(id3d12_graphics_command_list* cmd_list) {
 				assert(_offset);
 				cmd_list->ResourceBarrier(_offset, _barriers);
 				_offset = 0;
@@ -139,7 +139,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 			u32 _offset{ 0 };
 	};
 
-	void transition_resource(id3d12_graphics_command_lsit* cmd_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE, u32 subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+	void transition_resource(id3d12_graphics_command_list* cmd_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER_FLAGS flags = D3D12_RESOURCE_BARRIER_FLAG_NONE, u32 subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
 	ID3D12RootSignature* create_root_signature(const D3D12_ROOT_SIGNATURE_DESC1& desc);
 

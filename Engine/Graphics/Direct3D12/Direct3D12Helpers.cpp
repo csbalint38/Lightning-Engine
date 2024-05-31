@@ -3,7 +3,7 @@
 
 namespace lightning::graphics::direct3d12::d3dx {
 
-	void transition_resource(id3d12_graphics_command_lsit* cmd_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER_FLAGS flags, u32 subresource) {
+	void transition_resource(id3d12_graphics_command_list* cmd_list, ID3D12Resource* resource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER_FLAGS flags, u32 subresource) {
 		D3D12_RESOURCE_BARRIER barrier{};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = flags;

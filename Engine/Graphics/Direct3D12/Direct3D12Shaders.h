@@ -21,6 +21,7 @@ namespace lightning::graphics::direct3d12::shaders {
 		enum Id : u32 {
 			FULLSCREEN_TRIANGLE_VS = 0,
 			FILL_COLOR_PS = 1,
+			POST_PROCESS_PS = 2,
 
 			count
 		};

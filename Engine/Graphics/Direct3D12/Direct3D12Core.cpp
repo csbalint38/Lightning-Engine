@@ -2,6 +2,7 @@
 #include "Direct3D12Surface.h"
 #include "Direct3D12Shaders.h"
 #include "Direct3D12GPass.h"
+#include "Direct3D12PostProcess.h"
 
 using namespace Microsoft::WRL;
 
@@ -100,7 +101,7 @@ namespace lightning::graphics::direct3d12::core {
 				}
 
 				constexpr ID3D12CommandQueue* const command_queue() const { return _cmd_queue; }
-				constexpr id3d12_graphics_command_lsit* const command_list() const { return _cmd_list; }
+				constexpr id3d12_graphics_command_list* const command_list() const { return _cmd_list; }
 				constexpr u32 frame_index() const { return _frame_index; }
 
 			private:
@@ -124,7 +125,7 @@ namespace lightning::graphics::direct3d12::core {
 				};
 
 				ID3D12CommandQueue* _cmd_queue{ nullptr };
-				id3d12_graphics_command_lsit* _cmd_list{ nullptr };
+				id3d12_graphics_command_list* _cmd_list{ nullptr };
 				ID3D12Fence1* _fence{ nullptr };
 				u64 _fence_value{ 0 };
 				CommandFrame _cmd_frames[FRAME_BUFFER_COUNT]{};
@@ -217,7 +218,7 @@ namespace lightning::graphics::direct3d12::core {
 
 		u32 dxgi_factory_flags{ 0 };
 
-#ifdef _DEBUG 
+		#ifdef _DEBUG 
 		{
 			ComPtr<ID3D12Debug6> debug_interface;
 			if SUCCEEDED((D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)))) {
@@ -228,7 +229,7 @@ namespace lightning::graphics::direct3d12::core {
 			}
 			dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
-#endif
+		#endif
 
 		HRESULT hr{ S_OK };
 		DXCall(hr = CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
@@ -269,7 +270,7 @@ namespace lightning::graphics::direct3d12::core {
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 		if (!gfx_command.command_queue()) return failed_init();
 
-		if (!(shaders::initialize() && gpass::initialize())) return failed_init();
+		if (!(shaders::initialize() && gpass::initialize() && fx::initialize())) return failed_init();
 
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");
@@ -288,6 +289,7 @@ namespace lightning::graphics::direct3d12::core {
 			process_deferred_releases(i);
 		}
 
+		fx::shutdown();
 		gpass::shutdown();
 		shaders::shutdown();
 
@@ -358,7 +360,7 @@ namespace lightning::graphics::direct3d12::core {
 
 	void render_surface(surface_id id) {
 		gfx_command.begin_frame();
-		id3d12_graphics_command_lsit* cmd_list{ gfx_command.command_list() };
+		id3d12_graphics_command_list* cmd_list{gfx_command.command_list()};
 
 		const u32 frame_idx{ current_frame_index() };
 		if (deferred_release_flag[frame_idx]) {
@@ -376,9 +378,12 @@ namespace lightning::graphics::direct3d12::core {
 		gpass::set_size({ frame_info.surface_width, frame_info.surface_height });
 		d3dx::D3D12ResourceBarrier& barriers{ resource_barriers };
 
+		ID3D12DescriptorHeap* const heaps[]{ srv_desc_heap.heap() };
+		cmd_list->SetDescriptorHeaps(1, &heaps[0]);
+		
 		cmd_list->RSSetViewports(1, &surface.viewport());
 		cmd_list->RSSetScissorRects(1, &surface.scissor_rect());
-
+	
 		gpass::add_transitions_for_depth_prepass(barriers);
 		barriers.apply(cmd_list);
 		gpass::set_render_targets_for_depth_prepass(cmd_list);
@@ -388,11 +393,12 @@ namespace lightning::graphics::direct3d12::core {
 		barriers.apply(cmd_list);
 		gpass::set_render_targets_for_gpass(cmd_list);
 		gpass::render(cmd_list, frame_info);
-
 		d3dx::transition_resource(cmd_list, current_back_buffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		gpass::add_transitions_for_post_process(barriers);
 		barriers.apply(cmd_list);
+
+		fx::post_process(cmd_list, surface.rtv());
 
 		d3dx::transition_resource(cmd_list, current_back_buffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
