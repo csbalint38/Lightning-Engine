@@ -20,6 +20,7 @@ namespace lightning::graphics::direct3d12::gpass {
 		D3D12RenderTexture gpass_main_buffer{};
 		D3D12DepthBuffer gpass_depth_buffer{};
 		math::u32v2 dimensions{ initial_dimensions };
+		D3D12_RESOURCE_BARRIER_FLAGS flags{};
 
 		ID3D12RootSignature* gpass_root_sig{ nullptr };
 		ID3D12PipelineState* gpass_pso{ nullptr };
@@ -161,11 +162,12 @@ namespace lightning::graphics::direct3d12::gpass {
 	}
 
 	void add_transitions_for_depth_prepass(d3dx::D3D12ResourceBarrier& barriers) {
+		barriers.add(gpass_main_buffer.resource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);
 		barriers.add(gpass_depth_buffer.resource(), D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 
 	void add_transitions_for_gpass(d3dx::D3D12ResourceBarrier& barriers) {
-		barriers.add(gpass_main_buffer.resource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		barriers.add(gpass_main_buffer.resource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);
 		barriers.add(gpass_depth_buffer.resource(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
 

@@ -56,7 +56,18 @@ namespace lightning::graphics::direct3d12 {
 	}
 
 	void D3D12Surface::resize() {
+		assert(_swap_chain);
+		for (u32 i{ 0 }; i < buffer_count; ++i) {
+			core::release(_render_target_data[i].resource);
+		}
 
+		const u32 flags{ _allow_tearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0ul };
+		DXCall(_swap_chain->ResizeBuffers(buffer_count, 0, 0, DXGI_FORMAT_UNKNOWN, flags));
+		_current_bb_index = _swap_chain->GetCurrentBackBufferIndex();
+
+		finalize();
+
+		DEBUG_OP(OutputDebugString("::D3D12 Surface Resized\n"));
 	}
 
 	void D3D12Surface::finalize() {

@@ -7,7 +7,7 @@ struct VSOutput
 VSOutput fullscreen_triangle_vs(in uint VertexIdx : SV_VertexID)
 {
     VSOutput output;
-    
+    /*
     float2 tex;
     float2 pos;
     
@@ -28,6 +28,10 @@ VSOutput fullscreen_triangle_vs(in uint VertexIdx : SV_VertexID)
     }
     
     output.position = float4(pos, 0, 1);
+    output.uv = tex;
+    */
+    const float2 tex = float2(uint2(VertexIdx, VertexIdx << 1) & 2);
+    output.position = float4(lerp(float2(-1, 1), float2(1, -1), tex), 0, 1);
     output.uv = tex;
     
     return output;

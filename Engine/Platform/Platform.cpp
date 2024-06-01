@@ -29,33 +29,32 @@ namespace lightning::platform {
 			return get_from_id(id);
 		}
 
+		bool resized{ false };
 		LRESULT CALLBACK internal_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-			WindowInfo* info{ nullptr };
 
 			switch (msg) {
+				case WM_NCCREATE: {
+					DEBUG_OP(SetLastError(0));
+					const window_id id{ windows.add() };
+					windows[id].hwnd = hwnd;
+					SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)id);
+					assert(GetLastError() == 0);
+				}
 				case WM_DESTROY:
 					get_from_handle(hwnd).is_closed = true;
 					break;
-				case WM_EXITSIZEMOVE:
-					info = &get_from_handle(hwnd);
-					break;
 				case WM_SIZE:
-					if (wparam == SIZE_MAXIMIZED) {
-						info = &get_from_handle(hwnd);
-					}
-					break;
-				case WM_SYSCOMMAND:
-					if (wparam == SC_RESTORE) {
-						info = &get_from_handle(hwnd);
-					}
+					resized = (wparam != SIZE_MINIMIZED);
 					break;
 				default:
 					break;
 			}
 
-			if (info) {
-				assert(info->hwnd);
-				GetClientRect(info->hwnd, info->is_fullscreen ? &info->fullscreen_area : &info->client_area);
+			if (resized && GetAsyncKeyState(VK_LBUTTON) >= 0) {
+				WindowInfo& info{ get_from_handle(hwnd) };
+				assert(info.hwnd);
+				GetClientRect(info.hwnd, info.is_fullscreen ? &info.fullscreen_area : &info.client_area);
+				resized = false;
 			}
 
 			LONG_PTR long_ptr{ GetWindowLongPtrW(hwnd, 0) };
@@ -168,15 +167,17 @@ namespace lightning::platform {
 		info.hwnd = CreateWindowExW(0, wc.lpszClassName, caption, info.style, left, top, width, height, parent, NULL, NULL, NULL);
 
 		if (info.hwnd) {
-			DEBUG_OP(SetLastError(0));
-			const window_id id{ windows.add(info) };
-			SetWindowLongPtrW(info.hwnd, GWLP_USERDATA, (LONG_PTR)id);
 
+			DEBUG_OP(SetLastError(0));
 			if (callback) SetWindowLongPtrW(info.hwnd, 0, (LONG_PTR)callback);
 			assert(GetLastError() == 0);
 
 			ShowWindow(info.hwnd, SW_SHOWNORMAL);
 			UpdateWindow(info.hwnd);
+
+			window_id id{ (id::id_type)GetWindowLongPtr(info.hwnd, GWLP_USERDATA) };
+			windows[id] = info;
+
 			return Window{ id };
 		}
 
