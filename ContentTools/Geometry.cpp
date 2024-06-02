@@ -223,7 +223,7 @@ namespace lightning::tools {
 			s = num_indicies;
 			memcpy(&buffer[at], &s, su32);								// write number of indicies
 			at += su32;
-			memcpy(&buffer[at], &m.lod_treshold, sizeof(f32));			// wite LOD threshold
+			memcpy(&buffer[at], &m.lod_threshold, sizeof(f32));			// wite LOD threshold
 			at += sizeof(f32);
 			s = vertex_size * num_verticies;
 			memcpy(&buffer[at], m.packed_verticies_static.data(), s);	// write vertex data
@@ -239,9 +239,77 @@ namespace lightning::tools {
 			memcpy(&buffer[at], data, s);								// write index data
 			at += s;
 		}
+
+		bool split_meshes_by_material(u32 material_idx, const Mesh& m, Mesh& submesh) {
+			submesh.name = m.name;
+			submesh.lod_threshold = m.lod_threshold;
+			submesh.lod_id = m.lod_id;
+			submesh.material_used.emplace_back(material_idx);
+			submesh.uv_sets.resize(m.uv_sets.size());
+
+			const u32 num_polys{ (u32)m.raw_indicies.size() / 3 };
+			util::vector<u32> vertex_ref(m.positions.size(), u32_invalid_id);
+
+			for (u32 i{ 0 }; i < num_polys; ++i) {
+				const u32 mtl_idx{ m.material_indicies[i] };
+				if (mtl_idx != material_idx) continue;
+
+				const u32 index{ i * 3 };
+
+				for (u32 j = index; j < index + 3; ++j) {
+					const u32 v_idx{ m.raw_indicies[j] };
+
+					if (vertex_ref[v_idx] != u32_invalid_id) {
+						submesh.raw_indicies.emplace_back(vertex_ref[v_idx]);
+					}
+					else {
+						submesh.raw_indicies.emplace_back((u32)submesh.positions.size());
+						vertex_ref[v_idx] = submesh.raw_indicies.back();
+						submesh.positions.emplace_back(m.positions[v_idx]);
+					}
+
+					if (m.normals.size()) submesh.normals.emplace_back(m.normals[j]);
+					if (m.tangents.size()) submesh.tangents.emplace_back(m.tangents[j]);
+
+					for (u32 k{ 0 }; i < m.uv_sets.size(); ++k) {
+						if (m.uv_sets[k].size()) {
+							submesh.uv_sets[k].emplace_back(m.uv_sets[k][j]);
+						}
+					}
+				}
+			}
+
+			assert((submesh.raw_indicies.size() % 3) == 0);
+
+			return !submesh.raw_indicies.empty();
+		}
+
+		void split_meshes_by_material(Scene& scene) {
+			for (auto& lod : scene.lod_groups) {
+				util::vector<Mesh> new_meshes;
+
+				for (auto& m : lod.meshes) {
+					const u32 num_materials{ (u32)m.material_used.size() };
+					if (num_materials > 1) {
+						for (u32 i{ 0 }; i < num_materials; ++i) {
+							Mesh submesh{};
+							if (split_meshes_by_material(m.material_used[i], m, submesh)) {
+								new_meshes.emplace_back(submesh);
+							}
+						}
+					}
+					else {
+						new_meshes.emplace_back(m);
+					}
+				}
+				new_meshes.swap(lod.meshes);
+			}
+		}
 	}
 
 	void process_scene(Scene& scene, const GeometryImportSettings& settings) {
+		split_meshes_by_material(scene);
+		
 		for (auto& lod : scene.lod_groups) {
 			for (auto& m : lod.meshes) {
 				process_verticies(m, settings);

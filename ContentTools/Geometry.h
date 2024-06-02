@@ -26,6 +26,8 @@ namespace lightning::tools {
 		util::vector<math::v3> normals;
 		util::vector<math::v4> tangents;
 		util::vector<util::vector<math::v2>> uv_sets;
+		util::vector<u32> material_indicies;
+		util::vector<u32> material_used;
 		util::vector<u32> raw_indicies;
 
 		util::vector<Vertex> verticies;
@@ -33,7 +35,7 @@ namespace lightning::tools {
 
 		std::string name;
 		util::vector<packed_vertex::VertexStatic> packed_verticies_static;
-		f32 lod_treshold{ -1.f };
+		f32 lod_threshold{ -1.f };
 		u32 lod_id{ u32_invalid_id };
 	};
 
@@ -50,7 +52,7 @@ namespace lightning::tools {
 	struct GeometryImportSettings {
 		f32 smoothing_angle;
 		u8 calculate_normals;
-		u8 calculatetangents;
+		u8 calculate_tangents;
 		u8 reverse_handedness;
 		u8 import_embeded_textures;
 		u8 import_animations;
