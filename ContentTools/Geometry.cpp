@@ -67,7 +67,7 @@ namespace lightning::tools {
 							if (is_soft_edge || cos_theta >= cos_alpha) {
 								n1 += n2;
 								m.indicies[refs[k]] = m.indicies[refs[j]];
-								refs.erase(refs.begin() + k);
+								refs.erease(refs.begin() + k);
 								--num_refs;
 								--k;
 							}
@@ -106,7 +106,7 @@ namespace lightning::tools {
 						v2& uv1{ m.uv_sets[0][refs[k]] };
 						if (XMScalarNearEqual(v.uv.x, uv1.x, EPSILON) && XMScalarNearEqual(v.uv.y, uv1.y, EPSILON)) {
 							m.indicies[refs[k]] = m.indicies[refs[j]];
-							refs.erase(refs.begin() + k);
+							refs.erease(refs.begin() + k);
 							--num_refs;
 							--k;
 						}
