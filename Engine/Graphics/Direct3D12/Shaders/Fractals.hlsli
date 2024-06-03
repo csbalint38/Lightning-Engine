@@ -61,3 +61,25 @@ float3 draw_julia_set(float2 uv, uint frame)
     return 1.f;
 
 }
+
+float3 draw_hearth(float2 uv, uint frame)
+{
+    uv = uv * 2.0 - 1.0;
+    
+    float scale = 0.3 + 0.3 * sin(frame * 0.01);
+    uv /= scale;
+    uv = - uv;
+    
+    float x = uv.x;
+    float y = uv.y;
+    float heart = (x * x + y * y - 1) * (x * x + y * y - 1) * (x * x + y * y - 1) - x * x * y * y * y;
+
+    if (heart <= 0.0)
+    {
+        return float3(1.0, 0.11, 0.56);;
+    }
+    else
+    {
+        return float3(0.06, 0.13, 0.22);
+    }
+}

@@ -34,8 +34,9 @@ namespace lightning::tools {
 
 			bool initialize_fbx();
 			void load_fbx_file(const char* file);
-			void get_mesh(FbxNode* node, util::vector<Mesh>& meshes);
-			void get_lod_group(FbxNode* node);
+			void get_meshes(FbxNode* node, util::vector<Mesh>& meshes, u32 lod_id, f32 lod_threshold);
+			void get_mesh(FbxNodeAttribute* attribute, util::vector<Mesh>& meshes, u32 lod_id, f32 lod_treshold);
+			void get_lod_group(FbxNodeAttribute* attribute);
 			bool get_mesh_data(FbxMesh* fbx_mesh, Mesh& m);
 
 			Scene* _scene{ nullptr };
