@@ -1,4 +1,5 @@
 #include "Geometry.h"
+#include "../Utilities/IOStream.h"
 
 namespace lightning::tools {
 	namespace {
@@ -356,7 +357,10 @@ namespace lightning::tools {
 		}
 		u64 get_mesh_size(const Mesh& m) {
 			const u64 num_verticies{ m.verticies.size() };
-			const u64 vertex_buffer_size(sizeof(packed_vertex::VertexStatic) * num_verticies);
+			const u64 position_buffer_size{ m.position_buffer.size() };
+			assert(position_buffer_size == sizeof(math::v3) * num_verticies);
+			const u64 element_buffer_size{ m.element_buffer.size() };
+			assert(element_buffer_size == get_vertex_element_size(m.elements_type) * num_verticies);
 			const u64 index_size{ (num_verticies < (1 << 16)) ? sizeof(u16) : sizeof(u32) };
 			const u64 index_buffer_size{ index_size * m.indicies.size() };
 			constexpr u64 su32{ sizeof(u32) };
@@ -364,12 +368,14 @@ namespace lightning::tools {
 				su32 +					// name length
 				m.name.size() +			// mesh name string size
 				su32 +					// lod id
-				su32 +					// vertex size
+				su32 +					// vertex element size
+				su32 +					// element type enum
 				su32 +					// number of verticies
 				su32 +					// index size (16 bit || 32 bit)
 				su32 +					// number of indicies
 				sizeof(f32) +			// LOD threshold
-				vertex_buffer_size +	// room for verticies
+				position_buffer_size +	// room for vertex positions
+				element_buffer_size +	// room for vertex elements
 				index_buffer_size		// room for indicies
 			};
 			return size;
@@ -398,50 +404,42 @@ namespace lightning::tools {
 			return size;
 		}
 
-		void pack_mesh_data(const Mesh& m, u8* const buffer, u64& at) {
-			constexpr u64 su32{ sizeof(u32) };
-			u32 s{ 0 };
+		void pack_mesh_data(const Mesh& m, util::BlobStreamWriter& blob) {
 
-			s = (u32)m.name.size();
-			memcpy(&buffer[at], &s, su32);								// write mesh name size
-			at += su32;
-			memcpy(&buffer[at], m.name.c_str(), s);						// write mesh name
-			at += s;
-			s = m.lod_id;
-			memcpy(&buffer[at], &s, su32);								// write LOD id
-			at += su32;
+			blob.write((u32)m.name.size());
+			blob.write(m.name.c_str(), m.name.size());
+			blob.write(m.lod_id);
 
-			constexpr u32 vertex_size{ sizeof(packed_vertex::VertexStatic) };
-			s = vertex_size;
-			memcpy(&buffer[at], &s, su32);								// write vertex size
-			at += su32;
+			const u32 elements_size{ (u32)get_vertex_element_size(m.elements_type) };
+			blob.write(elements_size);
+			blob.write((u32)m.elements_type);
+
 			const u32 num_verticies{ (u32)m.verticies.size() };
-			s = num_verticies;
-			memcpy(&buffer[at], &s, su32);								// write number of verticies
-			at += su32;
+			blob.write(num_verticies);
+			
 			const u32 index_size{ (num_verticies < (1 << 16)) ? sizeof(u16) : sizeof(u32) };
-			s = index_size;
-			memcpy(&buffer[at], &s, su32);								// write index size (16 bit || 32 bit)
-			at += su32;
+			blob.write(index_size);
+			
 			const u32 num_indicies{ (u32)m.indicies.size() };
-			s = num_indicies;
-			memcpy(&buffer[at], &s, su32);								// write number of indicies
-			at += su32;
-			memcpy(&buffer[at], &m.lod_threshold, sizeof(f32));			// wite LOD threshold
-			at += sizeof(f32);
-			s = vertex_size * num_verticies;
-			memcpy(&buffer[at], m.packed_verticies_static.data(), s);	// write vertex data
-			at += s;
-			s = index_size * num_indicies;
-			void* data{ (void*)m.indicies.data() };
+			blob.write(num_indicies);
+
+			blob.write(m.lod_threshold);
+
+			assert(m.position_buffer.size() == sizeof(math::v3) * num_verticies);
+			blob.write(m.position_buffer.data(), m.position_buffer.size());
+
+			assert(m.element_buffer.size() == elements_size * num_verticies);
+			blob.write(m.element_buffer.data(), m.element_buffer.size());
+
+			const u32 index_buffer_size{ index_size * num_indicies };
+			const u8* data{ (const u8*)m.indicies.data() };
 			util::vector<u16> indicies;
 			if (index_size == sizeof(u16)) {
 				indicies.resize(num_indicies);
 				for (u32 i{ 0 }; i < num_indicies; ++i) indicies[i] = (u16)m.indicies[i];
-				data = (void*)indicies.data();
+				data = (const u8*)indicies.data();
 			}
-			memcpy(&buffer[at], data, s);								// write index data
-			at += s;
+			blob.write(data, index_buffer_size);
 		}
 
 		bool split_meshes_by_material(u32 material_idx, const Mesh& m, Mesh& submesh) {
@@ -528,32 +526,23 @@ namespace lightning::tools {
 		data.buffer = (u8*)CoTaskMemAlloc(scene_size);
 		assert(data.buffer);
 
-		u8* const buffer{ data.buffer };
-		u64 at{ 0 };
-		u32 s{ 0 };
+		util::BlobStreamWriter blob{ data.buffer, data.buffer_size };
 
-		s = (u32)scene.name.size();
-		memcpy(&buffer[at], &s, su32);					// write scene name length
-		at += su32;
-		memcpy(&buffer[at], scene.name.c_str(), s);		// write scene name
-		at += s;
-		s = (u32)scene.lod_groups.size();
-		memcpy(&buffer[at], &s, su32);					// write number of LODs
-		at += su32;
+		blob.write((u32)scene.name.size());
+		blob.write(scene.name.c_str(), scene.name.size());
+
+		blob.write((u32)scene.lod_groups.size());
 
 		for (auto& lod : scene.lod_groups) {
-			s = (u32)lod.name.size();
-			memcpy(&buffer[at], &s, su32);				// write LOD name size
-			at += su32;
-			memcpy(&buffer[at], lod.name.c_str(), s);	// write LOD name
-			at += s;
-			s = (u32)lod.meshes.size();
-			memcpy(&buffer[at], &s, su32);				// write number of meshes in LOD
-			at += su32;
+			blob.write((u32)lod.name.size());
+			blob.write(lod.name.c_str(), lod.name.size());
+
+			blob.write((u32)lod.meshes.size());
 
 			for (auto& m : lod.meshes) {
-				pack_mesh_data(m, buffer, at);
+				pack_mesh_data(m, blob);
 			}
 		}
-	};
+		assert(scene_size == blob.offset());
+	}
 }
