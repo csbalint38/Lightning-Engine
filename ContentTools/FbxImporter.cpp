@@ -218,8 +218,8 @@ namespace lightning::tools {
 					FbxVector4 t{ tangents->GetAt(i) };
 					const f32 handedness{ (f32)t[3] };
 					t[3] = .0f;
-					t.Normalize();
 					t = transform.MultT(t);
+					t.Normalize();
 					m.tangents.emplace_back((f32)t[0], (f32)t[1], (f32)t[2], handedness);
 				}
 			}
