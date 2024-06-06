@@ -1,6 +1,7 @@
 #include "CommonHeaders.h"
 #include "Direct3D12Interface.h"
 #include "Direct3d12Core.h"
+#include "Direct3D12Content.h"
 #include "Graphics\GraphicsPlatformInterface.h"
 
 namespace lightning::graphics::direct3d12 {
@@ -15,6 +16,9 @@ namespace lightning::graphics::direct3d12 {
 		pi.surface.width = core::surface_width;
 		pi.surface.height = core::surface_height;
 		pi.surface.render = core::render_surface;
+
+		pi.resources.add_submesh = content::submesh::add;
+		pi.resources.remove_submesh = content::submesh::remove;
 
 		pi.platform = GraphicsPlatform::DIRECT3D12;
 	}

@@ -71,6 +71,7 @@ namespace lightning::graphics::direct3d12::upload {
 	}
 
 	D3D12UploadContext::D3D12UploadContext(u32 aligned_size) {
+		assert(upload_cmd_queue);
 		{
 			std::lock_guard lock{ frame_mutex };
 			_frame_index = get_available_upload_frame();
