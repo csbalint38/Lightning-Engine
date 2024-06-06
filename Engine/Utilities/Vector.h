@@ -83,7 +83,7 @@ namespace lightning::util {
 					}
 					_size = new_size;
 				}
-				assert(new_size < _size);
+				assert(new_size == _size);
 			}
 
 			constexpr void resize(u64 new_size, const T& value) {
@@ -101,7 +101,7 @@ namespace lightning::util {
 					}
 					_size = new_size;
 				}
-				assert(new_size < _size);
+				assert(new_size == _size);
 			}
 
 			constexpr void reserve(u64 new_capacity) {

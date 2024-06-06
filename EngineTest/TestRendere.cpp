@@ -1,12 +1,54 @@
 #include "..\Engine\Platform\Platform.h"
 #include "..\Engine\Platform\PlatformTypes.h"
 #include "..\Graphics\Renderer.h"
+#include "..\Graphics\Direct3D12\Direct3D12Core.h"
+#include "..\Content\ContentToEngine.h"
 #include "TestRenderer.h"
 #include "ShaderCompilation.h"
+
+#include <filesystem>
+#include <fstream>
 
 #if TEST_RENDERER
 	using namespace lightning;
 
+	#pragma region TEST_MULTITHREDING
+
+	#define ENABLE_TEST_WORKERS 0
+
+	constexpr u32 num_threds{ 8 };
+	bool shutdown{ false };
+	std::thread workers[num_threds];
+	
+	util::vector<u8> buffer(1024 * 1024, 0);
+
+	void buffer_test_worker() {
+		while (!shutdown) {
+			auto* resource = graphics::direct3d12::d3dx::create_buffer(buffer.data(), (u32)buffer.size());
+			graphics::direct3d12::core::deferred_release(resource);
+		}
+	}
+
+	template<class FnPtr, class... Args> void init_test_workers(FnPtr&& fn_ptr, Args&&... args) {
+		#if ENABLE_TEST_WORKERS
+		shutdown = false;
+		for (auto& w : workers) {
+			w = std::thread(std::forward<FnPtr>(fn_ptr), std::forward<Args>(args)...);
+		}
+		#endif
+	}
+
+	void joint_test_workers() {
+		#if ENABLE_TEST_WORKERS
+		shutdown = true;
+
+		for (auto& w : workers) w.join();
+		#endif
+	}
+
+	#pragma endregion
+
+	id::id_type model_id{ id::invalid_id };
 	graphics::RenderSurface _surfaces[4];
 	TimeIt timer;
 
@@ -79,6 +121,24 @@
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 
+	bool read_file(std::filesystem::path path, std::unique_ptr<u8[]>& data, u64& size) {
+		if (!std::filesystem::exists(path)) return false;
+		size = std::filesystem::file_size(path);
+		assert(size);
+		if (!size) return false;
+		data = std::make_unique<u8[]>(size);
+		std::ifstream file{ path, std::ios::in | std::ios::binary };
+
+		if (!file || !file.read((char*)data.get(), size)) {
+			file.close();
+			return false;
+		}
+
+		file.close();
+
+		return true;
+	}
+
 	void create_render_surface(graphics::RenderSurface& surface, platform::WindowInitInfo info) {
 		surface.window = platform::create_window(&info);
 		surface.surface = graphics::create_surface(surface.window);
@@ -112,12 +172,27 @@
 			create_render_surface(_surfaces[i], info[i]);
 		}
 
+		std::unique_ptr<u8[]> model;
+		u64 size{ 0 };
+		if (!read_file("..\\..\\EngineTest\\model.model", model, size)) return false;
+
+		model_id = content::create_resource(model.get(), content::AssetType::MESH);
+		if (!id::is_valid(model_id)) return false;
+
+		init_test_workers(buffer_test_worker);
+
 		is_restarting = false;
 
 		return true;
 	}
 
 	void test_shutdown() {
+		joint_test_workers();
+
+		if (id::is_valid(model_id)) {
+			content::destroy_resource(model_id, content::AssetType::MESH);
+		}
+
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			destroy_render_surface(_surfaces[i]);
 		}

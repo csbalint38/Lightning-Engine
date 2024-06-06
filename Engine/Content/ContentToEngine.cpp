@@ -52,6 +52,7 @@ namespace lightning::content {
 				u32 _lod_count;
 		};
 
+		constexpr uintptr_t single_mesh_marker{ (uintptr_t)0x01 };
 		util::free_list<u8*> geometry_hierarchies;
 		std::mutex geometry_mutex;
 
@@ -111,23 +112,71 @@ namespace lightning::content {
 			return geometry_hierarchies.add(hierarchy_buffer);
 		}
 
-		id::id_type create_geometry_resource(const void* const data) { return create_mesh_hierarchy(data); }
+		id::id_type create_single_submesh(const void* const data) {
+			assert(data);
+			util::BlobStreamReader blob{ (const u8*)data };
+			blob.skip(sizeof(u32) + sizeof(f32) + sizeof(u32) + sizeof(u32));
+			const u8* at{ blob.position() };
+			const id::id_type gpu_id{ graphics::add_submesh(at) };
+
+			static_assert(sizeof(uintptr_t) > sizeof(id::id_type));
+			constexpr u8 shift_bits{ (sizeof(uintptr_t) - sizeof(id::id_type)) << 3 };
+			u8* const fake_pointer{ (u8* const)((((uintptr_t)gpu_id) << shift_bits) | single_mesh_marker) };
+
+			static_assert(alignof(void*) > 2, "We need the least significant bit for the single mesh marker.");
+			std::lock_guard lock{ geometry_mutex };
+
+			return geometry_hierarchies.add(fake_pointer);
+		}
+
+		bool is_single_mesh(const void* const data) {
+			assert(data);
+			util::BlobStreamReader blob{ (const u8*)data };
+			const u32 lod_count{ blob.read<u32>() };
+			assert(lod_count);
+			if (lod_count > 1) return false;
+
+			blob.skip(sizeof(u32));
+			const u32 submesh_count{ blob.read<u32>() };
+			assert(submesh_count);
+			return submesh_count == 1;
+		}
+
+		id::id_type gpu_id_from_fake_pointer(u8* const pointer) {
+			assert((uintptr_t)pointer & single_mesh_marker);
+			static_assert(sizeof(uintptr_t) > sizeof(id::id_type));
+			constexpr u8 shift_bits{ (sizeof(uintptr_t) - sizeof(id::id_type)) << 3 };
+
+			return (((uintptr_t)pointer) >> shift_bits) & (uintptr_t)id::invalid_id;
+		}
+
+		id::id_type create_geometry_resource(const void* const data) {
+			assert(data);
+			return is_single_mesh(data) ? create_single_submesh(data) : create_mesh_hierarchy(data);
+		}
 
 		void destroy_geometry_resource(id::id_type id) {
 			std::lock_guard lock{ geometry_mutex };
 			u8* const pointer{ geometry_hierarchies[id] };
 
-			GeometryHierarchyStream stream{ pointer };
-			const u32 lod_count{ stream.lod_count() };
-			u32 id_index{ 0 };
+			if ((uintptr_t)pointer & single_mesh_marker) {
+				graphics::remove_submesh(gpu_id_from_fake_pointer(pointer));
+			}
+			else {
 
-			for (u32 lod{ 0 }; lod < lod_count; ++lod) {
-				for (u32 i{ 0 }; i < stream.lod_offsets()[lod].count; ++i) {
-					graphics::remove_submesh(stream.gpu_ids()[id_index++]);
+				GeometryHierarchyStream stream{ pointer };
+				const u32 lod_count{ stream.lod_count() };
+				u32 id_index{ 0 };
+
+				for (u32 lod{ 0 }; lod < lod_count; ++lod) {
+					for (u32 i{ 0 }; i < stream.lod_offsets()[lod].count; ++i) {
+						graphics::remove_submesh(stream.gpu_ids()[id_index++]);
+					}
 				}
+
+				free(pointer);
 			}
 
-			free(pointer);
 			geometry_hierarchies.remove(id);
 		}
 	}
