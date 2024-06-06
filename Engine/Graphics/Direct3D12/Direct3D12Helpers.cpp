@@ -59,7 +59,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 		return create_pipeline_state(desc);
 	}
 
-	ID3D12Resource* create_buffer(u32 buffer_size, void* data, bool is_cpu_accessible, D3D12_RESOURCE_STATES state, D3D12_RESOURCE_FLAGS flags , ID3D12Heap* heap, u64 heap_offset) {
+	ID3D12Resource* create_buffer(const void* data, u32 buffer_size, bool is_cpu_accessible, D3D12_RESOURCE_STATES state, D3D12_RESOURCE_FLAGS flags , ID3D12Heap* heap, u64 heap_offset) {
 		assert(buffer_size);
 
 		D3D12_RESOURCE_DESC desc{};
@@ -88,7 +88,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 
 		if (data) {
 			if (is_cpu_accessible) {
-				D3D12_RANGE range{};
+				const D3D12_RANGE range{};
 				void* cpu_address{ nullptr };
 				DXCall(resource->Map(0, &range, reinterpret_cast<void**>(&cpu_address)));
 				assert(cpu_address);
