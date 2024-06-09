@@ -1,8 +1,8 @@
 #include "CommonHeaders.h"
 #include "Id.h"
 #include "Common.h"
-#include "..\Engine\Components\Entity.h"
-#include "..\Engine\Components\Transform.h"
+#include "Components/Entity.h"
+#include "Components/Transform.h"
 
 
 using namespace lightning;
