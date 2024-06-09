@@ -2,12 +2,13 @@ import os
 import re
 import shutil
 import subprocess
+import datetime
 
-from GameProject.Project import Project
 from ..Abstracts.NewProjectView import NewProjectView
 from LightningGUI import Observable
 from ..ProjectTemplate import ProjectTemplate
 from Utilities.Serializer import Serializer
+from ..ProjectData import Project, ProjectsData
 
 class NewProjectController(Observable):
     def __init__(self, view: NewProjectView) -> None:
@@ -15,6 +16,8 @@ class NewProjectController(Observable):
         self.view = view
         self._name = "NewProject"
         self._path = f"{os.environ["USERPROFILE"]}\\Documents\\LightningProjects\\"
+        self._app_data_path = f"{os.getenv("APPDATA")}\\LightningEditor\\"
+        self._projects_path = f"{self._app_data_path}ProjectData.xml"
         self._is_path_valid = True
         self._error_message = ""
 
@@ -29,6 +32,7 @@ class NewProjectController(Observable):
         
         self.templates = self._get_template_files()
         self.selected_template = 0
+        self.project = None
 
     @property
     def name(self) -> str:
@@ -121,10 +125,7 @@ class NewProjectController(Observable):
             self.error_message = "Folder doesn't exist"
             return 
         
-        if not os.path.isdir(full_path):
-            os.mkdir(full_path)
-        
-        if len(os.listdir(full_path)) > 0:
+        if os.path.isdir(full_path) and len(os.listdir(full_path)) > 0:
             self.is_path_valid = False
             self.error_message = "Folder alredy exists and its not empty."
             return
@@ -147,8 +148,8 @@ class NewProjectController(Observable):
         for folder in self.templates[self.selected_template]._folders:
             os.mkdir(full_path+folder)
         subprocess.run(["attrib", "+h", f"{full_path}.Lightning"], check=True)
-        shutil.copy(self.get_icon_path(self.templates[self.selected_template]), full_path)
-        shutil.copy(self.get_screenshot_path(self.templates[self.selected_template]), full_path)
+        shutil.copy(self.get_icon_path(self.templates[self.selected_template]), f"{full_path}.Lightning")
+        shutil.copy(self.get_screenshot_path(self.templates[self.selected_template]), f"{full_path}.Lightning")
         shutil.copy(self._get_project_file_path(self.templates[self.selected_template]), full_path)
         
         with open(f"{full_path}project.lightning") as file:
@@ -162,6 +163,21 @@ class NewProjectController(Observable):
         new_file.close()
        
         os.rename(f"{full_path}project.lightning", f"{full_path}{self.name}.lightning")
+        
+        if not os.path.exists(self._app_data_path):
+            os.mkdir(self._app_data_path)
+
+        if os.path.exists(self._projects_path):
+            projects = Serializer.from_file(ProjectsData, self._projects_path)
+        else:
+            projects = ProjectsData()
+            
+        project = Project(self.name, self.path)
+        project.created_at = datetime.datetime.now()
+        project.updated_at = datetime.datetime.now()
+        projects._projects.append(project)
+        projects._projects = sorted(projects._projects, key = lambda project: project.updated_at, reverse=True)
+        Serializer.to_file(projects, self._projects_path)
 
         self.view.project_created()
         

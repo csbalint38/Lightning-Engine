@@ -1,4 +1,6 @@
 import tkinter
+from typing import Any
+
 import LightningGUI
 from .OpenProject import OpenProject
 from .NewProject import NewProject
@@ -8,6 +10,8 @@ class ProjectBrowserDialog(LightningGUI.Window):
         super().__init__((800, 450), "Project Browser", False, True)
         self._c_open = OpenProject(self)
         self._c_create = NewProject(self)
+        
+        self.result = None
         
     def setup(self) -> None:
         font_button = LightningGUI.Font(size=24)
@@ -45,3 +49,6 @@ class ProjectBrowserDialog(LightningGUI.Window):
                 self._c_create.pack_forget()
                 self._c_open.pack(fill=tkinter.BOTH, anchor='n', expand=True)
             self._btn_open_project.set_state(True)
+            
+    def get_result(self) -> Any:
+        return self.result

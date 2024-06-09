@@ -46,17 +46,18 @@ class Serializer():
         return Serializer.parse_xml(cls, root)
     
     @staticmethod
-    def parse_xml(cls: Type[T], node: Element) -> Any:
+    def parse_xml(cls: Type[T], node: Element, **kwargs) -> Any:
         if issubclass(cls, Serializable):
             kwargs = {}
             for field in cls.data_members:
                 element = node.getElementsByTagName(field["name"])
-                value = Serializer.parse_xml(field["type"], element[0])
+                arg = field.get("list_type")
+                value = Serializer.parse_xml(field["type"], element[0], list_type = arg)
                 kwargs[field["field"][1:]] = value
             return cls(**kwargs)
         elif cls is list:
             elements = node.childNodes
-            return [Serializer.parse_xml(type(elements[0]), element) for element in elements if isinstance(element, Element)]
+            return [Serializer.parse_xml(kwargs["list_type"], element) for element in elements if isinstance(element, Element)]
         elif cls is dict:
             result = {}
             for child in node.childNodes:
@@ -64,4 +65,8 @@ class Serializer():
                     result[child.nodeName] = Serializer.parse_xml(type(result), child)
             return result
         else:
-            return node.firstChild.nodeValue if node.firstChild else None
+            if not node.firstChild: return None
+            elif cls is int: return int(node.firstChild.nodeValue)
+            elif cls is float: return float(node.firstChild.nodeValue)
+            elif cls is bool: return True if node.firstChild.nodeValue == "True" else False
+            else: return node.firstChild.nodeValue

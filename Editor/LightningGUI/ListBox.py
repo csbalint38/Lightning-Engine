@@ -1,4 +1,5 @@
 import tkinter
+
 from .ScrolleableContainer import ScrollableContainer
 from .Image import Image
 from .Container import Container
@@ -26,9 +27,18 @@ class ListBox(ScrollableContainer):
        
         label.pack(side=tkinter.LEFT, padx=(5, 0), pady=5)
         
-        item_frame.bind("<Button-1>", lambda _: self.toggle_selection(item_frame))
+        item_frame.bind_child("<Button-1>", lambda _: self.toggle_selection(item_frame))
         
         self.items.append((text, item_frame))
+        
+    def add_widget(self, widget: Container) -> None:
+        y = len(self.items) * widget.winfo_height()
+        
+        widget.pack(fill=tkinter.X)
+        
+        widget.bind_child("<Button-1>", lambda _: self.toggle_selection(widget))
+        
+        self.items.append((None, widget))
         
     def toggle_selection(self, item_frame: tkinter.Frame) -> None:
         prev_indicies = self.selected_indicies.copy()

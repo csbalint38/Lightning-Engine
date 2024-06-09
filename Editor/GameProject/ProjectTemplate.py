@@ -4,7 +4,7 @@ class ProjectTemplate(Serializable):
     data_members = [
         { "field": "_project_type", "name": "ProjectType", "type": str },
         { "field": "_project_file", "name": "ProjectFile", "type": str},
-        { "field": "_folders", "name": "Folders", "type": list}
+        { "field": "_folders", "name": "Folders", "type": list, "list_type": str}
     ]
     
     def __init__(self, project_type: str = "", project_file: str = "", folders: list = []):

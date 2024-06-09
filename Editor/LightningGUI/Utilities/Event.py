@@ -14,3 +14,4 @@ class Event():
     def __call__(self, *args, **kwargs):
         for subscriber in self.subscribers:
             subscriber(*args, **kwargs)
+        print(f"Event occured: {self.name}")

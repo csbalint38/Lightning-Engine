@@ -15,7 +15,7 @@ class NewProject(LightningGUI.Container, NewProjectView):
         self._sv_name = tkinter.StringVar()
         self._sv_path = tkinter.StringVar()
         
-        self.project_created.subscribe(self.master.destroy)
+        self.project_created.subscribe(lambda: self.master._c_open.open_button_clicked())
         
     def setup(self) -> None:
         font_button = LightningGUI.Font(size=16)
