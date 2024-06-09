@@ -12,11 +12,11 @@ namespace lightning::graphics {
 
 		bool set_platform_interface(GraphicsPlatform platform) {
 			switch (platform) {
-				case lightning::graphics::GraphicsPlatform::DIRECT3D12:
-					direct3d12::get_platform_interface(gfx);
-					break;
-				default:
-					return false;
+			case lightning::graphics::GraphicsPlatform::DIRECT3D12:
+				direct3d12::get_platform_interface(gfx);
+				break;
+			default:
+				return false;
 			}
 			assert(gfx.platform == platform);
 			return true;
@@ -24,7 +24,7 @@ namespace lightning::graphics {
 	}
 
 	bool initialize(GraphicsPlatform platform) { return set_platform_interface(platform) && gfx.initialize(); }
-	void shutdown() { if (gfx.platform != (GraphicsPlatform) - 1) gfx.shutdown(); }
+	void shutdown() { if (gfx.platform != (GraphicsPlatform)-1) gfx.shutdown(); }
 	Surface create_surface(platform::Window window) { return gfx.surface.create(window); }
 
 	void remove_surface(surface_id id) {
@@ -53,6 +53,143 @@ namespace lightning::graphics {
 	void Surface::render() const {
 		assert(is_valid());
 		gfx.surface.render(_id);
+	}
+
+	Camera create_camera(CameraInitInfo info) {
+		return gfx.camera.create(info);
+	}
+
+	void remove_camera(camera_id id) {
+		gfx.camera.remove(id);
+	}
+
+	void Camera::up(math::v3 up) const {
+		assert(is_valid());
+		gfx.camera.set_parameter(_id, CameraParameter::UP_VECTOR, &up, sizeof(up));
+	}
+
+	void Camera::field_of_view(f32 fov) const {
+		assert(is_valid());
+		gfx.camera.set_parameter(_id, CameraParameter::FIELD_OF_VIEW, &fov, sizeof(fov));
+	}
+
+	void Camera::aspect_ratio(f32 aspect_ratio) const {
+		assert(is_valid());
+		gfx.camera.set_parameter(_id, CameraParameter::ASPECT_RATIO, &aspect_ratio, sizeof(aspect_ratio));
+	}
+
+	void Camera::view_width(f32 width) const {
+		assert(is_valid());
+		gfx.camera.set_parameter(_id, CameraParameter::VIEW_WIDTH, &width, sizeof(width));
+	}
+
+	void Camera::view_height(f32 height) const {
+		assert(is_valid());
+		gfx.camera.set_parameter(_id, CameraParameter::VIEW_HEIGHT, &height, sizeof(height));
+	}
+
+	void Camera::range(f32 near_z, f32 far_z) const {
+		assert(is_valid());
+		gfx.camera.set_parameter(_id, CameraParameter::NEAR_Z, &near_z, sizeof(near_z));
+		gfx.camera.set_parameter(_id, CameraParameter::FAR_Z, &far_z, sizeof(far_z));
+	}
+
+	math::m4x4 Camera::view() const {
+		assert(is_valid());
+		math::m4x4 matrix;
+		gfx.camera.get_parameter(_id, CameraParameter::VIEW, &matrix, sizeof(matrix));
+		return matrix;
+	}
+
+	math::m4x4 Camera::projection() const {
+		assert(is_valid());
+		math::m4x4 matrix;
+		gfx.camera.get_parameter(_id, CameraParameter::PROJECTION, &matrix, sizeof(matrix));
+		return matrix;
+
+	}
+
+	math::m4x4 Camera::inverse_projection() const {
+		assert(is_valid());
+		math::m4x4 matrix;
+		gfx.camera.get_parameter(_id, CameraParameter::INVERSE_PROJECTION, &matrix, sizeof(matrix));
+		return matrix;
+	}
+
+	math::m4x4 Camera::view_projection() const {
+		assert(is_valid());
+		math::m4x4 matrix;
+		gfx.camera.get_parameter(_id, CameraParameter::VIEW_PROJECTION, &matrix, sizeof(matrix));
+		return matrix;
+	}
+
+	math::m4x4 Camera::inverse_view_projection() const {
+		assert(is_valid());
+		math::m4x4 matrix;
+		gfx.camera.get_parameter(_id, CameraParameter::INVERSE_VIEW_PROJECTION, &matrix, sizeof(matrix));
+		return matrix;
+	}
+
+	math::v3 Camera::up() const {
+		assert(is_valid());
+		math::v3 up_vector;
+		gfx.camera.get_parameter(_id, CameraParameter::UP_VECTOR, &up_vector, sizeof(up_vector));
+		return up_vector;
+	}
+	f32 Camera::near_z() const {
+		assert(is_valid());
+		f32 near_z;
+		gfx.camera.get_parameter(_id, CameraParameter::NEAR_Z, &near_z, sizeof(near_z));
+		return near_z;
+	}
+
+	f32 Camera::far_z() const {
+		assert(is_valid());
+		f32 far_z;
+		gfx.camera.get_parameter(_id, CameraParameter::NEAR_Z, &far_z, sizeof(far_z));
+		return far_z;
+	}
+
+	f32 Camera::field_of_view() const {
+		assert(is_valid());
+		f32 field_of_view;
+		gfx.camera.get_parameter(_id, CameraParameter::FAR_Z, &field_of_view, sizeof(field_of_view));
+		return field_of_view;
+	}
+
+	f32 Camera::aspect_ratio() const {
+		assert(is_valid());
+		f32 aspect_ratio;
+		gfx.camera.get_parameter(_id, CameraParameter::ASPECT_RATIO, &aspect_ratio, sizeof(aspect_ratio));
+		return aspect_ratio;
+	}
+
+	f32 Camera::view_width() const {
+		assert(is_valid());
+		f32 view_width;
+		gfx.camera.get_parameter(_id, CameraParameter::VIEW_WIDTH, &view_width, sizeof(view_width));
+		return view_width;
+	}
+
+	f32 Camera::view_height() const {
+		assert(is_valid());
+		f32 view_height;
+		gfx.camera.get_parameter(_id, CameraParameter::VIEW_HEIGHT, &view_height, sizeof(view_height));
+		return view_height;
+	}
+
+	Camera::Type Camera::projection_type() const {
+		assert(is_valid());
+		Camera::Type projection_type;
+		gfx.camera.get_parameter(_id, CameraParameter::TYPE, &projection_type, sizeof(projection_type));
+		return projection_type;
+	}
+
+	id::id_type Camera::entity_id() const {
+		assert(is_valid());
+		id::id_type id;
+		gfx.camera.get_parameter(_id, CameraParameter::ENTITY_ID, &id, sizeof(id));
+		return id;
 	}
 
 	id::id_type add_submesh(const u8*& data) {

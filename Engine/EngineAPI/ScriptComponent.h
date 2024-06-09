@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\Components\ComponentsCommonHeaders.h"
+#include "Components/ComponentsCommonHeaders.h"
 
 namespace lightning::script {
 	DEFINE_TYPED_ID(script_id);

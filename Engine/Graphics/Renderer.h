@@ -1,7 +1,8 @@
 #pragma once
 
 #include "CommonHeaders.h"
-#include "..\Platform\Window.h"
+#include "Platform/Window.h"
+#include "EngineAPI/Camera.h"
 
 namespace lightning::graphics {
 
@@ -28,6 +29,69 @@ namespace lightning::graphics {
 		Surface surface{};
 	};
 
+	struct CameraParameter {
+		enum Parameter : u32 {
+			UP_VECTOR,
+			FIELD_OF_VIEW,
+			ASPECT_RATIO,
+			VIEW_WIDTH,
+			VIEW_HEIGHT,
+			NEAR_Z,
+			FAR_Z,
+			VIEW,
+			PROJECTION,
+			INVERSE_PROJECTION,
+			VIEW_PROJECTION,
+			INVERSE_VIEW_PROJECTION,
+			TYPE,
+			ENTITY_ID,
+
+			count
+		};
+	};
+
+	struct CameraInitInfo {
+		id::id_type entity_id{ id::invalid_id };
+		Camera::Type type{};
+		math::v3 up;
+		union {
+			f32 field_of_view;
+			f32 view_width;
+		};
+		union {
+			f32 aspect_ratio;
+			f32 view_height;
+		};
+		f32 near_z;
+		f32 far_z;
+	};
+
+	struct PerspectiveCameraInitInfo : public CameraInitInfo {
+		explicit PerspectiveCameraInitInfo(id::id_type id) {
+			assert(id::is_valid(id));
+			entity_id = id;
+			type = Camera::PERSPECTIVE;
+			up = { 0.f, 1.f, 0.f };
+			field_of_view = .25f;
+			aspect_ratio = 16.f / 10.f;
+			near_z = 0.001;
+			far_z = 10000.f;
+		}
+	};
+
+	struct OrtographicCameraInitInfo : public CameraInitInfo {
+		explicit OrtographicCameraInitInfo(id::id_type id) {
+			assert(id::is_valid(id));
+			entity_id = id;
+			type = Camera::ORTOGRAPHIC;
+			up = { 0.f, 1.f, 0.f };
+			view_width = 1920.f;
+			view_height = 1080;
+			near_z = 0.001;
+			far_z = 10000.f;
+		}
+	};
+
 	enum class GraphicsPlatform : u32 {
 		DIRECT3D12 = 0,
 		VULKAN = 1,
@@ -42,6 +106,9 @@ namespace lightning::graphics {
 
 	Surface create_surface(platform::Window window);
 	void remove_surface(surface_id id);
+
+	Camera create_camera(CameraInitInfo info);
+	void remove_camera(camera_id id);
 
 	id::id_type add_submesh(const u8*& data);
 	void remove_submesh(id::id_type id);

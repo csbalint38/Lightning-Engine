@@ -42,9 +42,9 @@
 
 // common custom headers
 #include "PrimitiveTypes.h"
-#include "..\Utilities\Math.h"
-#include "..\Utilities\Utilities.h"
-#include "..\Utilities\MathTypes.h"
+#include "Utilities/Math.h"
+#include "Utilities/Utilities.h"
+#include "Utilities/MathTypes.h"
 #include "Id.h"
 
 #ifdef DOMAIN
