@@ -51,4 +51,10 @@ namespace lightning::graphics::direct3d12::camera {
 			id::id_type _entity_id;
 			bool _is_dirty;
 	};
+
+	graphics::Camera create(CameraInitInfo info);
+	void remove(camera_id id);
+	void set_parameter(camera_id id, CameraParameter::Parameter parameter, const void* const data, u32 data_size);
+	void get_parameter(camera_id id, CameraParameter::Parameter parameter, void* const data, u32 data_size);
+	[[nodiscard]] D3D12Camera& get(camera_id id);
 }
