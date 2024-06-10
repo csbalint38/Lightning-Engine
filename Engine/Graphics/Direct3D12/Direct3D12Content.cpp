@@ -18,8 +18,7 @@ namespace lightning::graphics::direct3d12::content {
 		util::free_list<SubmeshView> submesh_views{};
 		std::mutex submesh_mutex{};
 
-		D3D_PRIMITIVE_TOPOLOGY get_d3d_primitive_topology(lightning::content::PrimitiveTopology::Type type) {
-			using namespace lightning::content;
+		D3D_PRIMITIVE_TOPOLOGY get_d3d_primitive_topology(PrimitiveTopology::Type type) {
 
 			assert(type < PrimitiveTopology::count);
 
@@ -75,7 +74,7 @@ namespace lightning::graphics::direct3d12::content {
 			view.index_buffer_view.SizeInBytes = index_buffer_size;
 
 			view.element_type = elements_type;
-			view.primitive_topology = get_d3d_primitive_topology((lightning::content::PrimitiveTopology::Type)primitive_topology);
+			view.primitive_topology = get_d3d_primitive_topology((PrimitiveTopology::Type)primitive_topology);
 
 			std::lock_guard lock{ submesh_mutex };
 			submesh_buffers.add(resource);

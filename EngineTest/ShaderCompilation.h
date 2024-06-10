@@ -24,4 +24,5 @@ struct ShaderFileInfo {
 	ShaderType::Type type;
 };
 
+std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, const char* file_path);
 bool compile_shaders();

@@ -1,6 +1,8 @@
 #include "ShaderCompilation.h"
 #include "Graphics/Direct3D12/Direct3D12Core.h"
 #include "Graphics/Direct3D12/Direct3D12Shaders.h"
+#include "Content/ContentToEngine.h"
+#include "Utilities/IOStream.h"
 
 #include <dxcapi.h>
 #include <filesystem>
@@ -218,6 +220,29 @@ namespace {
 
 		return true;
 	}
+}
+
+std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, const char* file_path) {
+	std::filesystem::path full_path{ file_path };
+	full_path += info.file_name;
+	if (!(std::filesystem::exists(full_path))) return{};
+	
+	ShaderCompiler compiler{};
+	DxcCompiledShader compiled_shader{ compiler.compile(info, full_path) };
+
+	if (compiled_shader.byte_code && compiled_shader.byte_code->GetBufferPointer() && compiled_shader.byte_code->GetBufferSize()) {
+		static_assert(content::CompiledShader::hash_length == _countof(DxcShaderHash::HashDigest));
+		const u64 buffer_size{ sizeof(u64) + content::CompiledShader::hash_length + compiled_shader.byte_code->GetBufferSize() };
+		std::unique_ptr<u8[]> buffer{ std::make_unique<u8[]>(buffer_size) };
+		util::BlobStreamWriter blob{ buffer.get(), buffer_size };
+		blob.write(compiled_shader.byte_code->GetBufferSize());
+		blob.write(compiled_shader.hash.HashDigest, content::CompiledShader::hash_length);
+		blob.write((u8*)compiled_shader.byte_code->GetBufferPointer(), compiled_shader.byte_code->GetBufferSize());
+
+		assert(blob.offset() == buffer_size);
+		return buffer;
+	}
+	return {};
 }
 
 bool compile_shaders() {
