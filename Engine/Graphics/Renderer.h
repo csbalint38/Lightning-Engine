@@ -104,6 +104,7 @@ namespace lightning::graphics {
 		};
 	};
 
+	// Use this if the Engine supports multiple graphics renderers
 	enum class GraphicsPlatform : u32 {
 		DIRECT3D12 = 0,
 		VULKAN = 1,

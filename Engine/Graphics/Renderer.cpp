@@ -10,7 +10,8 @@ namespace lightning::graphics {
 
 		PlatformInterface gfx{};
 
-		bool set_platform_interface(GraphicsPlatform platform) {
+		// use this if Engine supports multiple graphics renderers
+		bool set_platform_interface(GraphicsPlatform platform, PlatformInterface& pi) {
 			switch (platform) {
 			case lightning::graphics::GraphicsPlatform::DIRECT3D12:
 				direct3d12::get_platform_interface(gfx);
@@ -23,7 +24,7 @@ namespace lightning::graphics {
 		}
 	}
 
-	bool initialize(GraphicsPlatform platform) { return set_platform_interface(platform) && gfx.initialize(); }
+	bool initialize(GraphicsPlatform platform) { return set_platform_interface(platform, gfx) && gfx.initialize(); }
 	void shutdown() { if (gfx.platform != (GraphicsPlatform)-1) gfx.shutdown(); }
 	Surface create_surface(platform::Window window) { return gfx.surface.create(window); }
 

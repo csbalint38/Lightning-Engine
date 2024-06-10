@@ -520,7 +520,6 @@ namespace lightning::tools {
 	}
 
 	void pack_data(const Scene& scene, SceneData& data) {
-		constexpr u64 su32{ sizeof(u32) };
 		const u64 scene_size{ get_scene_size(scene) };
 		data.buffer_size = (u32)scene_size;
 		data.buffer = (u8*)CoTaskMemAlloc(scene_size);

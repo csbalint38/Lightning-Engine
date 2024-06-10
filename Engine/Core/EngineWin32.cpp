@@ -1,4 +1,4 @@
-#if !defined(SHIPPING)
+#if !defined(SHIPPING) && defined(_WIN64)
 
 #include <thread>
 

@@ -1,7 +1,7 @@
 // PrimitiveTypes.h
 
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 
 // unsigned integers
 using u64 = uint64_t;
@@ -17,7 +17,7 @@ using s8 = int8_t;
 
 using f32 = float;
 
-constexpr u64 u64_invalid_id{ 0xffff'ffff'ffff'ffffui64 };
-constexpr u64 u32_invalid_id{ 0xffff'ffff'ffffui32 };
-constexpr u64 u16_invalid_id{ 0xffff'ffffui16 };
-constexpr u64 u8_invalid_id{ 0xffffui8 };
+constexpr u64 u64_invalid_id{ 0xffff'ffff'ffff'ffff };
+constexpr u64 u32_invalid_id{ 0xffff'ffff };
+constexpr u64 u16_invalid_id{ 0xffff };
+constexpr u64 u8_invalid_id{ 0xff };
