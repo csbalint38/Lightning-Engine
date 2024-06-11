@@ -4,6 +4,14 @@
 #include "Platform/Window.h"
 #include "EngineAPI/Camera.h"
 
+#ifdef OPAQUE
+#undef OPAQUE
+#endif
+
+#ifdef TRANSPARENT
+#undef TRANSPARENT
+#endif
+
 namespace lightning::graphics {
 
 	DEFINE_TYPED_ID(surface_id);
@@ -130,7 +138,9 @@ namespace lightning::graphics {
 			CLOTH,
 			SKIN,
 			FOLIAGE,
-			HAIR
+			HAIR,
+			
+			count
 		};
 	};
 

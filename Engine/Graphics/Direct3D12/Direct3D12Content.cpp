@@ -2,6 +2,15 @@
 #include "Direct3D12Core.h"
 #include "Utilities/IOStream.h"
 #include "Content/ContentToEngine.h"
+#include "Direct3D12GPass.h"
+
+#ifdef OPAQUE
+#undef OPAQUE
+#endif
+
+#ifdef TRANSPARENT
+#undef TRANSPARENT
+#endif
 
 namespace lightning::graphics::direct3d12::content {
 	namespace {
@@ -25,6 +34,79 @@ namespace lightning::graphics::direct3d12::content {
 		util::free_list<std::unique_ptr<u8[]>> materials;
 		std::mutex material_mutex{};
 
+		constexpr D3D12_ROOT_SIGNATURE_FLAGS get_root_signature_flags(ShaderFlags::Flags flags) {
+			D3D12_ROOT_SIGNATURE_FLAGS default_flags{ d3dx::D3D12RootSignatureDesc::default_flags };
+
+			if (flags & ShaderFlags::VERTEX) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
+			if (flags & ShaderFlags::HULL) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+			if (flags & ShaderFlags::DOMAIN) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
+			if (flags & ShaderFlags::GEOMETRY) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+			if (flags & ShaderFlags::PIXEL) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+			if (flags & ShaderFlags::AMPLIFICATION) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS;
+			if (flags & ShaderFlags::MESH) default_flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+
+			return default_flags;
+		}
+
+		id::id_type create_root_signature(MaterialType::Type type, ShaderFlags::Flags flags) {
+			assert(type < MaterialType::count);
+			static_assert(sizeof(type) == sizeof(u32) && sizeof(flags) == sizeof(u32));
+			const u64 key{ ((u64)type << 32) | flags };
+			auto pair = material_rs_map.find(key);
+
+			if (pair != material_rs_map.end()) {
+				assert(pair->first == key);
+				return pair->second;
+			}
+
+			ID3D12RootSignature* root_signature{ nullptr };
+
+			switch (type) {
+				case MaterialType::Type::OPAQUE:
+					using params = gpass::OpaqueRootParameter;
+					d3dx::D3D12RootParameter parameters[params::count]{};
+					parameters[params::PER_FRAME_DATA].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 0);
+
+					D3D12_SHADER_VISIBILITY buffer_visibility{};
+					D3D12_SHADER_VISIBILITY data_visibility{};
+
+					if (flags & ShaderFlags::VERTEX) {
+						buffer_visibility = D3D12_SHADER_VISIBILITY_VERTEX;
+						data_visibility = D3D12_SHADER_VISIBILITY_VERTEX;
+					}
+					else if (flags & ShaderFlags::MESH) {
+						buffer_visibility = D3D12_SHADER_VISIBILITY_MESH;
+						data_visibility = D3D12_SHADER_VISIBILITY_MESH;
+					}
+
+					if ((flags & ShaderFlags::HULL) || (flags & ShaderFlags::GEOMETRY) || (flags & ShaderFlags::AMPLIFICATION)) {
+						buffer_visibility = D3D12_SHADER_VISIBILITY_ALL;
+						data_visibility = D3D12_SHADER_VISIBILITY_ALL;
+					}
+
+					if ((flags & ShaderFlags::PIXEL) || (flags & ShaderFlags::COMPUTE)) {
+						data_visibility = D3D12_SHADER_VISIBILITY_ALL;
+					}
+
+					parameters[params::POSITION_BUFFER].as_srv(buffer_visibility, 0);
+					parameters[params::ELEMENT_BUFFER].as_srv(buffer_visibility, 1);
+					parameters[params::SRV_INDICIES].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 2);
+					parameters[params::PER_OBJECT_DATA].as_cbv(data_visibility, 1);
+
+					root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters), get_root_signature_flags(flags) }.create();
+
+					break;
+			}
+
+			assert(root_signature);
+			const id::id_type id{ (id::id_type)root_signatures.size() };
+			root_signatures.emplace_back(root_signature);
+			material_rs_map[key] = id;
+			NAME_D3D12_OBJECT_INDEXED(root_signature, key, L"GPass Root Signature - key");
+
+			return id;
+		}
+
 		class D3D12MaterialStream {
 			public:
 				DISABLE_COPY_AND_MOVE(D3D12MaterialStream);
@@ -37,7 +119,7 @@ namespace lightning::graphics::direct3d12::content {
 
 					u32 shader_count{ 0 };
 					u32 flags{ 0 };
-					for (u32 i{ 0 }; i < shader_count; ++i) {
+					for (u32 i{ 0 }; i < ShaderType::count; ++i) {
 						if (id::is_valid(info.shader_ids[i])) {
 							++shader_count;
 							flags |= (1 << i);
@@ -61,7 +143,7 @@ namespace lightning::graphics::direct3d12::content {
 
 					*(MaterialType::Type*)buffer = info.type;
 					*(ShaderFlags::Flags*)(&buffer[shader_flags_index]) = (ShaderFlags::Flags)flags;
-					*(id::id_type*)(&buffer[root_signature_index]) = create_root_signature(info.type, (ShaderFlags::Flags)flags)
+					*(id::id_type*)(&buffer[root_signature_index]) = create_root_signature(info.type, (ShaderFlags::Flags)flags);
 					*(u32*)(&buffer[texture_count_index]) = info.texture_count;
 
 					initialize();
@@ -81,6 +163,14 @@ namespace lightning::graphics::direct3d12::content {
 
 					assert(shader_index == _mm_popcnt_u32(_shader_flags));
  				}
+
+				[[nodiscard]] constexpr u32 texture_count() const { return _texture_count; }
+				[[nodiscard]] constexpr MaterialType::Type type() const { return _type; }
+				[[nodiscard]] constexpr ShaderFlags::Flags shader_flags() const { return _shader_flags; }
+				[[nodiscard]] constexpr id::id_type root_signature_id() const { return _root_signature_id; }
+				[[nodiscard]] constexpr id::id_type* texture_ids() const { return _texture_ids; }
+				[[nodiscard]] constexpr u32* descriptor_indicies() const { return _descriptor_indicies; }
+				[[nodiscard]] constexpr id::id_type* shader_ids() const { return _shader_ids; }
 
 			private:
 				void initialize() {
@@ -124,6 +214,14 @@ namespace lightning::graphics::direct3d12::content {
 				case PrimitiveTopology::Type::TRIANGLE_STRIP:return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 			}
 			return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+		}
+	}
+
+	bool initialize() { return true; }
+
+	void shutdown() {
+		for (auto& item : root_signatures) {
+			core::release(item);
 		}
 	}
 
@@ -200,6 +298,8 @@ namespace lightning::graphics::direct3d12::content {
 		id::id_type add(MaterialInitInfo info) {
 			std::unique_ptr<u8[]> buffer;
 			std::lock_guard lock{ material_mutex };
+
+			D3D12MaterialStream stream{ buffer, info };
 
 			assert(buffer);
 			return materials.add(std::move(buffer));

@@ -32,6 +32,10 @@ struct PixelOut {
     float4 color : SV_TARGET0;
 };
 
+ConstantBuffer<GlobalShaderData> per_frame_buffer : register(b0, space0);
+ConstantBuffer<PerObjectData> per_object_buffer : register(b1, space0);
+StructuredBuffer<float3> vertex_position : register(t0, space0);
+
 VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexOut vs_out;
     

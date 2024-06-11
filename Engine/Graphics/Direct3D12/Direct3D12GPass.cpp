@@ -85,7 +85,8 @@ namespace lightning::graphics::direct3d12::gpass {
 			using idx = GpassRootParamIndicies;
 			d3dx::D3D12RootParameter parameters[idx::count]{};
 			parameters[idx::ROOT_CONSTANTS].as_constants(3, D3D12_SHADER_VISIBILITY_PIXEL, 1);
-			const d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], idx::count };
+			d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], idx::count };
+			root_signature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 			gpass_root_sig = root_signature.create();
 			assert(gpass_root_sig);
 			NAME_D3D12_OBJECT(gpass_root_sig, L"GPass Root Signature");

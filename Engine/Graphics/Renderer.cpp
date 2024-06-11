@@ -202,7 +202,7 @@ namespace lightning::graphics {
 	}
 
 	id::id_type add_material(MaterialInitInfo info) {
-		gfx.resources.add_material(info);
+		return gfx.resources.add_material(info);
 	}
 
 	void remove_material(id::id_type id) {

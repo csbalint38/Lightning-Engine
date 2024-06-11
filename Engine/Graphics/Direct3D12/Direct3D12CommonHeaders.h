@@ -50,14 +50,14 @@ namespace lightning::graphics::direct3d12 {
 	OutputDebugStringW(name);								\
 	OutputDebugStringW(L"\n");								\
 }
-#define NAME_D3D12_OBJECT_INDEXED(obj, n, name) {		\
-	wchar_t full_name[128];								\
-	if (swprintf_s(full_name, L"%s[%u]", name, n) > 0) {\
-		obj->SetName(full_name);						\
-		OutputDebugStringW(L"::D3D12 Object Created: ");\
-		OutputDebugStringW(full_name);					\
-		OutputDebugStringW(L"\n");						\
-	}													\
+#define NAME_D3D12_OBJECT_INDEXED(obj, n, name) {				\
+	wchar_t full_name[128];										\
+	if (swprintf_s(full_name, L"%s[%llu]", name, (u64)n) > 0) {	\
+		obj->SetName(full_name);								\
+		OutputDebugStringW(L"::D3D12 Object Created: ");		\
+		OutputDebugStringW(full_name);							\
+		OutputDebugStringW(L"\n");								\
+	}															\
 }
 	
 #else

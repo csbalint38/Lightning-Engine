@@ -10,7 +10,6 @@ namespace lightning::graphics::direct3d12::fx {
 		struct FXRootParamIndicies {
 			enum : u32 {
 				ROOT_CONSTANTS,
-				DESCRIPTOR_TABLE,
 
 				count
 			};
@@ -22,20 +21,12 @@ namespace lightning::graphics::direct3d12::fx {
 		bool create_fx_pso_and_root_signature() {
 			assert(!fx_root_sig && !fx_pso);
 
-			d3dx::D3D12DescriptorRange range{
-				D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-				D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND,
-				0,
-				0,
-				D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE
-			};
-
 			using idx = FXRootParamIndicies;
 			d3dx::D3D12RootParameter parameters[idx::count]{};
 			parameters[idx::ROOT_CONSTANTS].as_constants(1, D3D12_SHADER_VISIBILITY_PIXEL, 1);
-			parameters[idx::DESCRIPTOR_TABLE].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &range, 1);
 
-			const d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], _countof(parameters) };
+			d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], _countof(parameters) };
+			root_signature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 			fx_root_sig = root_signature.create();
 			assert(fx_root_sig);
 			NAME_D3D12_OBJECT(fx_root_sig, L"Post-process FX Root Signature");
@@ -77,7 +68,6 @@ namespace lightning::graphics::direct3d12::fx {
 
 		using idx = FXRootParamIndicies;
 		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::main_buffer().srv().index, 0);
-		cmd_list->SetGraphicsRootDescriptorTable(idx::DESCRIPTOR_TABLE, core::srv_heap().gpu_start());
 
 		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		

@@ -65,7 +65,7 @@ id::id_type create_render_item(id::id_type entity_id) {
 	_1.join();
 	_2.join();
 
-	create_material()
+	create_material();
 
 	id::id_type item_id{ 0 };
 
@@ -82,6 +82,7 @@ void destroy_render_item(id::id_type item_id) {
 		}
 	}
 
+	if (id::is_valid(material_id)) content::destroy_resource(material_id, content::AssetType::MATERIAL);
 	if (id::is_valid(vs_id)) content::remove_shader(vs_id);
 	if (id::is_valid(ps_id)) content::remove_shader(ps_id);
 	if (id::is_valid(model_id)) content::destroy_resource(model_id, content::AssetType::MESH);
