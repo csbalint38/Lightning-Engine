@@ -34,6 +34,18 @@ namespace lightning::graphics::direct3d12::content {
 		util::free_list<std::unique_ptr<u8[]>> materials;
 		std::mutex material_mutex{};
 
+		util::free_list<render_item::D3D12RenderItem> render_items;
+		util::free_list<std::unique_ptr<id::id_type[]>> render_item_ids;
+		util::vector<ID3D12PipelineState*> pipeline_states;
+		std::unordered_map<u64, id::id_type> pso_map;
+		std::mutex render_item_mutex{};
+
+		struct {
+			util::vector<lightning::content::LodOffset> lod_offsets;
+			util::vector<id::id_type> geometry_ids;
+			util::vector<f32> thresholds;
+		} frame_cache;
+
 		constexpr D3D12_ROOT_SIGNATURE_FLAGS get_root_signature_flags(ShaderFlags::Flags flags) {
 			D3D12_ROOT_SIGNATURE_FLAGS default_flags{ d3dx::D3D12RootSignatureDesc::default_flags };
 
@@ -165,7 +177,7 @@ namespace lightning::graphics::direct3d12::content {
  				}
 
 				[[nodiscard]] constexpr u32 texture_count() const { return _texture_count; }
-				[[nodiscard]] constexpr MaterialType::Type type() const { return _type; }
+				[[nodiscard]] constexpr MaterialType::Type material_type() const { return _type; }
 				[[nodiscard]] constexpr ShaderFlags::Flags shader_flags() const { return _shader_flags; }
 				[[nodiscard]] constexpr id::id_type root_signature_id() const { return _root_signature_id; }
 				[[nodiscard]] constexpr id::id_type* texture_ids() const { return _texture_ids; }
@@ -223,6 +235,16 @@ namespace lightning::graphics::direct3d12::content {
 		for (auto& item : root_signatures) {
 			core::release(item);
 		}
+
+		material_rs_map.clear();
+		root_signatures.clear();
+
+		for (auto& item : pipeline_states) {
+			core::release(item);
+		}
+
+		pso_map.clear();
+		pipeline_states.clear();
 	}
 
 	namespace submesh {
@@ -280,6 +302,22 @@ namespace lightning::graphics::direct3d12::content {
 			core::deferred_release(submesh_buffers[id]);
 			submesh_buffers.remove(id);
 		}
+
+		void get_views(const id::id_type* const gpu_ids, u32 id_count, const ViewsCache& cache) {
+			assert(gpu_ids && id_count);
+			assert(cache.position_buffers && cache.element_buffers && cache.index_buffer_views && cache.primitive_topologies && cache.elements_types);
+
+			std::lock_guard lock{ submesh_mutex };
+
+			for (u32 i{ 0 }; i < id_count; ++i) {
+				const SubmeshView& view{ submesh_views[gpu_ids[i]] };
+				cache.position_buffers[i] = view.position_buffer_view.BufferLocation;
+				cache.element_buffers[i] = view.element_buffer_view.BufferLocation;
+				cache.index_buffer_views[i] = view.index_buffer_view;
+				cache.primitive_topologies[i] = view.primitive_topology;
+				cache.elements_types[i] = view.element_type;
+			}
+		}
 	}
 
 	namespace texture {
@@ -308,6 +346,132 @@ namespace lightning::graphics::direct3d12::content {
 		void remove(id::id_type id) {
 			std::lock_guard lock{ material_mutex };
 			materials.remove(id);
+		}
+
+		void get_materials(const id::id_type* const material_ids, u32 material_count, const MaterialsCache& cache) {
+			assert(material_ids && material_count);
+			assert(cache.root_signatures && cache.material_types);
+
+			std::lock_guard lock{ material_mutex };
+
+			for (u32 i{ 0 }; i < material_count; ++i) {
+				const D3D12MaterialStream stream{ materials[material_ids[i]].get() };
+				cache.root_signatures[i] = root_signatures[stream.root_signature_id()];
+				cache.material_types[i] = stream.material_type();
+			}
+		}
+	}
+
+	namespace render_item {
+		id::id_type add(id::id_type entity_id, id::id_type geometry_content_id, u32 material_count, const id::id_type* const material_ids) {
+			assert(id::is_valid(entity_id) && id::is_valid(geometry_content_id));
+			assert(material_count && material_ids);
+
+			id::id_type* const gpu_ids{ (id::id_type* const)alloca(material_count * sizeof(id::id_type)) };
+			lightning::content::get_submesh_gpu_ids(geometry_content_id, material_count, gpu_ids);
+
+			submesh::ViewsCache views_cache{
+				(D3D12_GPU_VIRTUAL_ADDRESS* const)alloca(material_count * sizeof(D3D12_GPU_VIRTUAL_ADDRESS)),
+				(D3D12_GPU_VIRTUAL_ADDRESS* const)alloca(material_count * sizeof(D3D12_GPU_VIRTUAL_ADDRESS)),
+				(D3D12_INDEX_BUFFER_VIEW* const)alloca(material_count * sizeof(D3D12_INDEX_BUFFER_VIEW)),
+				(D3D_PRIMITIVE_TOPOLOGY* const)alloca(material_count * sizeof(D3D_PRIMITIVE_TOPOLOGY)),
+				(u32* const)alloca(material_count * sizeof(u32))
+			};
+
+			submesh::get_views(gpu_ids, material_count, views_cache);
+
+			std::unique_ptr<id::id_type[]> items{ std::make_unique<id::id_type[]>(sizeof(id::id_type) * (1 + (u64)material_count + 1)) };
+
+			items[0] = geometry_content_id;
+			id::id_type* const item_ids{ &items[1] };
+
+			std::lock_guard lock{ render_item_mutex };
+
+			for (u32 i{ 0 }; i < material_count; ++i) {
+				D3D12RenderItem item{};
+				item.entity_id = entity_id;
+				item.submesh_gpu_id = gpu_ids[i];
+				item.material_id = material_ids[i];
+
+				assert(id::is_valid(item.submesh_gpu_id) && id::is_valid(item.material_id));
+
+				item_ids[i] = render_items.add(item);
+			}
+
+			item_ids[material_count] = id::invalid_id;
+
+			return render_item_ids.add(std::move(items));
+		}
+
+		void remove(id::id_type id) {
+			std::lock_guard lock{ render_item_mutex };
+
+			const id::id_type* const item_ids{ &render_item_ids[id][1] };
+
+			for (u32 i{ 0 }; item_ids[i] != id::invalid_id; ++i) {
+				render_items.remove(item_ids[i]);
+			}
+
+			render_item_ids.remove(id);
+		}
+
+		void get_d3d12_render_items_id(const FrameInfo& info, util::vector<id::id_type>& d3d12_render_item_ids) {
+			assert(info.render_item_ids && info.thresholds && info.render_item_count);
+			assert(d3d12_render_item_ids.empty());
+
+			frame_cache.lod_offsets.clear();
+			frame_cache.geometry_ids.clear();
+			frame_cache.thresholds.clear();
+			const u32 count{ info.render_item_count };
+
+			std::lock_guard lock{ render_item_mutex };
+
+			for (u32 i{ 0 }; i < count; ++i) {
+				const id::id_type* const buffer{ render_item_ids[info.render_item_ids[i]].get() };
+				frame_cache.geometry_ids.emplace_back(buffer[0]);
+				frame_cache.thresholds.emplace_back(info.thresholds[i]);
+			}
+
+			lightning::content::get_lod_offsets(frame_cache.geometry_ids.data(), frame_cache.thresholds.data(), count, frame_cache.lod_offsets);
+
+			assert(frame_cache.lod_offsets.size() == count);
+
+			u32 d3d12_render_item_count{ 0 };
+
+			for (u32 i{ 0 }; i < count; ++i) {
+				d3d12_render_item_count += frame_cache.lod_offsets[i].count;
+			}
+
+			assert(d3d12_render_item_count);
+
+			d3d12_render_item_ids.resize(d3d12_render_item_count);
+			u32 item_index{ 0 };
+
+			for (u32 i{ 0 }; i < count; ++i) {
+				const id::id_type* const item_ids{ &render_item_ids[info.render_item_ids[i]][1] };
+				const lightning::content::LodOffset& lod_offset{ frame_cache.lod_offsets[i] };
+				memcpy(&d3d12_render_item_ids[item_index], &item_ids[lod_offset.offset], sizeof(id::id_type) * lod_offset.count);
+				item_index += lod_offset.count;
+
+				assert(item_index <= d3d12_render_item_count);
+			}
+			assert(item_index <= d3d12_render_item_count);
+		}
+
+		void get_items(const id::id_type* const d3d12_render_item_ids, u32 id_count, const ItemsCache& cache) {
+			assert(d3d12_render_item_ids && id_count);
+			assert(cache.entity_ids && cache.submesh_gpu_ids && cache.material_ids && cache.psos && cache.depth_psos);
+
+			std::lock_guard lock{ render_item_mutex };
+
+			for (u32 i{ 0 }; i < id_count; ++i) {
+				const D3D12RenderItem& item{ render_items[d3d12_render_item_ids[i]] };
+				cache.entity_ids[i] = item.entity_id;
+				cache.submesh_gpu_ids[i] = item.submesh_gpu_id;
+				cache.material_ids[i] = item.material_id;
+				cache.psos[i] = pipeline_states[item.pso_id];
+				cache.depth_psos[i] = pipeline_states[item.depth_pso_id];
+			}
 		}
 	}
 }
