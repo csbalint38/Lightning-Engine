@@ -1,5 +1,6 @@
 #include "CommonHeaders.h"
 #include "Content/ContentToEngine.h"
+#include "Graphics/Renderer.h"
 #include "ShaderCompilation.h"
 #include "Components/Entity.h"
 
@@ -13,6 +14,7 @@ namespace {
 	id::id_type model_id{ id::invalid_id };
 	id::id_type vs_id{ id::invalid_id };
 	id::id_type ps_id{ id::invalid_id };
+	id::id_type material_id{ id::invalid_id };
 
 	std::unordered_map<id::id_type, id::id_type> render_item_entity_map;
 
@@ -47,12 +49,23 @@ namespace {
 	}
 }
 
+void create_material() {
+	graphics::MaterialInitInfo info{};
+	info.shader_ids[graphics::ShaderType::VERTEX] = vs_id;
+	info.shader_ids[graphics::ShaderType::PIXEL] = ps_id;
+	info.type = graphics::MaterialType::OPAQUE;
+
+	material_id = content::create_resource(&info, content::AssetType::MATERIAL);
+}
+
 id::id_type create_render_item(id::id_type entity_id) {
 	auto _1 = std::thread{ [] { load_model(); } };
 	auto _2 = std::thread{ [] { load_shaders(); } };
 
 	_1.join();
 	_2.join();
+
+	create_material()
 
 	id::id_type item_id{ 0 };
 

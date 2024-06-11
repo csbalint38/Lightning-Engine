@@ -182,6 +182,15 @@ namespace lightning::content {
 
 			geometry_hierarchies.remove(id);
 		}
+
+		id::id_type create_material_resource(const void* const data) {
+			assert(data);
+			return graphics::add_material(*(const graphics::MaterialInitInfo* const)data);
+		}
+
+		void destroy_material_resource(id::id_type id) {
+			graphics::remove_material(id);
+		}
 	}
 
 	id::id_type create_resource(const void* const data, AssetType::Type type) {
@@ -194,6 +203,7 @@ namespace lightning::content {
 			case AssetType::AUDIO:
 				break;
 			case AssetType::MATERIAL:
+				id = create_material_resource(data);
 				break;
 			case AssetType::MESH:
 				id = create_geometry_resource(data);
@@ -217,6 +227,7 @@ namespace lightning::content {
 			case AssetType::AUDIO:
 				break;
 			case AssetType::MATERIAL:
+				destroy_material_resource(id);
 				break;
 			case AssetType::MESH:
 				destroy_geometry_resource(id);

@@ -92,6 +92,55 @@ namespace lightning::graphics {
 		}
 	};
 
+	struct ShaderFlags {
+		enum Flags : u32 {
+			NONE = 0x0,
+			VERTEX = 0x01,
+			HULL = 0x02,
+			DOMAIN = 0x04,
+			GEOMETRY = 0x08,
+			PIXEL = 0x10,
+			COMPUTE = 0x20,
+			AMPLIFICATION = 0x40,
+			MESH = 0x80
+		};
+	};
+
+	struct ShaderType {
+		enum Type : u32 {
+			VERTEX = 0,
+			HULL,
+			DOMAIN,
+			GEOMETRY,
+			PIXEL,
+			COMPUTE,
+			AMPLIFICATION,
+			MESH,
+
+			count
+		};
+	};
+
+	struct MaterialType {
+		enum Type : u32 {
+			OPAQUE,
+			TRANSPARENT,
+			UNLIT,
+			CLEAR_COAT,
+			CLOTH,
+			SKIN,
+			FOLIAGE,
+			HAIR
+		};
+	};
+
+	struct MaterialInitInfo {
+		MaterialType::Type type;
+		u32 texture_count;
+		id::id_type shader_ids[ShaderType::Type::count]{ id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id };
+		id::id_type* texture_ids;
+	};
+
 	struct PrimitiveTopology {
 		enum Type : u32 {
 			POINT_LIST = 1,
@@ -125,4 +174,7 @@ namespace lightning::graphics {
 
 	id::id_type add_submesh(const u8*& data);
 	void remove_submesh(id::id_type id);
+
+	id::id_type add_material(MaterialInitInfo info);
+	void remove_material(id::id_type id);
 }

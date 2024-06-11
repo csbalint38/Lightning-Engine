@@ -200,4 +200,12 @@ namespace lightning::graphics {
 	void remove_submesh(id::id_type id) {
 		gfx.resources.remove_submesh(id);
 	}
+
+	id::id_type add_material(MaterialInitInfo info) {
+		gfx.resources.add_material(info);
+	}
+
+	void remove_material(id::id_type id) {
+		gfx.resources.remove_material(id);
+	}
 }

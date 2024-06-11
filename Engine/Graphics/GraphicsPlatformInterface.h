@@ -10,11 +10,11 @@ namespace lightning::graphics {
 
 		struct {
 			Surface(*create)(platform::Window);
-			void (*remove)(surface_id);
-			void (*resize)(surface_id, u32, u32);
-			u32 (*width)(surface_id);
-			u32 (*height)(surface_id);
-			void (*render)(surface_id);
+			void(*remove)(surface_id);
+			void(*resize)(surface_id, u32, u32);
+			u32(*width)(surface_id);
+			u32(*height)(surface_id);
+			void(*render)(surface_id);
 		} surface;
 
 		struct {
@@ -26,7 +26,9 @@ namespace lightning::graphics {
 
 		struct {
 			id::id_type(*add_submesh)(const u8*&);
-			void (*remove_submesh)(id::id_type);
+			void(*remove_submesh)(id::id_type);
+			id::id_type(*add_material)(MaterialInitInfo);
+			void(*remove_material)(id::id_type);
 		} resources;
 
 		GraphicsPlatform platform = (GraphicsPlatform)-1;
