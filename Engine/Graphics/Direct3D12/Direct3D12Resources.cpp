@@ -103,6 +103,53 @@ namespace lightning::graphics::direct3d12 {
 	}
 	#pragma endregion
 
+	#pragma region D3D12_BUFFER
+
+	D3D12Buffer::D3D12Buffer(D3D12BufferInitInfo info, bool is_cpu_accessible) {
+		assert(!_buffer && info.size && info.alignment);
+
+		_size = (u32)math::align_size_up(info.size, info.alignment);
+		_buffer = d3dx::create_buffer(info.data, _size, is_cpu_accessible, info.initial_state, info.flags, info.heap, info.allocation_info.Offset);
+		_gpu_address = _buffer->GetGPUVirtualAddress();
+		NAME_D3D12_OBJECT_INDEXED(_buffer, _size, L"D3D12Buffer - size");
+	}
+
+	void D3D12Buffer::release() {
+		core::deferred_release(_buffer);
+		_gpu_address = 0;
+		_size = 0;
+	}
+
+	#pragma endregion
+
+	#pragma region D3D12_CONSTANT_BUFFER
+
+	ConstantBuffer::ConstantBuffer(D3D12BufferInitInfo info) : _buffer{ info, true } {
+		NAME_D3D12_OBJECT_INDEXED(buffer(), size(), L"Constant Buffer - size");
+
+		D3D12_RANGE range{};
+		DXCall(buffer()->Map(0, &range, (void**)(&_cpu_address)));
+		assert(_cpu_address);
+	}
+
+	u8* const ConstantBuffer::allocate(u32 size) {
+		std::lock_guard lock{ _mutex };
+
+		const u32 aligned_size{ (u32)d3dx::align_size_for_constant_buffer(size) };
+		assert(_cpu_offset + aligned_size <= _buffer.size());
+
+		if (_cpu_offset + aligned_size <= _buffer.size()) {
+			u8* const address{ _cpu_address + _cpu_offset };
+			_cpu_offset += aligned_size;
+
+			return address;
+		}
+
+		return nullptr;
+	}
+
+	#pragma endregion
+
 	#pragma region D3D12_TEXTURE
 	D3D12Texture::D3D12Texture(D3D12TextureInitInfo info) {
 		auto* const device{ core::device() };

@@ -30,18 +30,19 @@ namespace lightning::graphics::direct3d12::core {
 		}
 	}
 
-	id3d12_device* const device();
-	DescriptorHeap& rtv_heap();
-	DescriptorHeap& dsv_heap();
-	DescriptorHeap& srv_heap();
-	DescriptorHeap& uav_heap();
-	u32 current_frame_index();
+	 [[nodiscard]] id3d12_device* const device();
+	 [[nodiscard]] DescriptorHeap& rtv_heap();
+	 [[nodiscard]] DescriptorHeap& dsv_heap();
+	 [[nodiscard]] DescriptorHeap& srv_heap();
+	 [[nodiscard]] DescriptorHeap& uav_heap();
+	 [[nodiscard]] ConstantBuffer& c_buffer();
+	 [[nodiscard]] u32 current_frame_index();
 	void set_deferred_release_flag();
 
-	Surface create_surface(platform::Window window);
+	[[nodiscard]] Surface create_surface(platform::Window window);
 	void remove_surface(surface_id id);
 	void resize_surface(surface_id id, u32 width, u32 height);
-	u32 surface_width(surface_id id);
-	u32 surface_height(surface_id id);
+	[[nodiscard]] u32 surface_width(surface_id id);
+	[[nodiscard]] u32 surface_height(surface_id id);
 	void render_surface(surface_id id);
 }

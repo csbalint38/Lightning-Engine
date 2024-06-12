@@ -49,11 +49,13 @@
     <Compile Include="Utilities\Serializer.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Editor\WorldEditor\" />
     <Folder Include="GameProject\" />
     <Folder Include="GameProject\Abstracts\" />
     <Folder Include="GameProject\Controllers\" />
     <Folder Include="LightningGUI\" />
     <Folder Include="LightningGUI\Utilities\" />
+    <Folder Include="Editor\" />
     <Folder Include="Utilities\" />
   </ItemGroup>
   <ItemGroup>

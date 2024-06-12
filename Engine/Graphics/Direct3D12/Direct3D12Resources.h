@@ -55,6 +55,110 @@ namespace lightning::graphics::direct3d12 {
 			const D3D12_DESCRIPTOR_HEAP_TYPE _type{};
 	};
 
+	struct D3D12BufferInitInfo {
+		ID3D12Heap1* heap{ nullptr };
+		const void* data{ nullptr };
+		D3D12_RESOURCE_ALLOCATION_INFO1 allocation_info{};
+		D3D12_RESOURCE_STATES initial_state{};
+		D3D12_RESOURCE_FLAGS flags{ D3D12_RESOURCE_FLAG_NONE };
+		u32 size{ 0 };
+		u32 stride{ 0 };
+		u32 element_count{ 0 };
+		u32 alignment{ 0 };
+		bool create_uav{ false };
+	};
+
+	class D3D12Buffer {
+		public:
+			D3D12Buffer() = default;
+			explicit D3D12Buffer(D3D12BufferInitInfo info, bool is_cpu_accessible);
+			DISABLE_COPY(D3D12Buffer);
+			constexpr D3D12Buffer(D3D12Buffer&& o) : _buffer{ o._buffer }, _gpu_address{ o._gpu_address }, _size{ o._size } { o.reset(); }
+
+			constexpr D3D12Buffer& operator=(D3D12Buffer&& o) {
+				assert(this != &o);
+				if (this != &o) {
+					release();
+					move(o);
+				}
+
+				return *this;
+			}
+
+			void release();
+
+			[[nodiscard]] constexpr ID3D12Resource* const buffer() const { return _buffer; }
+			[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_address() const { return _gpu_address; }
+			[[nodiscard]] constexpr u32 size() const { return _size; }
+
+			~D3D12Buffer() { release(); }
+
+		private:
+			ID3D12Resource* _buffer{ nullptr };
+			D3D12_GPU_VIRTUAL_ADDRESS _gpu_address{ 0 };
+			u32 _size{ 0 };
+
+			constexpr void move(D3D12Buffer& o) {
+				_buffer = o._buffer;
+				_gpu_address = o._gpu_address;
+				_size = o._size;
+				o.reset();
+			}
+
+			constexpr void reset() {
+				_buffer = nullptr;
+				_gpu_address = 0;
+				_size = 0;
+			}
+	};
+
+	class ConstantBuffer {
+		public:
+			ConstantBuffer() = default;
+			explicit ConstantBuffer(D3D12BufferInitInfo info);
+			DISABLE_COPY_AND_MOVE(ConstantBuffer);
+
+			void release() { 
+				_buffer.release();
+				_cpu_address = nullptr;
+				_cpu_offset = 0;
+			}
+
+			constexpr void clear() { _cpu_offset = 0; }
+			[[nodiscard]] u8* const allocate(u32 size);
+			template<typename T> [[nodiscard]] T* const allocate() { return (T* const)allocate(sizeof(T)); }
+			[[nodiscard]] constexpr ID3D12Resource* const buffer() const { return _buffer.buffer(); }
+			[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_address() const { return _buffer.gpu_address(); }
+			[[nodiscard]] constexpr u32 size() const { return _buffer.size(); }
+			[[nodiscard]] constexpr u8* const cpu_address() const { return _cpu_address; }
+
+			template<typename T> [[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_address(T* const allocate) {
+				std::lock_guard lock{ _mutex };
+				assert(_cpu_address);
+				if (!_cpu_address) return {};
+				const u8* const address{ (const u8* const)address };
+				assert(address <= _cpu_address + _cpu_offset);
+				assert(address >= _cpu_address);
+				const u64 offset{ (u64)(address - _cpu_address) };
+				return _buffer.gpu_address() + offset;
+			}
+
+			[[nodiscard]] constexpr static D3D12BufferInitInfo get_default_init_info(u32 size) {
+				assert(size);
+				D3D12BufferInitInfo info{};
+				info.size = size;
+				info.alignment = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
+				return info;
+			}
+
+			~ConstantBuffer() { release(); }
+		private:
+			D3D12Buffer _buffer{};
+			u8* _cpu_address{ nullptr };
+			u32 _cpu_offset{ 0 };
+			std::mutex _mutex;
+	};
+
 	struct D3D12TextureInitInfo {
 		ID3D12Heap1* heap{ nullptr };
 		ID3D12Resource2* resource{ nullptr };

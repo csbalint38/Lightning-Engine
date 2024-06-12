@@ -28,6 +28,14 @@ namespace lightning::graphics::direct3d12::content {
 			u32 element_type{};
 		};
 
+		struct D3D12RenderItem {
+			id::id_type entity_id;
+			id::id_type submesh_gpu_id;
+			id::id_type material_id;
+			id::id_type pso_id;
+			id::id_type depth_pso_id;
+		};
+
 		util::free_list<ID3D12Resource*> submesh_buffers{};
 		util::free_list<SubmeshView> submesh_views{};
 		std::mutex submesh_mutex{};
@@ -40,7 +48,7 @@ namespace lightning::graphics::direct3d12::content {
 		util::free_list<std::unique_ptr<u8[]>> materials;
 		std::mutex material_mutex{};
 
-		util::free_list<render_item::D3D12RenderItem> render_items;
+		util::free_list<D3D12RenderItem> render_items;
 		util::free_list<std::unique_ptr<id::id_type[]>> render_item_ids;
 		util::vector<ID3D12PipelineState*> pipeline_states;
 		std::unordered_map<u64, id::id_type> pso_map;
@@ -49,7 +57,6 @@ namespace lightning::graphics::direct3d12::content {
 		struct {
 			util::vector<lightning::content::LodOffset> lod_offsets;
 			util::vector<id::id_type> geometry_ids;
-			util::vector<f32> thresholds;
 		} frame_cache;
 
 		constexpr D3D12_ROOT_SIGNATURE_FLAGS get_root_signature_flags(ShaderFlags::Flags flags) {
@@ -517,7 +524,6 @@ namespace lightning::graphics::direct3d12::content {
 
 			frame_cache.lod_offsets.clear();
 			frame_cache.geometry_ids.clear();
-			frame_cache.thresholds.clear();
 			const u32 count{ info.render_item_count };
 
 			std::lock_guard lock{ render_item_mutex };
@@ -525,10 +531,9 @@ namespace lightning::graphics::direct3d12::content {
 			for (u32 i{ 0 }; i < count; ++i) {
 				const id::id_type* const buffer{ render_item_ids[info.render_item_ids[i]].get() };
 				frame_cache.geometry_ids.emplace_back(buffer[0]);
-				frame_cache.thresholds.emplace_back(info.thresholds[i]);
 			}
 
-			lightning::content::get_lod_offsets(frame_cache.geometry_ids.data(), frame_cache.thresholds.data(), count, frame_cache.lod_offsets);
+			lightning::content::get_lod_offsets(frame_cache.geometry_ids.data(), info.thresholds, count, frame_cache.lod_offsets);
 
 			assert(frame_cache.lod_offsets.size() == count);
 

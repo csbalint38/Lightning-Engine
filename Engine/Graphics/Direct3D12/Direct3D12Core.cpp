@@ -143,6 +143,7 @@ namespace lightning::graphics::direct3d12::core {
 		D3D12Command gfx_command;
 		surface_collection surfaces;
 		d3dx::D3D12ResourceBarrier resource_barriers{};
+		ConstantBuffer constant_buffers[FRAME_BUFFER_COUNT];
 
 		DescriptorHeap rtv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV };
 		DescriptorHeap dsv_desc_heap{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV };
@@ -274,6 +275,11 @@ namespace lightning::graphics::direct3d12::core {
 		result &= uav_desc_heap.initialize(512, false);
 		if (!result) return failed_init();
 
+		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+			new (&constant_buffers[i]) ConstantBuffer{ ConstantBuffer::get_default_init_info(1024 * 1024) };
+			NAME_D3D12_OBJECT_INDEXED(constant_buffers[i].buffer(), i, L"Global Constatnt Buffer");
+		}
+
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 		if (!gfx_command.command_queue()) return failed_init();
 
@@ -301,6 +307,8 @@ namespace lightning::graphics::direct3d12::core {
 		fx::shutdown();
 		gpass::shutdown();
 		shaders::shutdown();
+
+		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) constant_buffers[i].release();
 
 		release(dxgi_factory);
 
@@ -342,6 +350,7 @@ namespace lightning::graphics::direct3d12::core {
 	DescriptorHeap& dsv_heap() { return dsv_desc_heap; }
 	DescriptorHeap& srv_heap() { return srv_desc_heap; }
 	DescriptorHeap& uav_heap() { return uav_desc_heap; }
+	ConstantBuffer& c_buffer() { return constant_buffers[current_frame_index()]; }
 	u32 current_frame_index() { return gfx_command.frame_index(); }
 
 	void set_deferred_release_flag() {
@@ -369,9 +378,13 @@ namespace lightning::graphics::direct3d12::core {
 
 	void render_surface(surface_id id) {
 		gfx_command.begin_frame();
-		id3d12_graphics_command_list* cmd_list{gfx_command.command_list()};
+		id3d12_graphics_command_list* cmd_list{ gfx_command.command_list() };
 
 		const u32 frame_idx{ current_frame_index() };
+
+		ConstantBuffer& c_buffer{ constant_buffers[frame_idx] };
+		c_buffer.clear();
+
 		if (deferred_release_flag[frame_idx]) {
 			process_deferred_releases(frame_idx);
 		}
