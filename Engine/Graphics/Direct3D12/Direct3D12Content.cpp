@@ -14,6 +14,12 @@
 
 namespace lightning::graphics::direct3d12::content {
 	namespace {
+
+		struct PsoId {
+			id::id_type gpass_pso_id{ id::invalid_id };
+			id::id_type depth_pso_id{ id::invalid_id };
+		};
+
 		struct SubmeshView {
 			D3D12_VERTEX_BUFFER_VIEW position_buffer_view{};
 			D3D12_VERTEX_BUFFER_VIEW element_buffer_view{};
@@ -214,18 +220,105 @@ namespace lightning::graphics::direct3d12::content {
 				ShaderFlags::Flags _shader_flags;
 		};
 
-		D3D_PRIMITIVE_TOPOLOGY get_d3d_primitive_topology(PrimitiveTopology::Type type) {
+		constexpr D3D_PRIMITIVE_TOPOLOGY get_d3d_primitive_topology(PrimitiveTopology::Type type) {
 
 			assert(type < PrimitiveTopology::count);
 
 			switch (type) {
-				case PrimitiveTopology::Type::POINT_LIST:return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
-				case PrimitiveTopology::Type::LINE_LIST:return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
-				case PrimitiveTopology::Type::LINE_STRIP:return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
-				case PrimitiveTopology::Type::TRIANGLE_LIST:return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-				case PrimitiveTopology::Type::TRIANGLE_STRIP:return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+				case PrimitiveTopology::Type::POINT_LIST: return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+				case PrimitiveTopology::Type::LINE_LIST: return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+				case PrimitiveTopology::Type::LINE_STRIP: return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+				case PrimitiveTopology::Type::TRIANGLE_LIST: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+				case PrimitiveTopology::Type::TRIANGLE_STRIP: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 			}
 			return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+		}
+
+		constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE get_d3d_primitive_topology_type(D3D_PRIMITIVE_TOPOLOGY topology) {
+
+			switch (topology) {
+				case D3D_PRIMITIVE_TOPOLOGY_POINTLIST: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+				case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
+				case D3D_PRIMITIVE_TOPOLOGY_LINESTRIP: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+				case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
+				case D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			}
+			return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+		}
+
+		id::id_type create_pso_if_needed(const u8* const stream_ptr, u64 aligned_stream_size, [[maybe_unused]] bool is_depth) {
+			const u64 key{ math::calc_crc32_u64(stream_ptr, aligned_stream_size) };
+			auto pair = pso_map.find(key);
+
+			if (pair != pso_map.end()) {
+				assert(pair->first == key);
+				return pair->second;
+			}
+
+			const id::id_type id{ (u32)pipeline_states.size() };
+			d3dx::D3D12PipelineStateSubobjectStream* const stream{ (d3dx::D3D12PipelineStateSubobjectStream* const)stream_ptr };
+			pipeline_states.emplace_back(d3dx::create_pipeline_state(stream, sizeof(d3dx::D3D12PipelineStateSubobjectStream)));
+			NAME_D3D12_OBJECT_INDEXED(pipeline_states.back(), key, is_depth ? L"Depth-only Pipeline State Object - key" : L"GPass Pipeline State Object - key");
+
+			assert(id::is_valid(id));
+			pso_map[key] = id;
+
+			return id;
+		}
+
+		PsoId create_pso(id::id_type material_id, D3D12_PRIMITIVE_TOPOLOGY primitive_topology, u32 elements_type) {
+			std::lock_guard lock{ material_mutex };
+			const D3D12MaterialStream material{ materials[material_id].get() };
+
+			constexpr u64 aligned_stream_size{ math::align_size_up<sizeof(u64)>(sizeof(d3dx::D3D12PipelineStateSubobjectStream)) };
+			u8* const stream_ptr{ (u8* const)alloca(aligned_stream_size) };
+			ZeroMemory(stream_ptr, aligned_stream_size);
+			new (stream_ptr) d3dx::D3D12PipelineStateSubobjectStream{};
+
+			d3dx::D3D12PipelineStateSubobjectStream& stream{ *(d3dx::D3D12PipelineStateSubobjectStream* const)stream_ptr };
+
+			D3D12_RT_FORMAT_ARRAY rt_array{};
+			rt_array.NumRenderTargets = 1;
+			rt_array.RTFormats[0] = gpass::main_buffer_format;
+
+			stream.render_target_formats = rt_array;
+			stream.root_signature = root_signatures[material.root_signature_id()];
+			stream.primitive_topology = get_d3d_primitive_topology_type(primitive_topology);
+			stream.depth_stencil_format = gpass::depth_buffer_format;
+			stream.rasterizer = d3dx::rasterizer_state.backface_cull;
+			stream.depth_stencil1 = d3dx::depth_state.enabled_readonly;
+			stream.blend = d3dx::blend_state.disabled;
+
+			const ShaderFlags::Flags flags{ material.shader_flags() };
+			D3D12_SHADER_BYTECODE shaders[ShaderType::count]{};
+			u32 shader_index{ 0 };
+			for (u32 i{ 0 }; i < ShaderType::count; ++i) {
+				if (flags & (1 << i)) {
+					lightning::content::compiled_shader_ptr shader{ lightning::content::get_shader(material.shader_ids()[shader_index]) };
+					assert(shader);
+					shaders[i].pShaderBytecode = shader->byte_code();
+					shaders[i].BytecodeLength = shader->byte_code_size();
+					++shader_index;
+				}
+			}
+
+			stream.vs = shaders[ShaderType::VERTEX];
+			stream.ds = shaders[ShaderType::DOMAIN];
+			stream.hs = shaders[ShaderType::HULL];
+			stream.gs = shaders[ShaderType::GEOMETRY];
+			stream.ps = shaders[ShaderType::PIXEL];
+			stream.cs = shaders[ShaderType::COMPUTE];
+			stream.as = shaders[ShaderType::AMPLIFICATION];
+			stream.ms = shaders[ShaderType::MESH];
+
+			PsoId id_pair{};
+			id_pair.gpass_pso_id = create_pso_if_needed(stream_ptr, aligned_stream_size, false);
+
+			stream.ps = D3D12_SHADER_BYTECODE{};
+			stream.depth_stencil1 = d3dx::depth_state.enabled;
+			id_pair.depth_pso_id = create_pso_if_needed(stream_ptr, aligned_stream_size, true);
+
+			return id_pair;
 		}
 	}
 
@@ -392,6 +485,9 @@ namespace lightning::graphics::direct3d12::content {
 				item.entity_id = entity_id;
 				item.submesh_gpu_id = gpu_ids[i];
 				item.material_id = material_ids[i];
+				PsoId id_pair{ create_pso(item.material_id, views_cache.primitive_topologies[i], views_cache.elements_types[i]) };
+				item.pso_id = id_pair.gpass_pso_id;
+				item.depth_pso_id = id_pair.depth_pso_id;
 
 				assert(id::is_valid(item.submesh_gpu_id) && id::is_valid(item.material_id));
 

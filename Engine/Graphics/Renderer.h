@@ -194,4 +194,7 @@ namespace lightning::graphics {
 
 	id::id_type add_material(MaterialInitInfo info);
 	void remove_material(id::id_type id);
+
+	id::id_type add_render_item(id::id_type entity_id, id::id_type geometry_content_id, u32 material_count, const id::id_type* const material_ids);
+	void remove_render_item(id::id_type id);
 }

@@ -91,7 +91,138 @@ namespace lightning::graphics::direct3d12::d3dx {
 			{},
 			0
 		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 enabled{
+			1,
+			D3D12_DEPTH_WRITE_MASK_ALL,
+			D3D12_COMPARISON_FUNC_LESS_EQUAL,
+			0,
+			0,
+			0,
+			{},
+			{},
+			0
+		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 enabled_readonly{
+			1,
+			D3D12_DEPTH_WRITE_MASK_ZERO,
+			D3D12_COMPARISON_FUNC_LESS_EQUAL,
+			0,
+			0,
+			0,
+			{},
+			{},
+			0
+		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 reversed{
+			1,
+			D3D12_DEPTH_WRITE_MASK_ALL,
+			D3D12_COMPARISON_FUNC_GREATER_EQUAL,
+			0,
+			0,
+			0,
+			{},
+			{},
+			0
+		};
+
+		const D3D12_DEPTH_STENCIL_DESC1 reversed_readonly{
+			1,
+			D3D12_DEPTH_WRITE_MASK_ZERO,
+			D3D12_COMPARISON_FUNC_GREATER_EQUAL,
+			0,
+			0,
+			0,
+			{},
+			{},
+			0
+		};
+
 	} depth_state;
+
+	constexpr struct {
+		const D3D12_BLEND_DESC disabled{
+			0,										// Alpha to coverage enable
+			0,										// Independent blend enable
+			{
+				{
+					0,								// Blend Enable
+					0,								// Logic OP enable
+					D3D12_BLEND_SRC_ALPHA,			// Src blend
+					D3D12_BLEND_INV_SRC_ALPHA,		// Dest blend
+					D3D12_BLEND_OP_ADD,				// Blend OP
+					D3D12_BLEND_ONE,				// Src blend alpha
+					D3D12_BLEND_ONE,				// Dest blend alpha
+					D3D12_BLEND_OP_ADD,				// Blend OP alpha
+					D3D12_LOGIC_OP_NOOP,			// Logic OP
+					D3D12_COLOR_WRITE_ENABLE_ALL,	// Render target write mask
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+
+		const D3D12_BLEND_DESC alpha_blend{
+			0,										// Alpha to coverage enable
+			0,										// Independent blend enable
+			{
+				{
+					1,								// Blend Enable
+					0,								// Logic OP enable
+					D3D12_BLEND_SRC_ALPHA,			// Src blend
+					D3D12_BLEND_INV_SRC_ALPHA,		// Dest blend
+					D3D12_BLEND_OP_ADD,				// Blend OP
+					D3D12_BLEND_ONE,				// Src blend alpha
+					D3D12_BLEND_ONE,				// Dest blend alpha
+					D3D12_BLEND_OP_ADD,				// Blend OP alpha
+					D3D12_LOGIC_OP_NOOP,			// Logic OP
+					D3D12_COLOR_WRITE_ENABLE_ALL,	// Render target write mask
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+
+		const D3D12_BLEND_DESC additive{
+			0,										// Alpha to coverage enable
+			0,										// Independent blend enable
+			{
+				{
+					1,								// Blend Enable
+					0,								// Logic OP enable
+					D3D12_BLEND_ONE,				// Src blend
+					D3D12_BLEND_ONE,				// Dest blend
+					D3D12_BLEND_OP_ADD,				// Blend OP
+					D3D12_BLEND_ONE,				// Src blend alpha
+					D3D12_BLEND_ONE,				// Dest blend alpha
+					D3D12_BLEND_OP_ADD,				// Blend OP alpha
+					D3D12_LOGIC_OP_NOOP,			// Logic OP
+					D3D12_COLOR_WRITE_ENABLE_ALL,	// Render target write mask
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+
+		const D3D12_BLEND_DESC premultiplied{
+			0,										// Alpha to coverage enable
+			0,										// Independent blend enable
+			{
+				{
+					0,								// Blend Enable
+					0,								// Logic OP enable
+					D3D12_BLEND_ONE,				// Src blend
+					D3D12_BLEND_INV_SRC_ALPHA,		// Dest blend
+					D3D12_BLEND_OP_ADD,				// Blend OP
+					D3D12_BLEND_ONE,				// Src blend alpha
+					D3D12_BLEND_ONE,				// Dest blend alpha
+					D3D12_BLEND_OP_ADD,				// Blend OP alpha
+					D3D12_LOGIC_OP_NOOP,			// Logic OP
+					D3D12_COLOR_WRITE_ENABLE_ALL,	// Render target write mask
+				},
+				{},{},{},{},{},{},{}
+			}
+		};
+	} blend_state;
 
 	class D3D12ResourceBarrier {
 		public:
@@ -256,6 +387,33 @@ namespace lightning::graphics::direct3d12::d3dx {
 	PSS(as, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_AS, D3D12_SHADER_BYTECODE);
 	PSS(ms, D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_MS, D3D12_SHADER_BYTECODE);
 	#undef PSS
+
+	struct D3D12PipelineStateSubobjectStream {
+		d3d12_pipeline_state_subobject_root_signature root_signature{ nullptr };
+		d3d12_pipeline_state_subobject_vs vs{};
+		d3d12_pipeline_state_subobject_ps ps{};
+		d3d12_pipeline_state_subobject_ds ds{};
+		d3d12_pipeline_state_subobject_hs hs{};
+		d3d12_pipeline_state_subobject_gs gs{};
+		d3d12_pipeline_state_subobject_cs cs{};
+		d3d12_pipeline_state_subobject_stream_output stream_output{};
+		d3d12_pipeline_state_subobject_blend blend{ blend_state.disabled };
+		d3d12_pipeline_state_subobject_sample_mask sample_mask{ UINT_MAX };
+		d3d12_pipeline_state_subobject_rasterizer rasterizer{ rasterizer_state.no_cull };
+		d3d12_pipeline_state_subobject_input_layout input_layout{};
+		d3d12_pipeline_state_subobject_ib_strip_cut_value ib_strip_cut_value{};
+		d3d12_pipeline_state_subobject_primitive_topology primitive_topology{};
+		d3d12_pipeline_state_subobject_render_target_formats render_target_formats{};
+		d3d12_pipeline_state_subobject_depth_stencil_format depth_stencil_format{};
+		d3d12_pipeline_state_subobject_sample_desc sample_desc{ {1, 0} };
+		d3d12_pipeline_state_subobject_node_mask node_mask{};
+		d3d12_pipeline_state_subobject_cached_pso cached_pso{};
+		d3d12_pipeline_state_subobject_flags flags{};
+		d3d12_pipeline_state_subobject_depth_stencil1 depth_stencil1{};
+		d3d12_pipeline_state_subobject_view_instancing view_instancing{};
+		d3d12_pipeline_state_subobject_as as{};
+		d3d12_pipeline_state_subobject_ms ms{};
+	};
 
 	ID3D12PipelineState* create_pipeline_state(D3D12_PIPELINE_STATE_STREAM_DESC desc);
 	ID3D12PipelineState* create_pipeline_state(void* stream, u64 stream_size);

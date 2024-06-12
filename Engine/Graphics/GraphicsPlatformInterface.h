@@ -29,6 +29,8 @@ namespace lightning::graphics {
 			void(*remove_submesh)(id::id_type);
 			id::id_type(*add_material)(MaterialInitInfo);
 			void(*remove_material)(id::id_type);
+			id::id_type(*add_render_item)(id::id_type, id::id_type, u32, const id::id_type* const);
+			void(*remove_render_item)(id::id_type);
 		} resources;
 
 		GraphicsPlatform platform = (GraphicsPlatform)-1;

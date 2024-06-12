@@ -27,6 +27,8 @@ namespace lightning::graphics::direct3d12 {
 		pi.resources.remove_submesh = content::submesh::remove;
 		pi.resources.add_material = content::material::add;
 		pi.resources.remove_material = content::material::remove;
+		pi.resources.add_render_item = content::render_item::add;
+		pi.resources.remove_render_item = content::render_item::remove;
 
 		pi.platform = GraphicsPlatform::DIRECT3D12;
 	}

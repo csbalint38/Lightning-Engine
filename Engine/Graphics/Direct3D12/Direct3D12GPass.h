@@ -8,6 +8,9 @@ namespace lightning::graphics::direct3d12 {
 
 namespace lightning::graphics::direct3d12::gpass {
 
+	constexpr DXGI_FORMAT main_buffer_format{ DXGI_FORMAT_R16G16B16A16_FLOAT };
+	constexpr DXGI_FORMAT depth_buffer_format{ DXGI_FORMAT_D32_FLOAT };
+
 	struct OpaqueRootParameter {
 		enum parameter : u32 {
 			PER_FRAME_DATA,
