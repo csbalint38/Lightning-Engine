@@ -36,7 +36,7 @@ namespace lightning::graphics {
 			void resize(u32 width, u32 height) const;
 			u32 width() const;
 			u32 height() const;
-			void render() const;
+			void render(FrameInfo info) const;
 	};
 
 	struct RenderSurface {

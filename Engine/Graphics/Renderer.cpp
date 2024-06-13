@@ -51,9 +51,9 @@ namespace lightning::graphics {
 		return gfx.surface.height(_id);
 	}
 
-	void Surface::render() const {
+	void Surface::render(FrameInfo info) const {
 		assert(is_valid());
-		gfx.surface.render(_id);
+		gfx.surface.render(_id, info);
 	}
 
 	Camera create_camera(CameraInitInfo info) {

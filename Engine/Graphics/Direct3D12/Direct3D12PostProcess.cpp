@@ -62,7 +62,7 @@ namespace lightning::graphics::direct3d12::fx {
 		core::release(fx_pso);
 	}
 
-	void post_process(id3d12_graphics_command_list* cmd_list, D3D12_CPU_DESCRIPTOR_HANDLE target_rtv) {
+	void post_process(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info, D3D12_CPU_DESCRIPTOR_HANDLE target_rtv) {
 		cmd_list->SetGraphicsRootSignature(fx_root_sig);
 		cmd_list->SetPipelineState(fx_pso);
 

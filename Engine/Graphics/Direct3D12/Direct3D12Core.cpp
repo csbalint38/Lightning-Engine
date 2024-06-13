@@ -5,6 +5,8 @@
 #include "Direct3D12PostProcess.h"
 #include "Direct3D12Upload.h"
 #include "Direct3D12Content.h"
+#include "Direct3D12Camera.h"
+#include "Shaders/ShaderTypes.h"
 
 using namespace Microsoft::WRL;
 
@@ -206,6 +208,39 @@ namespace lightning::graphics::direct3d12::core {
 				resources.clear();
 			}
 		}
+
+		D3D12FrameInfo get_d3d12_frame_info(const FrameInfo& info, ConstantBuffer& cbuffer, const D3D12Surface& surface, u32 frame_index, f32 delta_time) {
+			camera::D3D12Camera& camera{ camera::get(info.camera_id) };
+			camera.update();
+			hlsl::GlobalShaderData data{};
+
+			using namespace DirectX;
+			XMStoreFloat4x4A(&data.view, camera.view());
+			XMStoreFloat4x4A(&data.projection, camera.projection());
+			XMStoreFloat4x4A(&data.inverse_projection, camera.inverse_projection());
+			XMStoreFloat4x4A(&data.view_projection, camera.view_projection());
+			XMStoreFloat4x4A(&data.inv_view_projection, camera.inverse_view_projection());
+			XMStoreFloat3(&data.camera_position, camera.position());
+			XMStoreFloat3(&data.camera_direction, camera.direction());
+			data.view_width = surface.width();
+			data.view_height = surface.height();
+			data.delta_time = delta_time;
+
+			hlsl::GlobalShaderData* const shader_data{ cbuffer.allocate<hlsl::GlobalShaderData>() };
+			memcpy(shader_data, &data, sizeof(hlsl::GlobalShaderData));
+
+			D3D12FrameInfo frame_info{
+				&info,
+				&camera,
+				cbuffer.gpu_address(shader_data),
+				surface.width(),
+				surface.height(),
+				frame_index,
+				delta_time
+			};
+
+			return frame_info;
+		}
 	}
 
 	namespace detail {
@@ -376,7 +411,7 @@ namespace lightning::graphics::direct3d12::core {
 	u32 surface_width(surface_id id) { return surfaces[id].width(); }
 	u32 surface_height(surface_id id) { return surfaces[id].height(); }
 
-	void render_surface(surface_id id) {
+	void render_surface(surface_id id, FrameInfo info) {
 		gfx_command.begin_frame();
 		id3d12_graphics_command_list* cmd_list{ gfx_command.command_list() };
 
@@ -392,9 +427,8 @@ namespace lightning::graphics::direct3d12::core {
 		const D3D12Surface& surface{ surfaces[id] };
 		ID3D12Resource* const current_back_buffer{ surface.back_buffer() };
 
-		D3D12FrameInfo frame_info{
-			surface.width(),
-			surface.height()
+		const D3D12FrameInfo frame_info{
+			get_d3d12_frame_info(info, c_buffer, surface, frame_idx, 16.7f)
 		};
 
 		gpass::set_size({ frame_info.surface_width, frame_info.surface_height });
@@ -422,7 +456,7 @@ namespace lightning::graphics::direct3d12::core {
 		gpass::add_transitions_for_post_process(barriers);
 		barriers.apply(cmd_list);
 
-		fx::post_process(cmd_list, surface.rtv());
+		fx::post_process(cmd_list, frame_info, surface.rtv());
 
 		d3dx::transition_resource(cmd_list, current_back_buffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 

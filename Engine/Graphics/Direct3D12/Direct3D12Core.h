@@ -2,9 +2,16 @@
 #include "Direct3D12CommonHeaders.h"
 
 namespace lightning::graphics::direct3d12 {
+	namespace camera { class D3D12Camera; }
+
 	struct D3D12FrameInfo {
-		u32 surface_width{};
-		u32 surface_height{};
+		const FrameInfo* info;
+		camera::D3D12Camera* camera;
+		D3D12_GPU_VIRTUAL_ADDRESS global_shader_data;
+		u32 surface_width;
+		u32 surface_height;
+		u32 frame_index;
+		f32 delta_time;
 	};
 }
 
@@ -44,5 +51,5 @@ namespace lightning::graphics::direct3d12::core {
 	void resize_surface(surface_id id, u32 width, u32 height);
 	[[nodiscard]] u32 surface_width(surface_id id);
 	[[nodiscard]] u32 surface_height(surface_id id);
-	void render_surface(surface_id id);
+	void render_surface(surface_id id, FrameInfo info);
 }

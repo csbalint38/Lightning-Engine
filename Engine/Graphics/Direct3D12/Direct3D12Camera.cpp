@@ -192,9 +192,9 @@ namespace lightning::graphics::direct3d12::camera {
 		using namespace DirectX;
 		math::v3 pos{ entity.transform().position() };
 		math::v3 dir{ entity.transform().orientation() };
-		XMVECTOR position{ XMLoadFloat3(&pos) };
-		XMVECTOR direction{ XMLoadFloat3(&dir) };
-		_view = XMMatrixLookToRH(position, direction, _up);
+		_position = XMLoadFloat3(&pos);
+		_direction = XMLoadFloat3(&dir);
+		_view = XMMatrixLookToRH(_position, _direction, _up);
 
 		if (_is_dirty) {
 			_projection = (_projection_type == graphics::Camera::PERSPECTIVE) ? XMMatrixPerspectiveFovRH(_field_of_view * XM_PI, _aspect_ratio, _near_z, _far_z) : XMMatrixOrthographicRH(_view_width, _view_height, _near_z, _far_z);

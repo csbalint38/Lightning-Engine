@@ -1,6 +1,7 @@
 #include "Direct3D12GPass.h"
 #include "Direct3D12Core.h"
 #include "Direct3D12Shaders.h"
+#include "Direct3D12Content.h"
 
 namespace lightning::graphics::direct3d12::gpass {
 	namespace {
@@ -29,6 +30,96 @@ namespace lightning::graphics::direct3d12::gpass {
 		constexpr f32 clear_value[4]{};
 		#endif
 
+		struct GPassCache {
+			util::vector<id::id_type> d3d12_render_item_ids;
+
+			id::id_type* entity_ids{ nullptr };
+			id::id_type* submesh_gpu_ids{ nullptr };
+			id::id_type* material_ids{ nullptr };
+			ID3D12PipelineState** gpass_pipeline_states{ nullptr };
+			ID3D12PipelineState** depth_pipeline_states{ nullptr };
+			ID3D12RootSignature** root_signatures{ nullptr };
+			MaterialType::Type* material_types{ nullptr };
+			D3D12_GPU_VIRTUAL_ADDRESS* position_buffers{ nullptr };
+			D3D12_GPU_VIRTUAL_ADDRESS* element_buffers{ nullptr };
+			D3D12_INDEX_BUFFER_VIEW* index_buffer_views{ nullptr };
+			D3D_PRIMITIVE_TOPOLOGY* primitive_topologies{ nullptr };
+			u32* elements_types{ nullptr };
+			D3D12_GPU_VIRTUAL_ADDRESS* per_object_data{ nullptr };
+
+			constexpr content::render_item::ItemsCache items_cache() const {
+				return {
+					entity_ids,
+					submesh_gpu_ids,
+					material_ids,
+					gpass_pipeline_states,
+					depth_pipeline_states
+				};
+			}
+
+			constexpr content::submesh::ViewsCache views_cache() const {
+				return {
+					position_buffers,
+					element_buffers,
+					index_buffer_views,
+					primitive_topologies,
+					elements_types
+				};
+			}
+
+			constexpr content::material::MaterialsCache materials_cache() const {
+				return {
+					root_signatures,
+					material_types
+				};
+			}
+
+			constexpr u32 size() { return (u32)d3d12_render_item_ids.size(); }
+			constexpr void clear() { d3d12_render_item_ids.clear(); }
+
+			constexpr void resize() {
+				const u64 items_count{ d3d12_render_item_ids.size() };
+				const u64 new_buffer_size{ items_count * struct_size };
+				const u64 old_buffer_size{ _buffer.size() };
+
+				if (new_buffer_size > old_buffer_size) _buffer.resize(new_buffer_size);
+
+				if (new_buffer_size != old_buffer_size) {
+					entity_ids = (id::id_type*)_buffer.data();
+					submesh_gpu_ids = (id::id_type*)(&entity_ids[items_count]);
+					material_ids = (id::id_type*)(&submesh_gpu_ids[items_count]);
+					gpass_pipeline_states = (ID3D12PipelineState**)(&material_ids[items_count]);
+					depth_pipeline_states = (ID3D12PipelineState**)(&gpass_pipeline_states[items_count]);
+					root_signatures = (ID3D12RootSignature**)(&depth_pipeline_states[items_count]);
+					material_types = (MaterialType::Type*)(&root_signatures[items_count]);
+					position_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)(&material_types[items_count]);
+					element_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)(&position_buffers[items_count]);
+					index_buffer_views = (D3D12_INDEX_BUFFER_VIEW*)(&element_buffers[items_count]);
+					primitive_topologies = (D3D_PRIMITIVE_TOPOLOGY*)(&index_buffer_views[items_count]);
+					elements_types = (u32*)(&primitive_topologies[items_count]);
+					per_object_data = (D3D12_GPU_VIRTUAL_ADDRESS*)(&elements_types[items_count]);
+				}
+			}
+
+			private:
+				constexpr static u32 struct_size{
+					sizeof(id::id_type) +
+					sizeof(id::id_type) +
+					sizeof(id::id_type) +
+					sizeof(ID3D12PipelineState*) +
+					sizeof(ID3D12PipelineState*) +
+					sizeof(ID3D12RootSignature*) +
+					sizeof(MaterialType::Type) +
+					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +
+					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +
+					sizeof(D3D12_INDEX_BUFFER_VIEW) +
+					sizeof(D3D_PRIMITIVE_TOPOLOGY) +
+					sizeof(u32) +
+					sizeof(D3D12_GPU_VIRTUAL_ADDRESS)
+				};
+
+				util::vector<u8> _buffer;
+		} frame_cache;
 
 		bool create_buffers(math::u32v2 size) {
 			assert(size.x && size.y);
@@ -111,6 +202,10 @@ namespace lightning::graphics::direct3d12::gpass {
 
 			return gpass_root_sig && gpass_pso;
 		}
+
+		void prepare_render_frame(const D3D12FrameInfo& info) {
+
+		}
 	}
 
 	bool initialize() {
@@ -139,7 +234,7 @@ namespace lightning::graphics::direct3d12::gpass {
 	}
 
 	void depth_prepass(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
-
+		prepare_render_frame(info);
 	}
 
 	void render(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
