@@ -90,7 +90,7 @@ namespace lightning::graphics::direct3d12::content {
 				case MaterialType::Type::OPAQUE:
 					using params = gpass::OpaqueRootParameter;
 					d3dx::D3D12RootParameter parameters[params::count]{};
-					parameters[params::PER_FRAME_DATA].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 0);
+					parameters[params::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 0);
 
 					D3D12_SHADER_VISIBILITY buffer_visibility{};
 					D3D12_SHADER_VISIBILITY data_visibility{};
@@ -561,7 +561,7 @@ namespace lightning::graphics::direct3d12::content {
 
 		void get_items(const id::id_type* const d3d12_render_item_ids, u32 id_count, const ItemsCache& cache) {
 			assert(d3d12_render_item_ids && id_count);
-			assert(cache.entity_ids && cache.submesh_gpu_ids && cache.material_ids && cache.psos && cache.depth_psos);
+			assert(cache.entity_ids && cache.submesh_gpu_ids && cache.material_ids && cache.gpass_psos && cache.depth_psos);
 
 			std::lock_guard lock{ render_item_mutex };
 
@@ -570,7 +570,7 @@ namespace lightning::graphics::direct3d12::content {
 				cache.entity_ids[i] = item.entity_id;
 				cache.submesh_gpu_ids[i] = item.submesh_gpu_id;
 				cache.material_ids[i] = item.material_id;
-				cache.psos[i] = pipeline_states[item.pso_id];
+				cache.gpass_psos[i] = pipeline_states[item.pso_id];
 				cache.depth_psos[i] = pipeline_states[item.depth_pso_id];
 			}
 		}

@@ -136,7 +136,7 @@ namespace lightning::graphics::direct3d12 {
 				std::lock_guard lock{ _mutex };
 				assert(_cpu_address);
 				if (!_cpu_address) return {};
-				const u8* const address{ (const u8* const)address };
+				const u8* const address{ (const u8* const)allocate };
 				assert(address <= _cpu_address + _cpu_offset);
 				assert(address >= _cpu_address);
 				const u64 offset{ (u64)(address - _cpu_address) };

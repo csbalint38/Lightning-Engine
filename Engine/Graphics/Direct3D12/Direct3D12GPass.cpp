@@ -2,9 +2,16 @@
 #include "Direct3D12Core.h"
 #include "Direct3D12Shaders.h"
 #include "Direct3D12Content.h"
+#include "Direct3D12Camera.h"
+#include "Shaders/ShaderTypes.h"
+#include "Components/Entity.h"
+#include "Components/Transform.h"
 
 namespace lightning::graphics::direct3d12::gpass {
 	namespace {
+		#ifdef OPAQUE
+		#undef OPAQUE
+		#endif
 
 		struct GpassRootParamIndicies {
 			enum : u32 {
@@ -74,7 +81,7 @@ namespace lightning::graphics::direct3d12::gpass {
 				};
 			}
 
-			constexpr u32 size() { return (u32)d3d12_render_item_ids.size(); }
+			constexpr u32 size() const { return (u32)d3d12_render_item_ids.size(); }
 			constexpr void clear() { d3d12_render_item_ids.clear(); }
 
 			constexpr void resize() {
@@ -203,8 +210,66 @@ namespace lightning::graphics::direct3d12::gpass {
 			return gpass_root_sig && gpass_pso;
 		}
 
-		void prepare_render_frame(const D3D12FrameInfo& info) {
+		void fill_per_object_data(ConstantBuffer& cbuffer, const D3D12FrameInfo& info) {
+			const GPassCache& cache{ frame_cache };
+			const u32 render_items_count{ (u32)cache.size() };
+			id::id_type current_entity_id{ id::invalid_id };
+			hlsl::PerObjectData* current_data_pointer{ nullptr };
 
+			using namespace DirectX;
+			for (u32 i{ 0 }; i < render_items_count; ++i) {
+				if (current_entity_id != cache.entity_ids[i]) {
+					current_entity_id = cache.entity_ids[i];
+					hlsl::PerObjectData data{};
+					transform::get_transform_matrices(game_entity::entity_id{ current_entity_id }, data.world, data.inv_world);
+					XMMATRIX world{ XMLoadFloat4x4(&data.world) };
+					XMMATRIX wvp{ XMMatrixMultiply(world, info.camera->view_projection()) };
+					XMStoreFloat4x4(&data.world_view_projection, wvp);
+
+					current_data_pointer = cbuffer.allocate<hlsl::PerObjectData>();
+					memcpy(current_data_pointer, &data, sizeof(hlsl::PerObjectData));
+				}
+				assert(current_data_pointer);
+				cache.per_object_data[i] = cbuffer.gpu_address(current_data_pointer);
+			}
+		}
+
+		void set_root_parameters(id3d12_graphics_command_list* cmd_list, u32 cache_index) {
+			GPassCache& cache{ frame_cache };
+			assert(cache_index < cache.size());
+
+			const MaterialType::Type material_type{ cache.material_types[cache_index] };
+
+			switch (material_type) {
+				case MaterialType::OPAQUE: {
+					using params = OpaqueRootParameter;
+					cmd_list->SetGraphicsRootShaderResourceView(params::POSITION_BUFFER, cache.position_buffers[cache_index]);
+					cmd_list->SetGraphicsRootShaderResourceView(params::ELEMENT_BUFFER, cache.element_buffers[cache_index]);
+					cmd_list->SetGraphicsRootConstantBufferView(params::PER_OBJECT_DATA, cache.per_object_data[cache_index]);
+				}
+				break;
+			}
+		}
+
+		void prepare_render_frame(const D3D12FrameInfo& info) {
+			assert(info.info && info.camera);
+			assert(info.info->render_item_ids && info.info->render_item_count);
+
+			GPassCache& cache{ frame_cache };
+			cache.clear();
+
+			using namespace content;
+			render_item::get_d3d12_render_items_id(*info.info, cache.d3d12_render_item_ids);
+			cache.resize();
+			const u32 items_count{ cache.size() };
+			const render_item::ItemsCache items_cache{ cache.items_cache() };
+			render_item::get_items(cache.d3d12_render_item_ids.data(), items_count, items_cache);
+
+			const submesh::ViewsCache views_cache{ cache.views_cache() };
+			submesh::get_views(items_cache.submesh_gpu_ids, items_count, views_cache);
+
+			const material::MaterialsCache materials_cache{ cache.materials_cache() };
+			material::get_materials(items_cache.material_ids, items_count, materials_cache);
 		}
 	}
 
@@ -235,24 +300,68 @@ namespace lightning::graphics::direct3d12::gpass {
 
 	void depth_prepass(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
 		prepare_render_frame(info);
+
+		ConstantBuffer& cbuffer{ core::c_buffer() };
+
+		fill_per_object_data(cbuffer, info);
+
+		const GPassCache& cache{ frame_cache };
+		const u32 items_count{ cache.size() };
+
+		ID3D12RootSignature* current_root_signature{ nullptr };
+		ID3D12PipelineState* current_pipeline_state{ nullptr };
+
+		for (u32 i{ 0 }; i < items_count; ++i) {
+			if (current_root_signature != cache.root_signatures[i]) {
+				current_root_signature = cache.root_signatures[i];
+				cmd_list->SetGraphicsRootSignature(current_root_signature);
+				cmd_list->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GLOBAL_SHADER_DATA, info.global_shader_data);
+			}
+
+			if (current_pipeline_state != cache.depth_pipeline_states[i]) {
+				current_pipeline_state = cache.depth_pipeline_states[i];
+				cmd_list->SetPipelineState(current_pipeline_state);
+			}
+
+			set_root_parameters(cmd_list, i);
+
+			const D3D12_INDEX_BUFFER_VIEW& ibv{ cache.index_buffer_views[i] };
+			const u32 index_count{ ibv.SizeInBytes >> (ibv.Format == DXGI_FORMAT_R16_UINT ? 1 : 2) };
+
+			cmd_list->IASetIndexBuffer(&ibv);
+			cmd_list->IASetPrimitiveTopology(cache.primitive_topologies[i]);
+			cmd_list->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
+		}
 	}
 
 	void render(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
-		cmd_list->SetGraphicsRootSignature(gpass_root_sig);
-		cmd_list->SetPipelineState(gpass_pso);
+		const GPassCache& cache{ frame_cache };
+		const u32 items_count{ cache.size() };
 
-		static u32 frame{ 0 };
-		struct {
-			f32 width;
-			f32 height;
-			u32 frame;
-		} constants{ (f32)info.surface_width, (f32)info.surface_height, ++frame };
+		ID3D12RootSignature* current_root_signature{ nullptr };
+		ID3D12PipelineState* current_pipeline_state{ nullptr };
 
-		using idx = GpassRootParamIndicies;
-		cmd_list->SetGraphicsRoot32BitConstants(idx::ROOT_CONSTANTS, 3, &constants, 0);
+		for (u32 i{ 0 }; i < items_count; ++i) {
+			if (current_root_signature != cache.root_signatures[i]) {
+				current_root_signature = cache.root_signatures[i];
+				cmd_list->SetGraphicsRootSignature(current_root_signature);
+				cmd_list->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GLOBAL_SHADER_DATA, info.global_shader_data);
+			}
 
-		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cmd_list->DrawInstanced(3, 1, 0, 0);
+			if (current_pipeline_state != cache.gpass_pipeline_states[i]) {
+				current_pipeline_state = cache.gpass_pipeline_states[i];
+				cmd_list->SetPipelineState(current_pipeline_state);
+			}
+
+			set_root_parameters(cmd_list, i);
+
+			const D3D12_INDEX_BUFFER_VIEW& ibv{ cache.index_buffer_views[i] };
+			const u32 index_count{ ibv.SizeInBytes >> (ibv.Format == DXGI_FORMAT_R16_UINT ? 1 : 2) };
+
+			cmd_list->IASetIndexBuffer(&ibv);
+			cmd_list->IASetPrimitiveTopology(cache.primitive_topologies[i]);
+			cmd_list->DrawIndexedInstanced(index_count, 1, 0, 0, 0);
+		}
 	}
 
 	void add_transitions_for_depth_prepass(d3dx::D3D12ResourceBarrier& barriers) {
