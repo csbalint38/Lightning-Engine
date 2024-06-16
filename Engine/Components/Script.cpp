@@ -1,5 +1,8 @@
 #include "Entity.h"
 #include "Script.h"
+#include "Transform.h"
+
+#define USE_TRANSFORM_CACHE_MAP 1
 
 namespace lightning::script {
 	namespace {
@@ -8,6 +11,11 @@ namespace lightning::script {
 
 		util::vector<detail::script_ptr> entity_scripts;
 		util::vector<id::id_type> id_mapping;
+
+		util::vector<transform::ComponentCache> transform_cache;
+		#if USE_TRANSFORM_CACHE_MAP
+		std::unordered_map<id::id_type, u32> cache_map;
+		#endif
 
 		using script_registry = std::unordered_map<size_t, detail::script_creator>;
 
@@ -30,6 +38,46 @@ namespace lightning::script {
 			assert(generations[index] == id::generation(id));
 			return (generations[index] == id::generation(id)) && entity_scripts[id_mapping[index]] && entity_scripts[id_mapping[index]]->is_valid();
 		}
+
+		#if USE_TRANSFORM_CACHE_MAP
+		transform::ComponentCache* const get_cache_ptr(const game_entity::Entity* const entity) {
+			assert(game_entity::is_alive((*entity).get_id()));
+			const transform::transform_id id{ (*entity).transform().get_id() };
+
+			u32 index{ u32_invalid_id };
+			auto pair = cache_map.try_emplace(id, id::invalid_id);
+
+			if (pair.second) {
+				index = (u32)transform_cache.size();
+				transform_cache.emplace_back();
+				transform_cache.back().id = id;
+				cache_map[id] = index;
+			}
+			else {
+				index = cache_map[id];
+			}
+
+			assert(index < transform_cache.size());
+
+			return &transform_cache[index];
+		}
+		#else
+		transform::ComponentCache* const get_cache_ptr(const game_entity::Entity* const entity) {
+			assert(game_entity::is_alive((*entity).get_id()));
+			const transform::transform_id id{ (*entity).transform().get_id() };
+
+			for (auto& cache : transform_cache) {
+				if (cache.id == id) {
+					return &cache;
+				}
+			}
+
+			transform_cache.emplace_back();
+			transform_cache.back().id = id;
+
+			return &transform_cache.back();
+		}
+		#endif
 	}
 
 	namespace detail {
@@ -95,6 +143,38 @@ namespace lightning::script {
 		for (auto& ptr : entity_scripts) {
 			ptr->update(dt);
 		}
+
+		if (transform_cache.size()) {
+			transform::update(transform_cache.data(), (u32)transform_cache.size());
+			transform_cache.clear();
+			#if USE_TRANSFORM_CACHE_MAP
+			cache_map.clear();
+			#endif
+		}
+	}
+
+	void EntityScript::set_rotation(const game_entity::Entity* const entity, math::v4 rotation_quaternion) {
+		transform::ComponentCache& cache{ *get_cache_ptr(entity) };
+		cache.flags |= transform::ComponentFlags::ROTATION;
+		cache.rotation = rotation_quaternion;
+	}
+
+	void EntityScript::set_orientation(const game_entity::Entity* const entity, math::v3 orientation_vector) {
+		transform::ComponentCache& cache{ *get_cache_ptr(entity) };
+		cache.flags |= transform::ComponentFlags::ORIENTATION;
+		cache.orientation = orientation_vector;
+	}
+
+	void EntityScript::set_position(const game_entity::Entity* const entity, math::v3 position) {
+		transform::ComponentCache& cache{ *get_cache_ptr(entity) };
+		cache.flags |= transform::ComponentFlags::POSITION;
+		cache.position = position;
+	}
+
+	void EntityScript::set_scale(const game_entity::Entity* const entity, math::v3 scale) {
+		transform::ComponentCache& cache{ *get_cache_ptr(entity) };
+		cache.flags |= transform::ComponentFlags::SCALE;
+		cache.scale = scale;
 	}
 }
 

@@ -10,6 +10,8 @@ namespace lightning::transform {
 		util::vector<math::v4> rotations;
 		util::vector<math::v3> scales;
 		util::vector<u8> has_transform;
+		util::vector<u8> changes_from_previous_frame;
+		u8 read_write_flags;
 	}
 
 	void calculate_transform_matrices(id::id_type index) {
@@ -41,6 +43,32 @@ namespace lightning::transform {
 		return orientation;
 	}
 
+	void set_rotation(transform_id id, const math::v4& rotaion_quaternion) {
+		const u32 index{ id::index(id) };
+		rotations[index] = rotaion_quaternion;
+		orientations[index] = calculate_orientation(rotaion_quaternion);
+		has_transform[index] = 0;
+		changes_from_previous_frame[index] |= ComponentFlags::ROTATION;
+	}
+
+	void set_orientation(transform_id id, const math::v3& orientation) {
+
+	}
+
+	void set_position(transform_id id, const math::v3& position) {
+		const u32 index{ id::index(id) };
+		positions[index] = position;
+		has_transform[index] = 0;
+		changes_from_previous_frame[index] |= ComponentFlags::POSITION;
+	}
+
+	void set_scale(transform_id id, const math::v3& scale) {
+		const u32 index{ id::index(id) };
+		scales[index] = scale;
+		has_transform[index] = 0;
+		changes_from_previous_frame[index] |= ComponentFlags::SCALE;
+	}
+
 	Component create(InitInfo info, game_entity::Entity entity) {
 		assert(entity.is_valid());
 		const id::id_type entity_index{ id::index(entity.get_id()) };
@@ -52,6 +80,7 @@ namespace lightning::transform {
 			positions[entity_index] = math::v3{ info.position };
 			scales[entity_index] = math::v3{ info.scale };
 			has_transform[entity_index] = 0;
+			changes_from_previous_frame[entity_index] = (u8)ComponentFlags::ALL;
 		}
 		else {
 			assert(positions.size() == entity_index);
@@ -62,11 +91,12 @@ namespace lightning::transform {
 			has_transform.emplace_back((u8)0);
 			to_world.emplace_back();
 			inv_world.emplace_back();
+			changes_from_previous_frame.emplace_back((u8)ComponentFlags::ALL);
 		}
 		return Component{ transform_id{ entity.get_id()} };
 	}
 
-	void remove([[maybe_unused]]Component component) {
+	void remove([[maybe_unused]] Component component) {
 		assert(component.is_valid());
 	}
 
@@ -80,6 +110,45 @@ namespace lightning::transform {
 
 		world = to_world[entity_index];
 		inverse_world = inv_world[entity_index];
+	}
+
+	void get_updated_component_flags(const game_entity::entity_id* const ids, u32 count, u8* const flags) {
+		assert(ids && count && flags);
+		read_write_flags = 1;
+
+		for (u32 i{ 0 }; i < count; ++i) {
+			assert(game_entity::Entity{ ids[i] }.is_valid());
+			flags[i] = changes_from_previous_frame[id::index(ids[i])];
+		}
+	}
+
+	void update(const ComponentCache* const cache, u32 count) {
+		assert(cache && count);
+		if (read_write_flags) {
+			memset(changes_from_previous_frame.data(), 0, changes_from_previous_frame.size());
+			read_write_flags = 0;
+		}
+
+		for (u32 i{ 0 }; i < count; ++i) {
+			const ComponentCache& c{ cache[i] };
+			assert(Component{ c.id }.is_valid());
+
+			if (c.flags & ComponentFlags::ROTATION) {
+				set_rotation(c.id, c.rotation);
+			}
+
+			if (c.flags & ComponentFlags::ORIENTATION) {
+				set_orientation(c.id, c.orientation);
+			}
+
+			if (c.flags & ComponentFlags::POSITION) {
+				set_position(c.id, c.position);
+			}
+
+			if (c.flags & ComponentFlags::SCALE) {
+				set_scale(c.id, c.scale);
+			}
+		}
 	}
 
 	math::v3 Component::position() const {

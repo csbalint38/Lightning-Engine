@@ -100,7 +100,7 @@ namespace lightning::content {
 		if (!num_entities) return false;
 		for (u32 entity_index{ 0 }; entity_index < num_entities; ++entity_index) {
 			game_entity::EntityInfo info{};
-			const u32 entity_type{ *at };
+			//const u32 entity_type{ *at };
 			at += su32;
 			const u32 num_components{ *at };
 			at += su32;
