@@ -24,12 +24,12 @@ namespace lightning::graphics::direct3d12::d3dx {
 		const D3D12_RASTERIZER_DESC no_cull{
 			D3D12_FILL_MODE_SOLID,
 			D3D12_CULL_MODE_NONE,
-			0,
+			1,
 			0,
 			0,
 			0,
 			1,
-			1,
+			0,
 			0,
 			0,
 			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
@@ -38,12 +38,12 @@ namespace lightning::graphics::direct3d12::d3dx {
 		const D3D12_RASTERIZER_DESC backface_cull{
 			D3D12_FILL_MODE_SOLID,
 			D3D12_CULL_MODE_BACK,
-			0,
+			1,
 			0,
 			0,
 			0,
 			1,
-			1,
+			0,
 			0,
 			0,
 			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
@@ -52,12 +52,12 @@ namespace lightning::graphics::direct3d12::d3dx {
 		const D3D12_RASTERIZER_DESC frontface_cull{
 			D3D12_FILL_MODE_SOLID,
 			D3D12_CULL_MODE_FRONT,
-			0,
+			1,
 			0,
 			0,
 			0,
 			1,
-			1,
+			0,
 			0,
 			0,
 			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
@@ -66,12 +66,12 @@ namespace lightning::graphics::direct3d12::d3dx {
 		const D3D12_RASTERIZER_DESC wireframe{
 			D3D12_FILL_MODE_WIREFRAME,
 			D3D12_CULL_MODE_NONE,
-			0,
+			1,
 			0,
 			0,
 			0,
 			1,
-			1,
+			0,
 			0,
 			0,
 			D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF

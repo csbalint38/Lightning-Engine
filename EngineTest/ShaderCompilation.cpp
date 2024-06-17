@@ -90,7 +90,7 @@ namespace {
 				DXC_ARG_DEBUG,
 				DXC_ARG_SKIP_OPTIMIZATIONS,
 				#else
-				DXC_ARG_OPTIMIZATION_LEVEL3
+				DXC_ARG_OPTIMIZATION_LEVEL3,
 				#endif
 				DXC_ARG_WARNINGS_ARE_ERRORS,
 				L"-Qstrip_reflect",	// Strip reflections onto separate blob
@@ -101,7 +101,6 @@ namespace {
 			OutputDebugStringA(info.file_name);
 			OutputDebugStringA(" : ");
 			OutputDebugStringA(info.function);
-			OutputDebugStringA("\n");
 
 			return compile(source_blob.Get(), args, _countof(args));
 		}
@@ -122,7 +121,7 @@ namespace {
 			if (FAILED(hr)) return {};
 
 			if (errors && errors->GetStringLength()) {
-				OutputDebugStringA("\nShader compilation error: \n");
+				OutputDebugStringA("\nShader compilation error: ");
 				OutputDebugStringA(errors->GetStringPointer());
 			}
 			else {

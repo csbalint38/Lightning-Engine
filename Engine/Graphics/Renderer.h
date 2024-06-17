@@ -89,8 +89,8 @@ namespace lightning::graphics {
 			up = { 0.f, 1.f, 0.f };
 			field_of_view = .25f;
 			aspect_ratio = 16.f / 10.f;
-			near_z = 0.001f;
-			far_z = 10000.f;
+			near_z = 0.01f;
+			far_z = 1000.f;
 		}
 	};
 
@@ -102,8 +102,8 @@ namespace lightning::graphics {
 			up = { 0.f, 1.f, 0.f };
 			view_width = 1920.f;
 			view_height = 1080;
-			near_z = 0.001f;
-			far_z = 10000.f;
+			near_z = 0.01f;
+			far_z = 1000.f;
 		}
 	};
 

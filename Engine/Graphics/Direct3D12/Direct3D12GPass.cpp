@@ -152,7 +152,7 @@ namespace lightning::graphics::direct3d12::gpass {
 				info.desc = &desc;
 				info.initial_state = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 				info.clear_value.Format = desc.Format;
-				info.clear_value.DepthStencil.Depth = 1.f;
+				info.clear_value.DepthStencil.Depth = 0.f;
 				info.clear_value.DepthStencil.Stencil = 0;
 
 				gpass_depth_buffer = D3D12DepthBuffer{ info };
@@ -164,11 +164,13 @@ namespace lightning::graphics::direct3d12::gpass {
 			return gpass_main_buffer.resource() && gpass_depth_buffer.resource();
 		}
 
-		void fill_per_object_data(ConstantBuffer& cbuffer, const D3D12FrameInfo& info) {
+		void fill_per_object_data(const D3D12FrameInfo& info) {
 			const GPassCache& cache{ frame_cache };
 			const u32 render_items_count{ (u32)cache.size() };
 			id::id_type current_entity_id{ id::invalid_id };
 			hlsl::PerObjectData* current_data_pointer{ nullptr };
+
+			ConstantBuffer& cbuffer{ core::c_buffer() };
 
 			using namespace DirectX;
 			for (u32 i{ 0 }; i < render_items_count; ++i) {
@@ -224,6 +226,8 @@ namespace lightning::graphics::direct3d12::gpass {
 
 			const material::MaterialsCache materials_cache{ cache.materials_cache() };
 			material::get_materials(items_cache.material_ids, items_count, materials_cache);
+
+			fill_per_object_data(info);
 		}
 	}
 
@@ -251,10 +255,6 @@ namespace lightning::graphics::direct3d12::gpass {
 
 	void depth_prepass(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
 		prepare_render_frame(info);
-
-		ConstantBuffer& cbuffer{ core::c_buffer() };
-
-		fill_per_object_data(cbuffer, info);
 
 		const GPassCache& cache{ frame_cache };
 		const u32 items_count{ cache.size() };
@@ -331,7 +331,7 @@ namespace lightning::graphics::direct3d12::gpass {
 
 	void set_render_targets_for_depth_prepass(id3d12_graphics_command_list* cmd_list) {
 		const D3D12_CPU_DESCRIPTOR_HANDLE dsv{ gpass_depth_buffer.dsv() };
-		cmd_list->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
+		cmd_list->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 0.f, 0, 0, nullptr);
 		cmd_list->OMSetRenderTargets(0, nullptr, 0, &dsv);
 	}
 

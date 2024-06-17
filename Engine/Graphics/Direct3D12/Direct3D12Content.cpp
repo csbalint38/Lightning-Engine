@@ -50,9 +50,11 @@ namespace lightning::graphics::direct3d12::content {
 
 		util::free_list<D3D12RenderItem> render_items;
 		util::free_list<std::unique_ptr<id::id_type[]>> render_item_ids;
+		std::mutex render_item_mutex{};
+
 		util::vector<ID3D12PipelineState*> pipeline_states;
 		std::unordered_map<u64, id::id_type> pso_map;
-		std::mutex render_item_mutex{};
+		std::mutex pso_mutex{};
 
 		struct {
 			util::vector<lightning::content::LodOffset> lod_offsets;
@@ -255,28 +257,34 @@ namespace lightning::graphics::direct3d12::content {
 
 		id::id_type create_pso_if_needed(const u8* const stream_ptr, u64 aligned_stream_size, [[maybe_unused]] bool is_depth) {
 			const u64 key{ math::calc_crc32_u64(stream_ptr, aligned_stream_size) };
-			auto pair = pso_map.find(key);
 
-			if (pair != pso_map.end()) {
-				assert(pair->first == key);
-				return pair->second;
+			{
+				std::lock_guard lock{ pso_mutex };
+				auto pair = pso_map.find(key);
+
+				if (pair != pso_map.end()) {
+					assert(pair->first == key);
+					return pair->second;
+				}
 			}
 
-			const id::id_type id{ (u32)pipeline_states.size() };
 			d3dx::D3D12PipelineStateSubobjectStream* const stream{ (d3dx::D3D12PipelineStateSubobjectStream* const)stream_ptr };
-			pipeline_states.emplace_back(d3dx::create_pipeline_state(stream, sizeof(d3dx::D3D12PipelineStateSubobjectStream)));
-			NAME_D3D12_OBJECT_INDEXED(pipeline_states.back(), key, is_depth ? L"Depth-only Pipeline State Object - key" : L"GPass Pipeline State Object - key");
+			ID3D12PipelineState* pso{ d3dx::create_pipeline_state(stream, sizeof(d3dx::D3D12PipelineStateSubobjectStream)) };
 
-			assert(id::is_valid(id));
-			pso_map[key] = id;
+			{
+				std::lock_guard lock{ pso_mutex };
+				const id::id_type id{ (u32)pipeline_states.size() };
+				pipeline_states.emplace_back(pso);
 
-			return id;
+				NAME_D3D12_OBJECT_INDEXED(pipeline_states.back(), key, is_depth ? L"Depth-only Pipeline State Object - key" : L"GPass Pipeline State Object - key");
+
+				pso_map[key] = id;
+
+				return id;
+			}
 		}
 
 		PsoId create_pso(id::id_type material_id, D3D12_PRIMITIVE_TOPOLOGY primitive_topology, u32 elements_type) {
-			std::lock_guard lock{ material_mutex };
-			const D3D12MaterialStream material{ materials[material_id].get() };
-
 			constexpr u64 aligned_stream_size{ math::align_size_up<sizeof(u64)>(sizeof(d3dx::D3D12PipelineStateSubobjectStream)) };
 			u8* const stream_ptr{ (u8* const)alloca(aligned_stream_size) };
 			ZeroMemory(stream_ptr, aligned_stream_size);
@@ -284,45 +292,50 @@ namespace lightning::graphics::direct3d12::content {
 
 			d3dx::D3D12PipelineStateSubobjectStream& stream{ *(d3dx::D3D12PipelineStateSubobjectStream* const)stream_ptr };
 
-			D3D12_RT_FORMAT_ARRAY rt_array{};
-			rt_array.NumRenderTargets = 1;
-			rt_array.RTFormats[0] = gpass::main_buffer_format;
+			{
+				std::lock_guard lock{ material_mutex };
+				const D3D12MaterialStream material{ materials[material_id].get() };
 
-			stream.render_target_formats = rt_array;
-			stream.root_signature = root_signatures[material.root_signature_id()];
-			stream.primitive_topology = get_d3d_primitive_topology_type(primitive_topology);
-			stream.depth_stencil_format = gpass::depth_buffer_format;
-			stream.rasterizer = d3dx::rasterizer_state.backface_cull;
-			stream.depth_stencil1 = d3dx::depth_state.enabled_readonly;
-			stream.blend = d3dx::blend_state.disabled;
+				D3D12_RT_FORMAT_ARRAY rt_array{};
+				rt_array.NumRenderTargets = 1;
+				rt_array.RTFormats[0] = gpass::main_buffer_format;
 
-			const ShaderFlags::Flags flags{ material.shader_flags() };
-			D3D12_SHADER_BYTECODE shaders[ShaderType::count]{};
-			u32 shader_index{ 0 };
-			for (u32 i{ 0 }; i < ShaderType::count; ++i) {
-				if (flags & (1 << i)) {
-					lightning::content::compiled_shader_ptr shader{ lightning::content::get_shader(material.shader_ids()[shader_index]) };
-					assert(shader);
-					shaders[i].pShaderBytecode = shader->byte_code();
-					shaders[i].BytecodeLength = shader->byte_code_size();
-					++shader_index;
+				stream.render_target_formats = rt_array;
+				stream.root_signature = root_signatures[material.root_signature_id()];
+				stream.primitive_topology = get_d3d_primitive_topology_type(primitive_topology);
+				stream.depth_stencil_format = gpass::depth_buffer_format;
+				stream.rasterizer = d3dx::rasterizer_state.backface_cull;
+				stream.depth_stencil1 = d3dx::depth_state.reversed_readonly;
+				stream.blend = d3dx::blend_state.disabled;
+
+				const ShaderFlags::Flags flags{ material.shader_flags() };
+				D3D12_SHADER_BYTECODE shaders[ShaderType::count]{};
+				u32 shader_index{ 0 };
+				for (u32 i{ 0 }; i < ShaderType::count; ++i) {
+					if (flags & (1 << i)) {
+						lightning::content::compiled_shader_ptr shader{ lightning::content::get_shader(material.shader_ids()[shader_index]) };
+						assert(shader);
+						shaders[i].pShaderBytecode = shader->byte_code();
+						shaders[i].BytecodeLength = shader->byte_code_size();
+						++shader_index;
+					}
 				}
-			}
 
-			stream.vs = shaders[ShaderType::VERTEX];
-			stream.ds = shaders[ShaderType::DOMAIN];
-			stream.hs = shaders[ShaderType::HULL];
-			stream.gs = shaders[ShaderType::GEOMETRY];
-			stream.ps = shaders[ShaderType::PIXEL];
-			stream.cs = shaders[ShaderType::COMPUTE];
-			stream.as = shaders[ShaderType::AMPLIFICATION];
-			stream.ms = shaders[ShaderType::MESH];
+				stream.vs = shaders[ShaderType::VERTEX];
+				stream.ds = shaders[ShaderType::DOMAIN];
+				stream.hs = shaders[ShaderType::HULL];
+				stream.gs = shaders[ShaderType::GEOMETRY];
+				stream.ps = shaders[ShaderType::PIXEL];
+				stream.cs = shaders[ShaderType::COMPUTE];
+				stream.as = shaders[ShaderType::AMPLIFICATION];
+				stream.ms = shaders[ShaderType::MESH];
+			}
 
 			PsoId id_pair{};
 			id_pair.gpass_pso_id = create_pso_if_needed(stream_ptr, aligned_stream_size, false);
 
 			stream.ps = D3D12_SHADER_BYTECODE{};
-			stream.depth_stencil1 = d3dx::depth_state.enabled;
+			stream.depth_stencil1 = d3dx::depth_state.reversed;
 			id_pair.depth_pso_id = create_pso_if_needed(stream_ptr, aligned_stream_size, true);
 
 			return id_pair;
@@ -563,7 +576,8 @@ namespace lightning::graphics::direct3d12::content {
 			assert(d3d12_render_item_ids && id_count);
 			assert(cache.entity_ids && cache.submesh_gpu_ids && cache.material_ids && cache.gpass_psos && cache.depth_psos);
 
-			std::lock_guard lock{ render_item_mutex };
+			std::lock_guard lock_1{ render_item_mutex };
+			std::lock_guard lock_2{ pso_mutex };
 
 			for (u32 i{ 0 }; i < id_count; ++i) {
 				const D3D12RenderItem& item{ render_items[d3d12_render_item_ids[i]] };

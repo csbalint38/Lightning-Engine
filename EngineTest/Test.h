@@ -22,22 +22,25 @@ class TimeIt {
 		using clock = std::chrono::high_resolution_clock;
 		using timestamp = std::chrono::steady_clock::time_point;
 
+		constexpr float dt_avg() const { return _dt_avg * 1e-6f; }
+
 		void begin() {
 			_start = clock::now();
 		}
 
 		void end() {
 			auto dt = clock::now() - _start;
-			_ms_avg += ((float)std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() - _ms_avg) / (float)_counter;
+			_us_avg += ((float)std::chrono::duration_cast<std::chrono::microseconds>(dt).count() - _us_avg) / (float)_counter;
 			++_counter;
+			_dt_avg = _us_avg;
 
 			if (std::chrono::duration_cast<std::chrono::seconds>(clock::now() - _seconds).count() >= 1) {
 				OutputDebugStringA("Avg. frame (ms): ");
-				OutputDebugStringA(std::to_string(_ms_avg).c_str());
+				OutputDebugStringA(std::to_string(_us_avg * 0.001f).c_str());
 				OutputDebugStringA((" " + std::to_string(_counter)).c_str());
 				OutputDebugStringA(" fps");
 				OutputDebugStringA("\n");
-				_ms_avg = 0.f;
+				_us_avg = 0.f;
 				_counter = 1;
 				_seconds = clock::now();
 			}
@@ -45,7 +48,8 @@ class TimeIt {
 
 
 	private:
-		float _ms_avg{ 0.f };
+		float _dt_avg{ 16.7f };
+		float _us_avg{ 0.f };
 		int _counter{ 1 };
 		timestamp _start;
 		timestamp _seconds{ clock::now() };
