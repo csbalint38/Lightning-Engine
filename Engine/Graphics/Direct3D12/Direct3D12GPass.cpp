@@ -26,6 +26,12 @@ namespace lightning::graphics::direct3d12::gpass {
 		constexpr f32 clear_value[4]{};
 		#endif
 
+		#if USE_STL_VECTOR
+		#define CONSTEXPR
+		#else
+		#define CONSTEXPR constexpr
+		#endif
+
 		struct GPassCache {
 			util::vector<id::id_type> d3d12_render_item_ids;
 
@@ -70,10 +76,10 @@ namespace lightning::graphics::direct3d12::gpass {
 				};
 			}
 
-			constexpr u32 size() const { return (u32)d3d12_render_item_ids.size(); }
-			constexpr void clear() { d3d12_render_item_ids.clear(); }
+			CONSTEXPR u32 size() const { return (u32)d3d12_render_item_ids.size(); }
+			CONSTEXPR void clear() { d3d12_render_item_ids.clear(); }
 
-			constexpr void resize() {
+			CONSTEXPR void resize() {
 				const u64 items_count{ d3d12_render_item_ids.size() };
 				const u64 new_buffer_size{ items_count * struct_size };
 				const u64 old_buffer_size{ _buffer.size() };
@@ -116,6 +122,7 @@ namespace lightning::graphics::direct3d12::gpass {
 
 				util::vector<u8> _buffer;
 		} frame_cache;
+		#undef CONSTEXPR
 
 		bool create_buffers(math::u32v2 size) {
 			assert(size.x && size.y);

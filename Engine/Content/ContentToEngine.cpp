@@ -5,6 +5,15 @@
 namespace lightning::content {
 	namespace {
 
+		struct NoexceptMap {
+			std::unordered_map<u32, std::unique_ptr<u8[]>> map;
+			NoexceptMap() = default;
+			NoexceptMap(const NoexceptMap&) = default;
+			NoexceptMap(NoexceptMap&&) noexcept = default;
+			NoexceptMap& operator=(const NoexceptMap&) = default;
+			NoexceptMap& operator=(NoexceptMap&&) noexcept = default;
+		};
+
 		class GeometryHierarchyStream {
 			public:
 				DISABLE_COPY_AND_MOVE(GeometryHierarchyStream);
@@ -53,7 +62,7 @@ namespace lightning::content {
 		util::free_list<u8*> geometry_hierarchies;
 		std::mutex geometry_mutex;
 
-		util::free_list<std::unique_ptr<u8[]>> shaders;
+		util::free_list<NoexceptMap> shader_groups;
 		std::mutex shader_mutex;
 
 		u32 get_geometry_hierarchy_buffer_size(const void* const data) {
@@ -239,30 +248,46 @@ namespace lightning::content {
 		}
 	}
 
-	id::id_type add_shader(const u8* data) {
-		const compiled_shader_ptr shader_ptr{ (const compiled_shader_ptr)data };
-		const u64 size{ sizeof(u64) + CompiledShader::hash_length + shader_ptr->byte_code_size() };
-		std::unique_ptr<u8[]> shader{ std::make_unique<u8[]>(size) };
-		memcpy(shader.get(), data, size);
+	id::id_type add_shader_group(const u8* const* shaders, u64 num_shaders, const u32* const keys) {
+		assert(shaders && num_shaders && keys);
+		NoexceptMap group;
+
+		for (u32 i{ 0 }; i < num_shaders; ++i) {
+			assert(shaders[i]);
+
+			const compiled_shader_ptr shader_ptr{ (const compiled_shader_ptr)shaders[i] };
+			const u64 size{ CompiledShader::buffer_size(shader_ptr->byte_code_size()) };
+			std::unique_ptr<u8[]> shader{ std::make_unique<u8[]>(size) };
+			memcpy(shader.get(), shaders[i], size);
+			group.map[keys[i]] = std::move(shader);
+		}
 
 		std::lock_guard lock{ shader_mutex };
 
-		return shaders.add(std::move(shader));
+		return shader_groups.add(std::move(group));
 	}
 
-	void remove_shader(id::id_type id) {
+	void remove_shader_group(id::id_type id) {
 		std::lock_guard lock{ shader_mutex };
 
 		assert(id::is_valid(id));
-		shaders.remove(id);
+
+		shader_groups[id].map.clear();
+		shader_groups.remove(id);
 	}
 
-	compiled_shader_ptr get_shader(id::id_type id) {
+	compiled_shader_ptr get_shader(id::id_type id, u32 shader_key) {
 		std::lock_guard lock{ shader_mutex };
 
 		assert(id::is_valid(id));
 
-		return (const compiled_shader_ptr)(shaders[id].get());
+		for (const auto& [key, value] : shader_groups[id].map) {
+			if (key == shader_key) {
+				return (const compiled_shader_ptr)value.get();
+			}
+		}
+		assert(false);
+		return nullptr;
 	}
 
 	void get_submesh_gpu_ids(id::id_type geometry_content_id, u32 id_count, id::id_type* const gpu_ids) {

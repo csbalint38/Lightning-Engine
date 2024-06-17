@@ -19,7 +19,7 @@ struct PixelOut {
 #define ELEMENTS_TYPE_SKELETAL_COLOR ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATIC_COLOR
 #define ELEMENTS_TYPE_SKELETAL_NORMAL ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATIC_NORMAL
 #define ELEMENTS_TYPE_SKELETAL_NORMAL_COLOR ELEMETS_TYPE_SKELETAL_NORMAL | ELEMENTS_TYPE_STATIC_COLOR
-#define ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATI
+#define ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
 #define ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE_COLOR ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE | ELEMENTS_TYPE_STATIC_COLOR
 
 struct VertexElement
@@ -28,7 +28,7 @@ struct VertexElement
     uint color_t_sign;
     uint16_t2 normal;
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
-    uint Coloc_t_sign;
+    uint color_t_sign;
     uint16_t2 normal;
     uint16_t2 tangent;
     float2 uv;
@@ -57,9 +57,9 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
     VertexElement element = Elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
-    float signs = (element.color_t_sign >> 24) & 0xff;
+    uint signs = (element.color_t_sign >> 24) & 0xff;
     float n_sign = float(signs & 0x02) - 1;
-    float3 normal = float3(m_xy.x, n_xy.y, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
+    float3 normal = float3(n_xy.x, n_xy.y, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
@@ -70,21 +70,13 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
     VertexElement element = Elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
-    float signs = (element.color_t_sign >> 24) & 0xff;
+    uint signs = (element.color_t_sign >> 24) & 0xff;
     float n_sign = float(signs & 0x02) - 1;
-    float3 normal = float3(m_xy.x, n_xy.y, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
+    float3 normal = float3(n_xy.x, n_xy.y, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
     vs_out.world_normal = mul(float4(normal, 0.f), per_object_buffer.inv_world).xyz;
-    vs_out.world_tangent = 0.f;
-    vs_out.uv = 0.f;
-    
-    #else
-    #undef ELEMENTS_TYPE
-    vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
-    vs_out.world_position = world_position.xyz;
-    vs_out.world_normal = 0.f;
     vs_out.world_tangent = 0.f;
     vs_out.uv = 0.f;
     #endif

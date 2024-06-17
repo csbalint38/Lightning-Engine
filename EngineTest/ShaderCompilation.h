@@ -24,5 +24,5 @@ struct ShaderFileInfo {
 	ShaderType::Type type;
 };
 
-std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, const char* file_path);
+std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, const char* file_path, lightning::util::vector<std::wstring>& extra_args);
 bool compile_shaders();

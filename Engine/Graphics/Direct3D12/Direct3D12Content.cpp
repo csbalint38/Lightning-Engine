@@ -284,6 +284,14 @@ namespace lightning::graphics::direct3d12::content {
 			}
 		}
 
+		#pragma intrinsic(_BitScanForward)
+		ShaderType::Type get_shader_type(u32 flag) {
+			assert(flag);
+			unsigned long index;
+			_BitScanForward(&index, flag);
+			return (ShaderType::Type)index;
+		}
+
 		PsoId create_pso(id::id_type material_id, D3D12_PRIMITIVE_TOPOLOGY primitive_topology, u32 elements_type) {
 			constexpr u64 aligned_stream_size{ math::align_size_up<sizeof(u64)>(sizeof(d3dx::D3D12PipelineStateSubobjectStream)) };
 			u8* const stream_ptr{ (u8* const)alloca(aligned_stream_size) };
@@ -313,7 +321,9 @@ namespace lightning::graphics::direct3d12::content {
 				u32 shader_index{ 0 };
 				for (u32 i{ 0 }; i < ShaderType::count; ++i) {
 					if (flags & (1 << i)) {
-						lightning::content::compiled_shader_ptr shader{ lightning::content::get_shader(material.shader_ids()[shader_index]) };
+						const u32 key{ get_shader_type(flags & (1 << i)) == ShaderType::VERTEX ? elements_type : u32_invalid_id };
+
+						lightning::content::compiled_shader_ptr shader{ lightning::content::get_shader(material.shader_ids()[shader_index], key) };
 						assert(shader);
 						shaders[i].pShaderBytecode = shader->byte_code();
 						shaders[i].BytecodeLength = shader->byte_code_size();
