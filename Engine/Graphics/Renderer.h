@@ -3,6 +3,7 @@
 #include "CommonHeaders.h"
 #include "Platform/Window.h"
 #include "EngineAPI/Camera.h"
+#include "EngineAPI/Light.h"
 
 #ifdef OPAQUE
 #undef OPAQUE
@@ -42,6 +43,46 @@ namespace lightning::graphics {
 	struct RenderSurface {
 		platform::Window window{};
 		Surface surface{};
+	};
+
+	struct DirectionalLightParams {};
+
+	struct PointLightParams {
+		math::v3 attenuation;
+		f32 range;
+	};
+
+	struct  SpotLightParams {
+		math::v3 attenuation;
+		f32 range;
+		f32 umbra;
+		f32 penumbra;
+	};
+
+	struct LightInitInfo {
+		u64 light_set_key{ 0 };
+		id::id_type entity_id{ id::invalid_id };
+		Light::Type type{};
+		f32 intensity{ 1.f };
+		math::v3 color{ 1.f, 1.f, 1.f };
+		union {
+			DirectionalLightParams directional_params;
+			PointLightParams point_params;
+			SpotLightParams spot_params;
+		};
+		bool is_enabled{ true };
+	};
+
+	struct LightParameter {
+		enum Parameter : u32 {
+			IS_ENABLED,
+			INTENSITY,
+			COLOR,
+			TYPE,
+			ENTITY_ID,
+
+			count
+		};
 	};
 
 	struct CameraParameter {
@@ -191,6 +232,9 @@ namespace lightning::graphics {
 
 	id::id_type add_submesh(const u8*& data);
 	void remove_submesh(id::id_type id);
+
+	Light create_light(LightInitInfo info);
+	void remove_light(light_id id, u64 light_set_key);
 
 	id::id_type add_material(MaterialInitInfo info);
 	void remove_material(id::id_type id);

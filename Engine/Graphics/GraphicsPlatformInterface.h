@@ -18,6 +18,13 @@ namespace lightning::graphics {
 		} surface;
 
 		struct {
+			Light(*create)(LightInitInfo);
+			void(*remove)(light_id, u64);
+			void(*set_parameter)(light_id, u64, LightParameter::Parameter, const void* const, u32);
+			void(*get_parameter)(light_id, u64, LightParameter::Parameter, void* const, u32);
+		} light;
+
+		struct {
 			Camera(*create)(CameraInitInfo);
 			void(*remove)(camera_id);
 			void(*set_parameter)(camera_id, CameraParameter::Parameter, const void* const, u32);

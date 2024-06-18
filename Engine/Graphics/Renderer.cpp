@@ -56,6 +56,64 @@ namespace lightning::graphics {
 		gfx.surface.render(_id, info);
 	}
 
+	Light create_light(LightInitInfo info) {
+		return gfx.light.create(info);
+	}
+
+	void remove_light(light_id id, u64 light_set_key) {
+		gfx.light.remove(id, light_set_key);
+	}
+
+	void Light::is_enabled(bool is_enabled) const {
+		assert(is_valid());
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::IS_ENABLED, &is_enabled, sizeof(is_enabled));
+	}
+
+	void Light::intensity(f32 intensity) const {
+		assert(is_valid());
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::INTENSITY, &intensity, sizeof(intensity));
+	}
+
+	void Light::color(math::v3 color) const {
+		assert(is_valid());
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::COLOR, &color, sizeof(color));
+	}
+
+	bool Light::is_enabled() const {
+		assert(is_valid());
+		bool is_enabled;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::IS_ENABLED, &is_enabled, sizeof(is_enabled));
+		return is_enabled;
+	}
+
+	f32 Light::intensity() const {
+		assert(is_valid());
+		f32 intensity;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::INTENSITY, &intensity, sizeof(intensity));
+		return intensity;
+	}
+
+	math::v3 Light::color() const {
+		assert(is_valid());
+		math::v3 color;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::COLOR, &color, sizeof(color));
+		return color;
+	}
+
+	Light::Type Light::light_type() const {
+		assert(is_valid());
+		Type type;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::TYPE, &type, sizeof(type));
+		return type;
+	}
+
+	id::id_type Light::entity_id() const {
+		assert(is_valid());
+		id::id_type entity_id;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::ENTITY_ID, &entity_id, sizeof(entity_id));
+		return entity_id;
+	}
+
 	Camera create_camera(CameraInitInfo info) {
 		return gfx.camera.create(info);
 	}

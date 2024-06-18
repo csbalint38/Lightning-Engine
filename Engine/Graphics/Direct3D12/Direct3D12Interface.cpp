@@ -2,8 +2,9 @@
 #include "Direct3D12Interface.h"
 #include "Direct3d12Core.h"
 #include "Direct3D12Content.h"
+#include "Direct3D12Light.h"
 #include "Direct3D12Camera.h"
-#include "Graphics\GraphicsPlatformInterface.h"
+#include "Graphics/GraphicsPlatformInterface.h"
 
 namespace lightning::graphics::direct3d12 {
 
@@ -17,6 +18,11 @@ namespace lightning::graphics::direct3d12 {
 		pi.surface.width = core::surface_width;
 		pi.surface.height = core::surface_height;
 		pi.surface.render = core::render_surface;
+
+		pi.light.create = light::create;
+		pi.light.remove = light::remove;
+		pi.light.set_parameter = light::set_parameter;
+		pi.light.get_parameter = light::get_parameter;
 
 		pi.camera.create = camera::create;
 		pi.camera.remove = camera::remove;
