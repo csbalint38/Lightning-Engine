@@ -72,7 +72,7 @@ namespace lightning::util {
 		}
 
 	private:
-		constexpr bool alredy_removed(u32 id) {
+		constexpr bool alredy_removed(u32 id) const {
 			if constexpr (sizeof(T) > sizeof(u32)) {
 				u32 i{ sizeof(u32) };
 				const u8* const p{ (const u8* const)std::addressof(_array[id]) };

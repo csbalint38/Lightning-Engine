@@ -90,6 +90,8 @@
 	void test_shutdown();
 	id::id_type create_render_item(id::id_type entity_id);
 	void destroy_render_item(id::id_type item_id);
+	void generate_lights();
+	void remove_lights();
 
 	LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
@@ -155,7 +157,7 @@
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 
-	game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, bool rotates) {
+	game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, const char* script_name) {
 		transform::InitInfo transform_info{};
 		DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3(&rotation)) };
 		math::v4a rot_quat;
@@ -164,8 +166,8 @@
 		memcpy(&transform_info.position[0], &position.x, sizeof(transform_info.position));
 
 		script::InitInfo script_info{};
-		if (rotates) {
-			script_info.script_creator = script::detail::get_script_creator(script::detail::string_hash()("RotatorScript"));
+		if (script_name) {
+			script_info.script_creator = script::detail::get_script_creator(script::detail::string_hash()(script_name));
 			assert(script_info.script_creator);
 		}
 
@@ -200,7 +202,7 @@
 	void create_camera_surface(CameraSurface& surface, platform::WindowInitInfo info) {
 		surface.surface.window = platform::create_window(&info);
 		surface.surface.surface = graphics::create_surface(surface.surface.window);
-		surface.entity = create_one_game_entity({ 0.f, 1.f, 3.f }, { 0.f, 3.14f, 0.f }, false);
+		surface.entity = create_one_game_entity({ 0.f, 1.f, 3.f }, { 0.f, 3.14f, 0.f }, nullptr);
 		surface.camera = graphics::create_camera(graphics::PerspectiveCameraInitInfo{ surface.entity.get_id() });
 		surface.camera.aspect_ratio((f32)surface.surface.window.width() / surface.surface.window.height());
 	}
@@ -244,7 +246,9 @@
 
 		init_test_workers(buffer_test_worker);
 
-		item_id = create_render_item(create_one_game_entity({}, {}, true).get_id());
+		item_id = create_render_item(create_one_game_entity({}, {}, "RotatorScript").get_id());
+
+		generate_lights();
 
 		is_restarting = false;
 
@@ -252,6 +256,7 @@
 	}
 
 	void test_shutdown() {
+		remove_lights();
 		destroy_render_item(item_id);
 		joint_test_workers();
 
