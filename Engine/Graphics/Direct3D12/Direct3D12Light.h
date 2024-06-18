@@ -2,6 +2,9 @@
 #include "Direct3D12CommonHeaders.h"
 
 namespace lightning::graphics::direct3d12::light {
+	bool initialize();
+	void shutdown();
+
 	graphics::Light create(LightInitInfo info);
 	void remove(light_id id, u64 light_set_key);
 	void set_parameter(light_id id, u64 light_set_key, LightParameter::Parameter parameter, const void* const data, u32 data_size);

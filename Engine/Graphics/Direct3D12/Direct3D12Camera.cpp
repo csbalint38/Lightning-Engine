@@ -11,41 +11,41 @@ namespace lightning::graphics::direct3d12::camera {
 			camera.up(up_vector);
 		}
 
-		void set_field_of_view(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
+		constexpr void set_field_of_view(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::PERSPECTIVE);
 			f32 fov{ *(f32*)data };
 			assert(sizeof(fov) == size);
 			camera.field_of_view(fov);
 		}
 
-		void set_aspect_ratio(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
+		constexpr void set_aspect_ratio(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::PERSPECTIVE);
 			f32 aspect_ratio{ *(f32*)data };
 			assert(sizeof(aspect_ratio) == size);
 			camera.aspect_ratio(aspect_ratio);
 		}
 
-		void set_view_width(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
+		constexpr void set_view_width(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::ORTOGRAPHIC);
 			f32 width{ *(f32*)data };
 			assert(sizeof(width) == size);
 			camera.view_width(width);
 		}
 
-		void set_view_height(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
+		constexpr void set_view_height(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::ORTOGRAPHIC);
 			f32 height{ *(f32*)data };
 			assert(sizeof(height) == size);
 			camera.view_height(height);
 		}
 
-		void set_near_z(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
+		constexpr void set_near_z(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
 			f32 near_z{ *(f32*)data };
 			assert(sizeof(near_z) == size);
 			camera.near_z(near_z);
 		}
 
-		void set_far_z(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
+		constexpr void set_far_z(D3D12Camera& camera, const void* const data, [[maybe_unused]] u32 size) {
 			f32 far_z{ *(f32*)data };
 			assert(sizeof(far_z) == size);
 			camera.far_z(far_z);
@@ -93,46 +93,46 @@ namespace lightning::graphics::direct3d12::camera {
 			*fov = camera.field_of_view();
 		}
 
-		void get_aspect_ratio(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_aspect_ratio(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::PERSPECTIVE);
 			f32* const aspect_ratio{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*aspect_ratio = camera.aspect_ratio();
 		}
 
-		void get_view_width(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_view_width(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::ORTOGRAPHIC);
 			f32* const width{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*width = camera.view_width();
 		}
 
-		void get_view_height(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_view_height(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			assert(camera.projection_type() == graphics::Camera::ORTOGRAPHIC);
 			f32* const height{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*height = camera.view_height();
 		}
 
-		void get_near_z(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_near_z(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			f32* const near_z{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*near_z = camera.near_z();
 		}
 
-		void get_far_z(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_far_z(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			f32* const far_z{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*far_z = camera.far_z();
 		}
 
-		void get_projection_type(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_projection_type(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			graphics::Camera::Type* const type{ (graphics::Camera::Type* const)data };
 			assert(sizeof(graphics::Camera::Type) == size);
 			*type = camera.projection_type();
 		}
 
-		void get_entity_id(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_entity_id(D3D12Camera& camera, void* const data, [[maybe_unused]] u32 size) {
 			id::id_type* const id{ (id::id_type* const)data };
 			assert(sizeof(id::id_type) == size);
 			*id = camera.entity_id();
@@ -210,38 +210,38 @@ namespace lightning::graphics::direct3d12::camera {
 		_up = DirectX::XMLoadFloat3(&up);
 	}
 
-	void D3D12Camera::field_of_view(f32 fov) {
+	constexpr void D3D12Camera::field_of_view(f32 fov) {
 		assert(_projection_type == graphics::Camera::PERSPECTIVE);
 		_field_of_view = fov;
 		_is_dirty = true;
 	}
 
-	void D3D12Camera::aspect_ratio(f32 aspect_ratio) {
+	constexpr void D3D12Camera::aspect_ratio(f32 aspect_ratio) {
 		assert(_projection_type == graphics::Camera::PERSPECTIVE);
 		_aspect_ratio = aspect_ratio;
 		_is_dirty = true;
 	}
 
-	void D3D12Camera::view_width(f32 width) {
+	constexpr void D3D12Camera::view_width(f32 width) {
 		assert(width);
 		assert(_projection_type == graphics::Camera::ORTOGRAPHIC);
 		_view_width = width;
 		_is_dirty = true;
 	}
 
-	void D3D12Camera::view_height(f32 height) {
+	constexpr void D3D12Camera::view_height(f32 height) {
 		assert(height);
 		assert(_projection_type == graphics::Camera::ORTOGRAPHIC);
 		_view_height = height;
 		_is_dirty = true;
 	}
 
-	void D3D12Camera::near_z(f32 near_z) {
+	constexpr void D3D12Camera::near_z(f32 near_z) {
 		_near_z = near_z;
 		_is_dirty = true;
 	}
 
-	void D3D12Camera::far_z(f32 far_z) {
+	constexpr void D3D12Camera::far_z(f32 far_z) {
 		_far_z = far_z;
 		_is_dirty = true;
 	}

@@ -67,8 +67,7 @@ namespace lightning::tools {
 			const u32 row_length{ horizontal_count + 1 };
 
 			for (u32 i{ 0 }; i < vertical_count; ++i) {
-				u32 k{ 0 };
-				for (u32 j{ k }; j < horizontal_count; ++j) {
+				for (u32 j{ 0 }; j < horizontal_count; ++j) {
 					const u32 index[4]{
 						j + i * row_length,
 						j + (i + 1) * row_length,
@@ -83,7 +82,6 @@ namespace lightning::tools {
 					m.raw_indicies.emplace_back(index[flip_winding ? 3 : 1]);
 					m.raw_indicies.emplace_back(index[flip_winding ? 1 : 3]);
 				}
-				++k;
 			}
 
 			const u32 num_indicies{ 3 * 2 * horizontal_count * vertical_count };

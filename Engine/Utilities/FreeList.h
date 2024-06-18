@@ -66,7 +66,7 @@ namespace lightning::util {
 			return _array[id];
 		}
 
-		[[nodiscard]] constexpr T& operator[](u32 id) const {
+		[[nodiscard]] constexpr const T& operator[](u32 id) const {
 			assert(id < _array.size() && !alredy_removed(id));
 			return _array[id];
 		}
