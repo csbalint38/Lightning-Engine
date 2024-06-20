@@ -2,6 +2,7 @@
 #include "Direct3D12Core.h"
 #include "Direct3D12Shaders.h"
 #include "Direct3D12Content.h"
+#include "Direct3D12Light.h"
 #include "Direct3D12Camera.h"
 #include "Shaders/ShaderTypes.h"
 #include "Components/Entity.h"
@@ -304,6 +305,7 @@ namespace lightning::graphics::direct3d12::gpass {
 				current_root_signature = cache.root_signatures[i];
 				cmd_list->SetGraphicsRootSignature(current_root_signature);
 				cmd_list->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GLOBAL_SHADER_DATA, info.global_shader_data);
+				cmd_list->SetGraphicsRootShaderResourceView(OpaqueRootParameter::DIRECTIONAL_LIGHTS, light::non_cullable_light_buffer(info.frame_index));
 			}
 
 			if (current_pipeline_state != cache.gpass_pipeline_states[i]) {

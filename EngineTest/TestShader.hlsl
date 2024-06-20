@@ -46,7 +46,8 @@ const static float inv_intervals = 2.f / ((1 << 16) - 1);
 ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<PerObjectData> per_object_buffer : register(b1, space0);
 StructuredBuffer<float3> vertex_positions : register(t0, space0);
-StructuredBuffer<VertexElement> Elements : register(t1, space0);
+StructuredBuffer<VertexElement> elements : register(t1, space0);
+StructuredBuffer<DirectionalLightParameters> directional_lights : register(t3, space0);
 
 VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexOut vs_out;
@@ -55,7 +56,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     float4 world_position = mul(per_object_buffer.world, position);
     
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
-    VertexElement element = Elements[vertex_idx];
+    VertexElement element = elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
     uint signs = (element.color_t_sign >> 24) & 0xff;
     float n_sign = float(signs & 0x02) - 1;
@@ -68,7 +69,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     vs_out.uv = 0.f;
 
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
-    VertexElement element = Elements[vertex_idx];
+    VertexElement element = elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
     uint signs = (element.color_t_sign >> 24) & 0xff;
     float n_sign = float(signs & 0x02) - 1;
@@ -87,7 +88,33 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 [earlydepthstencil]
 PixelOut test_shader_ps(in VertexOut ps_in) {
     PixelOut ps_out;
-    ps_out.color = float4(ps_in.world_normal, 1.f);
+    
+    float3 normal = normalize(ps_in.world_normal);
+    float3 view_dir = normalize(global_data.camera_position - ps_in.world_position);
+    
+    float3 color = 0;
+    
+    for (uint i = 0; i < global_data.num_directional_lights; ++i)
+    {
+        DirectionalLightParameters light = directional_lights[i];
+        
+        float3 light_direction = light.direction;
+        
+        if (abs(light_direction.z - 1.f) < .001f)
+        {
+            light_direction = global_data.camera_direction;
+        }
+        
+        float diffuse = max(dot(normal, -light_direction), 0.f);
+        float3 reflection = reflect(light_direction, normal);
+        float specular = pow(max(dot(view_dir, reflection), 0.f), 16) * .5f;
+        
+        float3 light_color = light.color * light.intensity;
+        color += (diffuse + specular) * light_color;
+    }
+    
+    float3 ambient = 10 / 255.f;
+    ps_out.color = saturate(float4(color + ambient , 1.f));
     
     return ps_out;
 }

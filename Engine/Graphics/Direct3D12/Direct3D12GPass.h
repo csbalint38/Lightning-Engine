@@ -17,6 +17,7 @@ namespace lightning::graphics::direct3d12::gpass {
 			POSITION_BUFFER,
 			ELEMENT_BUFFER,
 			SRV_INDICIES,
+			DIRECTIONAL_LIGHTS,
 			PER_OBJECT_DATA,
 
 			count

@@ -18,6 +18,9 @@ namespace lightning::graphics {
 	struct FrameInfo {
 		id::id_type* render_item_ids{ nullptr };
 		f32* thresholds{ nullptr };
+		u64 light_set_key{ 0 };
+		f32 last_frame_time{ 16.7f };
+		f32 average_frame_time{ 16.7f };
 		u32 render_item_count{ 0 };
 		camera_id camera_id{ id::invalid_id };
 	};

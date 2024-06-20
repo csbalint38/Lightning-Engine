@@ -1,4 +1,5 @@
 #include "Direct3D12Light.h"
+#include "Direct3D12Core.h"
 #include "Shaders/ShaderTypes.h"
 #include "EngineAPI/GameEntity.h"
 
@@ -59,6 +60,19 @@ namespace lightning::graphics::direct3d12::light {
 				}
 
 				_owners.remove(id);
+			}
+
+			void update_transforms() {
+				for (const auto& id : _non_cullable_owners) {
+					if (!id::is_valid(id)) continue;
+
+					const LightOwner& owner{ _owners[id] };
+					if (owner.is_enabled) {
+						const game_entity::Entity entity{ game_entity::entity_id{ owner.entity_id } };
+						hlsl::DirectionalLightParameters& params{ _non_cullable_lights[owner.data_index] };
+						params.direction = entity.orientation();
+					}
+				}
 			}
 
 			constexpr void enable(light_id id, bool is_enabled) {
@@ -299,6 +313,10 @@ namespace lightning::graphics::direct3d12::light {
 			}
 			return !has_lights;
 		}());
+
+		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
+			light_buffers[i].release();
+		}
 	}
 
 	graphics::Light create(LightInitInfo info) {
@@ -323,5 +341,29 @@ namespace lightning::graphics::direct3d12::light {
 		assert(light_sets.count(light_set_key));
 		assert(parameter < LightParameter::count);
 		get_functions[parameter](light_sets[light_set_key], id, data, data_size);
+	}
+
+	void update_light_buffers(const D3D12FrameInfo& info) {
+		const u64 light_set_key{ info.info->light_set_key };
+		assert(light_sets.count(light_set_key));
+
+		LightSet& set{ light_sets[light_set_key] };
+
+		if (!set.has_lights()) return;
+
+		set.update_transforms();
+		const u32 frame_index{ info.frame_index };
+		D3D12LightBuffer& light_buffer{ light_buffers[frame_index] };
+		light_buffer.update_light_buffers(set, light_set_key, frame_index);
+	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS non_cullable_light_buffer(u32 frame_index) {
+		const D3D12LightBuffer& light_buffer{ light_buffers[frame_index] };
+		return light_buffer.non_cullable_lights();
+	}
+
+	u32 non_cullable_light_count(u64 light_set_key) {
+		assert(light_sets.count(light_set_key));
+		return light_sets[light_set_key].non_cullable_light_count();
 	}
 }
