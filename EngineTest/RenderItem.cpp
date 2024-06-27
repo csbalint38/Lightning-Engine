@@ -21,15 +21,13 @@ namespace {
 
 	std::unordered_map<id::id_type, id::id_type> render_item_entity_map;
 
-	[[nodiscard]] id::id_type load_model(const char* path) {
+	void load_model() {
 		std::unique_ptr<u8[]> model;
 		u64 size{ 0 };
-		read_file(path, model, size);
+		read_file("..\\..\\EngineTest\\robot_model.model", model, size);
 
-		const id::id_type model_id{ content::create_resource(model.get(), content::AssetType::MESH) };
+		model_id = content::create_resource(model.get(), content::AssetType::MESH);
 		assert(id::is_valid(model_id));
-
-		return model_id;
 	}
 
 	void load_shaders() {
