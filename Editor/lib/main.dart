@@ -1,79 +1,42 @@
+import 'package:editor/game_project/project_browser_dialog.dart';
+import 'package:editor/themes/theme_manager.dart';
+import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
-import 'package:split_view/split_view.dart';
+import 'package:window_manager/window_manager.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  WindowOptions windowOptions = const WindowOptions(
+    size: Size(800, 600),
+    center: true,
+    title: "Lightning Engine",
+    minimumSize: Size(800, 600),
+    maximumSize: Size(800, 600),
+  );
+
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  runApp(const LightningEditor());
+}
+
+ThemeManager _themeManager = ThemeManager();
+
+class LightningEditor extends StatelessWidget {
+  const LightningEditor({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage();
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("A"),
-      ),
-      body: SplitView(
-        children: [
-          SplitView(
-            viewMode: SplitViewMode.Horizontal,
-            indicator: SplitIndicator(viewMode: SplitViewMode.Horizontal),
-            activeIndicator: SplitIndicator(
-              viewMode: SplitViewMode.Horizontal,
-              isActive: true,
-            ),
-            children: [
-              Container(
-                child: Center(child: Text("View1")),
-                color: Colors.red,
-              ),
-              Container(
-                child: Center(child: Text("View2")),
-                color: Colors.blue,
-              ),
-              Container(
-                child: Center(child: Text("View3")),
-                color: Colors.green,
-              ),
-            ],
-            onWeightChanged: (w) => print("Horizon: $w"),
-          ),
-          Container(
-            child: Center(child: Text("View4")),
-            color: Colors.purple,
-          ),
-          Container(
-            child: Center(child: Text("View5")),
-            color: Colors.yellow,
-          ),
-        ],
-        viewMode: SplitViewMode.Vertical,
-        indicator: SplitIndicator(viewMode: SplitViewMode.Vertical),
-        activeIndicator: SplitIndicator(
-          viewMode: SplitViewMode.Vertical,
-          isActive: true,
-        ),
-        controller: SplitViewController(limits: [null, WeightLimit(max: 0.5)]),
-        onWeightChanged: (w) => print("Vertical $w"),
-      ),
+      title: "Lightning Editor",
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: _themeManager.themeMode,
+      home: const ProjectBrowserDialog(),
     );
   }
 }

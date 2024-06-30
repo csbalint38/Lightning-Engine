@@ -1,3 +1,4 @@
+import 'package:editor/game_project/open_project.dart';
 import 'package:flutter/material.dart';
 
 class ProjectBrowserDialog extends StatefulWidget {
@@ -10,17 +11,6 @@ class ProjectBrowserDialog extends StatefulWidget {
 class _ProjectBrowserDialogState extends State<ProjectBrowserDialog> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: Text(
-            "Lightning Editor",
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          backgroundColor: Theme.of(context).primaryColor),
-      body: ElevatedButton(
-        onPressed: () async {},
-        child: const Text("Open Project"),
-      ),
-    );
+    return const OpenProject();
   }
 }

@@ -14,6 +14,59 @@ ThemeData lightTheme = ThemeData(
     bodyMedium: blackText,
     bodySmall: blackText,
   ),
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ButtonStyle(
+      backgroundColor: const WidgetStatePropertyAll(Colors.blueGrey),
+      overlayColor:
+          const WidgetStatePropertyAll(Color.fromARGB(255, 109, 142, 158)),
+      foregroundColor: const WidgetStatePropertyAll(Colors.white),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    ),
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: ButtonStyle(
+      overlayColor: const WidgetStatePropertyAll(
+        Color.fromARGB(27, 138, 169, 184),
+      ),
+      foregroundColor: const WidgetStatePropertyAll(Colors.blueGrey),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+      side: const WidgetStatePropertyAll(
+        BorderSide(color: Colors.blueGrey),
+      ),
+    ),
+  ),
+  listTileTheme: const ListTileThemeData(
+    selectedTileColor: Colors.blueGrey,
+    selectedColor: Colors.white,
+    textColor: Colors.blueGrey,
+  ),
+  inputDecorationTheme: const InputDecorationTheme(
+    border: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.blueGrey,
+      ),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.blueGrey,
+        width: 2,
+      ),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(
+        color: Colors.blueGrey,
+      ),
+    ),
+    isDense: true,
+  ),
 );
 
 ThemeData darkTheme = ThemeData(
@@ -29,15 +82,7 @@ ThemeData darkTheme = ThemeData(
   ),
 );
 
-ThemeData Lara = ThemeData(
-  scaffoldBackgroundColor: Colors.lightGreen,
-  primaryColor: Colors.pinkAccent,
-  textTheme: const TextTheme(
-    headlineLarge: whiteText,
-    headlineMedium: whiteText,
-    headlineSmall: whiteText,
-    bodyLarge: whiteText,
-    bodyMedium: whiteText,
-    bodySmall: whiteText,
-  ),
-);
+extension CustomTheme on ThemeData {
+  Color get borderColor =>
+      brightness == Brightness.light ? Colors.black38 : Colors.black38;
+}
