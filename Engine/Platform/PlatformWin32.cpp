@@ -1,5 +1,6 @@
 #include "Platform.h"
 #include "PlatformTypes.h"
+#include "Input/InputWin32.h"
 
 namespace lightning::platform {
 	#ifdef _WIN64
@@ -40,6 +41,7 @@ namespace lightning::platform {
 					SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)id);
 					assert(GetLastError() == 0);
 				}
+				break;
 				case WM_DESTROY:
 					get_from_handle(hwnd).is_closed = true;
 					break;
@@ -50,7 +52,9 @@ namespace lightning::platform {
 					break;
 			}
 
-			if (resized && GetAsyncKeyState(VK_LBUTTON) >= 0) {
+			input::process_input_message(hwnd, msg, wparam, lparam);
+
+			if (resized && GetKeyState(VK_LBUTTON) >= 0) {
 				WindowInfo& info{ get_from_handle(hwnd) };
 				assert(info.hwnd);
 				GetClientRect(info.hwnd, info.is_fullscreen ? &info.fullscreen_area : &info.client_area);
