@@ -15,26 +15,6 @@
 #if TEST_RENDERER
 	using namespace lightning;
 
-	class RotatorScript;
-	REGISTER_SCRIPT(RotatorScript);
-	class RotatorScript : public script::EntityScript {
-		public:
-			constexpr explicit RotatorScript(game_entity::Entity entity) : script::EntityScript{ entity } {}
-			void begin_play() override {}
-			void update(float dt) override {
-				_angle += 0.25f * dt * math::TWO_PI;
-				if (_angle > math::TWO_PI) _angle -= math::TWO_PI;
-				math::v3a rot{ 0.f, _angle, 0.f };
-				DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3A(&rot)) };
-				math::v4 rot_quat{};
-				DirectX::XMStoreFloat4(&rot_quat, quat);
-				set_rotation(rot_quat);
-			}
-
-		private:
-			f32 _angle{ 0.f };
-	};
-
 	#pragma region TEST_MULTITHREDING
 
 	#define ENABLE_TEST_WORKERS 0
@@ -88,8 +68,9 @@
 	void destroy_camera_surface(CameraSurface& surface);
 	bool test_initialize();
 	void test_shutdown();
-	id::id_type create_render_item(id::id_type entity_id);
-	void destroy_render_item(id::id_type item_id);
+	void create_render_items();
+	void destroy_render_items();
+	void get_render_items(id::id_type* items, u32 count);
 	void generate_lights();
 	void remove_lights();
 
@@ -202,7 +183,7 @@
 	void create_camera_surface(CameraSurface& surface, platform::WindowInitInfo info) {
 		surface.surface.window = platform::create_window(&info);
 		surface.surface.surface = graphics::create_surface(surface.surface.window);
-		surface.entity = create_one_game_entity({ 0.f, 1.f, 3.f }, { 0.f, 3.14f, 0.f }, nullptr);
+		surface.entity = create_one_game_entity({ 0.f, -200.f, 80.f }, { -1.35f, 3.14f, 0.f }, nullptr);
 		surface.camera = graphics::create_camera(graphics::PerspectiveCameraInitInfo{ surface.entity.get_id() });
 		surface.camera.aspect_ratio((f32)surface.surface.window.width() / surface.surface.window.height());
 	}
@@ -246,7 +227,7 @@
 
 		init_test_workers(buffer_test_worker);
 
-		item_id = create_render_item(create_one_game_entity({}, {}, "RotatorScript").get_id());
+		create_render_items();
 
 		generate_lights();
 
@@ -257,7 +238,7 @@
 
 	void test_shutdown() {
 		remove_lights();
-		destroy_render_item(item_id);
+		destroy_render_items();
 		joint_test_workers();
 
 		if (id::is_valid(model_id)) {
@@ -281,9 +262,12 @@
 
 				f32 threshold{ 10 };
 
+				id::id_type render_items[3]{};
+				get_render_items(&render_items[0], 3);
+
 				graphics::FrameInfo info{};
-				info.render_item_ids = &item_id;
-				info.render_item_count = 1;
+				info.render_item_ids = &render_items[0];
+				info.render_item_count = 3;
 				info.thresholds = &threshold;
 				info.light_set_key = 0;
 				info.average_frame_time = timer.dt_avg();
