@@ -1,11 +1,12 @@
-#include "..\Engine\Platform\Platform.h"
-#include "..\Engine\Platform\PlatformTypes.h"
-#include "..\Graphics\Renderer.h"
-#include "..\Graphics\Direct3D12\Direct3D12Core.h"
-#include "..\Content\ContentToEngine.h"
+#include "Platform\Platform.h"
+#include "Platform\PlatformTypes.h"
+#include "Graphics\Renderer.h"
+#include "Graphics\Direct3D12\Direct3D12Core.h"
+#include "Content\ContentToEngine.h"
 #include "Components/Entity.h"
 #include "Components/Transform.h"
 #include "Components/Script.h"
+#inlcude "Input/Input.h"
 #include "TestRenderer.h"
 #include "ShaderCompilation.h"
 
@@ -231,12 +232,43 @@
 
 		generate_lights();
 
+		input::InputSource source{};
+		source.binding = std::hash<std::string>()("move");
+		source.source_type = input::InputSource::KEYBOARD;
+		source.code = input::InputCode::KEY_A;
+		source.multiplier = 1.f;
+		source.axis = input::Axis::X;
+		input.bind(source);
+
+		source.code = input::InputCode::KEY_D;
+		source.multiplier = -1.f;
+		input.bind(source);
+
+		source.code = input::InputCode::KEY_W;
+		source.multiplier = 1.f;
+		source.axis = input::Axis::Z;
+		input.bind(source);
+
+		source.code = input::InputCode::KEY_S;
+		source.multiplier = -1.f;
+		input.bind(source);
+
+		source.code = input::InputCode::KEY_Q;
+		source.multiplier = -1.f;
+		source.axis = input::Axis::Y;
+		input.bind(source);
+
+		source.code = input::InputCode::KEY_E;
+		source.multiplier = 1.f;
+		input.bind(source);
+
 		is_restarting = false;
 
 		return true;
 	}
 
 	void test_shutdown() {
+		input::unbind(std::hash<std::string>()("move"));
 		remove_lights();
 		destroy_render_items();
 		joint_test_workers();

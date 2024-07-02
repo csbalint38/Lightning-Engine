@@ -163,11 +163,13 @@ namespace lightning::input {
 	};
 
 	void get(InputSource::Type type, InputCode::Code code, InputValue& value);
+	void get(u64 binding, InputValue& value);
 
 	namespace detail {
 		class InputSystemBase {
 			public:
 				virtual void on_event(InputSource::Type, InputCode::Code, const InputValue&) = 0;
+				virtual void on_event(u64, const InputValue&) = 0;
 
 			protected:
 				InputSystemBase();
@@ -178,6 +180,7 @@ namespace lightning::input {
 	template<typename T> class InputSystem final : public detail::InputSystemBase {
 		public:
 			using input_callback_t = void(T::*)(InputSource::Type, InputCode::Code, const InputValue&);
+			using binding_callback_t = void(T::*)(u64, const InputValue&);
 
 			void add_handler(InputSource::Type type, T* instance, input_callback_t callback) {
 				assert(instance && callback && type < InputSource::count);
@@ -189,10 +192,28 @@ namespace lightning::input {
 				collection.emplace_back(InputCallback{ instance, callback });
 			}
 
+			void add_handler(u64 binding, T* instance, binding_callback_t callback) {
+				assert(instance && callback && type < InputSource::count);
+
+				for (const auto& func : _binding_callbacks) {
+					if (func.binding == binding && func.instance == instance && func.callbac == callback) return;
+				}
+
+				_binding_callbacks.emplace_back(BindingCallback{ binding, instance, callback });
+			}
+
 			void on_event(InputSource::Type type, InputCode::Code code, const InputValue& value) override {
 				assert(type < InputSource::count);
 				for (const auto& item : _input_callbacks[type]) {
 					(itme.instance->*item.callback)(type, code, value);
+				}
+			}
+
+			void on_event(u64 binding, const InputValue& value) override {
+				for (const auto& item : _binding_callbacks) {
+					if (item.binding = binding) {
+						(item.instance->item.callback)(binding, value);
+					}
 				}
 			}
 
@@ -202,6 +223,13 @@ namespace lightning::input {
 				input_callback_t callback;
 			};
 
+			struct BindingCallback {
+				u64 binding,
+				T* instance;
+				binding_callback_t callback;
+			};
+
 			util::vector<InputCallback> _input_callbacks[InputSource::count];
+			util::vector<BindingCallback> _binding_callbacks;
 	};
 }
