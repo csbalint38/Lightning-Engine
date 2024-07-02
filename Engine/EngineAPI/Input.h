@@ -186,14 +186,14 @@ namespace lightning::input {
 				assert(instance && callback && type < InputSource::count);
 				auto& collection = _input_callbacks[type];
 				for (const auto& func : collection) {
-					if (func.instance == instance && func.callbac == callback) return;
+					if (func.instance == instance && func.callback == callback) return;
 				}
 
 				collection.emplace_back(InputCallback{ instance, callback });
 			}
 
 			void add_handler(u64 binding, T* instance, binding_callback_t callback) {
-				assert(instance && callback && type < InputSource::count);
+				assert(instance && callback);
 
 				for (const auto& func : _binding_callbacks) {
 					if (func.binding == binding && func.instance == instance && func.callbac == callback) return;
@@ -205,14 +205,14 @@ namespace lightning::input {
 			void on_event(InputSource::Type type, InputCode::Code code, const InputValue& value) override {
 				assert(type < InputSource::count);
 				for (const auto& item : _input_callbacks[type]) {
-					(itme.instance->*item.callback)(type, code, value);
+					(item.instance->*item.callback)(type, code, value);
 				}
 			}
 
 			void on_event(u64 binding, const InputValue& value) override {
 				for (const auto& item : _binding_callbacks) {
-					if (item.binding = binding) {
-						(item.instance->item.callback)(binding, value);
+					if (item.binding == binding) {
+						(item.instance->*item.callback)(binding, value);
 					}
 				}
 			}
@@ -224,7 +224,7 @@ namespace lightning::input {
 			};
 
 			struct BindingCallback {
-				u64 binding,
+				u64 binding;
 				T* instance;
 				binding_callback_t callback;
 			};

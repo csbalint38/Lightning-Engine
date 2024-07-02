@@ -58,7 +58,7 @@ class CameraScript : public script::EntityScript {
 			math::v3 dir{ orientation() };
 			f32 theta{ DirectX::XMScalarACos(dir.y) };
 			f32 phi{ std::atan2(-dir.z, dir.x) };
-			math::v3 rot{ theta - math::HALF_PI, phi + HALF_PI, 0.f };
+			math::v3 rot{ theta - math::HALF_PI, phi + math::HALF_PI, 0.f };
 			_desired_spherical = _spherical = DirectX::XMLoadFloat3(&rot);
 		}
 
@@ -68,14 +68,14 @@ class CameraScript : public script::EntityScript {
 
 			math::v3 move{};
 			input::InputValue value;
-			static u64 bnding{ std::hash<std::string>()("move") };
+			static u64 binding{ std::hash<std::string>()("move") };
 			input::get(binding, value);
 			move = value.current;
 
 			if (!(math::is_equal(move.x, 0.f) && math::is_equal(move.y, 0.f) && math::is_equal(move.z, 0.f))) {
 				using namespace DirectX;
 
-				constexpr f32 fps_scale{ dt / .0166667f };
+				const f32 fps_scale{ dt / .0166667f };
 				math::v4 rot{ rotation() };
 				XMVECTOR d{ XMVector3Rotate(XMLoadFloat3(&move) * 0.05f * fps_scale, XMLoadFloat4(&rot)) };
 				if (_position_acceleration < 1.f) _position_acceleration += (.02f * fps_scale);
@@ -94,7 +94,7 @@ class CameraScript : public script::EntityScript {
 	private:
 
 		void mouse_move(input::InputSource::Type type, input::InputCode::Code code, const input::InputValue& mouse_pos) {
-			if (code == input::InputCode::MousePosition) {
+			if (code == input::InputCode::MOUSE_POSITION) {
 				input::InputValue value;
 				input::get(input::InputSource::MOUSE, input::InputCode::MOUSE_LEFT, value);
 
@@ -108,7 +108,7 @@ class CameraScript : public script::EntityScript {
 				DirectX::XMStoreFloat3(&spherical, _desired_spherical);
 				spherical.x += dy;
 				spherical.y -= dx;
-				spherical.x = math.clamp(spherical.x, 0.0001f - math::HALF_PI, math::HALF_PI - 0.0001f);
+				spherical.x = math::clamp(spherical.x, 0.0001f - math::HALF_PI, math::HALF_PI - 0.0001f);
 
 				_desired_spherical = DirectX::XMLoadFloat3(&spherical);
 				_move_rotation = true;
@@ -138,8 +138,8 @@ class CameraScript : public script::EntityScript {
 				_spherical += (o * scale);
 				math::v3 new_rot;
 				XMStoreFloat3(&new_rot, _spherical);
-				new_rot.x = math.clamp(new_rot.x, 0.0001f - math::HALF_PI, math::HALF_PI - 0.0001f);
-				_spherical = DirctX::XMLoadFloat3(&new_rot);
+				new_rot.x = math::clamp(new_rot.x, 0.0001f - math::HALF_PI, math::HALF_PI - 0.0001f);
+				_spherical = DirectX::XMLoadFloat3(&new_rot);
 
 				DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(_spherical) };
 				math::v4 rot_quat;

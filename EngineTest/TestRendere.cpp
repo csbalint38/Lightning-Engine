@@ -6,7 +6,7 @@
 #include "Components/Entity.h"
 #include "Components/Transform.h"
 #include "Components/Script.h"
-#inlcude "Input/Input.h"
+#include "Input/Input.h"
 #include "TestRenderer.h"
 #include "ShaderCompilation.h"
 
@@ -184,7 +184,7 @@
 	void create_camera_surface(CameraSurface& surface, platform::WindowInitInfo info) {
 		surface.surface.window = platform::create_window(&info);
 		surface.surface.surface = graphics::create_surface(surface.surface.window);
-		surface.entity = create_one_game_entity({ 0.f, -200.f, 80.f }, { -1.35f, 3.14f, 0.f }, "CameraScript");
+		surface.entity = create_one_game_entity({ 0, 0, 0 }, { 0, 3.14f, 0 }, "CameraScript");
 		surface.camera = graphics::create_camera(graphics::PerspectiveCameraInitInfo{ surface.entity.get_id() });
 		surface.camera.aspect_ratio((f32)surface.surface.window.width() / surface.surface.window.height());
 	}
@@ -238,29 +238,29 @@
 		source.code = input::InputCode::KEY_A;
 		source.multiplier = 1.f;
 		source.axis = input::Axis::X;
-		input.bind(source);
+		input::bind(source);
 
 		source.code = input::InputCode::KEY_D;
 		source.multiplier = -1.f;
-		input.bind(source);
+		input::bind(source);
 
 		source.code = input::InputCode::KEY_W;
 		source.multiplier = 1.f;
 		source.axis = input::Axis::Z;
-		input.bind(source);
+		input::bind(source);
 
 		source.code = input::InputCode::KEY_S;
 		source.multiplier = -1.f;
-		input.bind(source);
+		input::bind(source);
 
 		source.code = input::InputCode::KEY_Q;
 		source.multiplier = -1.f;
 		source.axis = input::Axis::Y;
-		input.bind(source);
+		input::bind(source);
 
 		source.code = input::InputCode::KEY_E;
 		source.multiplier = 1.f;
-		input.bind(source);
+		input::bind(source);
 
 		is_restarting = false;
 
