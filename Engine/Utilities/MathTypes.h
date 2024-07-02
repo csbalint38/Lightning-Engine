@@ -2,9 +2,10 @@
 #include "CommonHeaders.h"
 
 namespace lightning::math {
-	constexpr float PI = 3.14159274101257324219f;
-	constexpr float TWO_PI = 2.f * PI;
-	constexpr float EPSILON = 1e-5f;
+	constexpr f32 PI{ 3.14159274101257324219f };
+	constexpr f32 TWO_PI{ 2.f * PI };
+	constexpr f32 HALF_PI{ PI * .5f };
+	constexpr f32 EPSILON{ 1e-5f };
 	
 	#if defined(_WIN64)
 	using v2 = DirectX::XMFLOAT2;

@@ -174,4 +174,34 @@ namespace lightning::input {
 				~InputSystemBase();
 		};
 	}
+
+	template<typename T> class InputSystem final : public detail::InputSystemBase {
+		public:
+			using input_callback_t = void(T::*)(InputSource::Type, InputCode::Code, const InputValue&);
+
+			void add_handler(InputSource::Type type, T* instance, input_callback_t callback) {
+				assert(instance && callback && type < InputSource::count);
+				auto& collection = _input_callbacks[type];
+				for (const auto& func : collection) {
+					if (func.instance == instance && func.callbac == callback) return;
+				}
+
+				collection.emplace_back(InputCallback{ instance, callback });
+			}
+
+			void on_event(InputSource::Type type, InputCode::Code code, const InputValue& value) override {
+				assert(type < InputSource::count);
+				for (const auto& item : _input_callbacks[type]) {
+					(itme.instance->*item.callback)(type, code, value);
+				}
+			}
+
+		private:
+			struct InputCallback {
+				T* instance;
+				input_callback_t callback;
+			};
+
+			util::vector<InputCallback> _input_callbacks[InputSource::count];
+	};
 }

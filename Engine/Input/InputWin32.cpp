@@ -320,7 +320,7 @@ namespace lightning::input {
 		}
 
 		constexpr math::v2 get_mouse_position(LPARAM lparam) {
-			return { (float)((s16)(lparam & 0x0000FFFF)), (float)((s16)(lparam >> 16)) };
+			return { (f32)((s16)(lparam & 0x0000FFFF)), (f32)((s16)(lparam >> 16)) };
 		}
 	}
 
@@ -376,7 +376,7 @@ namespace lightning::input {
 			break;
 
 			case WM_MOUSEHWHEEL: {
-				set(InputSource::MOUSE, InputCode::MOUSE_WHEEL, { (float)(GET_WHEEL_DELTA_WPARAM(wparam)), 0.f, 0.f });
+				set(InputSource::MOUSE, InputCode::MOUSE_WHEEL, { (f32)(GET_WHEEL_DELTA_WPARAM(wparam)), 0.f, 0.f });
 			}
 			break;
 		}
