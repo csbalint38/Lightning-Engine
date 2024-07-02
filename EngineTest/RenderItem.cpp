@@ -117,9 +117,9 @@ void create_render_items() {
 	auto _3 = std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }};
 	auto _4 = std::thread{ [] { load_shaders(); } };
 
-	building_entity_id = create_one_game_entity({-25, 0, 0}, {}, nullptr).get_id();
-	fan_entity_id = create_one_game_entity({}, {}, nullptr).get_id();
-	blades_entity_id = create_one_game_entity({ 0, -3.28f, 60.67f }, {}, "TurbineScript").get_id();
+	building_entity_id = create_one_game_entity({0, 0, 0}, {}, nullptr).get_id();
+	fan_entity_id = create_one_game_entity({0, 0, 69.78f}, {}, nullptr).get_id();
+	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362 }, {}, "TurbineScript").get_id();
 
 	_1.join();
 	_2.join();
