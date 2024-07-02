@@ -1,5 +1,5 @@
 # Lightning Engine
 
 ## Coordinate system
-- Forward: z
- - Up: -y
+- Forward:  -z
+ - Up:       y
