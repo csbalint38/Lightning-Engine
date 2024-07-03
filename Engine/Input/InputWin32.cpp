@@ -210,7 +210,7 @@ namespace lightning::input {
 			u32_invalid_id,				// 0xBE
 			u32_invalid_id,				// 0xBF
 
-			u32_invalid_id,				// 0xC0
+			InputCode::KEY_TILDE,		// 0xC0
 			u32_invalid_id,				// 0xC1
 			u32_invalid_id,				// 0xC2
 			u32_invalid_id,				// 0xC3

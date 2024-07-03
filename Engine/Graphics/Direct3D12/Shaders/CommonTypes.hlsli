@@ -28,6 +28,29 @@ struct PerObjectData
     float4x4 world_view_projection;
 };
 
+struct LightCullingLightInfo
+{
+    float3 position;
+    float range;
+    float3 direction;
+    float cone_radius;
+    uint type;
+    float3 _pad;
+};
+
+struct LightParameters {
+    float3 position;
+    float intensity;
+    float3 direction;
+    uint type;
+    float3 color;
+    float range;
+    float3 attenuation;
+    float cos_umbra;
+    float cos_penumbra;
+    float3 _pad;
+};
+
 struct DirectionalLightParameters
 {
     float3 direction;
@@ -38,5 +61,6 @@ struct DirectionalLightParameters
 
 #ifdef __cplusplus
 static_assert((sizeof(PerObjectData) % 16) == 0, "Make sure PerObjectData is formatted in 16-byte chunks without any implicit padding.");
+static_assert((sizeof(PerObjectData) % 16) == 0, "Make sure LightParameters is formatted in 16-byte chunks without any implicit padding.");
 static_assert((sizeof(DirectionalLightParameters) % 16) == 0, "Make sure DirectionalLightParameters is formatted in 16-byte chunks without any implicit padding.");
 #endif

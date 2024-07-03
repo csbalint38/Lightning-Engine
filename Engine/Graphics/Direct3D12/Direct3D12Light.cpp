@@ -6,9 +6,22 @@
 namespace lightning::graphics::direct3d12::light {
 	namespace {
 
+		template<u32 n> struct U32SetBits {
+			static_assert(n > 0 && n <= 32);
+			constexpr static const u32 bits{ U32SetBits<n - 1>::bits | (1 << (n - 1)) };
+		};
+
+		template<> struct U32SetBits<0> {
+			constexpr static const u32 bits{ 0 };
+		};
+
+		static_assert(U32SetBits<FRAME_BUFFER_COUNT>::bits < (1 << 8), "Frame buffer count is too large. Maximum number of frame buffers is 8");
+
+		constexpr u8 dirty_bits_mask{ (u8)U32SetBits<FRAME_BUFFER_COUNT>::bits };
+
 		struct LightOwner {
 			game_entity::entity_id entity_id{ id::invalid_id };
-			u32 data_index;
+			u32 data_index{ u32_invalid_id };
 			graphics::Light::Type type;
 			bool is_enabled;
 		};
@@ -45,6 +58,41 @@ namespace lightning::graphics::direct3d12::light {
 					LightOwner owner{ game_entity::entity_id{info.entity_id}, index, info.type, info.is_enabled };
 					const light_id id{ _owners.add(owner) };
 					_non_cullable_owners[index] = id;
+
+					return graphics::Light{ id, info.light_set_key };
+				}
+
+				else {
+					u32 index{ u32_invalid_id };
+
+					for (u32 i{ _enabled_cullable_light_count }; i < _cullable_owners.size(); ++i) {
+						if (!id::is_valid(_cullable_owners[i])) {
+							index = i;
+							break;
+						}
+					}
+
+					if (index == u32_invalid_id) {
+						index = (u32)_cullable_owners.size();
+						_cullable_lights.emplace_back();
+						_culling_info.emplace_back();
+						_cullable_entity_ids.emplace_back();
+						_cullable_owners.emplace_back();
+						_dirty_bits.emplace_back();
+						assert(_cullable_owners.size() == _cullable_lights.size());
+						assert(_cullable_owners.size() == _culling_info.size());
+						assert(_cullable_owners.size() == _cullable_entity_ids.size());
+						assert(_cullable_owners.size() == _dirty_bits.size());
+					}
+
+					add_cullable_light_parameters(info, index);
+					add_light_culling_info(info, index);
+					const light_id id{ _owners.add(LightOwner{game_entity::entity_id{info.entity_id}, index, info.type, info.is_enabled}) };
+					_cullable_entity_ids[index] = _owners[id].entity_id;
+					_cullable_owners[index] = id;
+					_dirty_bits[index] = dirty_bits_mask;
+					enable(id, info.is_enabled);
+					update_transform(index);
 
 					return graphics::Light{ id, info.light_set_key };
 				}
@@ -165,6 +213,14 @@ namespace lightning::graphics::direct3d12::light {
 			util::free_list<LightOwner> _owners;
 			util::vector<hlsl::DirectionalLightParameters> _non_cullable_lights;
 			util::vector<light_id> _non_cullable_owners;
+
+			util::vector<hlsl::LightParameters> _cullable_lights;
+			util::vector<hlsl::LightCullingLightInfo> _culling_info;
+			util::vector<game_entity::entity_id> _cullable_entity_ids;
+			util::vector<light_id> _cullable_owners;
+			util::vector<u8> _dirty_bits;
+
+			u32 _enabled_cullable_light_count{0};
 		};
 
 		class D3D12LightBuffer {

@@ -139,6 +139,7 @@ namespace lightning::input {
 
 			KEY_NUMLOCK,
 			KEY_SCROLLOCK,
+			KEY_TILDE,
 		};
 	};
 

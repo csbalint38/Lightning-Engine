@@ -292,7 +292,7 @@
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			if (_surfaces[i].surface.surface.is_valid()) {
 
-				f32 threshold{ 10 };
+				f32 thresholds[3]{};
 
 				id::id_type render_items[3]{};
 				get_render_items(&render_items[0], 3);
@@ -300,11 +300,12 @@
 				graphics::FrameInfo info{};
 				info.render_item_ids = &render_items[0];
 				info.render_item_count = 3;
-				info.thresholds = &threshold;
+				info.thresholds = &thresholds[0];
 				info.light_set_key = 0;
 				info.average_frame_time = timer.dt_avg();
 				info.camera_id = _surfaces[i].camera.get_id();
 
+				assert(_countof(thresholds) >= info.render_item_count);
 				_surfaces[i].surface.surface.render(info);
 			}
 		}

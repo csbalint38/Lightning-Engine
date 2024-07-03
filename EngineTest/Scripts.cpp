@@ -52,6 +52,9 @@ class CameraScript : public script::EntityScript {
 		explicit CameraScript(game_entity::Entity entity) : script::EntityScript{ entity } {
 			_input_system.add_handler(input::InputSource::MOUSE, this, &CameraScript::mouse_move);
 
+			const u64 binding{ std::hash<std::string>()("move") };
+			_input_system.add_handler(binding, this, &CameraScript::on_move);
+
 			math::v3 pos{ position() };
 			_desired_position = _position = DirectX::XMLoadFloat3(&pos);
 
@@ -64,20 +67,14 @@ class CameraScript : public script::EntityScript {
 
 		void begin_play() override {}
 		void update(f32 dt) override {
-			_dt = dt;
 
-			math::v3 move{};
-			input::InputValue value;
-			static u64 binding{ std::hash<std::string>()("move") };
-			input::get(binding, value);
-			move = value.current;
+			using namespace DirectX;
 
-			if (!(math::is_equal(move.x, 0.f) && math::is_equal(move.y, 0.f) && math::is_equal(move.z, 0.f))) {
-				using namespace DirectX;
 
+			if(_move_magnitude > math::epsilon) {
 				const f32 fps_scale{ dt / .0166667f };
 				math::v4 rot{ rotation() };
-				XMVECTOR d{ XMVector3Rotate(XMLoadFloat3(&move) * 0.05f * fps_scale, XMLoadFloat4(&rot)) };
+				XMVECTOR d{ XMVector3Rotate(_move * 0.05f * fps_scale, XMLoadFloat4(&rot)) };
 				if (_position_acceleration < 1.f) _position_acceleration += (.02f * fps_scale);
 				_desired_position += (d * _position_acceleration);
 				_move_position = true;
@@ -87,11 +84,18 @@ class CameraScript : public script::EntityScript {
 			}
 
 			if (_move_position || _move_rotation) {
-				seek_camera();
+				seek_camera(dt);
 			}
 		}
 
 	private:
+
+		void on_move(u64 binding, const input::InputValue& value) {
+			using namespace DirectX;
+
+			_move = XMLoadFloat3(&value.current);
+			_move_magnitude = XMVectorGetX(XMVector3LengthSq(_move));
+		}
 
 		void mouse_move(input::InputSource::Type type, input::InputCode::Code code, const input::InputValue& mouse_pos) {
 			if (code == input::InputCode::MOUSE_POSITION) {
@@ -116,16 +120,16 @@ class CameraScript : public script::EntityScript {
 			}
 		}
 
-		void seek_camera() {
+		void seek_camera(f32 dt) {
 			using namespace DirectX;
 		
 			XMVECTOR p{ _desired_position - _position };
 			XMVECTOR o{ _desired_spherical - _spherical };
 
-			_move_position = (XMVectorGetX(XMVector3Length(p)) > 1e-4f);
-			_move_rotation = (XMVectorGetX(XMVector3Length(o)) > 1e-4f);
+			_move_position = (XMVectorGetX(XMVector3Length(p)) > math::epsilon);
+			_move_rotation = (XMVectorGetX(XMVector3Length(o)) > math::epsilon);
 
-			const f32 scale{ .2f * _dt / 0.016667f };
+			const f32 scale{ .2f * dt / 0.016667f };
 
 			if (_move_position) {
 				_position += (p * scale);
@@ -154,7 +158,8 @@ class CameraScript : public script::EntityScript {
 		DirectX::XMVECTOR _position;
 		DirectX::XMVECTOR _desired_spherical;
 		DirectX::XMVECTOR _spherical;
-		f32 _dt;
+		DirectX::XMVECTOR _move{};
+		f32 _move_magnitude{ 0.f };
 		f32 _position_acceleration{ 0.f };
 		bool _move_position{ false };
 		bool _move_rotation{ false };

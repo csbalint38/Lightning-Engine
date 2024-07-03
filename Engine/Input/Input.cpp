@@ -43,14 +43,10 @@ namespace lightning::input {
 		for (u32 i{ 0 }; i < sources.size(); ++i) {
 			if (sources[i].source_type == type && sources[i].code == code) {
 				assert(sources[i].binding == source_binding_map[key]);
-				index = i;
+				util::erease_unordered(sources, i);
+				source_binding_map.erase(key);
 				break;
 			}
-		}
-
-		if (index != u32_invalid_id) {
-			util::erease_unordered(sources, index);
-			source_binding_map.erase(key);
 		}
 
 		if (!sources.size()) {
@@ -116,7 +112,7 @@ namespace lightning::input {
 			return;
 		}
 
-		util::vector<InputSource>& sources{ input_bindings[binding].sources };
+		util::vector<InputSource>& sources{ input_binding.sources };
 		InputValue sub_value{};
 		InputValue result{};
 
@@ -131,8 +127,8 @@ namespace lightning::input {
 				(&result.current.x)[source.axis] += (current - previous) * source.multiplier;
 			}
 			else {
-				(&result.previous.x)[source.axis] += sub_value.previous.x * source.multiplier;
-				(&result.current.x)[source.axis] += sub_value.current.x * source.multiplier;
+				(&result.previous.x)[source.axis] += (&sub_value.previous.x)[source.source_axis] * source.multiplier;
+				(&result.current.x)[source.axis] += (&sub_value.current.x)[source.source_axis] * source.multiplier;
 			}
 		}
 
