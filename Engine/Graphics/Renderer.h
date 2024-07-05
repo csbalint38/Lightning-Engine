@@ -81,6 +81,10 @@ namespace lightning::graphics {
 			IS_ENABLED,
 			INTENSITY,
 			COLOR,
+			ATTENUATION,
+			RANGE,
+			UMBRA,
+			PENUMBRA,
 			TYPE,
 			ENTITY_ID,
 

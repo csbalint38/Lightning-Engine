@@ -479,6 +479,8 @@ namespace lightning::graphics::direct3d12::light {
 
 			util::vector<u8> _transform_flags_cache;
 			u32 _enabled_cullable_light_count{0};
+
+			friend class D3D12LightBuffer;
 		};
 
 		class D3D12LightBuffer {
@@ -487,15 +489,57 @@ namespace lightning::graphics::direct3d12::light {
 			CONSTEXPR void update_light_buffers(LightSet& set, u64 light_set_key, u32 frame_index) {
 				u32 sizes[LightBuffer::count]{};
 				sizes[LightBuffer::NON_CULLABLE_LIGHT] = set.non_cullable_light_count() * sizeof(hlsl::DirectionalLightParameters);
+				sizes[LightBuffer::CULLABLE_LIGHT] = set.cullable_light_count() * sizeof(hlsl::LightParameters);
+				sizes[LightBuffer::CULLING_INFO] = set.cullable_light_count() * sizeof(hlsl::LightCullingLightInfo);
 
 				u32 current_sizes[LightBuffer::count]{};
 				current_sizes[LightBuffer::NON_CULLABLE_LIGHT] = _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.size();
+				current_sizes[LightBuffer::CULLABLE_LIGHT] = _buffers[LightBuffer::CULLABLE_LIGHT].buffer.size();
+				current_sizes[LightBuffer::CULLING_INFO] = _buffers[LightBuffer::CULLING_INFO].buffer.size();
 
 				if (current_sizes[LightBuffer::NON_CULLABLE_LIGHT] < sizes[LightBuffer::NON_CULLABLE_LIGHT]) {
 					resize_buffer(LightBuffer::NON_CULLABLE_LIGHT, sizes[LightBuffer::NON_CULLABLE_LIGHT], frame_index);
 				}
 
 				set.non_cullable_lights((hlsl::DirectionalLightParameters* const)_buffers[LightBuffer::NON_CULLABLE_LIGHT].cpu_address, _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.size());
+			
+				bool buffers_resized{ false };
+				if (current_sizes[LightBuffer::CULLABLE_LIGHT] < sizes[LightBuffer::CULLABLE_LIGHT]) {
+					assert(current_sizes[LightBuffer::CULLING_INFO] < sizes[LightBuffer::CULLING_INFO]);
+					resize_buffer(LightBuffer::CULLABLE_LIGHT, sizes[LightBuffer::CULLABLE_LIGHT], frame_index);
+					resize_buffer(LightBuffer::CULLING_INFO, sizes[LightBuffer::CULLING_INFO], frame_index);
+					buffers_resized = true;
+				}
+
+				bool all_lights_updated{ false };
+				if (buffers_resized || _current_light_set_key != light_set_key) {
+					memcpy(_buffers[LightBuffer::CULLABLE_LIGHT].cpu_address, set._cullable_lights.data(), sizes[LightBuffer::CULLABLE_LIGHT]);
+					memcpy(_buffers[LightBuffer::CULLING_INFO].cpu_address, set._culling_info.data(), sizes[LightBuffer::CULLING_INFO]);
+					_current_light_set_key = light_set_key;
+					all_lights_updated = true;
+				}
+
+				assert(_current_light_set_key == light_set_key);
+				const u32 index_mask{ 1UL << frame_index };
+
+				if (all_lights_updated) {
+					for (u32 i{ 0 }; i < set.cullable_light_count(); ++i) {
+						set._dirty_bits[i] &= ~index_mask;
+					}
+				}
+				else {
+					for (u32 i{ 0 }; i < set.cullable_light_count(); ++i) {
+						if (set._dirty_bits[i] & index_mask) {
+							assert(i * sizeof(hlsl::LightParameters) < sizes[LightBuffer::CULLABLE_LIGHT]);
+							assert(i * sizeof(hlsl::LightCullingLightInfo) < sizes[LightBuffer::CULLING_INFO]);
+							u8* const light_dst{ _buffers[LightBuffer::CULLABLE_LIGHT].cpu_address + (i * sizeof(hlsl::LightParameters)) };
+							u8* const culling_dst{ _buffers[LightBuffer::CULLING_INFO].cpu_address + (i * sizeof(hlsl::LightCullingLightInfo)) };
+							memcpy(light_dst, &set._cullable_lights[i], sizeof(hlsl::LightParameters));
+							memcpy(culling_dst, &set._culling_info[i], sizeof(hlsl::LightCullingLightInfo));
+							set._dirty_bits[i] &= ~index_mask;
+						}
+					}
+				}
 			}
 
 			constexpr void release() {
@@ -506,6 +550,8 @@ namespace lightning::graphics::direct3d12::light {
 			}
 
 			constexpr D3D12_GPU_VIRTUAL_ADDRESS non_cullable_lights() const { return _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.gpu_address(); }
+			constexpr D3D12_GPU_VIRTUAL_ADDRESS cullable_lights() const { return _buffers[LightBuffer::CULLABLE_LIGHT].buffer.gpu_address(); }
+			constexpr D3D12_GPU_VIRTUAL_ADDRESS culling_info() const { return _buffers[LightBuffer::CULLING_INFO].buffer.gpu_address(); }
 
 		private:
 			struct LightBuffer {
@@ -538,8 +584,6 @@ namespace lightning::graphics::direct3d12::light {
 			u64 _current_light_set_key{ 0 };
 		};
 
-		#undef CONSTEXPR
-
 		std::unordered_map<u64, LightSet> light_sets;
 		D3D12LightBuffer light_buffers[FRAME_BUFFER_COUNT];
 
@@ -561,6 +605,30 @@ namespace lightning::graphics::direct3d12::light {
 			set.color(id, color);
 		}
 
+		CONSTEXPR void set_attenuation(LightSet& set, light_id id, const void* const data, [[maybe_unused]] u32 size) {
+			math::v3 attenuation{ *(math::v3*)data };
+			assert(sizeof(attenuation) == size);
+			set.attenuation(id, attenuation);
+		}
+
+		CONSTEXPR void set_range(LightSet& set, light_id id, const void* const data, [[maybe_unused]] u32 size) {
+			f32 range{ *(f32*)data };
+			assert(sizeof(range) == size);
+			set.range(id, range);
+		}
+
+		void set_umbra(LightSet& set, light_id id, const void* const data, [[maybe_unused]] u32 size) {
+			f32 umbra{ *(f32*)data };
+			assert(sizeof(umbra) == size);
+			set.umbra(id, umbra);
+		}
+
+		void set_penumbra(LightSet& set, light_id id, const void* const data, [[maybe_unused]] u32 size) {
+			f32 penumbra{ *(f32*)data };
+			assert(sizeof(penumbra) == size);
+			set.penumbra(id, penumbra);
+		}
+
 		constexpr void get_is_enabled(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			bool* const is_enabled{ (bool* const)data };
 			assert(sizeof(bool) == size);
@@ -577,6 +645,30 @@ namespace lightning::graphics::direct3d12::light {
 			math::v3* const color{ (math::v3* const)data };
 			assert(sizeof(math::v3) == size);
 			*color = set.color(id);
+		}
+
+		CONSTEXPR void get_attenuation(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+			math::v3* const attenuation{ (math::v3* const)data };
+			assert(sizeof(math::v3) == size);
+			*attenuation = set.attenuation(id);
+		}
+
+		CONSTEXPR void get_range(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+			f32* const range{ (f32* const)data };
+			assert(sizeof(f32) == size);
+			*range = set.range(id);
+		}
+
+		void get_umbra(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+			f32* const umbra{ (f32* const)data };
+			assert(sizeof(f32) == size);
+			*umbra = set.umbra(id);
+		}
+
+		void get_penumbra(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+			f32* const penumbra{ (f32* const)data };
+			assert(sizeof(f32) == size);
+			*penumbra = set.penumbra(id);
 		}
 
 		constexpr void get_type(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
@@ -600,6 +692,10 @@ namespace lightning::graphics::direct3d12::light {
 			set_is_enabled,
 			set_intensity,
 			set_color,
+			set_attenuation,
+			set_range,
+			set_umbra,
+			set_penumbra,
 			empty_set,
 			empty_set
 		};
@@ -610,11 +706,17 @@ namespace lightning::graphics::direct3d12::light {
 			get_is_enabled,
 			get_intensity,
 			get_color,
+			get_attenuation,
+			get_range,
+			get_umbra,
+			get_penumbra,
 			get_type,
 			get_entity_id
 		};
 
 		static_assert(_countof(get_functions) == graphics::LightParameter::count);
+
+		#undef CONSTEXPR
 	}
 
 	bool initialize() { return true; }

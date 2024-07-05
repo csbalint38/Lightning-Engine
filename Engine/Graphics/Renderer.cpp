@@ -79,6 +79,22 @@ namespace lightning::graphics {
 		gfx.light.set_parameter(_id, _light_set_key, LightParameter::COLOR, &color, sizeof(color));
 	}
 
+	void Light::attenuation(math::v3 attenuation) const {
+		assert(is_valid());
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::ATTENUATION, &attenuation, sizeof(attenuation));
+	}
+
+	void Light::range(f32 range) const {
+		assert(is_valid());
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::RANGE, &range, sizeof(range));
+	}
+
+	void Light::cone_angles(f32 umbra, f32 penumbra) const {
+		assert(is_valid());
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::UMBRA, &umbra, sizeof(umbra));
+		gfx.light.set_parameter(_id, _light_set_key, LightParameter::PENUMBRA, &penumbra, sizeof(penumbra));
+	}
+
 	bool Light::is_enabled() const {
 		assert(is_valid());
 		bool is_enabled;
@@ -98,6 +114,34 @@ namespace lightning::graphics {
 		math::v3 color;
 		gfx.light.get_parameter(_id, _light_set_key, LightParameter::COLOR, &color, sizeof(color));
 		return color;
+	}
+
+	math::v3 Light::attenuation() const {
+		assert(is_valid());
+		math::v3 attenuation;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::ATTENUATION, &attenuation, sizeof(attenuation));
+		return attenuation;
+	}
+
+	f32 Light::range() const {
+		assert(is_valid());
+		f32 range;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::RANGE, &range, sizeof(range));
+		return range;
+	}
+
+	f32 Light::umbra() const {
+		assert(is_valid());
+		f32 umbra;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::UMBRA, &umbra, sizeof(umbra));
+		return umbra;
+	}
+
+	f32 Light::penumbra() const {
+		assert(is_valid());
+		f32 penumbra;
+		gfx.light.get_parameter(_id, _light_set_key, LightParameter::PENUMBRA, &penumbra, sizeof(penumbra));
+		return penumbra;
 	}
 
 	Light::Type Light::light_type() const {
