@@ -1,6 +1,7 @@
+import 'package:editor/common/mvvm/observer.dart';
+import 'package:editor/game_project/controllers/new_project_controller.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class NewProject extends StatefulWidget {
   const NewProject({super.key});
@@ -9,31 +10,39 @@ class NewProject extends StatefulWidget {
   State<NewProject> createState() => _NewProjectState();
 }
 
-class _NewProjectState extends State<NewProject> {
-  static List<String> items = [
-    "Template 1",
-    "Template 2",
-    "Template 3",
-    "Template 4",
-    "Template 5",
-    "Template 6",
-    "Template 7",
-    "Template 8"
-  ];
+class _NewProjectState extends State<NewProject> implements EventObserver {
+  final _controller = NewProjectController();
+
+  late final TextEditingController _nameController;
+  late final TextEditingController _pathController;
+
   final FocusNode _listFocus = FocusNode();
 
-  int selectedThemeIndex = 0;
+  int selectedTemplateIndex = 0;
 
   void _selectedThemeChanged(int index) {
     setState(() {
-      selectedThemeIndex = index;
+      selectedTemplateIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _nameController = TextEditingController(text: _controller.name);
+    _pathController = TextEditingController(text: _controller.path);
+
+    _controller.subscribe(this);
   }
 
   @override
   void dispose() {
     _listFocus.dispose();
+    _nameController.dispose();
+    _pathController.dispose();
     super.dispose();
+    _controller.unsubscribe(this);
   }
 
   @override
@@ -58,15 +67,27 @@ class _NewProjectState extends State<NewProject> {
                       ),
                       child: Material(
                         child: ListView.builder(
-                          itemCount: items.length,
+                          itemCount: _controller.getTemplates().length,
                           itemBuilder: (BuildContext context, int index) {
                             return Listener(
                               onPointerUp: (_) => _selectedThemeChanged(index),
                               child: ListTile(
-                                title: Text(
-                                  items[index],
+                                title: Row(
+                                  children: [
+                                    Image.file(
+                                      _controller.getTemplates()[index].icon,
+                                      width: 25,
+                                      height: 25,
+                                    ),
+                                    const SizedBox(width: 15),
+                                    Text(
+                                      _controller
+                                          .getTemplates()[index]
+                                          .projectName,
+                                    ),
+                                  ],
                                 ),
-                                selected: index == selectedThemeIndex,
+                                selected: index == selectedTemplateIndex,
                               ),
                             );
                           },
@@ -79,8 +100,10 @@ class _NewProjectState extends State<NewProject> {
                   flex: 4,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 16, 40, 16),
-                    child: Image.asset(
-                      "ProjectTemplates/EmptyProject/screenshot.png",
+                    child: Image.file(
+                      _controller
+                          .getTemplates()[selectedTemplateIndex]
+                          .screenshot,
                       alignment: Alignment.centerRight,
                     ),
                   ),
@@ -93,12 +116,12 @@ class _NewProjectState extends State<NewProject> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         width: 60,
                         child: Text(
                           "Name",
@@ -108,7 +131,12 @@ class _NewProjectState extends State<NewProject> {
                         ),
                       ),
                       Expanded(
-                        child: TextField(),
+                        child: TextField(
+                          controller: _nameController,
+                          onChanged: (text) {
+                            _controller.setName(text);
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -127,8 +155,13 @@ class _NewProjectState extends State<NewProject> {
                           ),
                         ),
                       ),
-                      const Expanded(
-                        child: TextField(),
+                      Expanded(
+                        child: TextField(
+                          controller: _pathController,
+                          onChanged: (text) {
+                            _controller.setPath(text);
+                          },
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 8),
@@ -165,5 +198,18 @@ class _NewProjectState extends State<NewProject> {
         ],
       ),
     );
+  }
+
+  @override
+  void notify(ViewEvent event) {
+    if (event is NameChanged) {
+      setState(() {
+        _nameController.text = event.name;
+      });
+    } else if (event is PathChanged) {
+      setState(() {
+        _pathController.text = event.path;
+      });
+    }
   }
 }

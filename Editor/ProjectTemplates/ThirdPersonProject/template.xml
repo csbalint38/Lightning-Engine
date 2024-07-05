@@ -3,8 +3,8 @@
 	<ProjectType>ThirdPersonProject</ProjectType>
 	<ProjectFile>project.lightning</ProjectFile>
 	<Folders>
-		<str>.Lightning</str>
-		<str>Asssets</str>
-		<str>Code</str>
+		<String>.Lightning</String>
+		<String>Asssets</String>
+		<String>Code</String>
 	</Folders>
 </ProjectTemplate>
