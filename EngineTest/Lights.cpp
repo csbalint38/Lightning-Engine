@@ -3,7 +3,7 @@
 #include "EngineAPI/TransformComponent.h"
 #include "Graphics/Renderer.h"
 
-#define RANDOM_LIGHTS 1;
+#define RANDOM_LIGHTS 1
 
 using namespace lightning;
 
@@ -29,35 +29,35 @@ namespace {
 		info.light_set_key = light_set_key;
 		info.intensity = 1.f;
 		info.color = { random(.2f), random(.2f), random(.2f) };
-	}
+		
+		#if RANDOM_LIGHTS
+		if (type == graphics::Light::POINT) {
+			info.point_params.range = random(.5f) * 2.f;
+			info.point_params.attenuation = { 1, 1, 1 };
+		}
+		else if (type == graphics::Light::SPOT) {
+			info.spot_params.range = random(.5f) * 2.f;
+			info.spot_params.umbra = (random(.5f) - .4f) * math::PI;
+			info.spot_params.penumbra = info.spot_params.umbra + (.1f * math::PI);
+			info.spot_params.attenuation = { 1, 1, 1 };
+		}
+		#else
+		if (type == garaphics::Light::POINT) {
+			info.point_params.range = 1.f;
+			info.point_params.attenuation = { 1, 1, 1 };
+		}
+		else if (type == graphics::Light::SPOT) {
+			info.spot_params.range = 2.f;
+			info.spot_params.umbra = .1f * math::PI;
+			info.spot_params.penumbra = info.spot_params.umbra + (.1f * math::PI);
+			info.spot_params.attenuation = { 1, 1, 1 };
+		}
+		#endif
 
-	#if RANDOM_LIGHTS
-	if (type == garaphics::Light::POINT) {
-		info.point_params.range = random(.5f) * 2.f;
-		info.point_params.attenuation = { 1, 1, 1 };
+		graphics::Light light{ graphics::create_light(info) };
+		assert(light.is_valid());
+		lights.push_back(light);
 	}
-	else if (type == graphics::Light::SPOT) {
-		info.spot_params.range = random(.5f) * 2.f;
-		info.spot_params.umbra = (random(.5f) - .4f) * math::PI;
-		info.spot_params.penumbra = info.spot_params.umbra + (.1f * math::PI);
-		info.spot_params.attenuation = { 1, 1, 1 };
-	}
-	#else
-	if (type == garaphics::Light::POINT) {
-		info.point_params.range = 1.f;
-		info.point_params.attenuation = { 1, 1, 1 };
-}
-	else if (type == graphics::Light::SPOT) {
-		info.spot_params.range = 2.f;
-		info.spot_params.umbra = .1f * math::PI;
-		info.spot_params.penumbra = info.spot_params.umbra + (.1f * math::PI);
-		info.spot_params.attenuation = { 1, 1, 1 };
-	}
-	#endif
-
-	graphics::Light light{ graphics::create_light(info) };
-	assert(light.is_valid());
-	lights.push_back(light);
 }
 
 void generate_lights() {
@@ -88,7 +88,7 @@ void generate_lights() {
 	lights.emplace_back(graphics::create_light(info));
 
 	info.entity_id = create_one_game_entity({}, { -math::PI * .5f, 0, 0 }, nullptr).get_id();
-	info.color = rgb_to_color(163, 47, 30);
+	info.color = rgb_to_color(63, 47, 130);
 	lights.emplace_back(graphics::create_light(info));
 
 	#if !RANDOM_LIGHTS
