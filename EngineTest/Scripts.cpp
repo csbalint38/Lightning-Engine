@@ -71,7 +71,7 @@ class CameraScript : public script::EntityScript {
 			using namespace DirectX;
 
 
-			if(_move_magnitude > math::epsilon) {
+			if(_move_magnitude > math::EPSILON) {
 				const f32 fps_scale{ dt / .0166667f };
 				math::v4 rot{ rotation() };
 				XMVECTOR d{ XMVector3Rotate(_move * 0.05f * fps_scale, XMLoadFloat4(&rot)) };
@@ -126,8 +126,8 @@ class CameraScript : public script::EntityScript {
 			XMVECTOR p{ _desired_position - _position };
 			XMVECTOR o{ _desired_spherical - _spherical };
 
-			_move_position = (XMVectorGetX(XMVector3Length(p)) > math::epsilon);
-			_move_rotation = (XMVectorGetX(XMVector3Length(o)) > math::epsilon);
+			_move_position = (XMVectorGetX(XMVector3LengthSq(p)) > math::EPSILON);
+			_move_rotation = (XMVectorGetX(XMVector3LengthSq(o)) > math::EPSILON);
 
 			const f32 scale{ .2f * dt / 0.016667f };
 

@@ -197,7 +197,7 @@ namespace lightning::input {
 				assert(instance && callback);
 
 				for (const auto& func : _binding_callbacks) {
-					if (func.binding == binding && func.instance == instance && func.callbac == callback) return;
+					if (func.binding == binding && func.instance == instance && func.callback == callback) return;
 				}
 
 				_binding_callbacks.emplace_back(BindingCallback{ binding, instance, callback });

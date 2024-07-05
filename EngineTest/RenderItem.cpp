@@ -119,7 +119,7 @@ void create_render_items() {
 
 	building_entity_id = create_one_game_entity({0, 0, 0}, {}, nullptr).get_id();
 	fan_entity_id = create_one_game_entity({0, 0, 69.78f}, {}, nullptr).get_id();
-	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362 }, {}, "TurbineScript").get_id();
+	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362f }, {}, "TurbineScript").get_id();
 
 	_1.join();
 	_2.join();

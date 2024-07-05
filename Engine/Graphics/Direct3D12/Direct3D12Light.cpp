@@ -109,7 +109,7 @@ namespace lightning::graphics::direct3d12::light {
 				}
 				else {
 					assert(_owners[_cullable_owners[owner.data_index]].data_index == owner.data_index);
-					_cullable_owners[owner.data_index] == light_id{ id::invalid_id };
+					_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
 				}
 
 				_owners.remove(id);
