@@ -4,13 +4,14 @@ import 'package:xml/xml.dart' as xml;
 class ProjectTemplate {
   final Directory _templatesDir = Directory("ProjectTemplates");
 
-  late String projectType;
-  late String projectFile;
-  late List<String> folders;
+  String projectType;
+  String projectFile;
+  List<String> folders;
 
   late String projectName;
   late File icon;
   late File screenshot;
+  late String projectFilePath;
   late String iconPath;
   late String screenshotPath;
 
@@ -23,25 +24,28 @@ class ProjectTemplate {
     projectName = _getProjectName();
     iconPath = '${templateFolderPath.path}/icon.png';
     screenshotPath = '${templateFolderPath.path}/screenshot.png';
+    projectFilePath = '${templateFolderPath.path}/project.lightning';
     icon = File(iconPath);
     screenshot = File(screenshotPath);
   }
 
-  factory ProjectTemplate.fromXML(File file) {
+  factory ProjectTemplate.fromXMLFile(File file) {
     String content = file.readAsStringSync();
-    return ProjectTemplate.fromXMLString(content);
+    return ProjectTemplate.fromXML(content);
   }
 
-  factory ProjectTemplate.fromXMLString(String xmlStr) {
+  factory ProjectTemplate.fromXML(String xmlStr) {
     xml.XmlDocument document = xml.XmlDocument.parse(xmlStr);
 
-    String projectType =
-        document.findAllElements('ProjectType').single.innerText;
-    String projectFile =
-        document.findAllElements('ProjectFile').single.innerText;
-    var folderNodes =
-        document.findAllElements('Folders').single.findElements('String');
-    List<String> folders = folderNodes.map((node) => node.innerText).toList();
+    final xml.XmlElement root = document.rootElement;
+    final String projectType = (root.getElement('ProjectType')?.innerText)!;
+    final String projectFile = (root.getElement('ProjectFile')?.innerText)!;
+    final xml.XmlElement foldersNode = (root.getElement("Folders"))!;
+    final List<String> folders = <String>[];
+
+    for (final folder in foldersNode.findElements("Folder")) {
+      folders.add(folder.innerText);
+    }
 
     return ProjectTemplate(
         projectType: projectType, projectFile: projectFile, folders: folders);

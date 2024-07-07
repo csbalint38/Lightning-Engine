@@ -3,8 +3,8 @@
 	<ProjectType>EmptyProject</ProjectType>
 	<ProjectFile>project.lightning</ProjectFile>
 	<Folders>
-		<String>.Lightning</String>
-		<String>Asssets</String>
-		<String>Code</String>
+		<Folder>.Lightning</Folder>
+		<Folder>Asssets</Folder>
+		<Folder>Code</Folder>
 	</Folders>
 </ProjectTemplate>

@@ -1,5 +1,7 @@
 import 'package:editor/common/mvvm/observer.dart';
+import 'package:editor/editors/dummy_editor.dart';
 import 'package:editor/game_project/controllers/new_project_controller.dart';
+import 'package:editor/game_project/project.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
 
@@ -24,6 +26,17 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
     setState(() {
       selectedTemplateIndex = index;
     });
+  }
+
+  void _navigateToEditor() async {
+    final Project project = await _controller
+        .createProject(_controller.getTemplates()[selectedTemplateIndex]);
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Editor(project: project)),
+      );
+    }
   }
 
   @override
@@ -173,6 +186,17 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                     ],
                   ),
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Text(
+                          _controller.errorMessage,
+                          style: const TextStyle(color: Colors.red),
+                        )),
+                  ],
+                ),
                 Expanded(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -186,7 +210,8 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                       ),
                       const SizedBox(width: 50),
                       ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () =>
+                            _controller.isValid ? _navigateToEditor() : null,
                         child: const Text("Create"),
                       ),
                     ],
