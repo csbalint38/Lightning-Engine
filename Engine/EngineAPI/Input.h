@@ -139,6 +139,16 @@ namespace lightning::input {
 
 			KEY_NUMLOCK,
 			KEY_SCROLLOCK,
+			KEY_COLON,
+			KEY_PLUS,
+			KEY_COMMA,
+			KEY_MINUS,
+			KEY_PERIOD,
+			KEY_QUESTION,
+			KEY_BRACKET_OPEN,
+			KEY_PIPE,
+			KEY_BRACKET_CLOSE,
+			KEY_QUOTE,
 			KEY_TILDE,
 		};
 	};

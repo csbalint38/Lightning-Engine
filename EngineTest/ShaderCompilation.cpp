@@ -26,12 +26,22 @@ namespace {
 
 
 	constexpr EngineShaderInfo engine_shader_files[]{
-		EngineShader::FULLSCREEN_TRIANGLE_VS,
-		{ "FullscreenTriangle.hlsl", "fullscreen_triangle_vs", ShaderType::VERTEX },
-		EngineShader:: FILL_COLOR_PS,
-		{ "FillColor.hlsl", "fill_color_ps", ShaderType::PIXEL },
-		EngineShader::POST_PROCESS_PS,
-		{ "PostProcess.hlsl", "post_process_ps", ShaderType::PIXEL },
+		{
+			EngineShader::FULLSCREEN_TRIANGLE_VS,
+			{ "FullscreenTriangle.hlsl", "fullscreen_triangle_vs", ShaderType::VERTEX },
+		},
+		{
+			EngineShader::FILL_COLOR_PS,
+			{ "FillColor.hlsl", "fill_color_ps", ShaderType::PIXEL },
+		},
+		{
+			EngineShader::POST_PROCESS_PS,
+			{ "PostProcess.hlsl", "post_process_ps", ShaderType::PIXEL },
+		},
+		{
+			EngineShader::GRID_FRUSTUMS_CS,
+			{ "GridFrustums.hlsl", "compute_grid_frustums_cs", ShaderType::COMPUTE },
+		}
 	};
 
 	std::wstring to_wstring(const char* c) {
@@ -266,6 +276,11 @@ bool compile_shaders() {
 
 		if (!std::filesystem::exists(full_path)) return false;
 		util::vector<std::wstring> extra_args{};
+
+		if (file.id == EngineShader::GRID_FRUSTUMS_CS) {
+			extra_args.emplace_back(L"-D");
+			extra_args.emplace_back(L"TILE_SIZE=16");
+		}
 
 		DxcCompiledShader compiled_shader{ compiler.compile(file.info, full_path, extra_args) };
 

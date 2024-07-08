@@ -8,6 +8,7 @@ namespace lightning::graphics::direct3d12::shaders {
 			FULLSCREEN_TRIANGLE_VS = 0,
 			FILL_COLOR_PS = 1,
 			POST_PROCESS_PS = 2,
+			GRID_FRUSTUMS_CS = 3,
 
 			count
 		};
