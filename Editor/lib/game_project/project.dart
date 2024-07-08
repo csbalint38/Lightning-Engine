@@ -8,16 +8,21 @@ class Project {
   final String name;
   final String path;
   final List<Scene> scenes = <Scene>[];
+  late Scene activeScene;
 
   late String fullPath;
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
     fullPath = '$path\\$name.$extension';
     if (scenes == null) {
-      this.scenes.add(Scene(name: "Default Scene"));
+      this.scenes.add(Scene(name: "Default Scene", isActive: true));
+      activeScene = this.scenes.first;
     } else {
       for (final Scene scene in scenes) {
         this.scenes.add(scene);
+        if (scene.isActive) {
+          activeScene = scene;
+        }
       }
     }
   }
@@ -43,6 +48,10 @@ class Project {
     return Project(scenes, name: name, path: path);
   }
 
+  factory Project.load(File file) {
+    return Project.fromXMLFile(file);
+  }
+
   String toXML() {
     final builder = xml.XmlBuilder();
 
@@ -64,4 +73,10 @@ class Project {
     final File file = File(path);
     file.writeAsStringSync(xmlString);
   }
+
+  static void save(Project project) {
+    return project.toXMLFile(project.fullPath);
+  }
+
+  void unload() {}
 }

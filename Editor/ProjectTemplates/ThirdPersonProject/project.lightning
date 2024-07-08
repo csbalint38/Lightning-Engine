@@ -5,7 +5,7 @@
 	<Scenes>
 		<Scene>
 			<Name>Default Scene</Name>
-			<IsActive>True</IsActive>
+			<IsActive>true</IsActive>
 		</Scene>
 	</Scenes>
 </Project>

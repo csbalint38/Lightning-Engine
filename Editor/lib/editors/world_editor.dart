@@ -10,11 +10,28 @@ class Editor extends StatefulWidget {
   State<Editor> createState() => _EditorState();
 }
 
-class _EditorState extends State<Editor> {
+class _EditorState extends State<Editor> with WindowListener {
+  late final Project project;
+
   @override
   void initState() {
     super.initState();
+    project = widget.project;
+    print(project.activeScene.name);
     _resizeWindow();
+    windowManager.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowClose() {
+    project.unload();
+    super.onWindowClose();
   }
 
   Future<void> _resizeWindow() async {

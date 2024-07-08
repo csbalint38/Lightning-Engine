@@ -4,7 +4,6 @@ import 'package:editor/common/mvvm/viewmodel.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_template.dart';
 import 'package:editor/utilities/logger.dart';
-import 'package:path_provider/path_provider.dart';
 
 class NewProjectController extends ViewModelBase {
   static final NewProjectController _newProjectController =
@@ -12,17 +11,17 @@ class NewProjectController extends ViewModelBase {
 
   final Directory _templatesDir = Directory("ProjectTemplates");
   String name = "NewProject";
-  String path = "";
+  String path =
+      "${Platform.environment['USERPROFILE']!}\\Documents\\LightningProjects";
   String errorMessage = "";
   final List<ProjectTemplate> _templates = [];
-  bool isValid = false;
+  bool isValid = true;
 
   factory NewProjectController() {
     return _newProjectController;
   }
 
   NewProjectController._internal() {
-    _getDocumentsPath();
     _getProjectTemplates();
   }
 
@@ -89,7 +88,7 @@ class NewProjectController extends ViewModelBase {
     return true;
   }
 
-  Future<Project> createProject(ProjectTemplate template) async {
+  Future<void> createProject(ProjectTemplate template) async {
     String fullPath = '$path\\$name';
 
     if (!fullPath.endsWith('\\')) {
@@ -117,13 +116,6 @@ class NewProjectController extends ViewModelBase {
         templateString.replaceAll('{{0}}', name).replaceAll('{{1}}', path);
     final Project project = Project.fromXML(templateString);
     project.toXMLFile('$fullPath\\$name.${Project.extension}');
-
-    return project;
-  }
-
-  Future<void> _getDocumentsPath() async {
-    Directory dir = await getApplicationDocumentsDirectory();
-    setPath("${dir.path}\\LightningProjects\\");
   }
 
   void _getProjectTemplates() {

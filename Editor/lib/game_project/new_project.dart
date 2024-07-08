@@ -1,7 +1,9 @@
 import 'package:editor/common/mvvm/observer.dart';
-import 'package:editor/editors/dummy_editor.dart';
+import 'package:editor/editors/world_editor.dart';
 import 'package:editor/game_project/controllers/new_project_controller.dart';
+import 'package:editor/game_project/controllers/open_project_controller.dart';
 import 'package:editor/game_project/project.dart';
+import 'package:editor/game_project/project_data.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
 
@@ -28,9 +30,16 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
     });
   }
 
-  void _navigateToEditor() async {
-    final Project project = await _controller
+  void _createProject() async {
+    await _controller
         .createProject(_controller.getTemplates()[selectedTemplateIndex]);
+    final Project project = OpenProjectController().open(
+      ProjectData(
+        projectName: _controller.name,
+        projectPath: _controller.path,
+        lastModified: DateTime.now(),
+      ),
+    );
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -45,6 +54,7 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
 
     _nameController = TextEditingController(text: _controller.name);
     _pathController = TextEditingController(text: _controller.path);
+    _controller.validate();
 
     _controller.subscribe(this);
   }
@@ -54,8 +64,8 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
     _listFocus.dispose();
     _nameController.dispose();
     _pathController.dispose();
-    super.dispose();
     _controller.unsubscribe(this);
+    super.dispose();
   }
 
   @override
@@ -85,20 +95,23 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                             return Listener(
                               onPointerUp: (_) => _selectedThemeChanged(index),
                               child: ListTile(
-                                title: Row(
-                                  children: [
-                                    Image.file(
-                                      _controller.getTemplates()[index].icon,
-                                      width: 25,
-                                      height: 25,
-                                    ),
-                                    const SizedBox(width: 15),
-                                    Text(
-                                      _controller
-                                          .getTemplates()[index]
-                                          .projectName,
-                                    ),
-                                  ],
+                                title: MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Row(
+                                    children: [
+                                      Image.file(
+                                        _controller.getTemplates()[index].icon,
+                                        width: 25,
+                                        height: 25,
+                                      ),
+                                      const SizedBox(width: 15),
+                                      Text(
+                                        _controller
+                                            .getTemplates()[index]
+                                            .projectName,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 selected: index == selectedTemplateIndex,
                               ),
@@ -210,8 +223,7 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                       ),
                       const SizedBox(width: 50),
                       ElevatedButton(
-                        onPressed: () =>
-                            _controller.isValid ? _navigateToEditor() : null,
+                        onPressed: _controller.isValid ? _createProject : null,
                         child: const Text("Create"),
                       ),
                     ],

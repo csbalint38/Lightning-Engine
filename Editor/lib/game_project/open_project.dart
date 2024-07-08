@@ -1,5 +1,10 @@
+import 'package:editor/common/mvvm/observer.dart';
+import 'package:editor/editors/world_editor.dart';
+import 'package:editor/game_project/controllers/open_project_controller.dart';
 import 'package:editor/game_project/new_project.dart';
+import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class OpenProject extends StatefulWidget {
   const OpenProject({super.key});
@@ -8,7 +13,10 @@ class OpenProject extends StatefulWidget {
   State<OpenProject> createState() => _OpenProjectState();
 }
 
-class _OpenProjectState extends State<OpenProject> {
+class _OpenProjectState extends State<OpenProject> implements EventObserver {
+  final OpenProjectController _controller = OpenProjectController();
+  int selectedProjectIndex = 0;
+
   Route _newProject(Widget nextPage) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => nextPage,
@@ -27,6 +35,39 @@ class _OpenProjectState extends State<OpenProject> {
     );
   }
 
+  void _selectedProjectChanged(int index) {
+    setState(() {
+      selectedProjectIndex = index;
+    });
+  }
+
+  void _openProject() {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Editor(
+            project: _controller.open(
+              _controller.projects[selectedProjectIndex],
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.subscribe(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.unsubscribe(this);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,7 +76,7 @@ class _OpenProjectState extends State<OpenProject> {
           Row(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(48, 32, 0, 16),
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(context, _newProject(const NewProject()));
@@ -48,8 +89,174 @@ class _OpenProjectState extends State<OpenProject> {
               )
             ],
           ),
+          Expanded(
+            flex: 4,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(48, 16, 0, 16),
+                        child: Container(
+                          height: 300,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Theme.of(context).borderColor, width: 1),
+                          ),
+                          child: Material(
+                            child: ListView.builder(
+                              itemCount: _controller.projects.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return GestureDetector(
+                                  onDoubleTap: _openProject,
+                                  child: Listener(
+                                    onPointerUp: (_) =>
+                                        _selectedProjectChanged(index),
+                                    child: ListTile(
+                                      title: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: Row(
+                                          children: [
+                                            Image.file(
+                                              _controller.projects[index].icon,
+                                              width: 35,
+                                              height: 35,
+                                            ),
+                                            const SizedBox(width: 17),
+                                            Text(
+                                              _controller
+                                                  .projects[index].projectName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style:
+                                                  const TextStyle(fontSize: 20),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      subtitle: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Tooltip(
+                                                    message: _controller
+                                                        .projects[index]
+                                                        .fullPath,
+                                                    child: Text(
+                                                      _controller
+                                                          .projects[index]
+                                                          .fullPath,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                          fontSize: 12),
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Tooltip(
+                                                  message:
+                                                      "Last modified: ${DateFormat('y.M.d H:mm').format(_controller.projects[index].lastModified)}",
+                                                  child: Text(
+                                                    DateFormat('y.M.d H:mm')
+                                                        .format(_controller
+                                                            .projects[index]
+                                                            .lastModified),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                        fontSize: 12),
+                                                  ),
+                                                ),
+                                                Tooltip(
+                                                  message:
+                                                      "Engine version: ${_controller.projects[index].engineVersion}",
+                                                  child: Text(
+                                                    _controller.projects[index]
+                                                        .engineVersion,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                        fontSize: 12),
+                                                  ),
+                                                )
+                                              ],
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      selected: index == selectedProjectIndex,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 16, 40, 16),
+                        child: _controller.projects.isNotEmpty
+                            ? Image.file(
+                                _controller
+                                    .projects[selectedProjectIndex].screenshot,
+                                alignment: Alignment.centerRight,
+                                fit: BoxFit.fill,
+                                height: 300,
+                              )
+                            : const Center(
+                                child: Text("No projects was found")),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _openProject,
+                      child: const Text("Open"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
+
+  @override
+  void notify(ViewEvent event) {}
 }

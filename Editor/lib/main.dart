@@ -4,6 +4,8 @@ import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+// TODO: Use path.join
+// TODO: Use enums
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
