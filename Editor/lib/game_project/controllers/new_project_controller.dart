@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:editor/common/mvvm/observer.dart';
 import 'package:editor/common/mvvm/viewmodel.dart';
 import 'package:editor/game_project/project.dart';
@@ -11,8 +12,8 @@ class NewProjectController extends ViewModelBase {
 
   final Directory _templatesDir = Directory("ProjectTemplates");
   String name = "NewProject";
-  String path =
-      "${Platform.environment['USERPROFILE']!}\\Documents\\LightningProjects";
+  String path = p.join(
+      Platform.environment['USERPROFILE']!, 'Documents', 'LightningProjects');
   String errorMessage = "";
   final List<ProjectTemplate> _templates = [];
   bool isValid = true;
@@ -89,7 +90,7 @@ class NewProjectController extends ViewModelBase {
   }
 
   Future<void> createProject(ProjectTemplate template) async {
-    String fullPath = '$path\\$name';
+    String fullPath = p.join(path, name);
 
     if (!fullPath.endsWith('\\')) {
       fullPath += '\\';
@@ -100,13 +101,14 @@ class NewProjectController extends ViewModelBase {
       await projectDir.create(recursive: true);
     }
     for (final String folder in template.folders) {
-      await Directory('$fullPath\\$folder').create();
+      await Directory(p.join(fullPath, folder)).create();
     }
     await Process.run('attrib', ['+h', '$fullPath\\.Lightning']);
 
     try {
-      await template.icon.copy('$fullPath\\.Lightning\\icon.jpg');
-      await template.screenshot.copy('$fullPath\\.Lightning\\screenshot.jpg');
+      await template.icon.copy(p.join(fullPath, '.Lightning', 'icon.jpg'));
+      await template.screenshot
+          .copy(p.join(fullPath, '.Lightning', 'screenshot.jpg'));
     } catch (e) {
       debugLogger.e("Failed to copy icon and/or screenshot from the template");
     }
@@ -115,7 +117,7 @@ class NewProjectController extends ViewModelBase {
     templateString =
         templateString.replaceAll('{{0}}', name).replaceAll('{{1}}', path);
     final Project project = Project.fromXML(templateString);
-    project.toXMLFile('$fullPath\\$name.${Project.extension}');
+    project.toXMLFile(p.join(fullPath, '$name.${Project.extension}'));
   }
 
   void _getProjectTemplates() {
@@ -123,7 +125,7 @@ class NewProjectController extends ViewModelBase {
       if (item is Directory) {
         _templates.add(
           ProjectTemplate.fromXMLFile(
-            File('${item.path}\\template.xml'),
+            File(p.join(item.path, 'template.xml')),
           ),
         );
       }

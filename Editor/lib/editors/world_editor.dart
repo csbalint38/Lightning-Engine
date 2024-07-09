@@ -17,7 +17,6 @@ class _EditorState extends State<Editor> with WindowListener {
   void initState() {
     super.initState();
     project = widget.project;
-    print(project.activeScene.name);
     _resizeWindow();
     windowManager.addListener(this);
   }

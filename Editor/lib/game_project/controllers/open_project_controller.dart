@@ -1,5 +1,6 @@
 import 'dart:io';
 import "package:collection/collection.dart";
+import 'package:path/path.dart' as p;
 import 'package:editor/common/mvvm/viewmodel.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_data.dart';
@@ -10,7 +11,7 @@ class OpenProjectController extends ViewModelBase {
       OpenProjectController._internal();
 
   static final Directory _appData =
-      Directory("${Platform.environment['APPDATA']!}\\LightningEditor");
+      Directory(p.join(Platform.environment['APPDATA']!, "LightningEditor"));
   late final File _projectDataFile;
   final List<ProjectData> projects = <ProjectData>[];
 
@@ -22,7 +23,7 @@ class OpenProjectController extends ViewModelBase {
     if (!_appData.existsSync()) {
       _appData.createSync(recursive: false);
     }
-    _projectDataFile = File('${_appData.path}\\ProjectData.xml');
+    _projectDataFile = File(p.join(_appData.path, 'ProjectData.xml'));
     _readProjectData();
   }
 
@@ -32,13 +33,14 @@ class OpenProjectController extends ViewModelBase {
       ProjectsData projectsData = ProjectsData.fromXMLFile(_projectDataFile);
 
       for (final project in projectsData.projects) {
-        if (File(
-                '${project.fullPath}\\${project.projectName}.${Project.extension}')
+        if (File(p.join(project.fullPath,
+                '${project.projectName}.${Project.extension}'))
             .existsSync()) {
           try {
-            project.icon = File('${project.fullPath}\\.Lightning\\icon.jpg');
+            project.icon =
+                File(p.join(project.fullPath, '.Lightning', 'icon.jpg'));
             project.screenshot =
-                File('${project.fullPath}\\.Lightning\\screenshot.jpg');
+                File(p.join(project.fullPath, '.Lightning', 'screenshot.jpg'));
           } catch (e) {
             debugLogger.e(
                 "Failed to load screenshot and/or icon for project: ${project.projectName}");
@@ -72,8 +74,8 @@ class OpenProjectController extends ViewModelBase {
     _writeProjectData();
 
     Project project = Project.load(
-      File(
-          "${selectedProject.fullPath}\\${selectedProject.projectName}.${Project.extension}"),
+      File(p.join(selectedProject.fullPath,
+          "${selectedProject.projectName}.${Project.extension}")),
     );
 
     return project;
