@@ -13,7 +13,7 @@ namespace lightning::graphics::direct3d12 {
 
 			#if USE_STL_VECTOR
 			DISABLE_COPY(D3D12Surface);
-			constexpr D3D12Surface(D3D12Surface&& o) : _swap_chain{ o._swap_chain }, _window{ o._window }, _current_bb_index{ o._current_bb_index }, _viewport{ o._viewport }, _scissor_rect{ o._scissor_rect }, _allow_tearing{ o._allow_tearing }, _present_flags{ o._present_flags } {
+			constexpr D3D12Surface(D3D12Surface&& o) : _swap_chain{ o._swap_chain }, _window{ o._window }, _current_bb_index{ o._current_bb_index }, _viewport{ o._viewport }, _scissor_rect{ o._scissor_rect }, _allow_tearing{ o._allow_tearing }, _present_flags{ o._present_flags }, _light_culling_id{ o._light_culling_id } {
 				for (u32 i{ 0 }; i < buffer_count; ++i) {
 					_render_target_data[i].resource = o._render_target_data[i].resource;
 					_render_target_data[i].rtv = o._render_target_data[i].rtv;
@@ -38,12 +38,13 @@ namespace lightning::graphics::direct3d12 {
 			void create_swap_chain(IDXGIFactory7* factory, ID3D12CommandQueue* cmd_queue);
 			void present() const;
 			void resize();
-			constexpr u32 width() const { return (u32)_viewport.Width; }
-			constexpr u32 height() const { return (u32)_viewport.Height; }
-			constexpr ID3D12Resource* const back_buffer() const { return _render_target_data[_current_bb_index].resource; }
-			constexpr D3D12_CPU_DESCRIPTOR_HANDLE rtv() const { return _render_target_data[_current_bb_index].rtv.cpu; }
-			constexpr const D3D12_VIEWPORT& viewport() const { return _viewport; }
-			constexpr const D3D12_RECT& scissor_rect() const { return _scissor_rect; }
+			[[nodiscard]] constexpr u32 width() const { return (u32)_viewport.Width; }
+			[[nodiscard]] constexpr u32 height() const { return (u32)_viewport.Height; }
+			[[nodiscard]] constexpr ID3D12Resource* const back_buffer() const { return _render_target_data[_current_bb_index].resource; }
+			[[nodiscard]] constexpr D3D12_CPU_DESCRIPTOR_HANDLE rtv() const { return _render_target_data[_current_bb_index].rtv.cpu; }
+			[[nodiscard]] constexpr const D3D12_VIEWPORT& viewport() const { return _viewport; }
+			[[nodiscard]] constexpr const D3D12_RECT& scissor_rect() const { return _scissor_rect; }
+			[[nodiscard]] constexpr id::id_type light_culling_id() const { return _light_culling_id; }
 
 		private:
 			struct RenderTargetData {
@@ -61,6 +62,7 @@ namespace lightning::graphics::direct3d12 {
 				_present_flags = o._present_flags;
 				_viewport = o._viewport;
 				_scissor_rect = o._scissor_rect;
+				_light_culling_id = o._light_culling_id;
 
 				o.reset();
 			}
@@ -74,6 +76,7 @@ namespace lightning::graphics::direct3d12 {
 				_present_flags = 0;
 				_viewport = {};
 				_scissor_rect = {};
+				_light_culling_id = id::invalid_id;
 			}
 			#endif
 
@@ -88,5 +91,6 @@ namespace lightning::graphics::direct3d12 {
 			u32 _present_flags{ 0 };
 			D3D12_VIEWPORT _viewport{};
 			D3D12_RECT _scissor_rect{};
+			id::id_type _light_culling_id{ id::invalid_id };
 	};
 }

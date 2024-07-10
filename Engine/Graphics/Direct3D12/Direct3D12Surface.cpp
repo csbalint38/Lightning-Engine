@@ -1,5 +1,6 @@
 #include "Direct3D12Surface.h"
 #include "Direct3D12Core.h"
+#include "Direct3D12LightCulling.h"
 
 namespace lightning::graphics::direct3d12 {
 	namespace {
@@ -45,6 +46,9 @@ namespace lightning::graphics::direct3d12 {
 		}
 
 		finalize();
+
+		assert(!id::is_valid(_light_culling_id));
+		_light_culling_id = delight::add_culler();
 	}
 
 	void D3D12Surface::present() const {
@@ -95,6 +99,10 @@ namespace lightning::graphics::direct3d12 {
 	}
 
 	void D3D12Surface::release() {
+		if (id::is_valid(_light_culling_id)) {
+			delight::remove_culler(_light_culling_id);
+		}
+
 		for (u32 i{ 0 }; i < buffer_count; ++i) {
 			RenderTargetData& data{ _render_target_data[i] };
 			core::release(data.resource);

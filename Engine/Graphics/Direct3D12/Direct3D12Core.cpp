@@ -6,6 +6,7 @@
 #include "Direct3D12Upload.h"
 #include "Direct3D12Content.h"
 #include "Direct3D12Light.h"
+#include "Direct3D12LightCulling.h"
 #include "Direct3D12Camera.h"
 #include "Shaders/ShaderTypes.h"
 
@@ -223,8 +224,8 @@ namespace lightning::graphics::direct3d12::core {
 			XMStoreFloat4x4A(&data.inv_view_projection, camera.inverse_view_projection());
 			XMStoreFloat3(&data.camera_position, camera.position());
 			XMStoreFloat3(&data.camera_direction, camera.direction());
-			data.view_width = (f32)surface.width();
-			data.view_height =(f32)surface.height();
+			data.view_width = surface.viewport().Width;
+			data.view_height = surface.viewport().Height;
 			data.num_directional_lights = light::non_cullable_light_count(info.light_set_key);
 			data.delta_time = delta_time;
 
@@ -237,6 +238,7 @@ namespace lightning::graphics::direct3d12::core {
 				cbuffer.gpu_address(shader_data),
 				surface.width(),
 				surface.height(),
+				surface.light_culling_id(),
 				frame_index,
 				delta_time
 			};
@@ -320,7 +322,7 @@ namespace lightning::graphics::direct3d12::core {
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 		if (!gfx_command.command_queue()) return failed_init();
 
-		if (!(shaders::initialize() && gpass::initialize() && fx::initialize() && upload::initialize() && content::initialize() && light::initialize())) return failed_init();
+		if (!(shaders::initialize() && gpass::initialize() && fx::initialize() && upload::initialize() && content::initialize() && delight::initialize())) return failed_init();
 
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");
@@ -339,7 +341,7 @@ namespace lightning::graphics::direct3d12::core {
 			process_deferred_releases(i);
 		}
 
-		light::shutdown();
+		delight::shutdown();
 		content::shutdown();
 		upload::shutdown();
 		fx::shutdown();
@@ -451,6 +453,7 @@ namespace lightning::graphics::direct3d12::core {
 		gpass::depth_prepass(cmd_list, frame_info);
 
 		light::update_light_buffers(frame_info);
+		delight::cull_lights(cmd_list, frame_info, barriers);
 		gpass::add_transitions_for_gpass(barriers);
 		barriers.apply(cmd_list);
 		gpass::set_render_targets_for_gpass(cmd_list);

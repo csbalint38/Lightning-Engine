@@ -42,7 +42,7 @@ struct Frustum
 struct LightCullingDispatchParameters
 {
     uint2 num_thred_groups;
-    uint3 num_threds;
+    uint2 num_threds;
     
     uint num_lights;
     uint depth_buffer_srv_index;
