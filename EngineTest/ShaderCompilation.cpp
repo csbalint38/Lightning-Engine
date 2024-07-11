@@ -40,7 +40,7 @@ namespace {
 		},
 		{
 			EngineShader::GRID_FRUSTUMS_CS,
-			{ "GridFrustums.hlsl", "compute_grid_frustums_cs", ShaderType::COMPUTE },
+			{ "GridFrustums.hlsl", "compute_grid_frustum_cs", ShaderType::COMPUTE },
 		}
 	};
 

@@ -7,8 +7,8 @@ struct ShaderConstants
 
 #define TILE_SIZE 16
 
-ConstantBuffer<GlobalShaderData> global_data : register(b0, sapce0);
-ConstantBuffer<LightCullingDispatchParameters> shader_params : register(b1, space0);
+ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
+ConstantBuffer<ShaderConstants> shader_params : register(b1, space0);
 StructuredBuffer<Frustum> frustums : register(t0, space0);
 
 uint get_grid_index(float2 pos_xy, float view_width)
@@ -42,7 +42,7 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     }
     
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
-    color = lerp(gpass_main[position.xy].xyz, color, .3f);
+    color = lerp(gpass_main[position.xy].xyz, color, .8f);
     
     return float4(color, 1.f);
      

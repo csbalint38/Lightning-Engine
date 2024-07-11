@@ -1,6 +1,6 @@
 #include "Common.hlsli"
 
-ConstantBuffer<GlobalShaderData> global_data : register(b0, sapce0);
+ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<LightCullingDispatchParameters> shader_params : register(b1, space0);
 RWStructuredBuffer<Frustum> frustums : register(u0, space0);
 
@@ -31,8 +31,8 @@ void compute_grid_frustum_cs( uint3 dispatch_thread_id : SV_DispatchThreadID )
     
     frustum.planes[0] = compute_plane(view_space[0], eye_pos, view_space[2]);
     frustum.planes[1] = compute_plane(view_space[3], eye_pos, view_space[1]);
-    frustum.planes[2] = compute_plane(view_space[2], eye_pos, view_space[0]);
-    frustum.planes[3] = compute_plane(view_space[1], eye_pos, view_space[3]);
+    frustum.planes[2] = compute_plane(view_space[1], eye_pos, view_space[0]);
+    frustum.planes[3] = compute_plane(view_space[2], eye_pos, view_space[3]);
 
     frustums[x + (y * shader_params.num_threds.x)] = frustum;
 }
