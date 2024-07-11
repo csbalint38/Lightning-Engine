@@ -3,13 +3,17 @@
 #include "Direct3D12Shaders.h"
 #include "Direct3D12Surface.h"
 #include "Direct3D12GPass.h"
+#include "Direct3D12LightCulling.h"
 
 namespace lightning::graphics::direct3d12::fx {
 	namespace {
 
 		struct FXRootParamIndicies {
 			enum : u32 {
+				GLOBAL_SHADER_DATA,
 				ROOT_CONSTANTS,
+
+				FRUSTUMS, // Remove later
 
 				count
 			};
@@ -23,7 +27,9 @@ namespace lightning::graphics::direct3d12::fx {
 
 			using idx = FXRootParamIndicies;
 			d3dx::D3D12RootParameter parameters[idx::count]{};
+			parameters[idx::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
 			parameters[idx::ROOT_CONSTANTS].as_constants(1, D3D12_SHADER_VISIBILITY_PIXEL, 1);
+			parameters[idx::FRUSTUMS].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
 
 			d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], _countof(parameters) };
 			root_signature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
@@ -63,11 +69,16 @@ namespace lightning::graphics::direct3d12::fx {
 	}
 
 	void post_process(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info, D3D12_CPU_DESCRIPTOR_HANDLE target_rtv) {
+		const u32 frame_index{ info.frame_index };
+		const id::id_type light_culling_id{ info.light_culling_id };
+
 		cmd_list->SetGraphicsRootSignature(fx_root_sig);
 		cmd_list->SetPipelineState(fx_pso);
 
 		using idx = FXRootParamIndicies;
+		cmd_list->SetGraphicsRootConstantBufferView(idx::GLOBAL_SHADER_DATA, info.global_shader_data);
 		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::main_buffer().srv().index, 0);
+		cmd_list->SetGraphicsRootShaderResourceView(idx::FRUSTUMS, delight::frustums(light_culling_id, frame_index));
 
 		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		

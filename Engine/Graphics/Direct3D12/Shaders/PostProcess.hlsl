@@ -1,14 +1,71 @@
+#include "Common.hlsli"
+
 struct ShaderConstants
 {
     uint gpass_main_buffer_index;
 };
 
-ConstantBuffer<ShaderConstants> shader_params : register(b1);
+#define TILE_SIZE 16
+
+ConstantBuffer<GlobalShaderData> global_data : register(b0, sapce0);
+ConstantBuffer<LightCullingDispatchParameters> shader_params : register(b1, space0);
+StructuredBuffer<Frustum> frustums : register(t0, space0);
+
+uint get_grid_index(float2 pos_xy, float view_width)
+{
+    const uint2 pos = uint2(pos_xy);
+    const uint tile_x = ceil(view_width / TILE_SIZE);
+    return (pos.x / TILE_SIZE) + (tile_x * (pos.y / TILE_SIZE));
+
+}
 
 float4 post_process_ps(in noperspective float4 position : SV_Position, in noperspective float2 uv : TEXCOORD) : SV_Target0
 {
+    #if 1
+    const float w = global_data.view_width;
+    const uint grid_index = get_grid_index(position.xy, w);
+    const Frustum f = frustums[grid_index];
+    const uint half_tile = TILE_SIZE / 2;
+    float3 color = abs(f.planes[1].normal);
+    
+    if (get_grid_index(float2(position.x + half_tile, position.y), w) == grid_index && get_grid_index(float2(position.x, position.y + half_tile), w) == grid_index)
+    {
+        color = abs(f.planes[0].normal);
+    }
+    else if (get_grid_index(float2(position.x + half_tile, position.y), w) != grid_index && get_grid_index(float2(position.x, position.y + half_tile), w) == grid_index)
+    {
+        color = abs(f.planes[2].normal);
+    }
+    else if (get_grid_index(float2(position.x + half_tile, position.y), w) == grid_index && get_grid_index(float2(position.x, position.y + half_tile), w) != grid_index)
+    {
+        color = abs(f.planes[3].normal);
+    }
+    
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
-    float4 color = float4(gpass_main[position.xy].xyz, 1.f);
-
-    return color;
+    color = lerp(gpass_main[position.xy].xyz, color, .3f);
+    
+    return float4(color, 1.f);
+     
+    #elif 0 // INDEX VISUALIZATION
+    const uint2 pos = uint2(position.xy);
+    const uint tile_x = ceil(global_data.view_width / TILE_SIZE);
+    const uint2 idx = pos / (uint2)TILE_SIZE;
+    
+    float c = (idx.x + tile_x * idx.y) * 0.00001f;
+    
+    if (idx.x % 2 == 0)
+    {
+        c += .1f;
+    }
+    if (idx.y % 2 == 0)
+    {
+        c += .1f;
+    }
+    
+    return float4((float3) c, 1.f);
+    
+    #elif 0 // SCENE
+    Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
+    return float4(gpass_main[position.xy].xyz, 1.f);
+    #endif
 }

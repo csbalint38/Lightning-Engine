@@ -13,4 +13,7 @@ namespace lightning::graphics::direct3d12::delight {
 	[[nodiscard]] id::id_type add_culler();
 	void remove_culler(id::id_type id);
 	void cull_lights(id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo& info, d3dx::D3D12ResourceBarrier& barriers);
+
+	// TEMP
+	D3D12_GPU_VIRTUAL_ADDRESS frustums(id::id_type light_culling_id, u32 frame_index);
 }

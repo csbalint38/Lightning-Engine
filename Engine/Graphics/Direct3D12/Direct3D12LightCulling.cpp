@@ -105,7 +105,8 @@ namespace lightning::graphics::direct3d12::delight {
 			const hlsl::LightCullingDispatchParameters& params{ culler.grid_frustums_dispatch_params };
 			memcpy(buffer, &params, sizeof(hlsl::LightCullingDispatchParameters));
 
-			barriers.add(culler.frustums.buffer(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+			// TEMP
+			barriers.add(culler.frustums.buffer(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 			barriers.apply(cmd_list);
 
 			using param = LightCullingRootParameter;
@@ -116,7 +117,8 @@ namespace lightning::graphics::direct3d12::delight {
 			cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.frustums.gpu_address());
 			cmd_list->Dispatch(params.num_thred_groups.x, params.num_thred_groups.y, 1);
 
-			barriers.add(culler.frustums.buffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			// TEMP
+			barriers.add(culler.frustums.buffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		}
 
 		void _declspec(noinline) resize_and_calculate_grid_frustums(CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo info, d3dx::D3D12ResourceBarrier& barriers) {
@@ -155,5 +157,13 @@ namespace lightning::graphics::direct3d12::delight {
 		if (info.surface_width != culler.view_width || info.surface_height != culler.view_height || !math::is_equal(info.camera->field_of_view(), culler.camera_fov)) {
 			resize_and_calculate_grid_frustums(culler, cmd_list, info, barriers);
 		}
+		//barriers.apply(cmd_list);
+	}
+
+	// TEMP
+
+	D3D12_GPU_VIRTUAL_ADDRESS frustums(id::id_type light_culling_id, u32 frame_index) {
+		assert(frame_index < FRAME_BUFFER_COUNT && id::is_valid(light_culling_id));
+		return light_cullers[light_culling_id].cullers[frame_index].frustums.gpu_address();
 	}
 }
