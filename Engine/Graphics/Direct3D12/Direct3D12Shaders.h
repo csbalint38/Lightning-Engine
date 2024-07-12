@@ -9,6 +9,7 @@ namespace lightning::graphics::direct3d12::shaders {
 			FILL_COLOR_PS = 1,
 			POST_PROCESS_PS = 2,
 			GRID_FRUSTUMS_CS = 3,
+			LIGHT_CULLING_CS = 4,
 
 			count
 		};

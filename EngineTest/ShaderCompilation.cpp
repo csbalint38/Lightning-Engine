@@ -41,6 +41,10 @@ namespace {
 		{
 			EngineShader::GRID_FRUSTUMS_CS,
 			{ "GridFrustums.hlsl", "compute_grid_frustum_cs", ShaderType::COMPUTE },
+		},
+		{
+			EngineShader::LIGHT_CULLING_CS,
+			{ "LightCulling.hlsl", "cull_lights_cs", ShaderType::COMPUTE },
 		}
 	};
 
@@ -202,16 +206,8 @@ namespace {
 		if (!std::filesystem::exists(engine_shaders_path)) return false;
 		auto shaders_compilation_time = std::filesystem::last_write_time(engine_shaders_path);
 
-		std::filesystem::path full_path{};
-
-		for (u32 i{ 0 }; i < EngineShader::count; ++i) {
-			auto& file = engine_shader_files[i];
-			full_path = shaders_source_path;
-			full_path += file.info.file_name;
-			if (!std::filesystem::exists(full_path)) return false;
-
-			auto shader_file_time = std::filesystem::last_write_time(full_path);
-			if (shader_file_time > shaders_compilation_time) return false;
+		for (const auto& entry : std::filesystem::directory_iterator{ shaders_source_path }) {
+			if (entry.last_write_time() > shaders_compilation_time) return false;
 		}
 
 		return true;
@@ -277,7 +273,7 @@ bool compile_shaders() {
 		if (!std::filesystem::exists(full_path)) return false;
 		util::vector<std::wstring> extra_args{};
 
-		if (file.id == EngineShader::GRID_FRUSTUMS_CS) {
+		if (file.id == EngineShader::GRID_FRUSTUMS_CS || file.id == EngineShader::LIGHT_CULLING_CS) {
 			extra_args.emplace_back(L"-D");
 			extra_args.emplace_back(L"TILE_SIZE=16");
 		}
