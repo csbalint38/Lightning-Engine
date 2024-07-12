@@ -34,10 +34,34 @@ struct Plane
     float distance;
 };
 
+struct Sphere
+{
+    float3 center;
+    float radius;
+};
+
+struct Cone
+{
+    float3 tip;
+    float height;
+    float3 direction;
+    float radius;
+};
+
 struct Frustum
 {
     Plane planes[4];
 };
+
+#ifndef __cplusplus
+struct ComputeShaderInput
+{
+    uint3 goup_id : SV_GroupID;
+    uint3 group_thread_id : SV_GroupThreadID;
+    uint3 dispatch_thread_id : SV_DispatchThreadID;
+    uint group_index : SV_GroupIndex;
+};
+#endif
 
 struct LightCullingDispatchParameters
 {

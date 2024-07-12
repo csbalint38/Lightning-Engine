@@ -99,7 +99,7 @@ namespace lightning::graphics::direct3d12::delight {
 			resize_buffers(culler);
 		}
 
-		void calculate_grid_frustums(CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo info, d3dx::D3D12ResourceBarrier& barriers) {
+		void calculate_grid_frustums(CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo& info, d3dx::D3D12ResourceBarrier& barriers) {
 			ConstantBuffer& cbuffer{ core::c_buffer() };
 			hlsl::LightCullingDispatchParameters* const buffer{ cbuffer.allocate<hlsl::LightCullingDispatchParameters>() };
 			const hlsl::LightCullingDispatchParameters& params{ culler.grid_frustums_dispatch_params };
@@ -121,7 +121,7 @@ namespace lightning::graphics::direct3d12::delight {
 			barriers.add(culler.frustums.buffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		}
 
-		void _declspec(noinline) resize_and_calculate_grid_frustums(CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo info, d3dx::D3D12ResourceBarrier& barriers) {
+		void _declspec(noinline) resize_and_calculate_grid_frustums(CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo& info, d3dx::D3D12ResourceBarrier& barriers) {
 			culler.camera_fov = info.camera->field_of_view();
 			culler.view_width = info.surface_width;
 			culler.view_height = info.surface_height;
