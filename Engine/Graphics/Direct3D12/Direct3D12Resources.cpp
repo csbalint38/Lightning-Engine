@@ -150,6 +150,24 @@ namespace lightning::graphics::direct3d12 {
 
 	#pragma endregion
 
+	#pragma region STRUCTURED_BUFFER
+
+	StructuredBuffer::StructuredBuffer(const D3D12BufferInitInfo& info) : _buffer{ info, false }, _stride{ info.stride } {
+		assert(info.size && info.stride == (info.stride * info.element_count));
+		assert(info.alignment > 0);
+
+		NAME_D3D12_OBJECT_INDEXED(buffer(), info.size, L"Structured Buffer - size");
+
+		if (info.create_uav) {
+			assert(info.flags && D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+			_uav = core::uav_heap().allocate();
+			_uav_shader_visible = core::srv_heap().allocate();
+
+		}
+	}
+
+	#pragma endregion
+
 	#pragma region D3D12_TEXTURE
 	D3D12Texture::D3D12Texture(D3D12TextureInitInfo info) {
 		auto* const device{ core::device() };

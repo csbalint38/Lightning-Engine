@@ -159,6 +159,78 @@ namespace lightning::graphics::direct3d12 {
 			std::mutex _mutex;
 	};
 
+	class StructuredBuffer {
+		public:
+			StructuredBuffer() = default;
+			explicit StructuredBuffer(const D3D12BufferInitInfo& info);
+			DISABLE_COPY(StructuredBuffer);
+
+			constexpr StructuredBuffer(StructuredBuffer&& o) : _buffer{ std::move(o._buffer) }, _uav{ o._uav }, _uav_shader_visible{ o._uav_shader_visible }, _stride{ o._stride } {
+				o.reset();
+			}
+
+			constexpr StructuredBuffer& operator=(StructuredBuffer&& o) {
+				assert(this != &o);
+				if (this != &o) {
+					release();
+					move(o);
+				}
+
+				return *this;
+			}
+
+			~StructuredBuffer() { release(); }
+
+			void release();
+
+			void clear_uav(id3d12_graphics_command_list* const cmd_list, const u32* const values) const {
+				cmd_list->ClearUnorderedAccessViewUint(_uav_shader_visible.gpu, _uav.cpu, buffer(), values, 0, nullptr);
+			}
+
+			void clear_uav(id3d12_graphics_command_list* const cmd_list, const f32* const values) const {
+				cmd_list->ClearUnorderedAccessViewFloat(_uav_shader_visible.gpu, _uav.cpu, buffer(), values, 0, nullptr);
+			}
+
+			[[nodiscard]] constexpr ID3D12Resource* buffer() const { return _buffer.buffer(); }
+			[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_adress() const { return _buffer.gpu_address(); }
+			[[nodiscard]] constexpr u32 size() const { return _buffer.size(); }
+			[[nodiscard]] constexpr DescriptorHandle uav() const { return _uav; }
+			[[nodiscard]] constexpr DescriptorHandle uav_shader_visible() const { return _uav_shader_visible; }
+
+			[[nodiscard]] constexpr static D3D12BufferInitInfo get_default_init_info(u32 stride, u32 element_count) {
+				assert(stride && element_count);
+				D3D12BufferInitInfo info{};
+				info.size = stride * element_count;
+				info.stride = stride;
+				info.element_count = element_count;
+				info.alignment = stride;
+				info.flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				return info;
+			}
+
+		private:
+
+			constexpr void move(StructuredBuffer& o) {
+				_buffer = std::move(o._buffer);
+				_uav = o._uav;
+				_uav_shader_visible = o._uav_shader_visible;
+				_stride = o._stride;
+
+				o.reset();
+			}
+
+			constexpr void reset() {
+				_uav = {};
+				_uav_shader_visible = {};
+				_stride = 0;
+			}
+
+			D3D12Buffer _buffer{};
+			DescriptorHandle _uav{};
+			DescriptorHandle _uav_shader_visible{};
+			u32 _stride{ 0 };
+	};
+
 	struct D3D12TextureInitInfo {
 		ID3D12Heap1* heap{ nullptr };
 		ID3D12Resource2* resource{ nullptr };

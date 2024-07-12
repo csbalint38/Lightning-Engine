@@ -13,6 +13,10 @@ namespace lightning::graphics::direct3d12::delight {
 				GLOBAL_SHADER_DATA,
 				CONSTANTS,
 				FRUSTUMS_OUT_OR_INDEX_COUNTER,
+				FRUSTUMS_IN,
+				CULLING_INFO,
+				LIGHT_GRID_OPAQUE,
+				LIGHT_INDEX_LIST_OPAQUE,
 
 				count
 			};
@@ -20,19 +24,26 @@ namespace lightning::graphics::direct3d12::delight {
 
 		struct CullingParameters {
 			D3D12Buffer frustums;
+			D3D12Buffer light_grid_and_index_list;
 			hlsl::LightCullingDispatchParameters grid_frustums_dispatch_params{};
+			hlsl::LightCullingDispatchParameters light_culling_dispatch_params{};
 			u32 frustum_count{ 0 };
 			u32 view_width{ 0 };
 			u32 view_height{ 0 };
 			f32 camera_fov{ 0.f };
+			D3D12_GPU_VIRTUAL_ADDRESS light_index_list_opaque_buffer{ 0 };
+			bool has_lights{ true };
 		};
 
 		struct LightCuller {
 			CullingParameters cullers[FRAME_BUFFER_COUNT]{};
 		};
 
+		constexpr u32 max_lights_per_tile{ 256 };
+
 		ID3D12RootSignature* light_culling_root_signature{ nullptr };
 		ID3D12PipelineState* grid_frustum_pso{ nullptr };
+		ID3D12PipelineState* light_culling_pso{ nullptr };
 		util::free_list<LightCuller> light_cullers;
 
 
@@ -43,6 +54,10 @@ namespace lightning::graphics::direct3d12::delight {
 			parameters[param::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 0);
 			parameters[param::CONSTANTS].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 1);
 			parameters[param::FRUSTUMS_OUT_OR_INDEX_COUNTER].as_uav(D3D12_SHADER_VISIBILITY_ALL, 0);
+			parameters[param::FRUSTUMS_IN].as_srv(D3D12_SHADER_VISIBILITY_ALL, 0);
+			parameters[param::CULLING_INFO].as_srv(D3D12_SHADER_VISIBILITY_ALL, 1);
+			parameters[param::LIGHT_GRID_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 1);
+			parameters[param::LIGHT_INDEX_LIST_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 3);
 
 			light_culling_root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters) }.create();
 			NAME_D3D12_OBJECT(light_culling_root_signature, L"Light Culling Root Signature");
@@ -51,22 +66,38 @@ namespace lightning::graphics::direct3d12::delight {
 		}
 
 		bool create_psos() {
-			assert(!grid_frustum_pso);
+			{
+				assert(!grid_frustum_pso);
 
-			struct {
-				d3dx::d3d12_pipeline_state_subobject_root_signature root_signature{ light_culling_root_signature };
-				d3dx::d3d12_pipeline_state_subobject_cs cs{ shaders::get_engine_shader(shaders::EngineShader::GRID_FRUSTUMS_CS) };
-			} stream;
+				struct {
+					d3dx::d3d12_pipeline_state_subobject_root_signature root_signature{ light_culling_root_signature };
+					d3dx::d3d12_pipeline_state_subobject_cs cs{ shaders::get_engine_shader(shaders::EngineShader::GRID_FRUSTUMS_CS) };
+				} stream;
 
-			grid_frustum_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
-			NAME_D3D12_OBJECT(grid_frustum_pso, L"Grid Frustums PSO");
+				grid_frustum_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
+				NAME_D3D12_OBJECT(grid_frustum_pso, L"Grid Frustums PSO");
+			}
+			{
+				assert(!light_culling_pso);
 
-			return grid_frustum_pso != nullptr;
+				struct {
+					d3dx::d3d12_pipeline_state_subobject_root_signature root_signature{ light_culling_root_signature };
+					d3dx::d3d12_pipeline_state_subobject_cs cs{ shaders::get_engine_shader(shaders::EngineShader::LIGHT_CULLING_CS) };
+				} stream;
+
+				grid_frustum_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
+				NAME_D3D12_OBJECT(light_culling_pso, L"Light Culling PSO");
+			}
+
+			return grid_frustum_pso != nullptr && light_culling_pso != nullptr;
 		}
 
 		void resize_buffers(CullingParameters& culler) {
 			const u32 frustum_count{ culler.frustum_count };
 			const u32 frustum_buffer_size{ sizeof(hlsl::Frustum) * frustum_count };
+			const u32 light_grid_buffer_size{ (u32)math::align_size_up<sizeof(math::v4)>(sizeof(math::u32v2) * frustum_count) };
+			const u32 light_index_buffer_size{ (u32)math::align_size_up<sizeof(math::v4)>(sizeof(u32) * max_lights_per_tile * frustum_count) };
+			const u32 light_grid_and_index_list_buffer_size{ light_grid_buffer_size + light_index_buffer_size };
 
 			D3D12BufferInitInfo info{};
 			info.alignment = sizeof(math::v4);
@@ -76,6 +107,15 @@ namespace lightning::graphics::direct3d12::delight {
 				info.size = frustum_buffer_size;
 				culler.frustums = D3D12Buffer{ info, false };
 				NAME_D3D12_OBJECT_INDEXED(culler.frustums.buffer(), frustum_count, L"Light Grid Frustums Buffer - count");
+			}
+
+			if (light_grid_and_index_list_buffer_size > culler.light_grid_and_index_list.size()) {
+				info.size = light_grid_and_index_list_buffer_size;
+				culler.light_grid_and_index_list = D3D12Buffer{ info, false };
+
+				const D3D12_GPU_VIRTUAL_ADDRESS light_grid_opaque_buffer{ culler.light_grid_and_index_list.gpu_address() };
+				culler.light_index_list_opaque_buffer = light_grid_opaque_buffer + light_grid_buffer_size;
+				NAME_D3D12_OBJECT_INDEXED(culler.light_grid_and_index_list.buffer(), light_grid_and_index_list_buffer_size, L"Light Grid and Index List Buffer - size");
 			}
 		}
 
@@ -94,6 +134,12 @@ namespace lightning::graphics::direct3d12::delight {
 				params.num_threds = tile_count;
 				params.num_thred_groups.x = (u32)math::align_size_up<tile_size>(tile_count.x) / tile_size;
 				params.num_thred_groups.y = (u32)math::align_size_up<tile_size>(tile_count.y) / tile_size;
+			}
+			{
+				hlsl::LightCullingDispatchParameters& params{ culler.light_culling_dispatch_params };
+				params.num_threds.x = tile_count.x * tile_size;
+				params.num_threds.y = tile_count.y * tile_size;
+				params.num_thred_groups = tile_count;
 			}
 
 			resize_buffers(culler);
@@ -137,9 +183,10 @@ namespace lightning::graphics::direct3d12::delight {
 
 	void shutdown() {
 		light::shutdown();
-		assert(light_culling_root_signature && grid_frustum_pso);
+		assert(light_culling_root_signature && grid_frustum_pso && light_culling_pso);
 		core::deferred_release(light_culling_root_signature);
 		core::deferred_release(grid_frustum_pso);
+		core::deferred_release(light_culling_pso);
 	}
 
 	[[nodiscard]] id::id_type add_culler() { return light_cullers.add(); }
