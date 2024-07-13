@@ -4,4 +4,4 @@
 
 static const uint LIGHT_TYPE_DIRECTIONAL_LIGHT = 0;
 static const uint LIGHT_TYPE_POINT_LIGHT = 1;
-static const uint LIGHT_TYPE_POTLIGHT = 2;
+static const uint LIGHT_TYPE_SPOTLIGHT = 2;

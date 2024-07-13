@@ -138,10 +138,10 @@ namespace lightning::graphics::direct3d12::camera {
 			*id = camera.entity_id();
 		}
 
-		constexpr void empty_set(const D3D12Camera&, const void* const, u32) {}
+		constexpr void empty_set(D3D12Camera&, const void* const, u32) {}
 
 		using set_function = void(*)(D3D12Camera&, const void* const, u32);
-		using get_function = void(*)(D3D12Camera&, void* const, u32);
+		using get_function = void(*)(const D3D12Camera&, void* const, u32);
 
 		constexpr set_function set_functions[]{
 			set_up_vector,
