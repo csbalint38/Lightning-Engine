@@ -44,7 +44,7 @@ namespace {
 		},
 		{
 			EngineShader::LIGHT_CULLING_CS,
-			{ "LightCulling.hlsl", "cull_lights_cs", ShaderType::COMPUTE },
+			{ "CullLights.hlsl", "cull_lights_cs", ShaderType::COMPUTE },
 		}
 	};
 

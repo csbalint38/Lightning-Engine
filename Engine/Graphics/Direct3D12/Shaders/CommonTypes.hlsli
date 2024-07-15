@@ -56,7 +56,7 @@ struct Frustum
 #ifndef __cplusplus
 struct ComputeShaderInput
 {
-    uint3 goup_id : SV_GroupID;
+    uint3 group_id : SV_GroupID;
     uint3 group_thread_id : SV_GroupThreadID;
     uint3 dispatch_thread_id : SV_DispatchThreadID;
     uint group_index : SV_GroupIndex;
@@ -65,7 +65,7 @@ struct ComputeShaderInput
 
 struct LightCullingDispatchParameters
 {
-    uint2 num_thred_groups;
+    uint2 num_thread_groups;
     uint2 num_threds;
     
     uint num_lights;

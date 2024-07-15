@@ -25,6 +25,7 @@ namespace lightning::graphics::direct3d12::delight {
 		struct CullingParameters {
 			D3D12Buffer frustums;
 			D3D12Buffer light_grid_and_index_list;
+			StructuredBuffer light_index_counter;
 			hlsl::LightCullingDispatchParameters grid_frustums_dispatch_params{};
 			hlsl::LightCullingDispatchParameters light_culling_dispatch_params{};
 			u32 frustum_count{ 0 };
@@ -85,7 +86,7 @@ namespace lightning::graphics::direct3d12::delight {
 					d3dx::d3d12_pipeline_state_subobject_cs cs{ shaders::get_engine_shader(shaders::EngineShader::LIGHT_CULLING_CS) };
 				} stream;
 
-				grid_frustum_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
+				light_culling_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
 				NAME_D3D12_OBJECT(light_culling_pso, L"Light Culling PSO");
 			}
 
@@ -116,6 +117,13 @@ namespace lightning::graphics::direct3d12::delight {
 				const D3D12_GPU_VIRTUAL_ADDRESS light_grid_opaque_buffer{ culler.light_grid_and_index_list.gpu_address() };
 				culler.light_index_list_opaque_buffer = light_grid_opaque_buffer + light_grid_buffer_size;
 				NAME_D3D12_OBJECT_INDEXED(culler.light_grid_and_index_list.buffer(), light_grid_and_index_list_buffer_size, L"Light Grid and Index List Buffer - size");
+
+				if (!culler.light_index_counter.buffer()) {
+					info = StructuredBuffer::get_default_init_info(sizeof(math::u32v4), 1);
+					info.create_uav = true;
+					culler.light_index_counter = StructuredBuffer{ info };
+					NAME_D3D12_OBJECT_INDEXED(culler.light_index_counter.buffer(), core::current_frame_index(), L"Light Index Counter Buffer ");
+				}
 			}
 		}
 
@@ -132,14 +140,14 @@ namespace lightning::graphics::direct3d12::delight {
 			{
 				hlsl::LightCullingDispatchParameters& params{ culler.grid_frustums_dispatch_params };
 				params.num_threds = tile_count;
-				params.num_thred_groups.x = (u32)math::align_size_up<tile_size>(tile_count.x) / tile_size;
-				params.num_thred_groups.y = (u32)math::align_size_up<tile_size>(tile_count.y) / tile_size;
+				params.num_thread_groups.x = (u32)math::align_size_up<tile_size>(tile_count.x) / tile_size;
+				params.num_thread_groups.y = (u32)math::align_size_up<tile_size>(tile_count.y) / tile_size;
 			}
 			{
 				hlsl::LightCullingDispatchParameters& params{ culler.light_culling_dispatch_params };
 				params.num_threds.x = tile_count.x * tile_size;
 				params.num_threds.y = tile_count.y * tile_size;
-				params.num_thred_groups = tile_count;
+				params.num_thread_groups = tile_count;
 			}
 
 			resize_buffers(culler);
@@ -161,7 +169,7 @@ namespace lightning::graphics::direct3d12::delight {
 			cmd_list->SetComputeRootConstantBufferView(param::GLOBAL_SHADER_DATA, info.global_shader_data);
 			cmd_list->SetComputeRootConstantBufferView(param::CONSTANTS, cbuffer.gpu_address(buffer));
 			cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.frustums.gpu_address());
-			cmd_list->Dispatch(params.num_thred_groups.x, params.num_thred_groups.y, 1);
+			cmd_list->Dispatch(params.num_thread_groups.x, params.num_thread_groups.y, 1);
 
 			// TEMP
 			barriers.add(culler.frustums.buffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -204,7 +212,39 @@ namespace lightning::graphics::direct3d12::delight {
 		if (info.surface_width != culler.view_width || info.surface_height != culler.view_height || !math::is_equal(info.camera->field_of_view(), culler.camera_fov)) {
 			resize_and_calculate_grid_frustums(culler, cmd_list, info, barriers);
 		}
-		//barriers.apply(cmd_list);
+
+		hlsl::LightCullingDispatchParameters& params{ culler.light_culling_dispatch_params };
+		params.num_lights = light::cullable_light_count(info.info->light_set_key);
+		params.depth_buffer_srv_index = gpass::depth_buffer().srv().index;
+
+		if (!params.num_lights && !culler.has_lights) return;
+
+		culler.has_lights = params.num_lights > 0;
+
+		ConstantBuffer& cbuffer{ core::c_buffer() };
+		hlsl::LightCullingDispatchParameters* const buffer{ cbuffer.allocate<hlsl::LightCullingDispatchParameters>() };
+		memcpy(buffer, &params, sizeof(hlsl::LightCullingDispatchParameters));
+
+		barriers.add(culler.light_grid_and_index_list.buffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		barriers.apply(cmd_list);
+
+		const math::u32v4 clear_value{ 0, 0, 0, 0 };
+		culler.light_index_counter.clear_uav(cmd_list, &clear_value.x);
+
+		cmd_list->SetComputeRootSignature(light_culling_root_signature);
+		cmd_list->SetPipelineState(light_culling_pso);
+		using param = LightCullingRootParameter;
+		cmd_list->SetComputeRootConstantBufferView(param::GLOBAL_SHADER_DATA, info.global_shader_data);
+		cmd_list->SetComputeRootConstantBufferView(param::CONSTANTS, cbuffer.gpu_address(buffer));
+		cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.light_index_counter.gpu_adress());
+		cmd_list->SetComputeRootShaderResourceView(param::FRUSTUMS_IN, culler.frustums.gpu_address());
+		cmd_list->SetComputeRootShaderResourceView(param::CULLING_INFO, light::culling_info_buffer(info.frame_index));
+		cmd_list->SetComputeRootUnorderedAccessView(param::LIGHT_GRID_OPAQUE, culler.light_grid_and_index_list.gpu_address());
+		cmd_list->SetComputeRootUnorderedAccessView(param::LIGHT_INDEX_LIST_OPAQUE, culler.light_index_list_opaque_buffer);
+
+		cmd_list->Dispatch(params.num_thread_groups.x, params.num_thread_groups.y, 1);
+
+		barriers.add(culler.light_grid_and_index_list.buffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 
 	// TEMP

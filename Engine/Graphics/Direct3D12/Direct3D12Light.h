@@ -16,5 +16,8 @@ namespace lightning::graphics::direct3d12::light {
 
 	void update_light_buffers(const D3D12FrameInfo& info);
 	D3D12_GPU_VIRTUAL_ADDRESS non_cullable_light_buffer(u32 frame_index);
+	D3D12_GPU_VIRTUAL_ADDRESS cullable_light_buffer(u32 frame_index);
+	D3D12_GPU_VIRTUAL_ADDRESS culling_info_buffer(u32 frame_index);
 	u32 non_cullable_light_count(u64 light_set_key);
+	u32 cullable_light_count(u64 light_set_key);
 }
