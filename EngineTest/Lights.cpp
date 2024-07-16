@@ -25,7 +25,7 @@ namespace {
 
 		graphics::LightInitInfo info{};
 		info.entity_id = entity_id;
-		info.type = type;
+		info.type = graphics::Light::SPOT;
 		info.light_set_key = light_set_key;
 		info.intensity = 1.f;
 		info.color = { random(.2f), random(.2f), random(.2f) };
@@ -42,7 +42,7 @@ namespace {
 			info.spot_params.attenuation = { 1, 1, 1 };
 		}
 		#else
-		if (type == garaphics::Light::POINT) {
+		if (type == graphics::Light::POINT) {
 			info.point_params.range = 1.f;
 			info.point_params.attenuation = { 1, 1, 1 };
 		}
@@ -92,14 +92,15 @@ void generate_lights() {
 	lights.emplace_back(graphics::create_light(info));
 
 	#if !RANDOM_LIGHTS
-	create_light({ 0, -3, 0 }, {}, graphics::Light::POINT, left_set);
-	create_light({ 0, 0, 1 }, {}, graphics::Light::POINT, left_set);
-	create_light({ 0, 3, 2.5f }, {}, graphics::Light::POINT, left_set);
-	create_light({ 0, 0, 7 }, { 0, 3.14f, 0 }, graphics::Light::SPOT, left_set);
+	create_light({ 0, 3, 0 }, {}, graphics::Light::SPOT, left_set);
+	create_light({ 0, -.4f, 1.f }, {}, graphics::Light::SPOT, left_set);
+	create_light({ 0, 2, 2.5f }, {}, graphics::Light::SPOT, left_set);
+	create_light({ 0, .1f, 7 }, { 0, 3.14f, 0 }, graphics::Light::SPOT, left_set);
 	#else
 	srand(17);
 
-	constexpr math::v3 scale{ 1.f, .5f, 1.f };
+	constexpr f32 scale1{ 2 };
+	constexpr math::v3 scale{ 1.f * scale1, .5f * scale1, 1.f * scale1};
 	constexpr s32 dim{ 5 };
 	for (s32 x{ -dim }; x < dim; ++x) {
 		for (s32 y{ 0 }; y < 2 * dim; ++y) {

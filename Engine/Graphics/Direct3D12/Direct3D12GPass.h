@@ -14,11 +14,14 @@ namespace lightning::graphics::direct3d12::gpass {
 	struct OpaqueRootParameter {
 		enum parameter : u32 {
 			GLOBAL_SHADER_DATA,
+			PER_OBJECT_DATA,
 			POSITION_BUFFER,
 			ELEMENT_BUFFER,
 			SRV_INDICIES,
 			DIRECTIONAL_LIGHTS,
-			PER_OBJECT_DATA,
+			CULLABLE_LIGHTS,
+			LIGHT_GRID,
+			LIGHT_INDEX_LIST,
 
 			count
 		};

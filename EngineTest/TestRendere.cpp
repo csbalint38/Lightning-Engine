@@ -200,7 +200,7 @@
 
 	bool test_initialize() {
 		while (!compile_shaders()) {
-			if (MessageBox(nullptr, L"Failed to compile engine shaders", L"Shader Compilation Error", MB_RETRYCANCEL) != IDRETRY) {
+			if (MessageBox(nullptr, "Failed to compile engine shaders", "Shader Compilation Error", MB_RETRYCANCEL) != IDRETRY) {
 				return false;
 			}
 		}

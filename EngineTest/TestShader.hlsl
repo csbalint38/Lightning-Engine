@@ -18,7 +18,7 @@ struct PixelOut {
 #define ELEMENTS_TYPE_SKELETAL 0x08
 #define ELEMENTS_TYPE_SKELETAL_COLOR ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATIC_COLOR
 #define ELEMENTS_TYPE_SKELETAL_NORMAL ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATIC_NORMAL
-#define ELEMENTS_TYPE_SKELETAL_NORMAL_COLOR ELEMETS_TYPE_SKELETAL_NORMAL | ELEMENTS_TYPE_STATIC_COLOR
+#define ELEMENTS_TYPE_SKELETAL_NORMAL_COLOR ELEMENTS_TYPE_SKELETAL_NORMAL | ELEMENTS_TYPE_STATIC_COLOR
 #define ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE ELEMENTS_TYPE_SKELETAL | ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
 #define ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE_COLOR ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE | ELEMENTS_TYPE_STATIC_COLOR
 
@@ -48,6 +48,9 @@ ConstantBuffer<PerObjectData> per_object_buffer : register(b1, space0);
 StructuredBuffer<float3> vertex_positions : register(t0, space0);
 StructuredBuffer<VertexElement> elements : register(t1, space0);
 StructuredBuffer<DirectionalLightParameters> directional_lights : register(t3, space0);
+StructuredBuffer<LightParameters> cullable_lights : register(t4, space0);
+StructuredBuffer<uint2> light_grid : register(t5, space0);
+StructuredBuffer<uint> light_index_list : register(t6, space0);
 
 VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexOut vs_out;
@@ -85,6 +88,69 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     return vs_out;
 }
 
+#define TILE_SIZE 16
+#define NO_LIGHT_ATTENUATION 1
+
+float3 calculate_lighting(float3 n, float3 l, float3 v, float3 light_color)
+{
+    const float no_l = dot(n, l);
+    float specular = 0;
+    
+    if (no_l > 0.f)
+    {
+        const float3 r = reflect(-l, n);
+        const float va_r = max(dot(v, r), 0.f);
+        specular = saturate(no_l * pow(va_r, 4.f) * .5f);
+    }
+
+    return (max(0.f, no_l) + specular) * light_color;
+}
+
+float3 point_light(float3 n, float3 world_position, float3 v, LightParameters light)
+{
+    float3 l = light.position - world_position;
+    const float d_sq = dot(l, l);
+    float3 color = 0.f;
+    
+    #if NO_LIGHT_ATTENUATION
+    if(d_sq < light.range * light.range) {
+        const float d_rcp = rsqrt(d_sq);
+        l *= d_rcp;
+        color = calculate_lighting(n, l, v, light.color * light.intensity * .2f);
+    }
+    return color;
+    #else
+    return color;
+    #endif
+}
+
+float3 spotlight(float3 n, float3 world_position, float3 v, LightParameters light)
+{
+    float3 l = light.position - world_position;
+    const float d_sq = dot(l, l);
+    float3 color = 0.f;
+    
+    #if NO_LIGHT_ATTENUATION
+    if(d_sq < light.range * light.range) {
+        const float d_rcp = rsqrt(d_sq);
+        l *= d_rcp;
+        const float cos_angle_to_light = saturate(dot(-l, light.direction)); 
+        const float angular_attenuation = float(light.cos_penumbra < cos_angle_to_light); 
+        color = calculate_lighting(n, l, v, light.color * light.intensity *  angular_attenuation * .2f);
+    }
+    return color;
+    #else
+    return color;
+    #endif
+}
+
+uint get_grid_index(float2 pos_xy, float view_width)
+{
+    const uint2 pos = uint2(pos_xy);
+    const uint tile_x = ceil(view_width / TILE_SIZE);
+    return (pos.x / TILE_SIZE) + (tile_x * (pos.y / TILE_SIZE));
+}
+
 [earlydepthstencil]
 PixelOut test_shader_ps(in VertexOut ps_in) {
     PixelOut ps_out;
@@ -94,7 +160,8 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     
     float3 color = 0;
     
-    for (uint i = 0; i < global_data.num_directional_lights; ++i)
+    uint i = 0;
+    for (i = 0; i < global_data.num_directional_lights; ++i)
     {
         DirectionalLightParameters light = directional_lights[i];
         
@@ -105,15 +172,30 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
             light_direction = global_data.camera_direction;
         }
         
-        float diffuse = max(dot(normal, -light_direction), 0.f);
-        float3 reflection = reflect(light_direction, normal);
-        float specular = pow(max(dot(view_dir, reflection), 0.f), 16) * .5f;
-        
-        float3 light_color = light.color * light.intensity;
-        color += (diffuse + specular) * light_color;
+        color += .1f * calculate_lighting(normal, -light_direction, view_dir, light.color * light.intensity);
     }
     
-    float3 ambient = 10 / 255.f;
+    const uint grid_index = get_grid_index(ps_in.homogeneous_position.xy, global_data.view_width);
+    uint light_start_index = light_grid[grid_index].x;
+    const uint light_count = light_grid[grid_index].y;
+    
+    for (i = 0; i < light_count; ++i)
+    {
+        const uint light_index = light_index_list[light_start_index + i];
+        LightParameters light = cullable_lights[light_index];
+        
+        if (light.type == LIGHT_TYPE_POINT_LIGHT)
+        {
+            color += point_light(normal, ps_in.world_position, view_dir, light);
+        }
+        else if (light.type == LIGHT_TYPE_SPOTLIGHT)
+        {
+            color += spotlight(normal, ps_in.world_position, view_dir, light);
+        }
+
+    }
+    
+     float3 ambient = 0 / 255.f;
     ps_out.color = saturate(float4(color + ambient , 1.f));
     
     return ps_out;

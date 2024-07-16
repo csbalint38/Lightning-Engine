@@ -253,4 +253,14 @@ namespace lightning::graphics::direct3d12::delight {
 		assert(frame_index < FRAME_BUFFER_COUNT && id::is_valid(light_culling_id));
 		return light_cullers[light_culling_id].cullers[frame_index].frustums.gpu_address();
 	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS light_grid_opaque(id::id_type light_culling_id, u32 frame_index) {
+		assert(frame_index < FRAME_BUFFER_COUNT && id::is_valid(light_culling_id));
+		return light_cullers[light_culling_id].cullers[frame_index].light_grid_and_index_list.gpu_address();
+	}
+	D3D12_GPU_VIRTUAL_ADDRESS light_index_list_opaque(id::id_type light_culling_id, u32 frame_index) {
+		assert(frame_index < FRAME_BUFFER_COUNT && id::is_valid(light_culling_id));
+		return light_cullers[light_culling_id].cullers[frame_index].light_index_list_opaque_buffer;
+	}
+
 }

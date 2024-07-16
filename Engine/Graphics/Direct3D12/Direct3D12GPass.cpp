@@ -4,6 +4,7 @@
 #include "Direct3D12Content.h"
 #include "Direct3D12Light.h"
 #include "Direct3D12Camera.h"
+#include "Direct3D12LightCulling.h"
 #include "Shaders/ShaderTypes.h"
 #include "Components/Entity.h"
 #include "Components/Transform.h"
@@ -296,16 +297,23 @@ namespace lightning::graphics::direct3d12::gpass {
 	void render(id3d12_graphics_command_list* cmd_list, const D3D12FrameInfo& info) {
 		const GPassCache& cache{ frame_cache };
 		const u32 items_count{ cache.size() };
+		const u32 frame_index{ info.frame_index };
+		const id::id_type light_culling_id{ info.light_culling_id };
 
 		ID3D12RootSignature* current_root_signature{ nullptr };
 		ID3D12PipelineState* current_pipeline_state{ nullptr };
 
 		for (u32 i{ 0 }; i < items_count; ++i) {
 			if (current_root_signature != cache.root_signatures[i]) {
+
+				using idx = OpaqueRootParameter;
 				current_root_signature = cache.root_signatures[i];
 				cmd_list->SetGraphicsRootSignature(current_root_signature);
-				cmd_list->SetGraphicsRootConstantBufferView(OpaqueRootParameter::GLOBAL_SHADER_DATA, info.global_shader_data);
-				cmd_list->SetGraphicsRootShaderResourceView(OpaqueRootParameter::DIRECTIONAL_LIGHTS, light::non_cullable_light_buffer(info.frame_index));
+				cmd_list->SetGraphicsRootConstantBufferView(idx::GLOBAL_SHADER_DATA, info.global_shader_data);
+				cmd_list->SetGraphicsRootShaderResourceView(idx::DIRECTIONAL_LIGHTS, light::non_cullable_light_buffer(frame_index));
+				cmd_list->SetGraphicsRootShaderResourceView(idx::CULLABLE_LIGHTS, light::cullable_light_buffer(frame_index));
+				cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_GRID, delight::light_grid_opaque(light_culling_id, frame_index));
+				cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_INDEX_LIST, delight::light_index_list_opaque(light_culling_id ,frame_index));
 			}
 
 			if (current_pipeline_state != cache.gpass_pipeline_states[i]) {

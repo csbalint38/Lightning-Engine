@@ -13,7 +13,9 @@ namespace lightning::graphics::direct3d12::fx {
 				GLOBAL_SHADER_DATA,
 				ROOT_CONSTANTS,
 
-				FRUSTUMS, // Remove later
+				// TEMP
+				FRUSTUMS,
+				LIGHT_GRID_OPAQUE,
 
 				count
 			};
@@ -30,6 +32,7 @@ namespace lightning::graphics::direct3d12::fx {
 			parameters[idx::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
 			parameters[idx::ROOT_CONSTANTS].as_constants(1, D3D12_SHADER_VISIBILITY_PIXEL, 1);
 			parameters[idx::FRUSTUMS].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
+			parameters[idx::LIGHT_GRID_OPAQUE].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 1);
 
 			d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], _countof(parameters) };
 			root_signature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
@@ -79,6 +82,7 @@ namespace lightning::graphics::direct3d12::fx {
 		cmd_list->SetGraphicsRootConstantBufferView(idx::GLOBAL_SHADER_DATA, info.global_shader_data);
 		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::main_buffer().srv().index, 0);
 		cmd_list->SetGraphicsRootShaderResourceView(idx::FRUSTUMS, delight::frustums(light_culling_id, frame_index));
+		cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_GRID_OPAQUE, delight::light_grid_opaque(light_culling_id, frame_index));
 
 		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		

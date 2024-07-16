@@ -10,18 +10,45 @@ struct ShaderConstants
 ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<ShaderConstants> shader_params : register(b1, space0);
 StructuredBuffer<Frustum> frustums : register(t0, space0);
+StructuredBuffer<uint2> light_grid_opaque : register(t1, space0);
 
 uint get_grid_index(float2 pos_xy, float view_width)
 {
     const uint2 pos = uint2(pos_xy);
     const uint tile_x = ceil(view_width / TILE_SIZE);
     return (pos.x / TILE_SIZE) + (tile_x * (pos.y / TILE_SIZE));
+}
+
+float4 heatmap(StructuredBuffer<uint2> buffer, float2 pos_xy, float blend)
+{
+    const float w = global_data.view_width;
+    const uint grid_index = get_grid_index(pos_xy, w);
+    const uint num_lights = buffer[grid_index].y;
+    
+    const float3 map_tex[] =
+    {
+        float3(0, 0, 0),
+        float3(0, 0, 1),
+        float3(0, 1, 1),
+        float3(0, 1, 0),
+        float3(1, 1, 0),
+        float3(1, 0, 0),
+    };
+    const uint map_tex_len = 5;
+    const uint max_heat = 40;
+    float l = saturate((float) num_lights / max_heat) * map_tex_len;
+    float3 a = map_tex[floor(l)];
+    float3 b = map_tex[ceil(l)];
+    float3 heatmap = lerp(a, b, l - floor(l));
+
+    Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
+    return float4(lerp(gpass_main[pos_xy].xyz, heatmap, blend), 1.f);
 
 }
 
 float4 post_process_ps(in noperspective float4 position : SV_Position, in noperspective float2 uv : TEXCOORD) : SV_Target0
 {
-    #if 1
+    #if 0
     const float w = global_data.view_width;
     const uint grid_index = get_grid_index(position.xy, w);
     const Frustum f = frustums[grid_index];
@@ -64,7 +91,10 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     
     return float4((float3) c, 1.f);
     
-    #elif 0 // SCENE
+    #elif 0 // LIGHT GRID OPAQUE
+    return heatmap(light_grid_opaque, position.xy, .75f);
+    
+    #elif 1 // SCENE
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
     return float4(gpass_main[position.xy].xyz, 1.f);
     #endif

@@ -92,7 +92,6 @@ namespace lightning::graphics::direct3d12::content {
 				case MaterialType::Type::OPAQUE:
 					using params = gpass::OpaqueRootParameter;
 					d3dx::D3D12RootParameter parameters[params::count]{};
-					parameters[params::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 0);
 
 					D3D12_SHADER_VISIBILITY buffer_visibility{};
 					D3D12_SHADER_VISIBILITY data_visibility{};
@@ -115,11 +114,15 @@ namespace lightning::graphics::direct3d12::content {
 						data_visibility = D3D12_SHADER_VISIBILITY_ALL;
 					}
 
+					parameters[params::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_ALL, 0);
+					parameters[params::PER_OBJECT_DATA].as_cbv(data_visibility, 1);
 					parameters[params::POSITION_BUFFER].as_srv(buffer_visibility, 0);
 					parameters[params::ELEMENT_BUFFER].as_srv(buffer_visibility, 1);
 					parameters[params::SRV_INDICIES].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 2);
 					parameters[params::DIRECTIONAL_LIGHTS].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 3);
-					parameters[params::PER_OBJECT_DATA].as_cbv(data_visibility, 1);
+					parameters[params::CULLABLE_LIGHTS].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 4);
+					parameters[params::LIGHT_GRID].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 5);
+					parameters[params::LIGHT_INDEX_LIST].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 6);
 
 					root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters), get_root_signature_flags(flags) }.create();
 
