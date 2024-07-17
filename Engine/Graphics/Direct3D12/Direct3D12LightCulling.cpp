@@ -236,7 +236,7 @@ namespace lightning::graphics::direct3d12::delight {
 		using param = LightCullingRootParameter;
 		cmd_list->SetComputeRootConstantBufferView(param::GLOBAL_SHADER_DATA, info.global_shader_data);
 		cmd_list->SetComputeRootConstantBufferView(param::CONSTANTS, cbuffer.gpu_address(buffer));
-		cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.light_index_counter.gpu_adress());
+		cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.light_index_counter.gpu_address());
 		cmd_list->SetComputeRootShaderResourceView(param::FRUSTUMS_IN, culler.frustums.gpu_address());
 		cmd_list->SetComputeRootShaderResourceView(param::CULLING_INFO, light::culling_info_buffer(info.frame_index));
 		cmd_list->SetComputeRootUnorderedAccessView(param::LIGHT_GRID_OPAQUE, culler.light_grid_and_index_list.gpu_address());

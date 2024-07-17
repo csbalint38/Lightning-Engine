@@ -108,6 +108,10 @@ namespace lightning::graphics::direct3d12::light {
 					_non_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
 				}
 				else {
+					char msg[255] = { 0 };
+					sprintf(msg, ">> Watch out x=%d\n", owner.data_index);
+					OutputDebugString(msg);
+					assert(_cullable_owners[owner.data_index] < 10);
 					assert(_owners[_cullable_owners[owner.data_index]].data_index == owner.data_index);
 					_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
 				}
@@ -448,7 +452,7 @@ namespace lightning::graphics::direct3d12::light {
 					std::swap(index1, index2);
 				}
 
-				if (!!id::is_valid(_cullable_owners[index1])) {
+				if (!id::is_valid(_cullable_owners[index1])) {
 					LightOwner& owner2{ _owners[_cullable_owners[index2]] };
 					assert(owner2.data_index == index2);
 					owner2.data_index = index1;

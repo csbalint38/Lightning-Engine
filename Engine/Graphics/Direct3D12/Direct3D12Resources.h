@@ -192,7 +192,7 @@ namespace lightning::graphics::direct3d12 {
 			}
 
 			[[nodiscard]] constexpr ID3D12Resource* buffer() const { return _buffer.buffer(); }
-			[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_adress() const { return _buffer.gpu_address(); }
+			[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_address() const { return _buffer.gpu_address(); }
 			[[nodiscard]] constexpr u32 size() const { return _buffer.size(); }
 			[[nodiscard]] constexpr DescriptorHandle uav() const { return _uav; }
 			[[nodiscard]] constexpr DescriptorHandle uav_shader_visible() const { return _uav_shader_visible; }
