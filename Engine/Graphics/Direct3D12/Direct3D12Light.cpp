@@ -234,7 +234,11 @@ namespace lightning::graphics::direct3d12::light {
 				make_dirty(index);
 
 				if (owner.type == graphics::Light::SPOT) {
-					_culling_info[index].cone_radius = calculate_cone_radius(range, _cullable_lights[index].cos_penumbra);
+					#if USE_BOUNDING_SPHERES
+					_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
+					#else
+					_culling_info[index].cone_radius = calculate_cone_radius(range(ID), _cullable_lights[index].cos_penumbra);
+					#endif		
 				}
 			}
 
@@ -264,7 +268,12 @@ namespace lightning::graphics::direct3d12::light {
 				penumbra = math::clamp(penumbra, umbra(id), math::PI);
 				_cullable_lights[index].cos_penumbra = DirectX::XMScalarACos(penumbra * .5f);
 
-				_culling_info[index].cone_radius = calculate_cone_radius(range(id), _cullable_lights[index].cos_penumbra);
+				#if USE_BOUNDING_SPHERES
+				_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
+				#else
+				_culling_info[index].cone_radius = calculate_cone_radius(range, _cullable_lights[index].cos_penumbra);
+				#endif
+
 				make_dirty(index);
 			}
 
@@ -427,7 +436,12 @@ namespace lightning::graphics::direct3d12::light {
 				culling_info.type = params.type;
 
 				if (info.type == Light::SPOT) {
-					culling_info.cone_radius = calculate_cone_radius(params.range, params.cos_penumbra);
+
+					#if USE_BOUNDING_SPHERES
+					_culling_info[index].cos_penumbra = params.cos_penumbra;
+					#else
+					_culling_info[index].cone_radius = calculate_cone_radius(params.range, params.cos_penumbra);
+					#endif	
 				}
 
 			}

@@ -3,7 +3,7 @@
 #include "EngineAPI/TransformComponent.h"
 #include "Graphics/Renderer.h"
 
-#define RANDOM_LIGHTS 1
+#define RANDOM_LIGHTS 0
 
 using namespace lightning;
 
@@ -103,7 +103,7 @@ void generate_lights() {
 
 	constexpr f32 scale1{ 1 };
 	constexpr math::v3 scale{ 1.f * scale1, .5f * scale1, 1.f * scale1};
-	constexpr s32 dim{ 0 };
+	constexpr s32 dim{ 13 };
 	for (s32 x{ -dim }; x < dim; ++x) {
 		for (s32 y{ 0 }; y < 2 * dim; ++y) {
 			for (s32 z{ -dim }; z < dim; ++z) {
