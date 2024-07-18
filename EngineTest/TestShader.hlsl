@@ -116,7 +116,7 @@ float3 point_light(float3 n, float3 world_position, float3 v, LightParameters li
     if(d_sq < light.range * light.range) {
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
-        color = calculate_lighting(n, l, v, light.color * light.intensity * .2f);
+        color = saturate(dot(n, l) * light.color * light.intensity * .2f);
     }
     return color;
     #else
@@ -136,7 +136,8 @@ float3 spotlight(float3 n, float3 world_position, float3 v, LightParameters ligh
         l *= d_rcp;
         const float cos_angle_to_light = saturate(dot(-l, light.direction)); 
         const float angular_attenuation = float(light.cos_penumbra < cos_angle_to_light); 
-        color = calculate_lighting(n, l, v, light.color * light.intensity *  angular_attenuation * .2f);
+        color = saturate(dot(n, l) * light.color * light.intensity * angular_attenuation * .2f);
+
     }
     return color;
     #else
