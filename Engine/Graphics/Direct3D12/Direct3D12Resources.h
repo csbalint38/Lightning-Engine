@@ -62,10 +62,7 @@ namespace lightning::graphics::direct3d12 {
 		D3D12_RESOURCE_STATES initial_state{};
 		D3D12_RESOURCE_FLAGS flags{ D3D12_RESOURCE_FLAG_NONE };
 		u32 size{ 0 };
-		u32 stride{ 0 };
-		u32 element_count{ 0 };
 		u32 alignment{ 0 };
-		bool create_uav{ false };
 	};
 
 	class D3D12Buffer {
@@ -159,17 +156,17 @@ namespace lightning::graphics::direct3d12 {
 			std::mutex _mutex;
 	};
 
-	class StructuredBuffer {
+	class UAVClearebleBuffer {
 		public:
-			StructuredBuffer() = default;
-			explicit StructuredBuffer(const D3D12BufferInitInfo& info);
-			DISABLE_COPY(StructuredBuffer);
+			UAVClearebleBuffer() = default;
+			explicit UAVClearebleBuffer(const D3D12BufferInitInfo& info);
+			DISABLE_COPY(UAVClearebleBuffer);
 
-			constexpr StructuredBuffer(StructuredBuffer&& o) : _buffer{ std::move(o._buffer) }, _uav{ o._uav }, _uav_shader_visible{ o._uav_shader_visible }, _stride{ o._stride } {
+			constexpr UAVClearebleBuffer(UAVClearebleBuffer&& o) : _buffer{ std::move(o._buffer) }, _uav{ o._uav }, _uav_shader_visible{ o._uav_shader_visible } {
 				o.reset();
 			}
 
-			constexpr StructuredBuffer& operator=(StructuredBuffer&& o) {
+			constexpr UAVClearebleBuffer& operator=(UAVClearebleBuffer&& o) {
 				assert(this != &o);
 				if (this != &o) {
 					release();
@@ -179,15 +176,19 @@ namespace lightning::graphics::direct3d12 {
 				return *this;
 			}
 
-			~StructuredBuffer() { release(); }
+			~UAVClearebleBuffer() { release(); }
 
 			void release();
 
 			void clear_uav(id3d12_graphics_command_list* const cmd_list, const u32* const values) const {
+				assert(buffer());
+				assert(_uav.is_valid() && _uav_shader_visible.is_valid() && _uav_shader_visible.is_shader_visible());
 				cmd_list->ClearUnorderedAccessViewUint(_uav_shader_visible.gpu, _uav.cpu, buffer(), values, 0, nullptr);
 			}
 
 			void clear_uav(id3d12_graphics_command_list* const cmd_list, const f32* const values) const {
+				assert(buffer());
+				assert(_uav.is_valid() && _uav_shader_visible.is_valid() && _uav_shader_visible.is_shader_visible());
 				cmd_list->ClearUnorderedAccessViewFloat(_uav_shader_visible.gpu, _uav.cpu, buffer(), values, 0, nullptr);
 			}
 
@@ -197,24 +198,21 @@ namespace lightning::graphics::direct3d12 {
 			[[nodiscard]] constexpr DescriptorHandle uav() const { return _uav; }
 			[[nodiscard]] constexpr DescriptorHandle uav_shader_visible() const { return _uav_shader_visible; }
 
-			[[nodiscard]] constexpr static D3D12BufferInitInfo get_default_init_info(u32 stride, u32 element_count) {
-				assert(stride && element_count);
+			[[nodiscard]] constexpr static D3D12BufferInitInfo get_default_init_info(u32 size) {
+				assert(size);
 				D3D12BufferInitInfo info{};
-				info.size = stride * element_count;
-				info.stride = stride;
-				info.element_count = element_count;
-				info.alignment = stride;
+				info.size = size;
+				info.alignment = sizeof(math::v4);
 				info.flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 				return info;
 			}
 
 		private:
 
-			constexpr void move(StructuredBuffer& o) {
+			constexpr void move(UAVClearebleBuffer& o) {
 				_buffer = std::move(o._buffer);
 				_uav = o._uav;
 				_uav_shader_visible = o._uav_shader_visible;
-				_stride = o._stride;
 
 				o.reset();
 			}
@@ -222,13 +220,11 @@ namespace lightning::graphics::direct3d12 {
 			constexpr void reset() {
 				_uav = {};
 				_uav_shader_visible = {};
-				_stride = 0;
 			}
 
 			D3D12Buffer _buffer{};
 			DescriptorHandle _uav{};
 			DescriptorHandle _uav_shader_visible{};
-			u32 _stride{ 0 };
 	};
 
 	struct D3D12TextureInitInfo {

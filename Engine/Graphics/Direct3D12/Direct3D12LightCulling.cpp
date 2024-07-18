@@ -25,7 +25,7 @@ namespace lightning::graphics::direct3d12::delight {
 		struct CullingParameters {
 			D3D12Buffer frustums;
 			D3D12Buffer light_grid_and_index_list;
-			StructuredBuffer light_index_counter;
+			UAVClearebleBuffer light_index_counter;
 			hlsl::LightCullingDispatchParameters grid_frustums_dispatch_params{};
 			hlsl::LightCullingDispatchParameters light_culling_dispatch_params{};
 			u32 frustum_count{ 0 };
@@ -119,9 +119,8 @@ namespace lightning::graphics::direct3d12::delight {
 				NAME_D3D12_OBJECT_INDEXED(culler.light_grid_and_index_list.buffer(), light_grid_and_index_list_buffer_size, L"Light Grid and Index List Buffer - size");
 
 				if (!culler.light_index_counter.buffer()) {
-					info = StructuredBuffer::get_default_init_info(sizeof(math::u32v4), 1);
-					info.create_uav = true;
-					culler.light_index_counter = StructuredBuffer{ info };
+					info = UAVClearebleBuffer::get_default_init_info(1);
+					culler.light_index_counter = UAVClearebleBuffer{ info };
 					NAME_D3D12_OBJECT_INDEXED(culler.light_index_counter.buffer(), core::current_frame_index(), L"Light Index Counter Buffer ");
 				}
 			}
@@ -153,7 +152,7 @@ namespace lightning::graphics::direct3d12::delight {
 			resize_buffers(culler);
 		}
 
-		void calculate_grid_frustums(CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo& info, d3dx::D3D12ResourceBarrier& barriers) {
+		void calculate_grid_frustums(const CullingParameters& culler, id3d12_graphics_command_list* const cmd_list, const D3D12FrameInfo& info, d3dx::D3D12ResourceBarrier& barriers) {
 			ConstantBuffer& cbuffer{ core::c_buffer() };
 			hlsl::LightCullingDispatchParameters* const buffer{ cbuffer.allocate<hlsl::LightCullingDispatchParameters>() };
 			const hlsl::LightCullingDispatchParameters& params{ culler.grid_frustums_dispatch_params };

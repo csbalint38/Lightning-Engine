@@ -91,7 +91,7 @@ namespace lightning::graphics::direct3d12::light {
 					const light_id id{ _owners.add(LightOwner{game_entity::entity_id{info.entity_id}, index, info.type, info.is_enabled}) };
 					_cullable_entity_ids[index] = _owners[id].entity_id;
 					_cullable_owners[index] = id;
-					_dirty_bits[index] = dirty_bits_mask;
+					make_dirty(index);
 					enable(id, info.is_enabled);
 					update_transform(index);
 
@@ -108,10 +108,6 @@ namespace lightning::graphics::direct3d12::light {
 					_non_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
 				}
 				else {
-					char msg[255] = { 0 };
-					sprintf(msg, ">> Watch out x=%d\n", owner.data_index);
-					OutputDebugString(msg);
-					assert(_cullable_owners[owner.data_index] < 10);
 					assert(_owners[_cullable_owners[owner.data_index]].data_index == owner.data_index);
 					_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
 				}
@@ -192,7 +188,7 @@ namespace lightning::graphics::direct3d12::light {
 					assert(_owners[_cullable_owners[index]].data_index == index);
 					assert(index < _cullable_lights.size());
 					_cullable_lights[index].intensity = intensity;
-					_dirty_bits[index] = dirty_bits_mask;
+					make_dirty(index);
 				}
 			}
 
@@ -211,7 +207,7 @@ namespace lightning::graphics::direct3d12::light {
 					assert(_owners[_cullable_owners[index]].data_index == index);
 					assert(index < _cullable_lights.size());
 					_cullable_lights[index].color = color;
-					_dirty_bits[index] = dirty_bits_mask;
+					make_dirty(index);
 				}
 			}
 
@@ -223,7 +219,7 @@ namespace lightning::graphics::direct3d12::light {
 				assert(owner.type != graphics::Light::DIRECTIONAL);
 				assert(index < _cullable_lights.size());
 				_cullable_lights[index].attenuation = attenuation;
-				_dirty_bits[index] = dirty_bits_mask;
+				make_dirty(index);
 			}
 
 			CONSTEXPR void range(light_id id, f32 range) {
@@ -235,7 +231,7 @@ namespace lightning::graphics::direct3d12::light {
 				assert(index < _cullable_lights.size());
 				_cullable_lights[index].range = range;
 				_culling_info[index].range = range;
-				_dirty_bits[index] = dirty_bits_mask;
+				make_dirty(index);
 
 				if (owner.type == graphics::Light::SPOT) {
 					_culling_info[index].cone_radius = calculate_cone_radius(range, _cullable_lights[index].cos_penumbra);
@@ -251,7 +247,7 @@ namespace lightning::graphics::direct3d12::light {
 
 				umbra = math::clamp(umbra, 0.f, math::PI);
 				_cullable_lights[index].cos_umbra = DirectX::XMScalarACos(umbra * .5f);
-				_dirty_bits[index] = dirty_bits_mask;
+				make_dirty(index);
 
 				if (penumbra(id) < umbra) {
 					penumbra(id, umbra);
@@ -269,7 +265,7 @@ namespace lightning::graphics::direct3d12::light {
 				_cullable_lights[index].cos_penumbra = DirectX::XMScalarACos(penumbra * .5f);
 
 				_culling_info[index].cone_radius = calculate_cone_radius(range(id), _cullable_lights[index].cos_penumbra);
-				_dirty_bits[index] = dirty_bits_mask;
+				make_dirty(index);
 			}
 
 			constexpr bool is_enabled(light_id id) const { return _owners[id].is_enabled; }
@@ -288,7 +284,7 @@ namespace lightning::graphics::direct3d12::light {
 				return _cullable_lights[index].intensity;
 			}
 
-			constexpr math::v3 color(light_id id) {
+			constexpr math::v3 color(light_id id) const {
 
 				const LightOwner& owner{ _owners[id] };
 				const u32 index{ owner.data_index };
@@ -351,8 +347,8 @@ namespace lightning::graphics::direct3d12::light {
 				return count;
 			}
 
-			CONSTEXPR void non_cullable_lights(hlsl::DirectionalLightParameters* const lights, [[maybe_unused]] u32 buffer_size) {
-				assert(buffer_size == math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(non_cullable_light_count() * sizeof(hlsl::DirectionalLightParameters)));
+			CONSTEXPR void non_cullable_lights(hlsl::DirectionalLightParameters* const lights, [[maybe_unused]] u32 buffer_size)const {
+				assert(buffer_size >= math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(non_cullable_light_count() * sizeof(hlsl::DirectionalLightParameters)));
 
 				const u32 count{ (u32)_non_cullable_owners.size() };
 				u32 index{ 0 };
@@ -390,7 +386,7 @@ namespace lightning::graphics::direct3d12::light {
 					culling_info.direction = params.direction = entity.orientation();
 				}
 
-				_dirty_bits[index] = dirty_bits_mask;
+				make_dirty(index);
  			}
 
 			CONSTEXPR void add_cullable_light_parameters(const LightInitInfo& info, u32 index) {
@@ -461,9 +457,9 @@ namespace lightning::graphics::direct3d12::light {
 					_culling_info[index1] = _culling_info[index2];
 					_cullable_entity_ids[index1] = _cullable_entity_ids[index2];
 					std::swap(_cullable_owners[index1], _cullable_owners[index2]);
-					_dirty_bits[index1] = dirty_bits_mask;
+					make_dirty(index1);
 					assert(_owners[_cullable_owners[index1]].entity_id == _cullable_entity_ids[index1]);
-					assert(id::is_valid(_cullable_owners[index2]));
+					assert(!id::is_valid(_cullable_owners[index2]));
 				}
 				else {
 					LightOwner& owner1{ _owners[_cullable_owners[index1]] };
@@ -481,11 +477,14 @@ namespace lightning::graphics::direct3d12::light {
 					assert(_owners[_cullable_owners[index1]].entity_id == _cullable_entity_ids[index1]);
 					assert(_owners[_cullable_owners[index2]].entity_id == _cullable_entity_ids[index2]);
 
-					assert(index1 < _dirty_bits.size());
-					assert(index2 < _dirty_bits.size());
-					_dirty_bits[index1] = dirty_bits_mask;
-					_dirty_bits[index2] = dirty_bits_mask;
+					make_dirty(index1);
+					make_dirty(index2);
 				}
+			}
+
+			CONSTEXPR void make_dirty(u32 index) {
+				assert(index < _dirty_bits.size());
+				_something_is_dirty = _dirty_bits[index] = dirty_bits_mask;
 			}
 
 			util::free_list<LightOwner> _owners;
@@ -500,6 +499,7 @@ namespace lightning::graphics::direct3d12::light {
 
 			util::vector<u8> _transform_flags_cache;
 			u32 _enabled_cullable_light_count{0};
+			u8 _something_is_dirty{ 0 };
 
 			friend class D3D12LightBuffer;
 		};
@@ -508,58 +508,63 @@ namespace lightning::graphics::direct3d12::light {
 		public:
 			D3D12LightBuffer() = default;
 			CONSTEXPR void update_light_buffers(LightSet& set, u64 light_set_key, u32 frame_index) {
-				u32 sizes[LightBuffer::count]{};
-				sizes[LightBuffer::NON_CULLABLE_LIGHT] = set.non_cullable_light_count() * sizeof(hlsl::DirectionalLightParameters);
-				sizes[LightBuffer::CULLABLE_LIGHT] = set.cullable_light_count() * sizeof(hlsl::LightParameters);
-				sizes[LightBuffer::CULLING_INFO] = set.cullable_light_count() * sizeof(hlsl::LightCullingLightInfo);
 
-				u32 current_sizes[LightBuffer::count]{};
-				current_sizes[LightBuffer::NON_CULLABLE_LIGHT] = _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.size();
-				current_sizes[LightBuffer::CULLABLE_LIGHT] = _buffers[LightBuffer::CULLABLE_LIGHT].buffer.size();
-				current_sizes[LightBuffer::CULLING_INFO] = _buffers[LightBuffer::CULLING_INFO].buffer.size();
+				const u32 non_cullable_light_count{ set.non_cullable_light_count() };
 
-				if (current_sizes[LightBuffer::NON_CULLABLE_LIGHT] < sizes[LightBuffer::NON_CULLABLE_LIGHT]) {
-					resize_buffer(LightBuffer::NON_CULLABLE_LIGHT, sizes[LightBuffer::NON_CULLABLE_LIGHT], frame_index);
-				}
+				if (non_cullable_light_count) {
+					const u32 need_size{ non_cullable_light_count * sizeof(hlsl::DirectionalLightParameters) };
+					const u32 current_size{ _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.size() };
 
-				set.non_cullable_lights((hlsl::DirectionalLightParameters* const)_buffers[LightBuffer::NON_CULLABLE_LIGHT].cpu_address, _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.size());
-			
-				bool buffers_resized{ false };
-				if (current_sizes[LightBuffer::CULLABLE_LIGHT] < sizes[LightBuffer::CULLABLE_LIGHT]) {
-					assert(current_sizes[LightBuffer::CULLING_INFO] < sizes[LightBuffer::CULLING_INFO]);
-					resize_buffer(LightBuffer::CULLABLE_LIGHT, sizes[LightBuffer::CULLABLE_LIGHT], frame_index);
-					resize_buffer(LightBuffer::CULLING_INFO, sizes[LightBuffer::CULLING_INFO], frame_index);
-					buffers_resized = true;
-				}
-
-				bool all_lights_updated{ false };
-				if (buffers_resized || _current_light_set_key != light_set_key) {
-					memcpy(_buffers[LightBuffer::CULLABLE_LIGHT].cpu_address, set._cullable_lights.data(), sizes[LightBuffer::CULLABLE_LIGHT]);
-					memcpy(_buffers[LightBuffer::CULLING_INFO].cpu_address, set._culling_info.data(), sizes[LightBuffer::CULLING_INFO]);
-					_current_light_set_key = light_set_key;
-					all_lights_updated = true;
-				}
-
-				assert(_current_light_set_key == light_set_key);
-				const u32 index_mask{ 1UL << frame_index };
-
-				if (all_lights_updated) {
-					for (u32 i{ 0 }; i < set.cullable_light_count(); ++i) {
-						set._dirty_bits[i] &= ~index_mask;
+					if (current_size < need_size) {
+						resize_buffer(LightBuffer::NON_CULLABLE_LIGHT, need_size, frame_index);
 					}
+
+					set.non_cullable_lights((hlsl::DirectionalLightParameters* const)_buffers[LightBuffer::NON_CULLABLE_LIGHT].cpu_address, _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.size());
 				}
-				else {
-					for (u32 i{ 0 }; i < set.cullable_light_count(); ++i) {
-						if (set._dirty_bits[i] & index_mask) {
-							assert(i * sizeof(hlsl::LightParameters) < sizes[LightBuffer::CULLABLE_LIGHT]);
-							assert(i * sizeof(hlsl::LightCullingLightInfo) < sizes[LightBuffer::CULLING_INFO]);
-							u8* const light_dst{ _buffers[LightBuffer::CULLABLE_LIGHT].cpu_address + (i * sizeof(hlsl::LightParameters)) };
-							u8* const culling_dst{ _buffers[LightBuffer::CULLING_INFO].cpu_address + (i * sizeof(hlsl::LightCullingLightInfo)) };
-							memcpy(light_dst, &set._cullable_lights[i], sizeof(hlsl::LightParameters));
-							memcpy(culling_dst, &set._culling_info[i], sizeof(hlsl::LightCullingLightInfo));
+			
+				const u32 cullable_light_count{ set.cullable_light_count() };
+
+				if (cullable_light_count) {
+
+					const u32 needed_light_buffer_size{ cullable_light_count * sizeof(hlsl::LightParameters) };
+					const u32 needed_culling_buffer_size{ cullable_light_count * sizeof(hlsl::LightCullingLightInfo) };
+					const u32 current_light_buffer_size{ _buffers[LightBuffer::CULLABLE_LIGHT].buffer.size() };
+
+
+					bool buffers_resized{ false };
+					if (current_light_buffer_size < needed_light_buffer_size) {
+						resize_buffer(LightBuffer::CULLABLE_LIGHT, (needed_light_buffer_size * 3) >> 1, frame_index);
+						resize_buffer(LightBuffer::CULLING_INFO, (needed_culling_buffer_size * 3) >> 1, frame_index);
+						buffers_resized = true;
+					}
+
+					const u32 index_mask{ 1UL << frame_index };
+
+					if (buffers_resized || _current_light_set_key != light_set_key) {
+						memcpy(_buffers[LightBuffer::CULLABLE_LIGHT].cpu_address, set._cullable_lights.data(), needed_light_buffer_size);
+						memcpy(_buffers[LightBuffer::CULLING_INFO].cpu_address, set._culling_info.data(), needed_culling_buffer_size);
+						_current_light_set_key = light_set_key;
+
+						for (u32 i{ 0 }; i < cullable_light_count; ++i) {
 							set._dirty_bits[i] &= ~index_mask;
 						}
 					}
+					else if (set._something_is_dirty) {
+						for (u32 i{ 0 }; i < set.cullable_light_count(); ++i) {
+							if (set._dirty_bits[i] & index_mask) {
+								assert(i * sizeof(hlsl::LightParameters) < needed_light_buffer_size);
+								assert(i * sizeof(hlsl::LightCullingLightInfo) < needed_culling_buffer_size);
+								u8* const light_dst{ _buffers[LightBuffer::CULLABLE_LIGHT].cpu_address + (i * sizeof(hlsl::LightParameters)) };
+								u8* const culling_dst{ _buffers[LightBuffer::CULLING_INFO].cpu_address + (i * sizeof(hlsl::LightCullingLightInfo)) };
+								memcpy(light_dst, &set._cullable_lights[i], sizeof(hlsl::LightParameters));
+								memcpy(culling_dst, &set._culling_info[i], sizeof(hlsl::LightCullingLightInfo));
+								set._dirty_bits[i] &= ~index_mask;
+							}
+						}
+					}
+
+					set._something_is_dirty &= ~index_mask;
+					assert(_current_light_set_key == light_set_key);
 				}
 			}
 
@@ -590,9 +595,8 @@ namespace lightning::graphics::direct3d12::light {
 
 			void resize_buffer(LightBuffer::Type type, u32 size, [[maybe_unused]] u32 frame_index) {
 				assert(type < LightBuffer::count);
-				if (!size) return;
+				if (!size || _buffers[type].buffer.size() >= math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(size)) return;
 
-				_buffers[type].buffer.release();
 				_buffers[type].buffer = D3D12Buffer{ ConstantBuffer::get_default_init_info(size),true };
 				NAME_D3D12_OBJECT_INDEXED(_buffers[type].buffer.buffer(), frame_index, type == LightBuffer::NON_CULLABLE_LIGHT ? L"Non-cullable Light Buffer" : type == LightBuffer::CULLABLE_LIGHT ? L"Cullable Light Buffer" : L"Light Culling Info Buffer");
 
@@ -601,7 +605,7 @@ namespace lightning::graphics::direct3d12::light {
 				assert(_buffers[type].cpu_address);
 			}
 
-			LightBuffer _buffers[LightBuffer::count];
+			LightBuffer _buffers[LightBuffer::count]{};
 			u64 _current_light_set_key{ 0 };
 		};
 
@@ -650,55 +654,55 @@ namespace lightning::graphics::direct3d12::light {
 			set.penumbra(id, penumbra);
 		}
 
-		constexpr void get_is_enabled(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_is_enabled(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			bool* const is_enabled{ (bool* const)data };
 			assert(sizeof(bool) == size);
 			*is_enabled = set.is_enabled(id);
 		}
 
-		constexpr void get_intensity(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_intensity(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			f32* const intensity{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*intensity = set.intensity(id);
 		}
 
-		constexpr void get_color(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_color(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			math::v3* const color{ (math::v3* const)data };
 			assert(sizeof(math::v3) == size);
 			*color = set.color(id);
 		}
 
-		CONSTEXPR void get_attenuation(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		CONSTEXPR void get_attenuation(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			math::v3* const attenuation{ (math::v3* const)data };
 			assert(sizeof(math::v3) == size);
 			*attenuation = set.attenuation(id);
 		}
 
-		CONSTEXPR void get_range(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		CONSTEXPR void get_range(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			f32* const range{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*range = set.range(id);
 		}
 
-		void get_umbra(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		void get_umbra(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			f32* const umbra{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*umbra = set.umbra(id);
 		}
 
-		void get_penumbra(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		void get_penumbra(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			f32* const penumbra{ (f32* const)data };
 			assert(sizeof(f32) == size);
 			*penumbra = set.penumbra(id);
 		}
 
-		constexpr void get_type(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_type(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			graphics::Light::Type* const type{ (graphics::Light::Type* const)data };
 			assert(sizeof(graphics::Light::Type) == size);
 			*type = set.type(id);
 		}
 
-		constexpr void get_entity_id(LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
+		constexpr void get_entity_id(const LightSet& set, light_id id, void* const data, [[maybe_unused]] u32 size) {
 			id::id_type* const entity_id{ (id::id_type* const)data };
 			assert(sizeof(id::id_type) == size);
 			*entity_id = set.entity_id(id);
@@ -707,7 +711,7 @@ namespace lightning::graphics::direct3d12::light {
 		constexpr void empty_set(LightSet&, light_id, const void* const, u32) {}
 
 		using set_function = void(*)(LightSet&, light_id, const void* const, u32);
-		using get_function = void(*)(LightSet&, light_id, void* const, u32);
+		using get_function = void(*)(const LightSet&, light_id, void* const, u32);
 
 		constexpr set_function set_functions[]{
 			set_is_enabled,
