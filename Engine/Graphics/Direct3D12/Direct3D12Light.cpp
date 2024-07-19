@@ -237,7 +237,7 @@ namespace lightning::graphics::direct3d12::light {
 					#if USE_BOUNDING_SPHERES
 					_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
 					#else
-					_culling_info[index].cone_radius = calculate_cone_radius(range(ID), _cullable_lights[index].cos_penumbra);
+					_culling_info[index].cone_radius = calculate_cone_radius(range, _cullable_lights[index].cos_penumbra);
 					#endif		
 				}
 			}
@@ -271,7 +271,7 @@ namespace lightning::graphics::direct3d12::light {
 				#if USE_BOUNDING_SPHERES
 				_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
 				#else
-				_culling_info[index].cone_radius = calculate_cone_radius(range, _cullable_lights[index].cos_penumbra);
+				_culling_info[index].cone_radius = calculate_cone_radius(range(id), _cullable_lights[index].cos_penumbra);
 				#endif
 
 				make_dirty(index);

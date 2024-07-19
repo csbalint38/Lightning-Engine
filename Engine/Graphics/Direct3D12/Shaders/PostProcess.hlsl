@@ -91,10 +91,10 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     
     return float4((float3) c, 1.f);
     
-    #elif 0 // LIGHT GRID OPAQUE
+    #elif 1 // LIGHT GRID OPAQUE
     return heatmap(light_grid_opaque, position.xy, .75f);
     
-    #elif 1 // SCENE
+    #elif 0 // SCENE
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
     return float4(gpass_main[position.xy].xyz, 1.f);
     #endif
