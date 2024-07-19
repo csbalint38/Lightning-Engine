@@ -22,7 +22,7 @@ namespace {
 	f32 random(f32 min = 0.f) { return std::max(min, rand() * inv_rand_max); }
 
 	void create_light(math::v3 position, math::v3 rotation, graphics::Light::Type type, u64 light_set_key) {
-		const char* script_name{ nullptr }; // { type == graphics::Light::SPOT ? "RotatorScript" : nullptr };
+		const char* script_name { type == graphics::Light::SPOT ? "RotatorScript" : nullptr };
 		game_entity::entity_id entity_id{ create_one_game_entity(position, rotation, script_name).get_id() };
 
 		graphics::LightInitInfo info{};
@@ -96,14 +96,14 @@ void generate_lights() {
 	#if !RANDOM_LIGHTS
 	create_light({ 0, 3, 0 }, {}, graphics::Light::POINT, left_set);
 	create_light({ 0, -.4f, 1.f }, {}, graphics::Light::POINT, left_set);
-	create_light({ 0, 2, 2.5f }, {}, graphics::Light::POINT, left_set);
-	create_light({ 0, .1f, 7 }, { 0, 3.14f, 0 }, graphics::Light::SPOT, left_set);
+	create_light({ -1.5f, 2.3, 2.5f }, {}, graphics::Light::POINT, left_set);
+	create_light({ 0, 2.3f, 5 }, { 0, 3.14f, 0 }, graphics::Light::SPOT, left_set);
 	#else
 	srand(17);
 
-	constexpr f32 scale1{ 1 };
+	constexpr f32 scale1{ 4 };
 	constexpr math::v3 scale{ 1.f * scale1, .5f * scale1, 1.f * scale1};
-	constexpr s32 dim{ 13 };
+	constexpr s32 dim{ 8 };
 	for (s32 x{ -dim }; x < dim; ++x) {
 		for (s32 y{ 0 }; y < 2 * dim; ++y) {
 			for (s32 z{ -dim }; z < dim; ++z) {
@@ -182,7 +182,7 @@ void test_lights(f32 dt) {
 	constexpr f32 scale1{ 1 };
 	constexpr math::v3 scale{ 1.f * scale1, .5f * scale1, 1.f * scale1 };
 	count = (u32)(random(.1f) * 50);
-	for (s32 i{ 0 }; i < count; ++i) {
+	for (u32 i{ 0 }; i < count; ++i) {
 		math::v3 p1{ (random() * 2 - 1.f) * 13.f * scale.x, random() * 2 * 13.f * scale.y, (random() * 2 - 1.f) * 13.f * scale.z };
 		math::v3 p2{ (random() * 2 - 1.f) * 13.f * scale.x, random() * 2 * 13.f * scale.y, (random() * 2 - 1.f) * 13.f * scale.z };
 		create_light(p1, { random() * 3.14f, random() * 3.14f, random() * 3.14f }, random() > .5f ? graphics::Light::SPOT : graphics::Light::POINT, left_set);

@@ -83,10 +83,9 @@ struct LightCullingLightInfo
     #if USE_BOUNDING_SPHERES
     float cos_penumbra;
     #else
-    float cone_readius;
+    float cone_radius;
     #endif
     
-    float cone_radius;
     uint type;
     float3 _pad;
 };

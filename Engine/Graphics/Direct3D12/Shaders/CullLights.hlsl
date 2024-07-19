@@ -96,25 +96,26 @@ void cull_lights_cs(ComputeShaderInput cs_in)
                 _light_index_list[index] = i;
             }
         }
+    }
 
-        GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrierWithGroupSync();
 
-        const uint light_count = min(_light_count, max_lights_per_group);
+    const uint light_count = min(_light_count, max_lights_per_group);
 
-        if (cs_in.group_index == 0)
-        {
-            InterlockedAdd(light_index_counter[0], light_count, _light_index_start_offset);
-            light_grid_opaque[grid_index] = uint2(_light_index_start_offset, light_count);
-        }
+    if (cs_in.group_index == 0)
+    {
+        InterlockedAdd(light_index_counter[0], light_count, _light_index_start_offset);
+        light_grid_opaque[grid_index] = uint2(_light_index_start_offset, light_count);
+    }
 
-        GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrierWithGroupSync();
 
-        for (i = cs_in.group_index; i < light_count; i += TILE_SIZE * TILE_SIZE)
-        {
-            light_index_list_opaque[_light_index_start_offset + i] = _light_index_list[i];
-        }
+    for (i = cs_in.group_index; i < light_count; i += TILE_SIZE * TILE_SIZE)
+    {
+        light_index_list_opaque[_light_index_start_offset + i] = _light_index_list[i];
     }
 }
+
 #else
 static const uint max_lights_per_group = 1024;
 

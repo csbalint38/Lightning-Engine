@@ -1,10 +1,10 @@
 ## Test device:
-**CPU:** *insert_cpu_here*
-**GPU:** *isert_gpu_here*
-**RAM:** *insert_amount_of_memory_here*
-**OS:** *insert_operating_system_here*
+**CPU:** Intel i5-11400H
+**GPU:** NVIDIA GeForce RTX 2050
+**RAM:** 16GB
+**OS:** Windows 11 Home 64bit
 
 |               | Base implementation | Using bounding spheres  | Gain | Calculate Bounding Spheres in C++ side | Gain | Total Gain |
 |---------------|---------------------|-------------------------|------|----------------------------------------|------|------------|
-|**4k lights**  | x fps               | x fps                   | x %  | x fps                                  | x %  | x %        |
-|**64k lights** | x fps               | x fps                   | x %  | x fps                                  | x %  | x %        |
+|**4k lights**  | 115 fps             | 116 fps                 | 1%   | x fps                                  | x %  | x %        |
+|**64k lights** | 3 fps               | 21 fps                  | 700% | x fps                                  | x %  | x %        |
