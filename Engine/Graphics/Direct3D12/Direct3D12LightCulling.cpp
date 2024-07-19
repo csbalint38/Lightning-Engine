@@ -15,6 +15,7 @@ namespace lightning::graphics::direct3d12::delight {
 				FRUSTUMS_OUT_OR_INDEX_COUNTER,
 				FRUSTUMS_IN,
 				CULLING_INFO,
+				BOUNDING_SPHERES,
 				LIGHT_GRID_OPAQUE,
 				LIGHT_INDEX_LIST_OPAQUE,
 
@@ -57,6 +58,7 @@ namespace lightning::graphics::direct3d12::delight {
 			parameters[param::FRUSTUMS_OUT_OR_INDEX_COUNTER].as_uav(D3D12_SHADER_VISIBILITY_ALL, 0);
 			parameters[param::FRUSTUMS_IN].as_srv(D3D12_SHADER_VISIBILITY_ALL, 0);
 			parameters[param::CULLING_INFO].as_srv(D3D12_SHADER_VISIBILITY_ALL, 1);
+			parameters[param::BOUNDING_SPHERES].as_srv(D3D12_SHADER_VISIBILITY_ALL, 2);
 			parameters[param::LIGHT_GRID_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 1);
 			parameters[param::LIGHT_INDEX_LIST_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 3);
 
@@ -95,17 +97,17 @@ namespace lightning::graphics::direct3d12::delight {
 
 		void resize_buffers(CullingParameters& culler) {
 			const u32 frustum_count{ culler.frustum_count };
-			const u32 frustum_buffer_size{ sizeof(hlsl::Frustum) * frustum_count };
+			const u32 frustums_buffer_size{ sizeof(hlsl::Frustum) * frustum_count };
 			const u32 light_grid_buffer_size{ (u32)math::align_size_up<sizeof(math::v4)>(sizeof(math::u32v2) * frustum_count) };
-			const u32 light_index_buffer_size{ (u32)math::align_size_up<sizeof(math::v4)>(sizeof(u32) * max_lights_per_tile * frustum_count) };
-			const u32 light_grid_and_index_list_buffer_size{ light_grid_buffer_size + light_index_buffer_size };
+			const u32 light_index_list_buffer_size{ (u32)math::align_size_up<sizeof(math::v4)>(sizeof(u32) * max_lights_per_tile * frustum_count) };
+			const u32 light_grid_and_index_list_buffer_size{ light_grid_buffer_size + light_index_list_buffer_size };
 
 			D3D12BufferInitInfo info{};
 			info.alignment = sizeof(math::v4);
 			info.flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
-			if (frustum_buffer_size > culler.frustums.size()) {
-				info.size = frustum_buffer_size;
+			if (frustums_buffer_size > culler.frustums.size()) {
+				info.size = frustums_buffer_size;
 				culler.frustums = D3D12Buffer{ info, false };
 				NAME_D3D12_OBJECT_INDEXED(culler.frustums.buffer(), frustum_count, L"Light Grid Frustums Buffer - count");
 			}
@@ -238,6 +240,7 @@ namespace lightning::graphics::direct3d12::delight {
 		cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.light_index_counter.gpu_address());
 		cmd_list->SetComputeRootShaderResourceView(param::FRUSTUMS_IN, culler.frustums.gpu_address());
 		cmd_list->SetComputeRootShaderResourceView(param::CULLING_INFO, light::culling_info_buffer(info.frame_index));
+		cmd_list->SetComputeRootShaderResourceView(param::BOUNDING_SPHERES, light::bounding_spheres_buffer(info.frame_index));
 		cmd_list->SetComputeRootUnorderedAccessView(param::LIGHT_GRID_OPAQUE, culler.light_grid_and_index_list.gpu_address());
 		cmd_list->SetComputeRootUnorderedAccessView(param::LIGHT_INDEX_LIST_OPAQUE, culler.light_index_list_opaque_buffer);
 
