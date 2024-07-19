@@ -77,11 +77,13 @@ namespace lightning::graphics::direct3d12::light {
 						index = (u32)_cullable_owners.size();
 						_cullable_lights.emplace_back();
 						_culling_info.emplace_back();
+						_bounding_spheres.emplace_back();
 						_cullable_entity_ids.emplace_back();
 						_cullable_owners.emplace_back();
 						_dirty_bits.emplace_back();
 						assert(_cullable_owners.size() == _cullable_lights.size());
 						assert(_cullable_owners.size() == _culling_info.size());
+						assert(_cullable_owners.size() == _bounding_spheres.size());
 						assert(_cullable_owners.size() == _cullable_entity_ids.size());
 						assert(_cullable_owners.size() == _dirty_bits.size());
 					}
@@ -231,9 +233,11 @@ namespace lightning::graphics::direct3d12::light {
 				assert(index < _cullable_lights.size());
 				_cullable_lights[index].range = range;
 				_culling_info[index].range = range;
+				_bounding_spheres[index].radius = range;
 				make_dirty(index);
 
 				if (owner.type == graphics::Light::SPOT) {
+					calculate_cone_bounding_sphere(_cullable_lights[index], _bounding_spheres[index]);
 					#if USE_BOUNDING_SPHERES
 					_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
 					#else
@@ -267,6 +271,7 @@ namespace lightning::graphics::direct3d12::light {
 
 				penumbra = math::clamp(penumbra, umbra(id), math::PI);
 				_cullable_lights[index].cos_penumbra = DirectX::XMScalarACos(penumbra * .5f);
+				calculate_cone_bounding_sphere(_cullable_lights[index], _bounding_spheres[index]);
 
 				#if USE_BOUNDING_SPHERES
 				_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
@@ -383,16 +388,36 @@ namespace lightning::graphics::direct3d12::light {
 				return sin_penumbra * range;
 			}
 
+			void calculate_cone_bounding_sphere(const hlsl::LightParameters& params, hlsl::Sphere& sphere) {
+				using namespace DirectX;
+
+				XMVECTOR tip{ XMLoadFloat3(&params.position) };
+				XMVECTOR direction{ XMLoadFloat3(&params.direction) };
+				const f32 cone_cos{ params.cos_penumbra };
+				assert(cone_cos > 0.f);
+
+				if (cone_cos >= .707107f) {
+					sphere.radius = params.range / (2.f * cone_cos);
+					XMStoreFloat3(&sphere.center, tip + sphere.radius * direction);
+				}
+				else {
+					XMStoreFloat3(&sphere.center, tip + cone_cos * params.range * direction);
+					const f32 cone_sin{ sqrt(1.f - cone_cos * cone_cos) };
+					sphere.radius = cone_sin * params.range;
+				}
+			}
+
 			void update_transform(u32 index) {
 				const game_entity::Entity entity{ game_entity::entity_id{_cullable_entity_ids[index]} };
 				hlsl::LightParameters& params{ _cullable_lights[index] };
 				params.position = entity.position();
 
 				hlsl::LightCullingLightInfo& culling_info{ _culling_info[index] };
-				culling_info.position = params.position;
+				culling_info.position = _bounding_spheres[index].center = params.position;
 
 				if (params.type == graphics::Light::SPOT) {
 					culling_info.direction = params.direction = entity.orientation();
+					calculate_cone_bounding_sphere(params, _bounding_spheres[index]);
 				}
 
 				make_dirty(index);
@@ -428,19 +453,19 @@ namespace lightning::graphics::direct3d12::light {
 
 				assert(info.type != Light::DIRECTIONAL && index < _culling_info.size());
 
-				hlsl::LightParameters& params{ _cullable_lights[index] };
+				const hlsl::LightParameters& params{ _cullable_lights[index] };
 				assert(params.type == info.type);
 
 				hlsl::LightCullingLightInfo& culling_info{ _culling_info[index] };
-				culling_info.range = params.range;
+				culling_info.range = _bounding_spheres[index].radius = params.range;
 				culling_info.type = params.type;
 
 				if (info.type == Light::SPOT) {
 
 					#if USE_BOUNDING_SPHERES
-					_culling_info[index].cos_penumbra = params.cos_penumbra;
+					culling_info.cos_penumbra = params.cos_penumbra;
 					#else
-					_culling_info[index].cone_radius = calculate_cone_radius(params.range, params.cos_penumbra);
+					culling_info.cone_radius = calculate_cone_radius(params.range, params.cos_penumbra);
 					#endif	
 				}
 
@@ -454,6 +479,8 @@ namespace lightning::graphics::direct3d12::light {
 				assert(index2 < _cullable_lights.size());
 				assert(index2 < _culling_info.size());
 				assert(index1 < _culling_info.size());
+				assert(index1 < _bounding_spheres.size());
+				assert(index2 < _bounding_spheres.size());
 				assert(index2 < _cullable_entity_ids.size());
 				assert(index1 < _cullable_entity_ids.size());
 				assert(id::is_valid(_cullable_owners[index1]) || id::is_valid(_cullable_owners[index2]));
@@ -469,6 +496,7 @@ namespace lightning::graphics::direct3d12::light {
 
 					_cullable_lights[index1] = _cullable_lights[index2];
 					_culling_info[index1] = _culling_info[index2];
+					_bounding_spheres[index1] = _bounding_spheres[index2];
 					_cullable_entity_ids[index1] = _cullable_entity_ids[index2];
 					std::swap(_cullable_owners[index1], _cullable_owners[index2]);
 					make_dirty(index1);
@@ -485,6 +513,7 @@ namespace lightning::graphics::direct3d12::light {
 
 					std::swap(_cullable_lights[index1], _cullable_lights[index2]);
 					std::swap(_culling_info[index1], _culling_info[index2]);
+					std::swap(_bounding_spheres[index1], _bounding_spheres[index2]);
 					std::swap(_cullable_entity_ids[index1], _cullable_entity_ids[index2]);
 					std::swap(_cullable_owners[index1], _cullable_owners[index2]);
 
@@ -507,6 +536,7 @@ namespace lightning::graphics::direct3d12::light {
 
 			util::vector<hlsl::LightParameters> _cullable_lights;
 			util::vector<hlsl::LightCullingLightInfo> _culling_info;
+			util::vector<hlsl::Sphere> _bounding_spheres;
 			util::vector<game_entity::entity_id> _cullable_entity_ids;
 			util::vector<light_id> _cullable_owners;
 			util::vector<u8> _dirty_bits;
@@ -542,6 +572,7 @@ namespace lightning::graphics::direct3d12::light {
 
 					const u32 needed_light_buffer_size{ cullable_light_count * sizeof(hlsl::LightParameters) };
 					const u32 needed_culling_buffer_size{ cullable_light_count * sizeof(hlsl::LightCullingLightInfo) };
+					const u32 needed_spheres_buffer_size{ cullable_light_count * sizeof(hlsl::Sphere) };
 					const u32 current_light_buffer_size{ _buffers[LightBuffer::CULLABLE_LIGHT].buffer.size() };
 
 
@@ -549,6 +580,7 @@ namespace lightning::graphics::direct3d12::light {
 					if (current_light_buffer_size < needed_light_buffer_size) {
 						resize_buffer(LightBuffer::CULLABLE_LIGHT, (needed_light_buffer_size * 3) >> 1, frame_index);
 						resize_buffer(LightBuffer::CULLING_INFO, (needed_culling_buffer_size * 3) >> 1, frame_index);
+						resize_buffer(LightBuffer::BOUNDING_SPHERES, (needed_spheres_buffer_size * 3) >> 1, frame_index);
 						buffers_resized = true;
 					}
 
@@ -557,6 +589,7 @@ namespace lightning::graphics::direct3d12::light {
 					if (buffers_resized || _current_light_set_key != light_set_key) {
 						memcpy(_buffers[LightBuffer::CULLABLE_LIGHT].cpu_address, set._cullable_lights.data(), needed_light_buffer_size);
 						memcpy(_buffers[LightBuffer::CULLING_INFO].cpu_address, set._culling_info.data(), needed_culling_buffer_size);
+						memcpy(_buffers[LightBuffer::BOUNDING_SPHERES].cpu_address, set._bounding_spheres.data(), needed_spheres_buffer_size);
 						_current_light_set_key = light_set_key;
 
 						for (u32 i{ 0 }; i < cullable_light_count; ++i) {
@@ -570,8 +603,10 @@ namespace lightning::graphics::direct3d12::light {
 								assert(i * sizeof(hlsl::LightCullingLightInfo) < needed_culling_buffer_size);
 								u8* const light_dst{ _buffers[LightBuffer::CULLABLE_LIGHT].cpu_address + (i * sizeof(hlsl::LightParameters)) };
 								u8* const culling_dst{ _buffers[LightBuffer::CULLING_INFO].cpu_address + (i * sizeof(hlsl::LightCullingLightInfo)) };
+								u8* const bounding_dst{ _buffers[LightBuffer::BOUNDING_SPHERES].cpu_address + (i * sizeof(hlsl::Sphere)) };
 								memcpy(light_dst, &set._cullable_lights[i], sizeof(hlsl::LightParameters));
 								memcpy(culling_dst, &set._culling_info[i], sizeof(hlsl::LightCullingLightInfo));
+								memcpy(bounding_dst, &set._bounding_spheres[i], sizeof(hlsl::Sphere));
 								set._dirty_bits[i] &= ~index_mask;
 							}
 						}
@@ -592,6 +627,7 @@ namespace lightning::graphics::direct3d12::light {
 			constexpr D3D12_GPU_VIRTUAL_ADDRESS non_cullable_lights() const { return _buffers[LightBuffer::NON_CULLABLE_LIGHT].buffer.gpu_address(); }
 			constexpr D3D12_GPU_VIRTUAL_ADDRESS cullable_lights() const { return _buffers[LightBuffer::CULLABLE_LIGHT].buffer.gpu_address(); }
 			constexpr D3D12_GPU_VIRTUAL_ADDRESS culling_info() const { return _buffers[LightBuffer::CULLING_INFO].buffer.gpu_address(); }
+			constexpr D3D12_GPU_VIRTUAL_ADDRESS bounding_spheres() const { return _buffers[LightBuffer::BOUNDING_SPHERES].buffer.gpu_address(); }
 
 		private:
 			struct LightBuffer {
@@ -599,6 +635,7 @@ namespace lightning::graphics::direct3d12::light {
 					NON_CULLABLE_LIGHT,
 					CULLABLE_LIGHT,
 					CULLING_INFO,
+					BOUNDING_SPHERES,
 
 					count
 				};
@@ -612,7 +649,7 @@ namespace lightning::graphics::direct3d12::light {
 				if (!size || _buffers[type].buffer.size() >= math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(size)) return;
 
 				_buffers[type].buffer = D3D12Buffer{ ConstantBuffer::get_default_init_info(size),true };
-				NAME_D3D12_OBJECT_INDEXED(_buffers[type].buffer.buffer(), frame_index, type == LightBuffer::NON_CULLABLE_LIGHT ? L"Non-cullable Light Buffer" : type == LightBuffer::CULLABLE_LIGHT ? L"Cullable Light Buffer" : L"Light Culling Info Buffer");
+				NAME_D3D12_OBJECT_INDEXED(_buffers[type].buffer.buffer(), frame_index, type == LightBuffer::NON_CULLABLE_LIGHT ? L"Non-cullable Light Buffer" : type == LightBuffer::CULLABLE_LIGHT ? L"Cullable Light Buffer" : type == LightBuffer::CULLING_INFO ? L"Light Culling Info Buffer" : L"Bounding Spheres Buffer");
 
 				D3D12_RANGE range{};
 				DXCall(_buffers[type].buffer.buffer()->Map(0, &range, (void**)(&_buffers[type].cpu_address)));
@@ -815,6 +852,11 @@ namespace lightning::graphics::direct3d12::light {
 	D3D12_GPU_VIRTUAL_ADDRESS non_cullable_light_buffer(u32 frame_index) {
 		const D3D12LightBuffer& light_buffer{ light_buffers[frame_index] };
 		return light_buffer.non_cullable_lights();
+	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS bounding_spheres_buffer(u32 frame_index) {
+		const D3D12LightBuffer& light_buffer{ light_buffers[frame_index] };
+		return light_buffer.bounding_spheres();
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS cullable_light_buffer(u32 frame_index) {

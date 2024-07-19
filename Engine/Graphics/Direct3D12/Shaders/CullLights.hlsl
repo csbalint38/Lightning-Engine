@@ -12,8 +12,10 @@ groupshared uint _light_index_list[max_lights_per_group];
 
 ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<LightCullingDispatchParameters> shader_params : register(b1, space0);
+
 StructuredBuffer<Frustum> frustums : register(t0, space0);
 StructuredBuffer<LightCullingLightInfo> lights : register(t1, space0);
+StructuredBuffer<Sphere> bounding_spheres : register(t2, space0);
 
 RWStructuredBuffer<uint> light_index_counter : register(u0, space0);
 RWStructuredBuffer<uint2> light_grid_opaque : register(u1, space0);
@@ -70,15 +72,21 @@ void cull_lights_cs(ComputeShaderInput cs_in)
 
     for (i = cs_in.group_index; i < shader_params.num_lights; i += TILE_SIZE * TILE_SIZE)
     {
+        /*
         const LightCullingLightInfo light = lights[i];
         const float3 light_position_vs = mul(global_data.view, float4(light.position, 1.f)).xyz;
-        Sphere sphere = { light_position_vs, light.range };
+        */
+        
+        Sphere sphere = bounding_spheres[i]; // { light_position_vs, light.range };
+        sphere.center = mul(global_data.view, float4(sphere.center, 1.f)).xyz;
 
+        /*
         if (light.type == LIGHT_TYPE_SPOTLIGHT)
         {
             const float3 light_direction_vs = mul(global_data.view, float4(light.direction, 0.f)).xyz;
             sphere = get_cone_bounding_sphere(light_position_vs, light.range, light_direction_vs, light.cos_penumbra);
         }
+        */
         
         if (sphere_inside_frustum(sphere, frustum, min_depth_vs, max_depth_vs))
         {
