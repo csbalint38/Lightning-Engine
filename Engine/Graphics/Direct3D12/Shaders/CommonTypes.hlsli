@@ -50,10 +50,18 @@ struct Cone
     float radius;
 };
 
+#if USE_BOUNDING_SPHERES
+struct Frustum
+{
+    float3 cone_direction;
+    float unit_radius;
+};
+#else
 struct Frustum
 {
     Plane planes[4];
 };
+#endif
 
 #ifndef __cplusplus
 struct ComputeShaderInput

@@ -38,6 +38,21 @@ Sphere get_cone_bounding_sphere(float3 tip, float range, float3 direction, float
     return sphere;
 }
 
+bool intersects(Frustum frustum, Sphere sphere, float min_depth, float max_depth)
+{
+    if ((sphere.center.z - sphere.radius > min_depth) || (sphere.center.z + sphere.radius < max_depth))
+    {
+        return false;
+    }
+
+    const float3 light_rejection = sphere.center - dot(sphere.center, frustum.cone_direction) * frustum.cone_direction;
+    const float dist_sq = dot(light_rejection, light_rejection);
+    const float radius = sphere.center.z * frustum.unit_radius + sphere.radius;
+    const float radius_sq = radius * radius;
+    
+    return dist_sq <= radius_sq;
+}
+
 [numthreads(TILE_SIZE, TILE_SIZE, 1)]
 void cull_lights_cs(ComputeShaderInput cs_in)
 {
@@ -72,23 +87,11 @@ void cull_lights_cs(ComputeShaderInput cs_in)
 
     for (i = cs_in.group_index; i < shader_params.num_lights; i += TILE_SIZE * TILE_SIZE)
     {
-        /*
-        const LightCullingLightInfo light = lights[i];
-        const float3 light_position_vs = mul(global_data.view, float4(light.position, 1.f)).xyz;
-        */
         
-        Sphere sphere = bounding_spheres[i]; // { light_position_vs, light.range };
+        Sphere sphere = bounding_spheres[i];
         sphere.center = mul(global_data.view, float4(sphere.center, 1.f)).xyz;
-
-        /*
-        if (light.type == LIGHT_TYPE_SPOTLIGHT)
-        {
-            const float3 light_direction_vs = mul(global_data.view, float4(light.direction, 0.f)).xyz;
-            sphere = get_cone_bounding_sphere(light_position_vs, light.range, light_direction_vs, light.cos_penumbra);
-        }
-        */
         
-        if (sphere_inside_frustum(sphere, frustum, min_depth_vs, max_depth_vs))
+        if (intersects(frustum, sphere, min_depth_vs, max_depth_vs))
         {
             InterlockedAdd(_light_count, 1, index);
             if (index < max_lights_per_group)

@@ -33,6 +33,7 @@ bool cone_inside_plane(Cone cone, Plane plane)
     return point_inside_plane(cone.tip, plane) && point_inside_plane(Q, plane);
 }
 
+#if !USE_BOUNDING_SPHERES
 bool sphere_inside_frustum(Sphere sphere, Frustum frustum, float near_z, float far_z)
 {
     return !((sphere.center.z - sphere.radius > near_z || sphere.center.z + sphere.radius < far_z) || sphere_inside_plane(sphere, frustum.planes[0]) || sphere_inside_plane(sphere, frustum.planes[1]) || sphere_inside_plane(sphere, frustum.planes[2]) || sphere_inside_plane(sphere, frustum.planes[3]));
@@ -59,12 +60,20 @@ bool cone_inside_frustum(Cone cone, Frustum frustum, float near_z, float far_z)
 
     return true;
 }
+#endif
+
+float4 unproject_uv(float2 uv, float depth, float4x4 inverse)
+{
+    float4 clip = float4(float2(uv.x, 1.f - uv.y) * 2.f - 1.f, depth, 1.f);
+    float4 position = mul(inverse, clip);
+    
+    return position / position.w;
+}
 
 float4 clip_to_view(float4 clip, float4x4 inverse_projection)
 {
     float4 view = mul(inverse_projection, clip);
-    view /= view.w;
-    return view;
+    return view / view.w;
 }
 
 float4 screen_to_view(float4 screen, float2 inv_view_dimensions, float4x4 inverse_projection)

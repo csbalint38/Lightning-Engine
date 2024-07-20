@@ -22,7 +22,7 @@ namespace {
 	f32 random(f32 min = 0.f) { return std::max(min, rand() * inv_rand_max); }
 
 	void create_light(math::v3 position, math::v3 rotation, graphics::Light::Type type, u64 light_set_key) {
-		const char* script_name { type == graphics::Light::SPOT ? "RotatorScript" : nullptr };
+		const char* script_name{ nullptr }; //{ type == graphics::Light::SPOT ? "RotatorScript" : nullptr };
 		game_entity::entity_id entity_id{ create_one_game_entity(position, rotation, script_name).get_id() };
 
 		graphics::LightInitInfo info{};
@@ -101,9 +101,9 @@ void generate_lights() {
 	#else
 	srand(17);
 
-	constexpr f32 scale1{ 4 };
+	constexpr f32 scale1{ 1 };
 	constexpr math::v3 scale{ 1.f * scale1, .5f * scale1, 1.f * scale1};
-	constexpr s32 dim{ 8 };
+	constexpr s32 dim{ 20 };
 	for (s32 x{ -dim }; x < dim; ++x) {
 		for (s32 y{ 0 }; y < 2 * dim; ++y) {
 			for (s32 z{ -dim }; z < dim; ++z) {
