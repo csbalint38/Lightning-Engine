@@ -1,5 +1,5 @@
 import 'package:editor/common/mvvm/observer.dart';
-import 'package:editor/editors/world_editor.dart';
+import 'package:editor/editor.dart';
 import 'package:editor/game_project/controllers/open_project_controller.dart';
 import 'package:editor/game_project/new_project.dart';
 import 'package:editor/themes/themes.dart';

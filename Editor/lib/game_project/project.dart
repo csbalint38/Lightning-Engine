@@ -1,16 +1,23 @@
 import 'dart:io';
+import 'package:editor/common/mvvm/observable_list.dart';
+import 'package:editor/common/relay_command.dart';
 import 'package:editor/game_project/scene.dart';
+import 'package:editor/utilities/undo_redo.dart';
 import 'package:xml/xml.dart' as xml;
 
 class Project {
   static String extension = "lightning";
+  static final UndoRedo _undoRedo = UndoRedo();
 
   final String name;
   final String path;
-  final List<Scene> scenes = <Scene>[];
+  final ObservableList<Scene> scenes = ObservableList<Scene>();
   late Scene activeScene;
 
   late String fullPath;
+
+  late RelayCommand addScene;
+  late RelayCommand removeScene;
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
     fullPath = '$path\\$name.$extension';
@@ -25,6 +32,36 @@ class Project {
         }
       }
     }
+
+    addScene = RelayCommand(
+      (x) {
+        _addScene("New Scene ${this.scenes.length}");
+        Scene newScene = this.scenes.last;
+        int index = this.scenes.length - 1;
+        _undoRedo.add(
+          UndoRedoAction(
+            name: "Add ${newScene.name}",
+            undoAction: () => _removeScene(newScene),
+            redoAction: () => this.scenes.insert(index, newScene),
+          ),
+        );
+      },
+    );
+
+    removeScene = RelayCommand<Scene>(
+      (x) {
+        int index = this.scenes.indexOf(x);
+        _removeScene(x);
+        _undoRedo.add(
+          UndoRedoAction(
+            name: "Remove ${x.name}",
+            undoAction: () => this.scenes.insert(index, x),
+            redoAction: () => _removeScene(x),
+          ),
+        );
+      },
+      (x) => !x.isActive,
+    );
   }
 
   factory Project.fromXMLFile(File file) {
@@ -79,4 +116,12 @@ class Project {
   }
 
   void unload() {}
+
+  void _addScene(String sceneName) {
+    scenes.add(Scene(name: sceneName));
+  }
+
+  void _removeScene(Scene scene) {
+    scenes.remove(scene);
+  }
 }
