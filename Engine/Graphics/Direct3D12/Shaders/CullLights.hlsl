@@ -56,6 +56,27 @@ bool intersects(Frustum frustum, Sphere sphere, float min_depth, float max_depth
 [numthreads(TILE_SIZE, TILE_SIZE, 1)]
 void cull_lights_cs(ComputeShaderInput cs_in)
 {
+    // INITIALIZATION
+    //
+    // Coordinate system: right-handed
+    //
+    // Major projection matrices:
+    //
+    //  Projection                  Inverse projection:
+    //  |   A   0   0   0   |       |   1/A 0   0   0   |
+    //  |   0   B   0   0   |       |   0   1/B 0   0   |
+    //  |   0   0   C   D   |       |   0   0   0   -1  |
+    //  |   0   0   -1  0   |       |   0   0   1/D C/D |
+    //
+    // Transform position vector v from clip t oview space:
+    //
+    // q = mul(inverse_projection, v);
+    // v_view_space = q / q.w;
+    //
+    // z-component of v_view_space
+    //
+    // v_view_space = -D / (depth + C)
+    
     const float depth = Texture2D( ResourceDescriptorHeap[shader_params.depth_buffer_srv_index])[cs_in.dispatch_thread_id.xy].r;
     const float c = global_data.projection._m22;
     const float d = global_data.projection._m23;
@@ -71,6 +92,7 @@ void cull_lights_cs(ComputeShaderInput cs_in)
 
     uint i = 0, index = 0;
 
+    // DEPTH MIN/MAX
     GroupMemoryBarrierWithGroupSync();
 
     if (depth != 0)
@@ -80,6 +102,7 @@ void cull_lights_cs(ComputeShaderInput cs_in)
         InterlockedMax(_max_depth_vs, z);
     }
 
+    // LIGHT CULLING
     GroupMemoryBarrierWithGroupSync();
 
     const float min_depth_vs = -asfloat(_min_depth_vs);
@@ -101,6 +124,7 @@ void cull_lights_cs(ComputeShaderInput cs_in)
         }
     }
 
+    // UPDATE LIGHT GRID
     GroupMemoryBarrierWithGroupSync();
 
     const uint light_count = min(_light_count, max_lights_per_group);
@@ -111,6 +135,7 @@ void cull_lights_cs(ComputeShaderInput cs_in)
         light_grid_opaque[grid_index] = uint2(_light_index_start_offset, light_count);
     }
 
+    // UPDATE LIGHT INDEX LIST
     GroupMemoryBarrierWithGroupSync();
 
     for (i = cs_in.group_index; i < light_count; i += TILE_SIZE * TILE_SIZE)

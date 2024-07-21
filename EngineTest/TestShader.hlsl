@@ -88,8 +88,8 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     return vs_out;
 }
 
-#define TILE_SIZE 16
-#define NO_LIGHT_ATTENUATION 1
+#define TILE_SIZE 32 
+#define NO_LIGHT_ATTENUATION 0
 
 float3 calculate_lighting(float3 n, float3 l, float3 v, float3 light_color)
 {
@@ -120,6 +120,13 @@ float3 point_light(float3 n, float3 world_position, float3 v, LightParameters li
     }
     return color;
     #else
+    if (d_sq < light.range * light.range)
+    {
+        const float d_rcp = rsqrt(d_sq);
+        l *= d_rcp;
+        const float attenuation = 1.f - smoothstep(-light.range, light.range, rcp(d_rcp));
+        color = calculate_lighting(n, l, v, light.color * light.intensity * attenuation);
+    }
     return color;
     #endif
 }
@@ -137,10 +144,21 @@ float3 spotlight(float3 n, float3 world_position, float3 v, LightParameters ligh
         const float cos_angle_to_light = saturate(dot(-l, light.direction)); 
         const float angular_attenuation = float(light.cos_penumbra < cos_angle_to_light); 
         color = saturate(dot(n, l) * light.color * light.intensity * angular_attenuation * .2f);
-
     }
     return color;
     #else
+    
+    if (d_sq < light.range * light.range)
+    {
+        const float d_rcp = rsqrt(d_sq);
+        l *= d_rcp;
+        const float attenuation = 1.f - smoothstep(-light.range, light.range, rcp(d_rcp));
+        const float cos_angle_to_light = saturate(dot(-l, light.direction));
+        const float angular_attenuation = smoothstep(light.cos_penumbra, light.cos_umbra, cos_angle_to_light);
+        color = calculate_lighting(n, l, v, light.intensity * attenuation * angular_attenuation);
+
+    }
+    
     return color;
     #endif
 }
@@ -173,7 +191,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
             light_direction = global_data.camera_direction;
         }
         
-        color += .1f * calculate_lighting(normal, -light_direction, view_dir, light.color * light.intensity);
+        color += .02f * calculate_lighting(normal, -light_direction, view_dir, light.color * light.intensity);
     }
     
     const uint grid_index = get_grid_index(ps_in.homogeneous_position.xy, global_data.view_width);

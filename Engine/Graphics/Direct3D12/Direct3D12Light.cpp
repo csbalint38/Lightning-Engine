@@ -454,11 +454,14 @@ namespace lightning::graphics::direct3d12::light {
 				assert(info.type != Light::DIRECTIONAL && index < _culling_info.size());
 
 				const hlsl::LightParameters& params{ _cullable_lights[index] };
-				assert(params.type == info.type);
-
 				hlsl::LightCullingLightInfo& culling_info{ _culling_info[index] };
 				culling_info.range = _bounding_spheres[index].radius = params.range;
+
+				#if USE_BOUNDING_SPHERES
+				culling_info.cos_penumbra = -1.f;
+				#else
 				culling_info.type = params.type;
+				#endif
 
 				if (info.type == Light::SPOT) {
 

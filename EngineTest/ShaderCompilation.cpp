@@ -275,7 +275,7 @@ bool compile_shaders() {
 
 		if (file.id == EngineShader::GRID_FRUSTUMS_CS || file.id == EngineShader::LIGHT_CULLING_CS) {
 			extra_args.emplace_back(L"-D");
-			extra_args.emplace_back(L"TILE_SIZE=16");
+			extra_args.emplace_back(L"TILE_SIZE=32");
 		}
 
 		DxcCompiledShader compiled_shader{ compiler.compile(file.info, full_path, extra_args) };

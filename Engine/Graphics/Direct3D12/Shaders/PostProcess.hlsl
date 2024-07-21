@@ -5,7 +5,7 @@ struct ShaderConstants
     uint gpass_main_buffer_index;
 };
 
-#define TILE_SIZE 16
+#define TILE_SIZE 32
 
 ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<ShaderConstants> shader_params : register(b1, space0);
@@ -23,7 +23,13 @@ float4 heatmap(StructuredBuffer<uint2> buffer, float2 pos_xy, float blend)
 {
     const float w = global_data.view_width;
     const uint grid_index = get_grid_index(pos_xy, w);
-    const uint num_lights = buffer[grid_index].y;
+    uint num_lights = buffer[grid_index].y;
+    
+    #if USE_BOUNDING_SPHERES
+    const uint num_point_lights = num_lights >> 16;
+    const uint num_spot_lights = num_point_lights + (num_lights & 0xffff);
+    num_lights = num_point_lights + num_spot_lights;
+    #endif
     
     const float3 map_tex[] =
     {
@@ -52,6 +58,10 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     const float w = global_data.view_width;
     const uint grid_index = get_grid_index(position.xy, w);
     const Frustum f = frustums[grid_index];
+    
+    #if USE_BOUNDING_SPHERES
+    float3 color = abs(f.cone_direction);
+    #else
     const uint half_tile = TILE_SIZE / 2;
     float3 color = abs(f.planes[1].normal);
     
@@ -67,9 +77,10 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     {
         color = abs(f.planes[3].normal);
     }
+    #endif
     
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
-    color = lerp(gpass_main[position.xy].xyz, color, .8f);
+    color = lerp(gpass_main[position.xy].xyz, color, 1.f);
     
     return float4(color, 1.f);
      

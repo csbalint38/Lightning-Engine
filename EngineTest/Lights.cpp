@@ -3,7 +3,7 @@
 #include "EngineAPI/TransformComponent.h"
 #include "Graphics/Renderer.h"
 
-#define RANDOM_LIGHTS 0
+#define RANDOM_LIGHTS 1
 
 using namespace lightning;
 
@@ -107,8 +107,8 @@ void generate_lights() {
 	for (s32 x{ -dim }; x < dim; ++x) {
 		for (s32 y{ 0 }; y < 2 * dim; ++y) {
 			for (s32 z{ -dim }; z < dim; ++z) {
-				create_light({ (f32)(x * scale.x), (f32)(y * scale.y), (f32)(z * scale.z) }, {3.14f, random(), 0.f}, random() > .5f ? graphics::Light::SPOT : graphics::Light::POINT, left_set);
-				create_light({ (f32)(x * scale.x), (f32)(y * scale.y), (f32)(z * scale.z) }, {3.14f, random(), 0.f}, random() > .5f ? graphics::Light::SPOT : graphics::Light::POINT, right_set);
+				create_light({ (f32)(x * scale.x), (f32)(y * scale.y), (f32)(z * scale.z) }, { random() * 3.14f, random() * 3.14f,  random() * 3.14f }, random() > .5f ? graphics::Light::SPOT : graphics::Light::POINT, left_set);
+				create_light({ (f32)(x * scale.x), (f32)(y * scale.y), (f32)(z * scale.z) }, { random() * 3.14f, random() * 3.14f,  random() * 3.14f }, random() > .5f ? graphics::Light::SPOT : graphics::Light::POINT, right_set);
 			}
 		}
 	}
