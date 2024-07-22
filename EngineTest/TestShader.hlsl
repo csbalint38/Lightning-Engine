@@ -88,7 +88,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     return vs_out;
 }
 
-#define TILE_SIZE 32 
+#define TILE_SIZE 32
 #define NO_LIGHT_ATTENUATION 0
 
 float3 calculate_lighting(float3 n, float3 l, float3 v, float3 light_color)
@@ -199,7 +199,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     const uint light_count = light_grid[grid_index].y;
     
     #if USE_BOUNDING_SPHERES
-    const uint num_point_lights = light_start_index + (light_count << 16);
+    const uint num_point_lights = light_start_index + (light_count >> 16);
     const uint num_spotlights = num_point_lights + (light_count & 0xffff);
     
     for(i = light_start_index; i < num_point_lights; ++i) {
@@ -208,7 +208,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         color += point_light(normal, ps_in.world_position, view_dir, light);
     }
     
-    for(i = num_point_lights; i < num_spot_lights; ++i) {
+    for(i = num_point_lights; i < num_spotlights; ++i) {
         const uint light_index = light_index_list[i];
         LightParameters light = cullable_lights[light_index];
         color += spotlight(normal, ps_in.world_position, view_dir, light);
