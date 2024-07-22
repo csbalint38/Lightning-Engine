@@ -69,7 +69,7 @@ namespace lightning::tools {
 			ScratchImage scratch;
 
 			if (!file_exists(file_name)) {
-				data->import_error = ImportError::FILE_NOT_FOUND;
+				data->info.import_error = ImportError::FILE_NOT_FOUND;
 				return scratch;
 			}
 
@@ -83,7 +83,7 @@ namespace lightning::tools {
 				tga_flags |= TGA_FLAGS_IGNORE_SRGB;
 			}
 
-			const std::wstring wfile{ to_wstring(file_name) };
+			const std::wstring w_file{ to_wstring(file_name) };
 			const wchar_t* const file{ w_file.c_str() };
 
 			wic_flags |= WIC_FLAGS_FORCE_RGB;
@@ -120,16 +120,14 @@ namespace lightning::tools {
 		}
 	}
 
-	EDITOR_NTERFACE void decompress_mipmaps(TextureData* const data) {
-
-	}
+	EDITOR_INTERFACE void decompress_mipmaps(TextureData* const data);
 
 	EDITOR_INTERFACE void import(TextureData* const data) {
 		const TextureImportSettings& settings{ data->import_settings };
 		assert(settings.sources && settings.source_count);
 
 		util::vector<ScratchImage> scratch_images;
-		util::vectir<Image> images;
+		util::vector<Image> images;
 
 		u32 width{ 0 };
 		u32 height{ 0 };
