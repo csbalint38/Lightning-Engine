@@ -233,6 +233,9 @@ namespace lightning::graphics::direct3d12::light {
 				assert(index < _cullable_lights.size());
 				_cullable_lights[index].range = range;
 				_culling_info[index].range = range;
+				#if USE_BOUNDING_SPHERES
+				_culling_info[index].cos_penumbra = -1.f;
+				#endif
 				_bounding_spheres[index].radius = range;
 				make_dirty(index);
 
@@ -415,7 +418,7 @@ namespace lightning::graphics::direct3d12::light {
 				hlsl::LightCullingLightInfo& culling_info{ _culling_info[index] };
 				culling_info.position = _bounding_spheres[index].center = params.position;
 
-				if (params.type == graphics::Light::SPOT) {
+				if (_owners[_cullable_owners[index]].type == graphics::Light::SPOT) {
 					culling_info.direction = params.direction = entity.orientation();
 					calculate_cone_bounding_sphere(params, _bounding_spheres[index]);
 				}
@@ -429,17 +432,19 @@ namespace lightning::graphics::direct3d12::light {
 				assert(info.type != Light::DIRECTIONAL && index < _cullable_lights.size());
 
 				hlsl::LightParameters& params{ _cullable_lights[index] };
+				#if !USE_BOUNDING_SPHERES
 				params.type = info.type;
 				assert(params.type < Light::count);
+				#endif
 				params.color = info.color;
 				params.intensity = info.intensity;
 
-				if (params.type == Light::POINT) {
+				if (info.type == Light::POINT) {
 					const PointLightParams& p{ info.point_params };
 					params.attenuation = p.attenuation;
 					params.range = p.range;
 				}
-				else if (params.type == Light::SPOT) {
+				else if (info.type == Light::SPOT) {
 					const SpotLightParams& p{ info.spot_params };
 					params.attenuation = p.attenuation;
 					params.range = p.range;
@@ -450,7 +455,6 @@ namespace lightning::graphics::direct3d12::light {
 
 			CONSTEXPR void add_light_culling_info(const LightInitInfo& info, u32 index) {
 				using graphics::Light;
-
 				assert(info.type != Light::DIRECTIONAL && index < _culling_info.size());
 
 				const hlsl::LightParameters& params{ _cullable_lights[index] };

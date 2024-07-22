@@ -198,6 +198,22 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     uint light_start_index = light_grid[grid_index].x;
     const uint light_count = light_grid[grid_index].y;
     
+    #if USE_BOUNDING_SPHERES
+    const uint num_point_lights = light_start_index + (light_count << 16);
+    const uint num_spotlights = num_point_lights + (light_count & 0xffff);
+    
+    for(i = light_start_index; i < num_point_lights; ++i) {
+        const uint light_index = light_index_list[i];
+        LightParameters light = cullable_lights[light_index];
+        color += point_light(normal, ps_in.world_position, view_dir, light);
+    }
+    
+    for(i = num_point_lights; i < num_spot_lights; ++i) {
+        const uint light_index = light_index_list[i];
+        LightParameters light = cullable_lights[light_index];
+        color += spotlight(normal, ps_in.world_position, view_dir, light);
+    }
+    #else
     for (i = 0; i < light_count; ++i)
     {
         const uint light_index = light_index_list[light_start_index + i];
@@ -213,8 +229,9 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         }
 
     }
+    #endif
     
-     float3 ambient = 0 / 255.f;
+    float3 ambient = 0 / 255.f;
     ps_out.color = saturate(float4(color + ambient , 1.f));
     
     return ps_out;

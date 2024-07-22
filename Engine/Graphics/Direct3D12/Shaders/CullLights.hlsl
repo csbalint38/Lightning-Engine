@@ -9,6 +9,9 @@ groupshared uint _max_depth_vs;
 groupshared uint _light_count;
 groupshared uint _light_index_start_offset;
 groupshared uint _light_index_list[max_lights_per_group];
+groupshared uint _light_flags_opaque[max_lights_per_group];
+groupshared uint _spotlight_start_offset;
+groupshared uint2 _opaque_light_index;
 
 ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<LightCullingDispatchParameters> shader_params : register(b1, space0);
@@ -88,18 +91,31 @@ void cull_lights_cs(ComputeShaderInput cs_in)
         _min_depth_vs = 0x7f7fffff;
         _max_depth_vs = 0;
         _light_count = 0;
+        _opaque_light_index = 0;
     }
 
     uint i = 0, index = 0;
+    
+    for (i = cs_in.group_index; i < max_lights_per_group; i += TILE_SIZE * TILE_SIZE)
+    {
+        _light_flags_opaque[i] = 0;
+    }
 
     // DEPTH MIN/MAX
-    GroupMemoryBarrierWithGroupSync();
+        GroupMemoryBarrierWithGroupSync();
 
     if (depth != 0)
     {
-        const uint z = asuint(d / (depth + c));
-        InterlockedMin(_min_depth_vs, z);
-        InterlockedMax(_max_depth_vs, z);
+        const float depth_min = WaveActiveMax(depth);
+        const float depth_max = WaveActiveMin(depth);
+
+        if (WaveIsFirstLane())
+        {
+            const uint z_min = asuint(d / (depth_min + c));
+            const uint z_max = asuint(d / (depth_max + c));
+            InterlockedMin(_min_depth_vs, z_min);
+            InterlockedMax(_max_depth_vs, z_max);
+        }
     }
 
     // LIGHT CULLING
@@ -124,23 +140,68 @@ void cull_lights_cs(ComputeShaderInput cs_in)
         }
     }
 
-    // UPDATE LIGHT GRID
+    // LIGHT_PRUNING
     GroupMemoryBarrierWithGroupSync();
 
     const uint light_count = min(_light_count, max_lights_per_group);
+    const float2 inv_view_dimension = 1.f / float2(global_data.view_width, global_data.view_height);
+    const float3 pos = unproject_uv(cs_in.dispatch_thread_id.xy * inv_view_dimension, depth, global_data.inv_view_projection).xyz;
+    
+    for (i = 0; i < light_count; ++i)
+    {
+        index = _light_index_list[i];
+        const LightCullingLightInfo light = lights[index];
+        const float3 d = pos - light.position;
+        const float dist_sq = dot(d, d);
 
+        if (dist_sq <= light.range * light.range)
+        {
+            const bool is_point_light = light.cos_penumbra == -1.f;
+            
+            if (is_point_light || (dot(d * rsqrt(dist_sq), light.direction) >= light.cos_penumbra))
+            {
+                _light_flags_opaque[i] = 2 - uint(is_point_light);
+
+            }
+        }
+    }
+    
+    // UPDATE_LIGHT_GRID
+    GroupMemoryBarrierWithGroupSync();
+    
     if (cs_in.group_index == 0)
     {
-        InterlockedAdd(light_index_counter[0], light_count, _light_index_start_offset);
-        light_grid_opaque[grid_index] = uint2(_light_index_start_offset, light_count);
+        uint num_point_lights = 0;
+        uint num_spotlights = 0;
+        
+        for (i = 0; i < light_count; ++i)
+        {
+            num_point_lights += (_light_flags_opaque[i] & 1);
+            num_spotlights += (_light_flags_opaque[i] >> 1);
+        }
+        
+        InterlockedAdd(light_index_counter[0], num_point_lights + num_spotlights, _light_index_start_offset);
+        _spotlight_start_offset = _light_index_start_offset + num_point_lights;
+        light_grid_opaque[grid_index] = uint2(_light_index_start_offset, (num_point_lights << 16) | num_spotlights);
     }
 
     // UPDATE LIGHT INDEX LIST
     GroupMemoryBarrierWithGroupSync();
 
+    uint point_index, spot_index;
+    
     for (i = cs_in.group_index; i < light_count; i += TILE_SIZE * TILE_SIZE)
     {
-        light_index_list_opaque[_light_index_start_offset + i] = _light_index_list[i];
+        if (_light_flags_opaque[i] == 1)
+        {
+            InterlockedAdd(_opaque_light_index.x, 1, point_index);
+            light_index_list_opaque[_light_index_start_offset + point_index] = _light_index_list[i];
+        }
+        else if (_light_flags_opaque[i] == 2)
+        {
+            InterlockedAdd(_opaque_light_index.y, 1, spot_index);
+            light_index_list_opaque[_spotlight_start_offset + spot_index] = _light_index_list[i];
+        }
     }
 }
 

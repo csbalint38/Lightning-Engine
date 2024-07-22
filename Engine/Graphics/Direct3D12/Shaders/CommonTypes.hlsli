@@ -92,23 +92,26 @@ struct LightCullingLightInfo
     float cos_penumbra;
     #else
     float cone_radius;
-    #endif
     
     uint type;
     float3 _pad;
+    #endif
 };
 
 struct LightParameters {
     float3 position;
     float intensity;
     float3 direction;
-    uint type;
-    float3 color;
     float range;
-    float3 attenuation;
+    float3 color;
     float cos_umbra;
-    float cos_penumbra;
+    float3 attenuation;
+    float cos_penumbra; // If this is -1 light type is POINT
+    
+    #if !USE_BOUNDING_SPHERES
+    uint type;
     float3 _pad;
+    #endif
 };
 
 struct DirectionalLightParameters
