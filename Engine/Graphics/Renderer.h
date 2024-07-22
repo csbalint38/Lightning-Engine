@@ -240,6 +240,9 @@ namespace lightning::graphics {
 	id::id_type add_submesh(const u8*& data);
 	void remove_submesh(id::id_type id);
 
+	void create_light_set(u64 light_set_key);
+	void remove_light_set(u64 light_set_key);
+
 	Light create_light(LightInitInfo info);
 	void remove_light(light_id id, u64 light_set_key);
 

@@ -56,6 +56,14 @@ namespace lightning::graphics {
 		gfx.surface.render(_id, info);
 	}
 
+	void create_light_set(u64 light_set_key) {
+		gfx.light.create_light_set(light_set_key);
+	}
+
+	void remove_light_set(u64 light_set_key) {
+		gfx.light.remove_light_set(light_set_key);
+	}
+
 	Light create_light(LightInitInfo info) {
 		return gfx.light.create(info);
 	}
