@@ -18,6 +18,7 @@ namespace lightning::tools {
 				MIPMAP_GENERATION,
 				MAX_SIZE_EXCEEDED,
 				SIZE_MISMATCH,
+				FORMAT_MISMATCH,
 				FILE_NOT_FOUND
 			};
 		};
@@ -92,7 +93,7 @@ namespace lightning::tools {
 			info.array_size = metadata.IsVolumemap() ? (u32)metadata.depth : (u32)metadata.arraySize;
 			info.mip_levels = (u32)metadata.mipLevels;
 			set_or_clear_flags(info.flags, TextureFlags::HAS_ALPHA, HasAlpha(format));
-			set_or_clear_flags(info.flags, TextureFlags::IS_HDR, format == DXGI_FORMAT_BC6H_UF_16 || format == DXGI_FORMAT_BC6H_SF16);
+			set_or_clear_flags(info.flags, TextureFlags::IS_HDR, format == DXGI_FORMAT_BC6H_UF16 || format == DXGI_FORMAT_BC6H_SF16);
 			set_or_clear_flags(info.flags, TextureFlags::IS_CUBE_MAP, metadata.IsCubemap());
 			set_or_clear_flags(info.flags, TextureFlags::IS_VOLUME_MAP, metadata.IsVolumemap());
 		}
@@ -116,7 +117,7 @@ namespace lightning::tools {
 			}
 
 			data->subresource_size = (u32)subresource_size;
-			data->subresource_data = (u8* const)CoTaskMemRealloc(data->subresource_data, subresource_slice);
+			data->subresource_data = (u8* const)CoTaskMemRealloc(data->subresource_data, subresource_size);
 			assert(data->subresource_data);
 
 			util::BlobStreamWriter blob{ data->subresource_data, data->subresource_size };
@@ -211,19 +212,19 @@ namespace lightning::tools {
 
 			ScratchImage scratch;
 			HRESULT hr{ S_OK };
-			const u32 array_size{ (u32)imagessize() };
+			const u32 array_size{ (u32)images.size() };
 
 			{
 				ScratchImage working_scratch{};
 
-				if (settings.dimension == TextureDimension::TEXTURE_1D || settings.dimension == TextureDimnsion::TEXTURE_2D) {
+				if (settings.dimension == TextureDimension::TEXTURE_1D || settings.dimension == TextureDimension::TEXTURE_2D) {
 					const bool allow_1d{ settings.dimension == TextureDimension::TEXTURE_1D };
 
 					if (array_size > 1) {
 						hr = working_scratch.InitializeArrayFromImages(images.data(), images.size(), allow_1d);
 					}
 					else {
-						assert(array_size == 1 && images.size = 1);
+						assert(array_size == 1 && images.size() == 1);
 						hr = working_scratch.InitializeFromImage(images[0], allow_1d);
 					}
 				}
