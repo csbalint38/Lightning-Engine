@@ -68,13 +68,13 @@ namespace lightning::tools {
 			TextureImportSettings import_settings;
 		};
 
-		struct D3D12Device {
-			ComPTR<ID3D12Device> device;
+		struct D3D11Device {
+			ComPtr<ID3D11Device> device;
 			std::mutex hw_compression_mutex;
 		};
 
 		std::mutex device_creation_mutex;
-		util::vector<D3D12Device> d3d12_devices;
+		util::vector<D3D11Device> d3d11_devices;
 
 		bool get_dxgi_factory(IDXGIFactory1** factory) {
 			if (!factory) return false;
@@ -85,7 +85,7 @@ namespace lightning::tools {
 			static PFN_CreateDXGIFactory1 create_dxgi_factory_1{ nullptr };
 
 			if (!create_dxgi_factory_1) {
-				HMODULE dxgi_module{ LoadLobrary(L"dxgi.dll") };
+				HMODULE dxgi_module{ LoadLibrary(L"dxgi.dll") };
 
 				if (!dxgi_module) return false;
 
@@ -98,7 +98,7 @@ namespace lightning::tools {
 		}
 
 		void create_device() {
-			if (d3d12_devices.size()) return;
+			if (d3d11_devices.size()) return;
 
 			util::vector<ComPtr<IDXGIAdapter>> adapters;
 			ComPtr<IDXGIFactory1> factory;
@@ -129,7 +129,7 @@ namespace lightning::tools {
 			static PFN_D3D11_CREATE_DEVICE d3d11_create_device{ nullptr };
 
 			if (!d3d11_create_device) {
-				HMODULE d3d11_module{ LoadLobrary(L"d3d11.dll") };
+				HMODULE d3d11_module{ LoadLibrary(L"d3d11.dll") };
 
 				if (!d3d11_module) return;
 
@@ -146,7 +146,7 @@ namespace lightning::tools {
 			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
 			constexpr D3D_FEATURE_LEVEL feature_levels[]{ D3D_FEATURE_LEVEL_11_0 };
 
-			for (u32 i{ 0 }; i < atapters.size(); ++i) {
+			for (u32 i{ 0 }; i < adapters.size(); ++i) {
 				ID3D11Device** device{ &devices[i] };
 				D3D_FEATURE_LEVEL feature_level;
 				[[maybe_unused]] HRESULT hr{ d3d11_create_device(adapters[i].Get(), adapters[i] ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE, nullptr, create_device_flags, feature_levels, _countof(feature_levels), D3D11_SDK_VERSION, device, &feature_level, nullptr) };
@@ -365,18 +365,18 @@ namespace lightning::tools {
 			return scratch;
 		}
 
-		DXGI_FORMAT determine_output_format() {
+		DXGI_FORMAT determine_output_format(TextureData* const data, ScratchImage& scratch, const Image* const image) {
 			using namespace lightning::content;
 
 			assert(data && data->import_settings.compress);
-			const DGXI_FORMAT image_format{ image->format };
+			const DXGI_FORMAT image_format{ image->format };
 			TextureImportSettings& settings{ data->import_settings };
 
 			if (settings.output_format != DXGI_FORMAT_UNKNOWN) {
 				goto _done;
 			}
 
-			if (data->info - flags & TextureFlags::IS_HDR || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
+			if (data->info.flags & TextureFlags::IS_HDR || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
 				settings.output_format == DXGI_FORMAT_BC6H_UF16;
 			}
 			else if (image_format == DXGI_FORMAT_R8_UNORM || image_format == DXGI_FORMAT_BC4_UNORM || image_format == DXGI_FORMAT_BC4_SNORM) {
@@ -395,7 +395,7 @@ namespace lightning::tools {
 			}
 
 			_done:
-				assert(IsCompresed((DXGI_FORMAT)settings.output_format));
+				assert(IsCompressed((DXGI_FORMAT)settings.output_format));
 				if (HasAlpha((DXGI_FORMAT)settings.output_format)) data->info.flags |= TextureFlags::HAS_ALPHA;
 
 				return IsSRGB(image->format) ? MakeSRGB((DXGI_FORMAT)settings.output_format) : (DXGI_FORMAT)settings.output_format;
@@ -417,7 +417,7 @@ namespace lightning::tools {
 						create_device();
 					}
 
-					return d3d12_devices.size() > 0;
+					return d3d11_devices.size() > 0;
 				}
 			}
 
@@ -425,7 +425,7 @@ namespace lightning::tools {
 		}
 
 		[[nodiscard]] ScratchImage compress_image(TextureData* const data, ScratchImage& scratch) {
-			assert(data && data->import_settings.compress && scratch.getImages());
+			assert(data && data->import_settings.compress && scratch.GetImages());
 			const Image* const image{ scratch.GetImage(0, 0, 0) };
 
 			if (!image) {
@@ -442,8 +442,8 @@ namespace lightning::tools {
 
 				while (wait) {
 					for (u32 i{ 0 }; i < d3d11_devices.size(); ++i) {
-						if (d3d11_cevices[i].hw_compression_mutex.try_lock()) {
-							hr = Compress(d3d11_devices[i].device.Get(), scratch.GetImages, scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch);
+						if (d3d11_devices[i].hw_compression_mutex.try_lock()) {
+							hr = Compress(d3d11_devices[i].device.Get(), scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch);
 							d3d11_devices[i].hw_compression_mutex.unlock();
 							wait = false;
 							break;
@@ -453,7 +453,7 @@ namespace lightning::tools {
 				}
 			}
 			else {
-				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALELL, data->import_settings.alpha_threshold, bc_scratch);
+				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
 			}
 
 			if (FAILED(hr)) {
@@ -461,7 +461,7 @@ namespace lightning::tools {
 				return {};
 			}
 
-			return bc_scatch;
+			return bc_scratch;
 		}
 	}
 

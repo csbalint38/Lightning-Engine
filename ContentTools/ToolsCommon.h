@@ -6,7 +6,7 @@
 #define NOMINMAX
 #endif
 
-#include <wrl.>
+#include <wrl.h>
 
 #ifndef EDITOR_INTERFACE
 #define EDITOR_INTERFACE extern "C" __declspec(dllexport)
