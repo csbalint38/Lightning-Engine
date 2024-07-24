@@ -1,7 +1,12 @@
 #pragma once
 
-#include <combaseapi.h>
 #include "CommonHeaders.h"
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#include <wrl.>
 
 #ifndef EDITOR_INTERFACE
 #define EDITOR_INTERFACE extern "C" __declspec(dllexport)

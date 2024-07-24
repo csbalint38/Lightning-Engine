@@ -4,8 +4,12 @@
 #include <directXTex.h>
 
 using namespace DirectX;
+using namespace Microsoft::WRL;
 
 namespace lightning::tools {
+
+	bool is_normal_map(const Image* const image) { return false; }
+
 	namespace {
 
 		struct ImportError {
@@ -62,6 +66,99 @@ namespace lightning::tools {
 			TextureInfo info;
 			TextureImportSettings import_settings;
 		};
+
+		struct D3D12Device {
+			ComPTR<ID3D12Device> device;
+			std::mutex hw_compression_mutex;
+		};
+
+		std::mutex device_creation_mutex;
+		util::vector<D3D12Device> d3d12_devices;
+
+		bool get_dxgi_factory(IDXGIFactory1** factory) {
+			if (!factory) return false;
+
+			*factory = nullptr;
+
+			using PFN_CreateDXGIFactory1 = HRESULT(WINAPI*)(REFIID, void**);
+			static PFN_CreateDXGIFactory1 create_dxgi_factory_1{ nullptr };
+
+			if (!create_dxgi_factory_1) {
+				HMODULE dxgi_module{ LoadLobrary(L"dxgi.dll") };
+
+				if (!dxgi_module) return false;
+
+				create_dxgi_factory_1 = (PFN_CreateDXGIFactory1)((void*)GetProcAddress(dxgi_module, "CreateDXGIFactory1"));
+
+				if (!create_dxgi_factory_1) return false;
+			}
+
+			return SUCCEEDED(create_dxgi_factory_1(IID_PPV_ARGS(factory)));
+		}
+
+		void create_device() {
+			if (d3d12_devices.size()) return;
+
+			util::vector<ComPtr<IDXGIAdapter>> adapters;
+			ComPtr<IDXGIFactory1> factory;
+
+			if (get_dxgi_factory(factory.GetAddressOf())) {
+				constexpr u32 amd_id{ 0x1002 };
+				constexpr u32 nvidia_id{ 0x10de };
+				[[maybe_unused]] constexpr u32 intel_id{ 0x8086 };
+				constexpr u32 wrap_id{ 0x1414 };
+
+				ComPtr<IDXGIAdapter> adapter;
+				for (u32 i{ 0 }; factory->EnumAdapters(i, adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i) {
+					if (!adapter) continue;
+
+					DXGI_ADAPTER_DESC desc;
+					adapter->GetDesc(&desc);
+
+					if (desc.VendorId != wrap_id) adapters.emplace_back(adapter);
+
+					if ((desc.VendorId == amd_id || desc.VendorId == nvidia_id) && adapters.size() > 1) {
+						adapters.back().Swap(adapters.front());
+					}
+
+					adapter.Reset();
+				}
+			}
+
+			static PFN_D3D11_CREATE_DEVICE d3d11_create_device{ nullptr };
+
+			if (!d3d11_create_device) {
+				HMODULE d3d11_module{ LoadLobrary(L"d3d11.dll") };
+
+				if (!d3d11_module) return;
+
+				d3d11_create_device = (PFN_D3D11_CREATE_DEVICE)((void*)GetProcAddress(d3d11_module, "D3D11CreateDevice"));
+
+				if (!d3d11_create_device) return;
+			}
+
+			u32 create_device_flags{ 0 };
+			#ifdef _DEBUG
+			create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
+			#endif
+
+			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
+			constexpr D3D_FEATURE_LEVEL feature_levels[]{ D3D_FEATURE_LEVEL_11_0 };
+
+			for (u32 i{ 0 }; i < atapters.size(); ++i) {
+				ID3D11Device** device{ &devices[i] };
+				D3D_FEATURE_LEVEL feature_level;
+				[[maybe_unused]] HRESULT hr{ d3d11_create_device(adapters[i].Get(), adapters[i] ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE, nullptr, create_device_flags, feature_levels, _countof(feature_levels), D3D11_SDK_VERSION, device, &feature_level, nullptr) };
+				assert(SUCCEEDED(hr));
+			}
+
+			for (u32 i{ 0 }; i < devices.size(); ++i) {
+				if (devices[i]) {
+					d3d11_devices.emplace_back();
+					d3d11_devices.back().device = devices[i];
+				}
+			}
+		}
 
 		constexpr void set_or_clear_flags(u32& flags, u32 flag, bool set) {
 			if (set) flags |= flag;
@@ -266,6 +363,109 @@ namespace lightning::tools {
 
 			return scratch;
 		}
+
+		DXGI_FORMAT determine_output_format() {
+			using namespace lightning::content;
+
+			assert(data && data->import_settings.compress);
+			const DGXI_FORMAT image_format{ image->format };
+			TextureImportSettings& settings{ data->import_settings };
+
+			if (settings.output_format != DXGI_FORMAT_UNKNOWN) {
+				goto _done;
+			}
+
+			if (data->info - flags & TextureFlags::IS_HDR || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
+				settings.output_format == DXGI_FORMAT_BC6H_UF16;
+			}
+			else if (image_format == DXGI_FORMAT_R8_UNORM || image_format == DXGI_FORMAT_BC4_UNORM || image_format == DXGI_FORMAT_BC4_SNORM) {
+				settings.output_format == DXGI_FORMAT_BC4_UNORM;
+			}
+			else if (is_normal_map(image) || image_format == DXGI_FORMAT_BC5_UNORM || image_format == DXGI_FORMAT_BC5_SNORM) {
+				data->info.flags |= TextureFlags::IS_IMPORTED_AS_NORMAL_MAP;
+				settings.output_format == DXGI_FORMAT_BC5_UNORM;
+
+				if (IsSRGB(image_format)) {
+					scratch.OverrideFormat(MakeTypelessUNORM(MakeTypeless(image_format)));
+				}
+			}
+			else {
+				settings.output_format = settings.prefer_bc7 ? DXGI_FORMAT_BC7_UNORM : DXGI_FORMAT_BC3_UNORM;
+			}
+
+			_done:
+				assert(IsCompresed((DXGI_FORMAT)settings.output_format));
+				if (HasAlpha((DXGI_FORMAT)settings.output_format)) data->info.flags |= TextureFlags::HAS_ALPHA;
+
+				return IsSRGB(image->format) ? MakeSRGB((DXGI_FORMAT)settings.output_format) : (DXGI_FORMAT)settings.output_format;
+		}
+
+		bool can_use_gpu(DXGI_FORMAT format) {
+			switch (format) {
+				case DXGI_FORMAT_BC6H_TYPELESS:
+				case DXGI_FORMAT_BC6H_UF16:
+				case DXGI_FORMAT_BC6H_SF16:
+				case DXGI_FORMAT_BC7_TYPELESS:
+				case DXGI_FORMAT_BC7_UNORM:
+				case DXGI_FORMAT_BC7_UNORM_SRGB: {
+					std::lock_guard lock{ device_creation_mutex };
+					static bool try_once = false;
+
+					if (!try_once) {
+						try_once = true;
+						create_device();
+					}
+
+					return d3d12_devices.size() > 0;
+				}
+			}
+
+			return false;
+		}
+
+		[[nodiscard]] ScratchImage compress_image(TextureData* const data, ScratchImage& scratch) {
+			assert(data && data->import_settings.compress && scratch.getImages());
+			const Image* const image{ scratch.GetImage(0, 0, 0) };
+
+			if (!image) {
+				data->info.import_error = ImportError::UNKNOWN;
+				return {};
+			}
+
+			const DXGI_FORMAT output_format{ determine_output_format(data, scratch, image) };
+			HRESULT hr{ S_OK };
+			ScratchImage bc_scratch;
+			
+			if (can_use_gpu(output_format)) {
+				bool wait{ true };
+
+				while (wait) {
+					for (u32 i{ 0 }; i < d3d11_devices.size(); ++i) {
+						if (d3d11_cevices[i].hw_compression_mutex.try_lock()) {
+							hr = Compress(d3d11_devices[i].device.Get(), scratch.GetImages, scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch);
+							d3d11_devices[i].hw_compression_mutex.unlock();
+							wait = false;
+							break;
+						}
+					}
+					if (wait) std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				}
+			}
+			else {
+				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALELL, data->import_settings.alpha_threshold, bc_scratch);
+			}
+
+			if (FAILED(hr)) {
+				data->info.import_error = ImportError::COMPRESS;
+				return {};
+			}
+
+			return bc_scatch;
+		}
+	}
+
+	void shutdown_texture_tools() {
+		d3d11_devices.clear();
 	}
 
 	EDITOR_INTERFACE void decompress_mipmaps(TextureData* const data);
