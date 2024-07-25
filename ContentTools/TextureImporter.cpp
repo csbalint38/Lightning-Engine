@@ -2,6 +2,7 @@
 #include "Content/ContentToEngine.h"
 #include "Utilities/IOStream.h"
 #include <directXTex.h>
+#include <dxgi1_6.h>
 
 using namespace DirectX;
 using namespace Microsoft::WRL;
@@ -38,7 +39,6 @@ namespace lightning::tools {
 			u32 source_count;
 			u32 dimension;
 			u32 mip_levels;
-			u32 array_size;
 			f32 alpha_threshold;
 			u32 prefer_bc7;
 			u32 output_format;
@@ -73,41 +73,28 @@ namespace lightning::tools {
 		std::mutex device_creation_mutex;
 		util::vector<D3D12Device> d3d11_devices;
 
-		bool get_dxgi_factory(IDXGIFactory1** factory) {
-			if (!factory) return false;
-
-			*factory = nullptr;
-
+		util::vector<ComPtr<IDXGIAdapter>> get_adapters_by_performance() {
 			using PFN_CreateDXGIFactory1 = HRESULT(WINAPI*)(REFIID, void**);
 			static PFN_CreateDXGIFactory1 create_dxgi_factory_1{ nullptr };
 
 			if (!create_dxgi_factory_1) {
 				HMODULE dxgi_module{ LoadLibrary(L"dxgi.dll") };
 
-				if (!dxgi_module) return false;
+				if (!dxgi_module) return {};
 
 				create_dxgi_factory_1 = (PFN_CreateDXGIFactory1)((void*)GetProcAddress(dxgi_module, "CreateDXGIFactory1"));
 
-				if (!create_dxgi_factory_1) return false;
+				if (!create_dxgi_factory_1) return {};
 			}
 
-			return SUCCEEDED(create_dxgi_factory_1(IID_PPV_ARGS(factory)));
-		}
-
-		void create_device() {
-			if (d3d11_devices.size()) return;
-
+			ComPtr<IDXGIFactory7> factory;
 			util::vector<ComPtr<IDXGIAdapter>> adapters;
-			ComPtr<IDXGIFactory1> factory;
 
-			if (get_dxgi_factory(factory.GetAddressOf())) {
-				constexpr u32 amd_id{ 0x1002 };
-				constexpr u32 nvidia_id{ 0x10de };
-				[[maybe_unused]] constexpr u32 intel_id{ 0x8086 };
-				constexpr u32 wrap_id{ 0x1414 };
+			if (SUCCEEDED(create_dxgi_factory1(IID_PPV_ARGS(factory.GetAddressOf())))) {
+				constexpr u32 warp_id{ 0x1414 };
 
 				ComPtr<IDXGIAdapter> adapter;
-				for (u32 i{ 0 }; factory->EnumAdapters(i, adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND; ++i) {
+				for (u32 i{ 0 }; factory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
 					if (!adapter) continue;
 
 					DXGI_ADAPTER_DESC desc;
@@ -115,13 +102,17 @@ namespace lightning::tools {
 
 					if (desc.VendorId != wrap_id) adapters.emplace_back(adapter);
 
-					if ((desc.VendorId == amd_id || desc.VendorId == nvidia_id) && adapters.size() > 1) {
-						adapters.back().Swap(adapters.front());
-					}
-
 					adapter.Reset();
 				}
 			}
+
+			return adapters;
+		}
+
+		void create_device() {
+			if (d3d12_devices.size()) return;
+
+			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapter_by_performance() };
 
 			static PFN_D3D11_CREATE_DEVICE d3d11_create_device{ nullptr };
 
@@ -136,9 +127,9 @@ namespace lightning::tools {
 			}
 
 			u32 create_device_flags{ 0 };
-#ifdef _DEBUG
+			#ifdef _DEBUG
 			create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+			#endif
 
 			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
 			constexpr D3D_FEATURE_LEVEL feature_levels[]{ D3D_FEATURE_LEVEL_11_0 };
@@ -266,12 +257,16 @@ namespace lightning::tools {
 			return images;
 		}
 
-		void copy_icon(const ScratchImage& scratch, TextureData* const data) {
-			const Image* const images{ scratch.GetImages() };
-			const u32 image_count{ (u32)scratch.GetImageCount() };
-			assert(images && image_count);
+		void copy_icon(const Image& bc_image, TextureData* const data) {
+			ScratchImage scratch;
 
-			const Image& image{ images[0] };
+			if (FAILED(Decompress(bc_image, DXGI_FORMAT_UNKNOWN, scratch))) {
+				return;
+			}
+
+			assert(scratch.GetImages());
+			const Image& const images{ scratch.GetImages()[0] };
+
 			data->icon_size = (u32)(sizeof(u32) * 4 + image.slicePitch);
 			data->icon = (u8* const)CoTaskMemRealloc(data->icon, data->icon_size);
 			assert(data->icon);
@@ -287,11 +282,10 @@ namespace lightning::tools {
 			using namespace lightning::content;
 
 			assert(file_exists(file_name));
-			ScratchImage scratch;
 
 			if (!file_exists(file_name)) {
 				data->info.import_error = ImportError::FILE_NOT_FOUND;
-				return scratch;
+				return {};
 			}
 
 			data->info.import_error = ImportError::LOAD;
@@ -306,6 +300,7 @@ namespace lightning::tools {
 
 			const std::wstring w_file{ to_wstring(file_name) };
 			const wchar_t* const file{ w_file.c_str() };
+			ScratchImage scratch;
 
 			wic_flags |= WIC_FLAGS_FORCE_RGB;
 			HRESULT hr{ LoadFromWICFile(file, wic_flags, nullptr, scratch) };
@@ -353,17 +348,12 @@ namespace lightning::tools {
 
 				if (settings.dimension == TextureDimension::TEXTURE_1D || settings.dimension == TextureDimension::TEXTURE_2D) {
 					const bool allow_1d{ settings.dimension == TextureDimension::TEXTURE_1D };
+					assert(array_size >= 1);
+					hr = working_scratch.InitializeArrayFromImages(images.data(), images.size(), allow_1d);
 
-					if (array_size > 1) {
-						hr = working_scratch.InitializeArrayFromImages(images.data(), images.size(), allow_1d);
-					}
-					else {
-						assert(array_size == 1 && images.size() == 1);
-						hr = working_scratch.InitializeFromImage(images[0], allow_1d);
-					}
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
-					assert(array_size % 6 == 0);
+					assert((array_size % 6) == 0);
 					hr = working_scratch.InitializeCubeFromImages(images.data(), images.size());
 				}
 				else {
@@ -406,36 +396,36 @@ namespace lightning::tools {
 			using namespace lightning::content;
 
 			assert(data && data->import_settings.compress);
-			const DXGI_FORMAT image_format{ image->format };
-			TextureImportSettings& settings{ data->import_settings };
+			const DGXI_FORMAT image_format{ image->format };
+			DXGI_FORMAT output_format{ (DXGI_FORMAT)data->import_settings.output_format };
 
-			if (settings.output_format != DXGI_FORMAT_UNKNOWN) {
+			if (output_format != DXGI_FORMAT_UNKNOWN) {
 				goto _done;
 			}
 
-			if (data->info.flags & TextureFlags::IS_HDR || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
-				settings.output_format == DXGI_FORMAT_BC6H_UF16;
+			if ((data->info - flags & TextureFlags::IS_HDR) || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
+				output_format == DXGI_FORMAT_BC6H_UF16;
 			}
 			else if (image_format == DXGI_FORMAT_R8_UNORM || image_format == DXGI_FORMAT_BC4_UNORM || image_format == DXGI_FORMAT_BC4_SNORM) {
-				settings.output_format == DXGI_FORMAT_BC4_UNORM;
+				output_format == DXGI_FORMAT_BC4_UNORM;
 			}
 			else if (is_normal_map(image) || image_format == DXGI_FORMAT_BC5_UNORM || image_format == DXGI_FORMAT_BC5_SNORM) {
 				data->info.flags |= TextureFlags::IS_IMPORTED_AS_NORMAL_MAP;
-				settings.output_format == DXGI_FORMAT_BC5_UNORM;
+				output_format == DXGI_FORMAT_BC5_UNORM;
 
 				if (IsSRGB(image_format)) {
 					scratch.OverrideFormat(MakeTypelessUNORM(MakeTypeless(image_format)));
 				}
 			}
 			else {
-				settings.output_format = settings.prefer_bc7 ? DXGI_FORMAT_BC7_UNORM : DXGI_FORMAT_BC3_UNORM;
+				output_format = settings.prefer_bc7 ? DXGI_FORMAT_BC7_UNORM : scratch.IsAlphaAllOpaque() ? DXGI_FORMAT_BC1_UNORM : DXGI_FORMAT_BC3_UNORM;
 			}
 
 		_done:
-			assert(IsCompressed((DXGI_FORMAT)settings.output_format));
-			if (HasAlpha((DXGI_FORMAT)settings.output_format)) data->info.flags |= TextureFlags::HAS_ALPHA;
+			assert(IsCompresed(output_format));
+			if (HasAlpha((DXGI_FORMAT)output_format)) data->info.flags |= TextureFlags::HAS_ALPHA;
 
-			return IsSRGB(image->format) ? MakeSRGB((DXGI_FORMAT)settings.output_format) : (DXGI_FORMAT)settings.output_format;
+			return IsSRGB(image_format) ? MakeSRGB()output_format) : output_format;
 		}
 
 		bool can_use_gpu(DXGI_FORMAT format) {
@@ -506,7 +496,7 @@ namespace lightning::tools {
 		d3d11_devices.clear();
 	}
 
-	EDITOR_INTERFACE void decompress_mipmaps(TextureData* const data) {
+	EDITOR_INTERFACE void decompress(TextureData* const data) {
 		using namespace lightning::content;
 		assert(data->import_settings.compress);
 		TextureInfo& info{ data->info };
@@ -603,11 +593,13 @@ namespace lightning::tools {
 		if (data->info.import_error) return;
 
 		if (settings.compress) {
-			copy_icon(scratch, data);
 			ScratchImage bc_scratch{};
 
 			if (data->info.import_error) return;
 
+			assert(bc_scratch.GetImages());
+			copy_icon(bc_scratch.GetImages()[0], data);
+			
 			scratch = std::move(bc_scratch);
 		}
 
