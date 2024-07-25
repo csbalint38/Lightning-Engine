@@ -50,7 +50,7 @@ class _EditorState extends State<Editor> with WindowListener {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           return Scaffold(
-            body: WorldEdotor(project: project),
+            body: WorldEditor(project: project),
           );
         } else {
           return const Center(child: CircularProgressIndicator());
