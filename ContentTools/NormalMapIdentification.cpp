@@ -19,7 +19,7 @@ namespace lightning::tools {
 		struct Color {
 			f32 r, g, b, a;
 			bool is_transparent() const { return a < .001f; }
-			bool is_black() const { return r < .001f && g < .001f, && b < .001f; }
+			bool is_black() const { return r < .001f && g < .001f && b < .001f; }
 
 			Color operator+(Color c) {
 				r += c.r;
@@ -57,8 +57,8 @@ namespace lightning::tools {
 			return c * inv_255;
 		}
 
-		s32 evaluete_color(Color c) {
-			if (c.is_black() || c.is_transparent()) reurn 0;
+		s32 evaluate_color(Color c) {
+			if (c.is_black() || c.is_transparent()) return 0;
 
 			math::v3 v{ c.r * 2.f - 1.f, c.g * 2.f - 1.f, c.b * 2.f - 1.f };
 			const f32 v_length_sq{ v.x * v.x + v.y * v.y + v.z * v.z };
@@ -81,7 +81,7 @@ namespace lightning::tools {
 
 			while (offset < image_size) {
 				const Color c{ sample(&pixels[offset]) };
-				cosnt s32 result{ evaluate_color(c) };
+				const s32 result{ evaluate_color(c) };
 
 				if (result < 0) {
 					++rejected_samples;

@@ -8,6 +8,9 @@ using namespace DirectX;
 using namespace Microsoft::WRL;
 
 namespace lightning::tools {
+
+	bool is_normal_map(const Image* const image);
+
 	namespace {
 
 		struct ImportError {
@@ -90,7 +93,7 @@ namespace lightning::tools {
 			ComPtr<IDXGIFactory7> factory;
 			util::vector<ComPtr<IDXGIAdapter>> adapters;
 
-			if (SUCCEEDED(create_dxgi_factory1(IID_PPV_ARGS(factory.GetAddressOf())))) {
+			if (SUCCEEDED(create_dxgi_factory_1(IID_PPV_ARGS(factory.GetAddressOf())))) {
 				constexpr u32 warp_id{ 0x1414 };
 
 				ComPtr<IDXGIAdapter> adapter;
@@ -100,7 +103,7 @@ namespace lightning::tools {
 					DXGI_ADAPTER_DESC desc;
 					adapter->GetDesc(&desc);
 
-					if (desc.VendorId != wrap_id) adapters.emplace_back(adapter);
+					if (desc.VendorId != warp_id) adapters.emplace_back(adapter);
 
 					adapter.Reset();
 				}
@@ -110,9 +113,9 @@ namespace lightning::tools {
 		}
 
 		void create_device() {
-			if (d3d12_devices.size()) return;
+			if (d3d11_devices.size()) return;
 
-			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapter_by_performance() };
+			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapters_by_performance() };
 
 			static PFN_D3D11_CREATE_DEVICE d3d11_create_device{ nullptr };
 
@@ -265,7 +268,7 @@ namespace lightning::tools {
 			}
 
 			assert(scratch.GetImages());
-			const Image& const images{ scratch.GetImages()[0] };
+			const Image& image{ scratch.GetImages()[0] };
 
 			data->icon_size = (u32)(sizeof(u32) * 4 + image.slicePitch);
 			data->icon = (u8* const)CoTaskMemRealloc(data->icon, data->icon_size);
@@ -396,36 +399,36 @@ namespace lightning::tools {
 			using namespace lightning::content;
 
 			assert(data && data->import_settings.compress);
-			const DGXI_FORMAT image_format{ image->format };
+			const DXGI_FORMAT image_format{ image->format };
 			DXGI_FORMAT output_format{ (DXGI_FORMAT)data->import_settings.output_format };
 
 			if (output_format != DXGI_FORMAT_UNKNOWN) {
 				goto _done;
 			}
 
-			if ((data->info - flags & TextureFlags::IS_HDR) || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
-				output_format == DXGI_FORMAT_BC6H_UF16;
+			if ((data->info.flags & TextureFlags::IS_HDR) || image_format == DXGI_FORMAT_BC6H_UF16 || image_format == DXGI_FORMAT_BC6H_SF16) {
+				output_format = DXGI_FORMAT_BC6H_UF16;
 			}
 			else if (image_format == DXGI_FORMAT_R8_UNORM || image_format == DXGI_FORMAT_BC4_UNORM || image_format == DXGI_FORMAT_BC4_SNORM) {
-				output_format == DXGI_FORMAT_BC4_UNORM;
+				output_format = DXGI_FORMAT_BC4_UNORM;
 			}
 			else if (is_normal_map(image) || image_format == DXGI_FORMAT_BC5_UNORM || image_format == DXGI_FORMAT_BC5_SNORM) {
 				data->info.flags |= TextureFlags::IS_IMPORTED_AS_NORMAL_MAP;
-				output_format == DXGI_FORMAT_BC5_UNORM;
+				output_format = DXGI_FORMAT_BC5_UNORM;
 
 				if (IsSRGB(image_format)) {
 					scratch.OverrideFormat(MakeTypelessUNORM(MakeTypeless(image_format)));
 				}
 			}
 			else {
-				output_format = settings.prefer_bc7 ? DXGI_FORMAT_BC7_UNORM : scratch.IsAlphaAllOpaque() ? DXGI_FORMAT_BC1_UNORM : DXGI_FORMAT_BC3_UNORM;
+				output_format = data->import_settings.prefer_bc7 ? DXGI_FORMAT_BC7_UNORM : scratch.IsAlphaAllOpaque() ? DXGI_FORMAT_BC1_UNORM : DXGI_FORMAT_BC3_UNORM;
 			}
 
 		_done:
-			assert(IsCompresed(output_format));
+			assert(IsCompressed(output_format));
 			if (HasAlpha((DXGI_FORMAT)output_format)) data->info.flags |= TextureFlags::HAS_ALPHA;
 
-			return IsSRGB(image_format) ? MakeSRGB()output_format) : output_format;
+			return IsSRGB(image_format) ? MakeSRGB(output_format) : output_format;
 		}
 
 		bool can_use_gpu(DXGI_FORMAT format) {
