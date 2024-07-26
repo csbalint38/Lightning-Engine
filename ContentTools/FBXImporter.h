@@ -11,7 +11,7 @@ namespace lightning::tools {
 
 	class FbxContext {
 		public:
-			FbxContext(const char* file, Scene* scene, SceneData* data) : _scene{ scene }, _scene_data{ data } {
+			FbxContext(const char* file, Scene* scene, SceneData* data, Progression* const progression) : _scene{ scene }, _scene_data{ data }, _progression{ progression } {
 				assert(file && _scene && _scene_data);
 				if (initialize_fbx()) {
 					load_fbx_file(file);
@@ -29,6 +29,7 @@ namespace lightning::tools {
 
 			constexpr bool is_valid() const { return _fbx_manager && _fbx_scene; }
 			constexpr f32 scene_scale() const { return _scene_scale; }
+			constexpr Progression* get_progression() const { return _progression; }
 
 		private:
 
@@ -43,6 +44,7 @@ namespace lightning::tools {
 			SceneData* _scene_data{ nullptr };
 			FbxManager* _fbx_manager{ nullptr };
 			FbxScene* _fbx_scene{ nullptr };
+			Progression* _progression{ nullptr };
 			f32 _scene_scale{ 1.f };
 	};
 

@@ -140,6 +140,7 @@ namespace lightning::tools {
 		u8 reverse_handedness;
 		u8 import_embeded_textures;
 		u8 import_animations;
+		u8 coalesce_meshes;
 	};
 
 	struct SceneData {
@@ -148,6 +149,7 @@ namespace lightning::tools {
 		GeometryImportSettings settings;
 	};
 
-	void process_scene(Scene& scene, const GeometryImportSettings& settings);
+	void process_scene(Scene& scene, const GeometryImportSettings& settings, Progression* const progression);
 	void pack_data(const Scene& scene, SceneData& data);
+	bool coalesce_meshes(const LodGroup& lod, Mesh& combined_mesh, Progression* const progression);
 }

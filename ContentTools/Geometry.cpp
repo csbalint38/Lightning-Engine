@@ -323,22 +323,26 @@ namespace lightning::tools {
 			}
 		}
 
-		void determine_elements_type(Mesh& m) {
+		elements::ElementsType::Type determine_elements_type(const Mesh& m) {
 			using namespace elements;
+
+			ElementsType::Type type{};
 
 			if (m.normals.size()) {
 				if (m.uv_sets.size() && m.uv_sets[0].size()) {
-					m.elements_type = ElementsType::STATIC_NORMAL_TEXTURE;
+					type = ElementsType::STATIC_NORMAL_TEXTURE;
 				}
 				else {
-					m.elements_type = ElementsType::STATIC_NORMAL;
+					type = ElementsType::STATIC_NORMAL;
 				}
 			}
 			else if (m.colors.size()) {
-				m.elements_type = ElementsType::STATIC_COLOR;
+				type = ElementsType::STATIC_COLOR;
 			}
 
 			// TODO: Expand to Skeletal Meshes
+
+			return type;
 		}
 
 		void process_verticies(Mesh& m, const GeometryImportSettings& settings) {
@@ -352,7 +356,7 @@ namespace lightning::tools {
 				process_uvs(m);
 			}
 
-			determine_elements_type(m);
+			m.elements_type = determine_elements_type(m);
 			pack_verticies(m);
 		}
 		u64 get_mesh_size(const Mesh& m) {
@@ -389,14 +393,14 @@ namespace lightning::tools {
 				su32					// number of LODs
 			};
 
-			for (auto& lod : scene.lod_groups) {
+			for (const auto& lod : scene.lod_groups) {
 				u64 lod_size{
 					su32 +				// LOD name length
 					lod.name.size() +	// LOD name string size
 					su32				// number of mashes in this LOD
 				};
 
-				for (auto& m : lod.meshes) {
+				for (const auto& m : lod.meshes) {
 					lod_size += get_mesh_size(m);
 				}
 				size += lod_size;
@@ -490,13 +494,14 @@ namespace lightning::tools {
 			for (auto& lod : scene.lod_groups) {
 				util::vector<Mesh> new_meshes;
 
-				for (auto& m : lod.meshes) {
+				for (const auto& m : lod.meshes) {
 					const u32 num_materials{ (u32)m.material_used.size() };
 					if (num_materials > 1) {
 						for (u32 i{ 0 }; i < num_materials; ++i) {
 							Mesh submesh{};
 							if (split_meshes_by_material(m.material_used[i], m, submesh)) {
 								new_meshes.emplace_back(submesh);
+								progression->callback(progression->value(), progression->max_value() + 1);
 							}
 						}
 					}
@@ -507,14 +512,24 @@ namespace lightning::tools {
 				new_meshes.swap(lod.meshes);
 			}
 		}
+
+		template <typename T> void append_to_vector_pod(util::vector<T>& dst, const util::vector<T>& src) {
+			if (src.empty()) return;
+
+			const u32 num_elements{ (u32)dst.size() };
+			dst.resize(dst.size() + src.size());
+			memcpy(&dst[num_elements], src.data(), src.size() * sizeof(T));
+		}
 	}
 
-	void process_scene(Scene& scene, const GeometryImportSettings& settings) {
-		split_meshes_by_material(scene);
+	void process_scene(Scene& scene, const GeometryImportSettings& settings, Progression* const progression) {
+		assert(progression);
+		split_meshes_by_material(scene, progression);
 		
 		for (auto& lod : scene.lod_groups) {
 			for (auto& m : lod.meshes) {
 				process_verticies(m, settings);
+				progression->callback(progression->value() + 1, progression->max_value());
 			}
 		}
 	}
@@ -532,16 +547,64 @@ namespace lightning::tools {
 
 		blob.write((u32)scene.lod_groups.size());
 
-		for (auto& lod : scene.lod_groups) {
+		for (const auto& lod : scene.lod_groups) {
 			blob.write((u32)lod.name.size());
 			blob.write(lod.name.c_str(), lod.name.size());
 
 			blob.write((u32)lod.meshes.size());
 
-			for (auto& m : lod.meshes) {
+			for (const auto& m : lod.meshes) {
 				pack_mesh_data(m, blob);
 			}
 		}
 		assert(scene_size == blob.offset());
+	}
+
+	bool coalesce_meshes(const LodGroup& lod, Mesh& combined_mesh, Progression* const progression) {
+		assert(lod.meshes.size());
+		const Mesh& first_mesh{ lod.meshes[0] };
+		combined_mesh.name = first_mesh.name;
+		combined_mesh.elements_type = determine_elements_type(first_mesh);
+		combined_mesh.lod_threshold = first_mesh.lod_threshold;
+		combined_mesh.lod_id = first_mesh.lod_id;
+		combined_mesh.uv_sets.resize(first_mesh.uv_sets.size());
+
+		for (u32 mesh_idx{ 0 }; mesh_idx < lod.meshes.size(); ++mesh_index) {
+			const Mesh& m{ lod.meshes[mesh_index] };
+
+			if (combined_mesh.elements_type != determine_elements_type(m) || combined_mesh.uv_sets.size() != m.uv_sets.size() || combined_mesh.lod_id != m.lod_id || !math::is_equal(combined_mesh.lod_threshold, m.lod_threshold)) {
+				combined_mesh = {};
+				return false;
+			}
+
+			const u32 position_count{ (u32)combined_mesh.positions.size() };
+			const u32 raw_index_base{ (u32)combined_mesh.raw_indicies.size() };
+
+			append_to_vector_pod(combined_mesh.positions, m.positions);
+			append_to_vector_pod(combined_mesh.normals, m.normals);
+			append_to_vector_pod(combined_mesh.tangents, m.tangents);
+			append_to_vector_pod(combined_mesh.colors, m.colors);
+
+			for (u32 i{ 0 }; i < combined_mesh.uv_sets.size(); ++i) {
+				append_to_vector_pod(combined_mesh.uv_sets[i], m.uv_sets[i]);
+			}
+
+			append_to_vector_pod(combined_mesh.material_indicies, m.material_indicies);
+			append_to_vector_pod(combined_mesh.raw_indices, m.raw_indicies);
+
+			for (u32 i{ raw_index_base }; i < combined_mesh.raw_indices.size(); ++i) {
+				combined_mesh.raw_indicies[i] += position_count;
+			}
+
+			progression->callback(progression->value(), progression->max_value() > 1 ? progression_max_value() - 1 : 1);
+		}
+
+		for (const u32 mtl_id : combined_mesh.material_indices) {
+			if (std::find(combined_mesh.material_used.begin(), combined_mesh.material_used.end(), mtl_index) == combined_mesh.material_used.end()) {
+				combined_mesh.material_used.emplace_back(mtl_index);
+			}
+		}
+
+		return true;
 	}
 }

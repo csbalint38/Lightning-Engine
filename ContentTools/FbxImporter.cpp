@@ -49,15 +49,42 @@ namespace lightning::tools {
 		}
 
 		const s32 num_nodes{ root->GetChildCount() };
-		for (s32 i{ 0 }; i < num_nodes; ++i) {
-			FbxNode* node{ root->GetChild(i) };
-			if (!node) continue;
 
+		if (_scene_data->settings.coalesce_meshes) {
 			LodGroup lod{};
-			get_meshes(node, lod.meshes, 0, -1.f);
+
+			for (s32 i{ 0 }; i < num_nodes; ++i) {
+				FbxNode* node{ root->GetChild(i) };
+				
+				if (!node) continue;
+
+				get_mesh(node, lod.meshes, 0, -1.f);
+			}
+
 			if (lod.meshes.size()) {
 				lod.name = lod.meshes[0].name;
+				Mesh combined_mesh{};
+
+				if (coalesce_meshes(lod, combined_mesh, _progression)) {
+					lod.meshes.clear();
+					lod.meshes.emplace_back(combined_mesh);
+				}
+
 				_scene->lod_groups.emplace_back(lod);
+			}
+
+		}
+		else {
+			for (s32 i{ 0 }; i < num_nodes; ++i) {
+				FbxNode* node{ root->GetChild(i) };
+				if (!node) continue;
+
+				LodGroup lod{};
+				get_meshes(node, lod.meshes, 0, -1.f);
+				if (lod.meshes.size()) {
+					lod.name = lod.meshes[0].name;
+					_scene->lod_groups.emplace_back(lod);
+				}
 			}
 		}
 	}
@@ -108,6 +135,7 @@ namespace lightning::tools {
 		m.name = (node->GetName()[0] != '\0') ? node->GetName() : fbx_mesh->GetName();
 		if (get_mesh_data(fbx_mesh, m)) {
 			meshes.emplace_back(m);
+			_progression->callback(_progression->value(), _progression->max_value() + 1);
 		}
 	}
 
@@ -248,14 +276,15 @@ namespace lightning::tools {
 	}
 
 
-	EDITOR_INTERFACE void import_fbx(const char* file, SceneData* data) {
+	EDITOR_INTERFACE void import_fbx(const char* file, SceneData* data, Progression::progression_callback callback) {
 		assert(file && data);
 		Scene scene{};
+		Progression progression{ callback };
 
 		{
 			std::lock_guard lock{ fbx_mutex };
 
-			FbxContext fbx_context{ file, &scene, data };
+			FbxContext fbx_context{ file, &scene, data, &progression };
 			if (fbx_context.is_valid()) {
 				fbx_context.get_scene();
 			}
@@ -264,7 +293,7 @@ namespace lightning::tools {
 			}
 		}
 
-		process_scene(scene, data->settings);
+		process_scene(scene, data->settings, &progression);
 		pack_data(scene, *data);
 	}
 }
