@@ -89,7 +89,7 @@ namespace lightning::tools {
 
 			using PFN_CreateDXGIFactory1 = HRESULT(WINAPI*)(REFIID, void**);
 
-			const PFN_CreateDXGIFactory1 create_dxgi_factory_1{ (PFN_CreateDXFIFactory)((void*)GetProcAddress(dxgi_module, "CreateDXGIFactory1")) };
+			const PFN_CreateDXGIFactory1 create_dxgi_factory_1{ (PFN_CreateDXGIFactory1)((void*)GetProcAddress(dxgi_module, "CreateDXGIFactory1")) };
 
 			if (!create_dxgi_factory_1) return {};
 
@@ -356,7 +356,7 @@ namespace lightning::tools {
 
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
-					if ((array_size % 6) {
+					if (array_size % 6) {
 						data->info.import_error = ImportError::NEED_SIX_IMAGES;
 						return {};
 					}

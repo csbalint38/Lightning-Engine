@@ -7,5 +7,5 @@ namespace lightning::tools {
 EDITOR_INTERFACE void shutdown_content_tools() {
 	using namespace lightning::tools;
 
-	shutdownt_texture_tools();
+	shutdown_texture_tools();
 }

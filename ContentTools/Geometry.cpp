@@ -490,7 +490,7 @@ namespace lightning::tools {
 			return !submesh.raw_indicies.empty();
 		}
 
-		void split_meshes_by_material(Scene& scene) {
+		void split_meshes_by_material(Scene& scene, Progression* const progression) {
 			for (auto& lod : scene.lod_groups) {
 				util::vector<Mesh> new_meshes;
 
@@ -569,8 +569,8 @@ namespace lightning::tools {
 		combined_mesh.lod_id = first_mesh.lod_id;
 		combined_mesh.uv_sets.resize(first_mesh.uv_sets.size());
 
-		for (u32 mesh_idx{ 0 }; mesh_idx < lod.meshes.size(); ++mesh_index) {
-			const Mesh& m{ lod.meshes[mesh_index] };
+		for (u32 mesh_idx{ 0 }; mesh_idx < lod.meshes.size(); ++mesh_idx) {
+			const Mesh& m{ lod.meshes[mesh_idx] };
 
 			if (combined_mesh.elements_type != determine_elements_type(m) || combined_mesh.uv_sets.size() != m.uv_sets.size() || combined_mesh.lod_id != m.lod_id || !math::is_equal(combined_mesh.lod_threshold, m.lod_threshold)) {
 				combined_mesh = {};
@@ -590,18 +590,18 @@ namespace lightning::tools {
 			}
 
 			append_to_vector_pod(combined_mesh.material_indicies, m.material_indicies);
-			append_to_vector_pod(combined_mesh.raw_indices, m.raw_indicies);
+			append_to_vector_pod(combined_mesh.raw_indicies, m.raw_indicies);
 
-			for (u32 i{ raw_index_base }; i < combined_mesh.raw_indices.size(); ++i) {
+			for (u32 i{ raw_index_base }; i < combined_mesh.raw_indicies.size(); ++i) {
 				combined_mesh.raw_indicies[i] += position_count;
 			}
 
-			progression->callback(progression->value(), progression->max_value() > 1 ? progression_max_value() - 1 : 1);
+			progression->callback(progression->value(), progression->max_value() > 1 ? progression->max_value() - 1 : 1);
 		}
 
-		for (const u32 mtl_id : combined_mesh.material_indices) {
-			if (std::find(combined_mesh.material_used.begin(), combined_mesh.material_used.end(), mtl_index) == combined_mesh.material_used.end()) {
-				combined_mesh.material_used.emplace_back(mtl_index);
+		for (const u32 mtl_id : combined_mesh.material_indicies) {
+			if (std::find(combined_mesh.material_used.begin(), combined_mesh.material_used.end(), mtl_id) == combined_mesh.material_used.end()) {
+				combined_mesh.material_used.emplace_back(mtl_id);
 			}
 		}
 

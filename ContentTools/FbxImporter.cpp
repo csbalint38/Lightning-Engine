@@ -58,7 +58,7 @@ namespace lightning::tools {
 				
 				if (!node) continue;
 
-				get_mesh(node, lod.meshes, 0, -1.f);
+				get_meshes(node, lod.meshes, 0, -1.f);
 			}
 
 			if (lod.meshes.size()) {
@@ -276,7 +276,7 @@ namespace lightning::tools {
 	}
 
 
-	EDITOR_INTERFACE void import_fbx(const char* file, SceneData* data, Progression::progression_callback callback) {
+	EDITOR_INTERFACE void import_fbx(const char* file, SceneData* data, Progression::progress_callback callback) {
 		assert(file && data);
 		Scene scene{};
 		Progression progression{ callback };
