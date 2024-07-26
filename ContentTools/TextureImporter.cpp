@@ -24,7 +24,8 @@ namespace lightning::tools {
 				MAX_SIZE_EXCEEDED,
 				SIZE_MISMATCH,
 				FORMAT_MISMATCH,
-				FILE_NOT_FOUND
+				FILE_NOT_FOUND,
+				NEED_SIX_IMAGES,
 			};
 		};
 
@@ -76,19 +77,21 @@ namespace lightning::tools {
 		std::mutex device_creation_mutex;
 		util::vector<D3D12Device> d3d11_devices;
 
-		util::vector<ComPtr<IDXGIAdapter>> get_adapters_by_performance() {
-			using PFN_CreateDXGIFactory1 = HRESULT(WINAPI*)(REFIID, void**);
-			static PFN_CreateDXGIFactory1 create_dxgi_factory_1{ nullptr };
+		HMODULE dxgi_module{ nullptr };
+		HMODULE d3d11_module{ nullptr };
 
-			if (!create_dxgi_factory_1) {
-				HMODULE dxgi_module{ LoadLibrary(L"dxgi.dll") };
+		util::vector<ComPtr<IDXGIAdapter>> get_adapters_by_performance() {
+			if (!dxgi_module) {
+				dxgi_module = LoadLibrary(L"dxgi.dll");
 
 				if (!dxgi_module) return {};
-
-				create_dxgi_factory_1 = (PFN_CreateDXGIFactory1)((void*)GetProcAddress(dxgi_module, "CreateDXGIFactory1"));
-
-				if (!create_dxgi_factory_1) return {};
 			}
+
+			using PFN_CreateDXGIFactory1 = HRESULT(WINAPI*)(REFIID, void**);
+
+			const PFN_CreateDXGIFactory1 create_dxgi_factory_1{ (PFN_CreateDXFIFactory)((void*)GetProcAddress(dxgi_module, "CreateDXGIFactory1")) };
+
+			if (!create_dxgi_factory_1) return {};
 
 			ComPtr<IDXGIFactory7> factory;
 			util::vector<ComPtr<IDXGIAdapter>> adapters;
@@ -115,25 +118,21 @@ namespace lightning::tools {
 		void create_device() {
 			if (d3d11_devices.size()) return;
 
-			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapters_by_performance() };
-
-			static PFN_D3D11_CREATE_DEVICE d3d11_create_device{ nullptr };
-
-			if (!d3d11_create_device) {
-				HMODULE d3d11_module{ LoadLibrary(L"d3d11.dll") };
+			if (!d3d11_module) {
+				d3d11_module = LoadLibrary(L"d3d11.dll");
 
 				if (!d3d11_module) return;
-
-				d3d11_create_device = (PFN_D3D11_CREATE_DEVICE)((void*)GetProcAddress(d3d11_module, "D3D11CreateDevice"));
-
-				if (!d3d11_create_device) return;
 			}
+
+			const PFN_D3D11_CREATE_DEVICE d3d11_create_device{ (PFN_D3D11_CREATE_DEVICE)((void*)GetProcAddress(d3d11_module, "D3D11CreateDevice")) };
+			if (!d3d11_create_device) return;
 
 			u32 create_device_flags{ 0 };
 			#ifdef _DEBUG
 			create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
 			#endif
 
+			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapters_by_performance() };
 			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
 			constexpr D3D_FEATURE_LEVEL feature_levels[]{ D3D_FEATURE_LEVEL_11_0 };
 
@@ -184,6 +183,7 @@ namespace lightning::tools {
 			set_or_clear_flags(info.flags, TextureFlags::IS_HDR, format == DXGI_FORMAT_BC6H_UF16 || format == DXGI_FORMAT_BC6H_SF16);
 			set_or_clear_flags(info.flags, TextureFlags::IS_CUBE_MAP, metadata.IsCubemap());
 			set_or_clear_flags(info.flags, TextureFlags::IS_VOLUME_MAP, metadata.IsVolumemap());
+			set_or_clear_flags(info.flags, TextureFlags::IS_SRGB, IsSRGB(format));
 		}
 
 		void copy_subresources(const ScratchImage& scratch, TextureData* const data) {
@@ -356,7 +356,11 @@ namespace lightning::tools {
 
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
-					assert((array_size % 6) == 0);
+					if ((array_size % 6) {
+						data->info.import_error = ImportError::NEED_SIX_IMAGES;
+						return {};
+					}
+
 					hr = working_scratch.InitializeCubeFromImages(images.data(), images.size());
 				}
 				else {
@@ -497,6 +501,16 @@ namespace lightning::tools {
 
 	void shutdown_texture_tools() {
 		d3d11_devices.clear();
+
+		if (dxgi_module) {
+			FreeLibrary(dxgi_module);
+			dxgi_module = nullptr;
+		}
+
+		if (d3d11_module) {
+			FreeLibrary(d3d11_module);
+			d3d11_module = nullptr;
+		}
 	}
 
 	EDITOR_INTERFACE void decompress(TextureData* const data) {
