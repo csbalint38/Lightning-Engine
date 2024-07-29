@@ -491,6 +491,9 @@ namespace lightning::tools {
 		}
 
 		void split_meshes_by_material(Scene& scene, Progression* const progression) {
+			assert(progression);
+			progression->callback(0, 0);
+
 			for (auto& lod : scene.lod_groups) {
 				util::vector<Mesh> new_meshes;
 
@@ -501,7 +504,6 @@ namespace lightning::tools {
 							Mesh submesh{};
 							if (split_meshes_by_material(m.material_used[i], m, submesh)) {
 								new_meshes.emplace_back(submesh);
-								progression->callback(progression->value(), progression->max_value() + 1);
 							}
 						}
 					}
@@ -509,6 +511,7 @@ namespace lightning::tools {
 						new_meshes.emplace_back(m);
 					}
 				}
+				progression->callback(progression->value(), progression->max_value() + (u32)new_meshes.size());
 				new_meshes.swap(lod.meshes);
 			}
 		}
@@ -576,7 +579,10 @@ namespace lightning::tools {
 				combined_mesh = {};
 				return false;
 			}
+		}
 
+		for (u32 mesh_idx{ 0 }; mesh_idx < lod.meshes.size(); ++mesh_idx) {
+			const Mesh& m{ lod.meshes[mesh_idx] };
 			const u32 position_count{ (u32)combined_mesh.positions.size() };
 			const u32 raw_index_base{ (u32)combined_mesh.raw_indicies.size() };
 

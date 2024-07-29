@@ -275,7 +275,6 @@ namespace lightning::tools {
 		return true;
 	}
 
-
 	EDITOR_INTERFACE void import_fbx(const char* file, SceneData* data, Progression::progress_callback callback) {
 		assert(file && data);
 		Scene scene{};
@@ -288,9 +287,10 @@ namespace lightning::tools {
 			if (fbx_context.is_valid()) {
 				fbx_context.get_scene();
 			}
-			else {
-				return;
-			}
+		}
+		
+		if(scene.lod_groups.empty()) {
+			return;
 		}
 
 		process_scene(scene, data->settings, &progression);

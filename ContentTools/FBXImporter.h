@@ -12,7 +12,7 @@ namespace lightning::tools {
 	class FbxContext {
 		public:
 			FbxContext(const char* file, Scene* scene, SceneData* data, Progression* const progression) : _scene{ scene }, _scene_data{ data }, _progression{ progression } {
-				assert(file && _scene && _scene_data);
+				assert(file && _scene && _scene_data && _progression);
 				if (initialize_fbx()) {
 					load_fbx_file(file);
 					assert(is_valid());
