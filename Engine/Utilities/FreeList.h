@@ -2,7 +2,7 @@
 #include "CommonHeaders.h"
 
 #if USE_STL_VECTOR
-#pragma message("WARNING: using util::free_list with std::vector result in duplicate calls to class constructor!")
+#pragma message("WARNING: using util::free_list with std::vector result in duplicate calls to class destructor!")
 #endif
 
 namespace lightning::util {
@@ -31,7 +31,7 @@ namespace lightning::util {
 			}
 			else {
 				id = _next_free_index;
-				assert(id < _array.size() && alredy_removed(id));
+				assert(id < _array.size() && alredy_removed(id, true));
 				_next_free_index = *(const u32* const)std::addressof(_array[id]);
 				new (std::addressof(_array[id])) T(std::forward<params>(p)...);
 			}
@@ -40,7 +40,7 @@ namespace lightning::util {
 		}
 
 		constexpr void remove(u32 id) {
-			assert(id < _array.size() && !alredy_removed(id));
+			assert(id < _array.size() && !alredy_removed(id, false));
 			T& item{ _array[id] };
 			item.~T();
 			DEBUG_OP(memset(std::addressof(_array[id]), 0xCC, sizeof(T)));
@@ -54,7 +54,7 @@ namespace lightning::util {
 		}
 
 		constexpr u32 capacity() const {
-			return _array.size();
+			return (u32)_array.size();
 		}
 
 		constexpr bool empty() const {
@@ -62,17 +62,17 @@ namespace lightning::util {
 		}
 
 		[[nodiscard]] constexpr T& operator[](u32 id) {
-			assert(id < _array.size() && !alredy_removed(id));
+			assert(id < _array.size() && !alredy_removed(id, false));
 			return _array[id];
 		}
 
 		[[nodiscard]] constexpr const T& operator[](u32 id) const {
-			assert(id < _array.size() && !alredy_removed(id));
+			assert(id < _array.size() && !alredy_removed(id, false));
 			return _array[id];
 		}
 
 	private:
-		constexpr bool alredy_removed(u32 id) const {
+		constexpr bool alredy_removed(u32 id, bool return_value_when_sozeof_t_equals_4) const {
 			if constexpr (sizeof(T) > sizeof(u32)) {
 				u32 i{ sizeof(u32) };
 				const u8* const p{ (const u8* const)std::addressof(_array[id]) };
@@ -80,7 +80,7 @@ namespace lightning::util {
 				return i == sizeof(T);
 			}
 			else {
-				return true;
+				return return_value_when_sozeof_t_equals_4;
 			}
 		}
 

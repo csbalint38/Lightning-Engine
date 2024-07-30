@@ -29,6 +29,10 @@ namespace {
 	game_entity::entity_id fan_entity_id{ id::invalid_id };
 	game_entity::entity_id blades_entity_id{ id::invalid_id };
 
+	id::id_type texture_array_id{ id::invalid_id };
+	id::id_type texture_3d_id{ id::invalid_id };
+	id::id_type texture_cube_id{ id::invalid_id };
+
 	id::id_type vs_id{ id::invalid_id };
 	id::id_type ps_id{ id::invalid_id };
 	id::id_type material_id{ id::invalid_id };
@@ -123,19 +127,24 @@ void remove_item(id::id_type item_id, id::id_type model_id) {
 }
 
 void create_render_items() {
-	auto _1 = std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }};
-	auto _2 = std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }};
-	auto _3 = std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }};
-	auto _4 = std::thread{ [] { load_shaders(); } };
+	std::thread threads[]{
+		std::thread{[] {texture_array_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/texture_array.texture"); }},
+		std::thread{[] {texture_3d_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/texture_3d.texture"); }},
+		std::thread{[] {texture_cube_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/texture_cube.texture"); }},
+
+		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
+		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
+		std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }},
+		std::thread{ [] { load_shaders(); } },
+	};
+
+	for (auto& t : threads) {
+		t.join();
+	}
 
 	building_entity_id = create_one_game_entity({0, 0, 0}, {}, nullptr).get_id();
 	fan_entity_id = create_one_game_entity({0, 0, 69.78f}, {}, nullptr).get_id();
 	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362f }, {}, "TurbineScript").get_id();
-
-	_1.join();
-	_2.join();
-	_3.join();
-	_4.join();
 
 	create_material();
 	id::id_type materials[]{ material_id };
@@ -156,6 +165,9 @@ void destroy_render_items() {
 	remove_item(blades_item_id, blades_model_id);
 
 	if (id::is_valid(material_id)) content::destroy_resource(material_id, content::AssetType::MATERIAL);
+	if (id::is_valid(texture_array_id)) content::destroy_resource(texture_array_id, content::AssetType::TEXTURE);
+	if (id::is_valid(texture_3d_id)) content::destroy_resource(texture_3d_id, content::AssetType::TEXTURE);
+	if (id::is_valid(texture_cube_id)) content::destroy_resource(texture_cube_id, content::AssetType::TEXTURE);
 	if (id::is_valid(vs_id)) content::remove_shader_group(vs_id);
 	if (id::is_valid(ps_id)) content::remove_shader_group(ps_id);
 }

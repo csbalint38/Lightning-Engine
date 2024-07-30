@@ -618,7 +618,7 @@ namespace lightning::graphics::direct3d12::content {
 			std::lock_guard lock{ texture_mutex };
 
 			for (u32 i{ 0 }; i < id_count; ++i) {
-				indicies[i] = textures[i].srv().index;
+				indicies[i] = descriptor_indicies[texture_ids[i]];
 			}
 		}
 	}
