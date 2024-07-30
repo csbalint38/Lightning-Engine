@@ -46,6 +46,17 @@ namespace {
 		return model_id;
 	}
 
+	[[nodiscard]] id::id_type load_texture(const char* path) {
+		std::unique_ptr<u8[]> texture;
+		u64 size{ 0 };
+		read_file(path, texture, size);
+
+		const id::id_type texture_id{ content::create_resource(texture.get(), content::AssetType::TEXTURE) };
+		assert(id::is_valid(texture_id));
+
+		return texture_id;
+	}
+
 	void load_shaders() {
 		ShaderFileInfo info{};
 		info.file_name = "TestShader.hlsl";

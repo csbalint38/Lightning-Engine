@@ -3,6 +3,7 @@
 #include "Utilities/IOStream.h"
 #include "Content/ContentToEngine.h"
 #include "Direct3D12GPass.h"
+#include "Direct3D12Upload.h"
 
 #ifdef OPAQUE
 #undef OPAQUE
@@ -41,6 +42,7 @@ namespace lightning::graphics::direct3d12::content {
 		std::mutex submesh_mutex{};
 
 		util::free_list<D3D12Texture> textures;
+		util::free_list<u32> descriptor_indicies;
 		std::mutex texture_mutex{};
 
 		util::vector<ID3D12RootSignature*> root_signatures;
@@ -354,6 +356,151 @@ namespace lightning::graphics::direct3d12::content {
 
 			return id_pair;
 		}
+
+		D3D12Texture create_resource_from_texture_data(const u8* const data) {
+			assert(data);
+			util::BlobStreamReader blob{ data };
+			const u32 width{ blob.read<u32>() };
+			const u32 height{ blob.read<u32>() };
+			u32 depth{ 1 };
+			u32 array_size{ blob.read<u32>() };
+			const u32 flags{ blob.read<u32>() };
+			const u32 mip_levels{ blob.read<u32>() };
+			const DXGI_FORMAT format{ (DXGI_FORMAT)blob.read<u32>() };
+			const bool is_3d{ (flags & lightning::content::TextureFlags::IS_VOLUME_MAP) != 0 };
+			
+			assert(mip_levels <= D3D12Texture::max_mips);
+			u32 depth_per_mip_level[D3D12Texture::max_mips]{};
+
+			for (u32 i{ 0 }; i < D3D12Texture::max_mips; ++i) {
+				depth_per_mip_level[i] = 1;
+			}
+
+			if (is_3d) {
+				depth = array_size;
+				array_size = 1;
+				u32 depth_per_mip{ depth };
+
+				for (u32 i{ 0 }; i < mip_levels; ++i) {
+					depth_per_mip_level[i] = depth_per_mip;
+					depth_per_mip = std::max(depth_per_mip >> 1, (u32)1);
+				}
+			}
+
+			util::vector<D3D12_SUBRESOURCE_DATA> subresources{};
+
+			for (u32 i{ 0 }; i < array_size; ++i) {
+				for (u32 j{ 0 }; j < mip_levels; ++j) {
+					blob.skip(2 * sizeof(u32));
+					const u32 row_pitch{ blob.read<u32>() };
+					const u32 slice_pitch{ blob.read<u32>() };
+
+					subresources.emplace_back(D3D12_SUBRESOURCE_DATA{ blob.position(), row_pitch, slice_pitch });
+					blob.skip(slice_pitch);
+
+					for (u32 k{ 1 }; k < depth_per_mip_level[j]; ++k) {
+						blob.skip(4 * sizeof(u32) + slice_pitch);
+					}
+				}
+			}
+
+			D3D12_RESOURCE_DESC desc{};
+			desc.Dimension = is_3d ? D3D12_RESOURCE_DIMENSION_TEXTURE3D : D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+			desc.Alignment = 0;
+			desc.Width = width;
+			desc.Height = height;
+			desc.DepthOrArraySize = is_3d ? (u16)depth : (u16)array_size;
+			desc.MipLevels = (u16)mip_levels;
+			desc.Format = format;
+			desc.SampleDesc{ 1, 0 };
+			desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+			desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+			assert(!(flags & lightning::content::TextureFlags::IS_CUBE_MAP && (array_size % 6)));
+			const u32 subresource_count{ array_size * mip_levels };
+			assert(subresource_count);
+
+			D3D12_PLACED_SUBRESOURCE_FOOTPRINT* const layouts{ (D3D12_PLACED_SUBRESOURCE_FOOTPRINT* const)_alloca(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * subresource_count) };
+			u32* const num_rows{ (u32* const)_alloca(sizeof(u32) * subresource_count) };
+			u64* const row_sizes{ (u64* const)_alloca(sizeof(u64) * subresource_count) };
+			u64 required_size{ 0 };
+			id3d12_device* device{ core::device() };
+
+			device->GetCopyableFootprints(&desc, 0, subresource_count, 0, layouts, num_rows, row_sizes, &required_size);
+
+			assert(required_size);
+			upload::D3D12UploadContext context{ (u32)required_size };
+			u8* const cpu_address{ (u8* const)context.cpu_address() };
+
+			for (u32 subresource_idx{ 0 }; subresource_idx < subresource_count; ++subresource_idx) {
+				const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& layout{ layouts[subresource_idx] };
+				const u32 subresource_height{ num_rows[subresource_idx] };
+				const u32 subresource_depth{ layout.Footprint.Depth };
+				const D3D12_SUBRESOURCE_DATA& subresource{ subresources[subresource_idx] };
+
+				const D3D12_MEMCPY_DEST copy_dst{
+					cpu_address + layout.Offset,
+					layout.Footprint.RowPitch,
+					layout.Footprint.RowPitch * subresource_height
+				};
+
+				for (u32 depth_idx{ 0 }; depth_idx < subresource_depth; ++depth_idx) {
+					u8* const src_slice{ (u8* const)subresource.pData + subresource.SlicePitch * depth_idx };
+					u8* const dst_slice{ (u8* const)copy_dst.pData + copy_dst.SlicePitch * depth_idx };
+
+					for (u32 row_idx{ 0 }; row_idx < subresource_height; ++row_idx) {
+						memcpy(dst_slice + copy_dst.RowPitch * row_idx, src_slice + subresource.RowPitch * row_idx, row_sizes[subresource_idx]);
+					}
+				}
+			}
+
+			ID3D12Resource2* resource{ nullptr };
+			DXCall(device->CreateCommittedResource(&d3dx::heap_properties.default_heap, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&resource)));
+			ID3D12Resource* upload_buffer{ context.upload_buffer() };
+
+			for (u32 i{ 0 }; i < subresource_count; ++i) {
+				D3D12_TEXTURE_COPY_LOCATION src{};
+				src.pResource = upload_buffer;
+				src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+				src.PlacedFootprint = layouts[i];
+
+				D3D12_TEXTURE_COPY_LOCATION dst{};
+				dst.pResource = resource;
+				dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+				dst.SubresourceIndex = i;
+
+				context.command_list()->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+			}
+
+			context.end_upload();
+			assert(resource);
+			D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc{};
+			D3D12TextureInitInfo info{};
+			info.resource = resource;
+
+			if (flags & lightning::content::TextureFlags::IS_CUBE_MAP) {
+				assert(array_size % 6);
+				srv_desc.Format = format;
+				srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+				if (array_size > 6) {
+					srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+					srv_desc.TextureCubeArray.MostDetailedMip = 0;
+					srv_desc.TextureCubeArray.MipLevels = mip_levels;
+					srv_desc.TextureCubeArray.NumCubes = array_size / 6;
+				}
+				else {
+					srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+					srv_desc.TextureCube.MostDetailedMip = 0;
+					srv_desc.TextureCube.MipLevels = mip_levels;
+					srv_desc.TextureCube.ResourceMinLODClamp = .0f;
+				}
+
+				info.srv_desc = &srv_desc;
+			}
+
+			return D3D12Texture{ info };
+		}
 	}
 
 	bool initialize() { return true; }
@@ -448,6 +595,23 @@ namespace lightning::graphics::direct3d12::content {
 	}
 
 	namespace texture {
+		id::id_type add(const u8* const data) {
+			assert(data);
+			D3D12Texture texture{ create_resource_from_texture_data(data) };
+
+			std::lock_guard lock{ texture_mutex };
+			const id::id_type id{ textures.add(std::move(texture)) };
+			descriptor_indicies.add(textures[id].srv().index);
+
+			return id;
+		}
+
+		void remove(id::id_type id) {
+			std::lock_guard lock{ texture_mutex };
+			textures.remove(id);
+			descriptor_indicies.remove(id);
+		}
+
 		void get_descriptor_indicies(const id::id_type* const texture_ids, u32 id_count, u32* const indicies) {
 			assert(texture_ids && id_count && indicies);
 

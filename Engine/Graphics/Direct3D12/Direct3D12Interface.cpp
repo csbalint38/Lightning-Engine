@@ -33,6 +33,8 @@ namespace lightning::graphics::direct3d12 {
 
 		pi.resources.add_submesh = content::submesh::add;
 		pi.resources.remove_submesh = content::submesh::remove;
+		pi.resources.add_rexture = content::texture::add;
+		pi.resources.remove_texture = content::texture::remove;
 		pi.resources.add_material = content::material::add;
 		pi.resources.remove_material = content::material::remove;
 		pi.resources.add_render_item = content::render_item::add;

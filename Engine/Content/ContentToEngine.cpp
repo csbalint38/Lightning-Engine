@@ -159,7 +159,7 @@ namespace lightning::content {
 			return (((uintptr_t)pointer) >> shift_bits) & (uintptr_t)id::invalid_id;
 		}
 
-		id::id_type create_geometry_resource(const void* const data) {
+		[[nodiscard]] id::id_type create_geometry_resource(const void* const data) {
 			assert(data);
 			return is_single_mesh(data) ? create_single_submesh(data) : create_mesh_hierarchy(data);
 		}
@@ -189,13 +189,22 @@ namespace lightning::content {
 			geometry_hierarchies.remove(id);
 		}
 
-		id::id_type create_material_resource(const void* const data) {
+		[[nodiscard]] id::id_type create_material_resource(const void* const data) {
 			assert(data);
 			return graphics::add_material(*(const graphics::MaterialInitInfo* const)data);
 		}
 
 		void destroy_material_resource(id::id_type id) {
 			graphics::remove_material(id);
+		}
+
+		[[nodiscard]] id::id_type create_texture_resource(const void* const data) {
+			assert(data);
+			return graphics::add_texture((const u8* const)data);
+		}
+
+		void destroy_texture_resource(id::id_type id) {
+			graphics::remove_texture(id);
 		}
 	}
 
@@ -217,6 +226,7 @@ namespace lightning::content {
 			case AssetType::SKELETON:
 				break;
 			case AssetType::TEXTURE:
+				id = create_texture_resource(data);
 				break;
 		}
 
@@ -241,6 +251,7 @@ namespace lightning::content {
 			case AssetType::SKELETON:
 				break;
 			case AssetType::TEXTURE:
+				destroy_texture_resource(id); 
 				break;
 			default:
 				assert(false);

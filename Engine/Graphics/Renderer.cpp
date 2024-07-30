@@ -311,6 +311,14 @@ namespace lightning::graphics {
 		gfx.resources.remove_submesh(id);
 	}
 
+	id::id_type add_texture(const u8* const data) {
+		return gfx.resources.add_texture(data);
+	}
+
+	void remove_texture(id::id_type id) {
+		gfx.resources.remove_texture(id);
+	}
+
 	id::id_type add_material(MaterialInitInfo info) {
 		return gfx.resources.add_material(info);
 	}
