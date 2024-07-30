@@ -33,7 +33,7 @@ namespace lightning::content {
 				}
 
 				u32 lod_from_threshold(f32 threshold) {
-					assert(threshold > 0);
+					assert(threshold >= 0);
 
 					if (_lod_count == 1) return 0;
 
@@ -41,7 +41,6 @@ namespace lightning::content {
 						if (_thresholds[i] <= threshold) return i;
 					}
 
-					assert(false);
 					return 0;
 				}
 

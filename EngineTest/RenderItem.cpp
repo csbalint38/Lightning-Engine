@@ -29,9 +29,19 @@ namespace {
 	game_entity::entity_id fan_entity_id{ id::invalid_id };
 	game_entity::entity_id blades_entity_id{ id::invalid_id };
 
-	id::id_type texture_array_id{ id::invalid_id };
-	id::id_type texture_3d_id{ id::invalid_id };
-	id::id_type texture_cube_id{ id::invalid_id };
+	struct TextureUsage {
+		enum Usage : u32 {
+			AMBIENT_OCCLUSIN = 0,
+			BASE_COLOR,
+			EMISSIVE,
+			METAL_ROUGH,
+			NORMAL,
+
+			count
+		};
+	};
+
+	id::id_type texture_ids[TextureUsage::count];
 
 	id::id_type vs_id{ id::invalid_id };
 	id::id_type ps_id{ id::invalid_id };
@@ -127,10 +137,14 @@ void remove_item(id::id_type item_id, id::id_type model_id) {
 }
 
 void create_render_items() {
+	memset(&texture_ids[0], 0xff, sizeof(id::id_type) * _countof(texture_ids));
+
 	std::thread threads[]{
-		std::thread{[] {texture_array_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/texture_array.texture"); }},
-		std::thread{[] {texture_3d_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/texture_3d.texture"); }},
-		std::thread{[] {texture_cube_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/texture_cube.texture"); }},
+		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSIN] = load_texture(""); }},
+		std::thread{ [] { texture_ids[TextureUsage::BASE_COLOR] = load_texture(""); }},
+		std::thread{ [] { texture_ids[TextureUsage::EMISSIVE] = load_texture(""); }},
+		std::thread{ [] { texture_ids[TextureUsage::METAL_ROUGH] = load_texture(""); }},
+		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture(""); }},
 
 		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
@@ -165,9 +179,13 @@ void destroy_render_items() {
 	remove_item(blades_item_id, blades_model_id);
 
 	if (id::is_valid(material_id)) content::destroy_resource(material_id, content::AssetType::MATERIAL);
-	if (id::is_valid(texture_array_id)) content::destroy_resource(texture_array_id, content::AssetType::TEXTURE);
-	if (id::is_valid(texture_3d_id)) content::destroy_resource(texture_3d_id, content::AssetType::TEXTURE);
-	if (id::is_valid(texture_cube_id)) content::destroy_resource(texture_cube_id, content::AssetType::TEXTURE);
+
+	for (id::id_type id : texture_ids) {
+		if (id::is_valid(id)) {
+			content::destroy_resource(id, content::AssetType::TEXTURE);
+		}
+	}
+
 	if (id::is_valid(vs_id)) content::remove_shader_group(vs_id);
 	if (id::is_valid(ps_id)) content::remove_shader_group(ps_id);
 }
