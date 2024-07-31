@@ -412,7 +412,7 @@ namespace lightning::graphics::direct3d12::content {
 			desc.DepthOrArraySize = is_3d ? (u16)depth : (u16)array_size;
 			desc.MipLevels = (u16)mip_levels;
 			desc.Format = format;
-			desc.SampleDesc{ 1, 0 };
+			desc.SampleDesc = { 1, 0 };
 			desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 			desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
