@@ -36,6 +36,7 @@ namespace lightning::graphics::direct3d12::gpass {
 
 		struct GPassCache {
 			util::vector<id::id_type> d3d12_render_item_ids;
+			u32 descriptor_index_count{ 0 };
 
 			id::id_type* entity_ids{ nullptr };
 			id::id_type* submesh_gpu_ids{ nullptr };
@@ -44,12 +45,15 @@ namespace lightning::graphics::direct3d12::gpass {
 			ID3D12PipelineState** depth_pipeline_states{ nullptr };
 			ID3D12RootSignature** root_signatures{ nullptr };
 			MaterialType::Type* material_types{ nullptr };
+			u32** descriptor_indices{ nullptr };
+			u32* texture_counts{ nullptr };
 			D3D12_GPU_VIRTUAL_ADDRESS* position_buffers{ nullptr };
 			D3D12_GPU_VIRTUAL_ADDRESS* element_buffers{ nullptr };
 			D3D12_INDEX_BUFFER_VIEW* index_buffer_views{ nullptr };
 			D3D_PRIMITIVE_TOPOLOGY* primitive_topologies{ nullptr };
 			u32* elements_types{ nullptr };
 			D3D12_GPU_VIRTUAL_ADDRESS* per_object_data{ nullptr };
+			D3D12_GPU_VIRTUAL_ADDRESS* srv_indices{ nullptr };
 
 			constexpr content::render_item::ItemsCache items_cache() const {
 				return {
@@ -74,12 +78,18 @@ namespace lightning::graphics::direct3d12::gpass {
 			constexpr content::material::MaterialsCache materials_cache() const {
 				return {
 					root_signatures,
-					material_types
+					material_types,
+					descriptor_indices,
+					texture_counts
 				};
 			}
 
 			CONSTEXPR u32 size() const { return (u32)d3d12_render_item_ids.size(); }
-			CONSTEXPR void clear() { d3d12_render_item_ids.clear(); }
+
+			CONSTEXPR void clear() {
+				d3d12_render_item_ids.clear();
+				descriptor_index_count = 0;
+			}
 
 			CONSTEXPR void resize() {
 				const u64 items_count{ d3d12_render_item_ids.size() };
@@ -90,18 +100,21 @@ namespace lightning::graphics::direct3d12::gpass {
 
 				if (new_buffer_size != old_buffer_size) {
 					entity_ids = (id::id_type*)_buffer.data();
-					submesh_gpu_ids = (id::id_type*)(&entity_ids[items_count]);
-					material_ids = (id::id_type*)(&submesh_gpu_ids[items_count]);
-					gpass_pipeline_states = (ID3D12PipelineState**)(&material_ids[items_count]);
-					depth_pipeline_states = (ID3D12PipelineState**)(&gpass_pipeline_states[items_count]);
-					root_signatures = (ID3D12RootSignature**)(&depth_pipeline_states[items_count]);
-					material_types = (MaterialType::Type*)(&root_signatures[items_count]);
-					position_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)(&material_types[items_count]);
-					element_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)(&position_buffers[items_count]);
-					index_buffer_views = (D3D12_INDEX_BUFFER_VIEW*)(&element_buffers[items_count]);
-					primitive_topologies = (D3D_PRIMITIVE_TOPOLOGY*)(&index_buffer_views[items_count]);
-					elements_types = (u32*)(&primitive_topologies[items_count]);
-					per_object_data = (D3D12_GPU_VIRTUAL_ADDRESS*)(&elements_types[items_count]);
+					submesh_gpu_ids = (id::id_type*)&entity_ids[items_count];
+					material_ids = (id::id_type*)&submesh_gpu_ids[items_count];
+					gpass_pipeline_states = (ID3D12PipelineState**)&material_ids[items_count];
+					depth_pipeline_states = (ID3D12PipelineState**)&gpass_pipeline_states[items_count];
+					root_signatures = (ID3D12RootSignature**)&depth_pipeline_states[items_count];
+					material_types = (MaterialType::Type*)&root_signatures[items_count];
+					descriptor_indices = (u32**)&material_types[items_count];
+					texture_counts = (u32*)&descriptor_indices[items_count];
+					position_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)&texture_counts[items_count];
+					element_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)&position_buffers[items_count];
+					index_buffer_views = (D3D12_INDEX_BUFFER_VIEW*)&element_buffers[items_count];
+					primitive_topologies = (D3D_PRIMITIVE_TOPOLOGY*)&index_buffer_views[items_count];
+					elements_types = (u32*)&primitive_topologies[items_count];
+					per_object_data = (D3D12_GPU_VIRTUAL_ADDRESS*)&elements_types[items_count];
+					srv_indices = (D3D12_GPU_VIRTUAL_ADDRESS*)&per_object_data[items_count];
 				}
 			}
 
@@ -114,11 +127,14 @@ namespace lightning::graphics::direct3d12::gpass {
 					sizeof(ID3D12PipelineState*) +
 					sizeof(ID3D12RootSignature*) +
 					sizeof(MaterialType::Type) +
+					sizeof(u32*) + 
+					sizeof(u32) + 
 					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +
 					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +
 					sizeof(D3D12_INDEX_BUFFER_VIEW) +
 					sizeof(D3D_PRIMITIVE_TOPOLOGY) +
 					sizeof(u32) +
+					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) + 
 					sizeof(D3D12_GPU_VIRTUAL_ADDRESS)
 				};
 
@@ -200,7 +216,7 @@ namespace lightning::graphics::direct3d12::gpass {
 		}
 
 		void set_root_parameters(id3d12_graphics_command_list* cmd_list, u32 cache_index) {
-			GPassCache& cache{ frame_cache };
+			const GPassCache& cache{ frame_cache };
 			assert(cache_index < cache.size());
 
 			const MaterialType::Type material_type{ cache.material_types[cache_index] };
@@ -211,6 +227,10 @@ namespace lightning::graphics::direct3d12::gpass {
 					cmd_list->SetGraphicsRootShaderResourceView(params::POSITION_BUFFER, cache.position_buffers[cache_index]);
 					cmd_list->SetGraphicsRootShaderResourceView(params::ELEMENT_BUFFER, cache.element_buffers[cache_index]);
 					cmd_list->SetGraphicsRootConstantBufferView(params::PER_OBJECT_DATA, cache.per_object_data[cache_index]);
+
+					if (cache.texture_counts[cache_index]) {
+						cmd_list->SetGraphicsRootShaderResourceView(params::SRV_INDICIES, cache.srv_indices[cache_index]);
+					}
 				}
 				break;
 			}
@@ -234,9 +254,28 @@ namespace lightning::graphics::direct3d12::gpass {
 			submesh::get_views(items_cache.submesh_gpu_ids, items_count, views_cache);
 
 			const material::MaterialsCache materials_cache{ cache.materials_cache() };
-			material::get_materials(items_cache.material_ids, items_count, materials_cache);
+			material::get_materials(items_cache.material_ids, items_count, materials_cache, cache.descriptor_index_count);
 
 			fill_per_object_data(info);
+
+			if (cache.descriptor_index_count) {
+				ConstantBuffer& cbuffer{ core::c_buffer() };
+				const u32 size{ cache.descriptor_index_count * sizeof(u32) };
+				u32* const srv_indices{ (u32* const)cbuffer.allocate(size) };
+				u32 srv_index_offset{ 0 };
+
+				for (u32 i{ 0 }; i < items_count; ++i) {
+					const u32 texture_count{ cache.texture_counts[i] };
+					cache.srv_indices[i] = 0;
+
+					if (texture_count) {
+						const u32* const descriptor_indicies{ cache.descriptor_indices[i] };
+						memcpy(&srv_indices[srv_index_offset], descriptor_indicies, texture_count * sizeof(u32));
+						cache.srv_indices[i] = cbuffer.gpu_address(srv_indices + srv_index_offset);
+						srv_index_offset += texture_count;
+					}
+				}
+			}
 		}
 	}
 
