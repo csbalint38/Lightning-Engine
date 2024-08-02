@@ -20,7 +20,7 @@ class Project {
   late RelayCommand removeScene;
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
-    fullPath = '$path\\$name.$extension';
+    fullPath = '$path\\$name\\$name.$extension';
     if (scenes == null) {
       this.scenes.add(Scene(name: "Default Scene", isActive: true));
       activeScene = this.scenes.first;

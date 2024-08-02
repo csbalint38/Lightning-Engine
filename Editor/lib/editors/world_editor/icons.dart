@@ -30,23 +30,32 @@ class _IconsRowState extends State<IconsRow> implements EventObserver {
       children: [
         const SizedBox(width: 8),
         Tooltip(
-          message: "Undo",
+          message: "Undo\nCtrl + Z",
           child: IconButton(
             onPressed: _controller.undoRedo.undoList.isNotEmpty
-                ? () => _controller.undo.execute(null)
+                ? () => _controller.undoCommand.execute(null)
                 : null,
             icon: const Icon(Icons.undo),
           ),
         ),
         Tooltip(
-          message: "Redo",
+          message: "Redo\nCtrl + Y",
           child: IconButton(
             onPressed: _controller.undoRedo.redoList.isNotEmpty
-                ? () => _controller.redo.execute(null)
+                ? () => _controller.redoCommand.execute(null)
                 : null,
             icon: const Icon(Icons.redo),
           ),
         ),
+        Tooltip(
+          message: "Save\nCtrl + S",
+          child: IconButton(
+            onPressed: _controller.saveCommand.canExecute(null)
+                ? () => _controller.saveCommand.execute(null)
+                : null,
+            icon: const Icon(Icons.save),
+          ),
+        )
       ],
     );
   }
@@ -57,6 +66,9 @@ class _IconsRowState extends State<IconsRow> implements EventObserver {
       setState(() {});
     }
     if (event is RedoListChanged) {
+      setState(() {});
+    }
+    if (event is ProjectSaved) {
       setState(() {});
     }
   }

@@ -1,4 +1,5 @@
 import 'package:editor/common/mvvm/observer.dart';
+import 'package:editor/editors/world_editor/components.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/editors/world_editor/history.dart';
 import 'package:editor/editors/world_editor/icons.dart';
@@ -122,7 +123,7 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
                                 ),
                                 DockingItem(
                                   name: "Components",
-                                  widget: const Text("D"),
+                                  widget: const Components(),
                                 ),
                               ],
                             ),
@@ -141,18 +142,15 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
   }
 
   void _undo() {
-    _controller.undo.execute(null);
-    print('UNDO');
-    setState(() {});
+    _controller.undoCommand.execute(null);
   }
 
   void _redo() {
-    _controller.redo.execute(null);
-    setState(() {});
+    _controller.redoCommand.execute(null);
   }
 
   void _save() {
-    setState(() {});
+    _controller.saveCommand.execute(null);
   }
 
   @override

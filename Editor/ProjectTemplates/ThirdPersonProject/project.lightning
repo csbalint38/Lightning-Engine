@@ -6,6 +6,7 @@
 		<Scene>
 			<Name>Default Scene</Name>
 			<IsActive>true</IsActive>
+			<Entities/>
 		</Scene>
 	</Scenes>
 </Project>

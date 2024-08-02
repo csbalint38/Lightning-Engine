@@ -123,6 +123,8 @@ ThemeData darkTheme = ThemeData(
 extension CustomTheme on ThemeData {
   Color get borderColor =>
       brightness == Brightness.light ? Colors.black38 : Colors.black38;
+  Color? get outlineColor =>
+      brightness == Brightness.light ? Colors.blueGrey[100] : Colors.blueGrey;
   MultiSplitViewThemeData get msvTheme => brightness == Brightness.light
       ? MultiSplitViewThemeData(
           dividerPainter: DividerPainters.background(
@@ -180,4 +182,22 @@ extension CustomTheme on ThemeData {
           color: Color.fromARGB(255, 109, 142, 158),
         )
       : const TextStyle();
+
+  ButtonStyle get smallIcon => brightness == Brightness.light
+      ? smallButton.copyWith(
+          side: const WidgetStatePropertyAll(
+            BorderSide(color: Colors.transparent, width: 0),
+          ),
+          iconSize: const WidgetStatePropertyAll(20),
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+          iconColor: WidgetStateProperty.resolveWith<Color>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.disabled)) {
+                return Colors.black38;
+              }
+              return Colors.blueGrey;
+            },
+          ),
+        )
+      : const ButtonStyle();
 }
