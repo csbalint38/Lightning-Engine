@@ -391,16 +391,11 @@ namespace lightning::graphics::direct3d12::content {
 
 			for (u32 i{ 0 }; i < array_size; ++i) {
 				for (u32 j{ 0 }; j < mip_levels; ++j) {
-					blob.skip(2 * sizeof(u32));
 					const u32 row_pitch{ blob.read<u32>() };
 					const u32 slice_pitch{ blob.read<u32>() };
 
 					subresources.emplace_back(D3D12_SUBRESOURCE_DATA{ blob.position(), row_pitch, slice_pitch });
-					blob.skip(slice_pitch);
-
-					for (u32 k{ 1 }; k < depth_per_mip_level[j]; ++k) {
-						blob.skip(4 * sizeof(u32) + slice_pitch);
-					}
+					blob.skip(slice_pitch * depth_per_mip_level[j]);
 				}
 			}
 
@@ -420,9 +415,12 @@ namespace lightning::graphics::direct3d12::content {
 			const u32 subresource_count{ array_size * mip_levels };
 			assert(subresource_count);
 
-			D3D12_PLACED_SUBRESOURCE_FOOTPRINT* const layouts{ (D3D12_PLACED_SUBRESOURCE_FOOTPRINT* const)_alloca(sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) * subresource_count) };
-			u32* const num_rows{ (u32* const)_alloca(sizeof(u32) * subresource_count) };
-			u64* const row_sizes{ (u64* const)_alloca(sizeof(u64) * subresource_count) };
+			const u32 footprints_data_size{ (sizeof(D3D12_PLACED_SUBRESOURCE_FOOTPRINT) + sizeof(u32) + sizeof(u64)) * subresource_count };
+			std::unique_ptr<u8[]> footprints_data{ std::make_unique<u8[]>(footprints_data_size) };
+
+			D3D12_PLACED_SUBRESOURCE_FOOTPRINT* const layouts{ (D3D12_PLACED_SUBRESOURCE_FOOTPRINT* const)footprints_data.get() };
+			u32* const num_rows{ (u32* const)&layouts[subresource_count] };
+			u64* const row_sizes{ (u64* const)&num_rows[subresource_count] };
 			u64 required_size{ 0 };
 			id3d12_device* device{ core::device() };
 
@@ -676,10 +674,10 @@ namespace lightning::graphics::direct3d12::content {
 			items[0] = geometry_content_id;
 			id::id_type* const item_ids{ &items[1] };
 
-			std::lock_guard lock{ render_item_mutex };
+			D3D12RenderItem* const d3d12_items{ (D3D12RenderItem* const)alloca(material_count * sizeof(D3D12RenderItem)) };
 
 			for (u32 i{ 0 }; i < material_count; ++i) {
-				D3D12RenderItem item{};
+				D3D12RenderItem& item{ d3d12_items[i] };
 				item.entity_id = entity_id;
 				item.submesh_gpu_id = gpu_ids[i];
 				item.material_id = material_ids[i];
@@ -687,9 +685,13 @@ namespace lightning::graphics::direct3d12::content {
 				item.pso_id = id_pair.gpass_pso_id;
 				item.depth_pso_id = id_pair.depth_pso_id;
 
-				assert(id::is_valid(item.submesh_gpu_id) && id::is_valid(item.material_id));
+				assert(id::is_valid(item.submesh_gpu_id) && id::is_valid(item.material_id)); 
+			}
+			
+			std::lock_guard lock{ render_item_mutex };
 
-				item_ids[i] = render_items.add(item);
+			for (u32 i{ 0 }; i < material_count; ++i) {
+				item_ids[i] = render_items.add(d3d12_items[i]);
 			}
 
 			item_ids[material_count] = id::invalid_id;
@@ -747,7 +749,7 @@ namespace lightning::graphics::direct3d12::content {
 
 				assert(item_index <= d3d12_render_item_count);
 			}
-			assert(item_index <= d3d12_render_item_count);
+			assert(item_index == d3d12_render_item_count);
 		}
 
 		void get_items(const id::id_type* const d3d12_render_item_ids, u32 id_count, const ItemsCache& cache) {

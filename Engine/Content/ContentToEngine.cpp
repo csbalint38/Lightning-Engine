@@ -17,7 +17,7 @@ namespace lightning::content {
 		class GeometryHierarchyStream {
 			public:
 				DISABLE_COPY_AND_MOVE(GeometryHierarchyStream);
-				GeometryHierarchyStream(u8* const buffer, u32 lods = u32_invalid_id) : _buffer{ buffer } {
+				explicit GeometryHierarchyStream(u8* const buffer, u32 lods = u32_invalid_id) {
 					assert(buffer && lods);
 					if (lods != u32_invalid_id) *((u32*)buffer) = lods;
 					_lod_count = *((u32*)buffer);
@@ -50,7 +50,6 @@ namespace lightning::content {
 				[[nodiscard]] constexpr id::id_type* gpu_ids() const { return _gpu_ids; }
 
 			private:
-				u8* const _buffer;
 				f32* _thresholds;
 				LodOffset* _lod_offsets;
 				id::id_type* _gpu_ids;

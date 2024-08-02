@@ -12,6 +12,18 @@ struct PixelOut {
     float4 color : SV_TARGET0;
 };
 
+struct Surface
+{
+    float3 base_color;
+    float metallic;
+    float3 normal;
+    float perceptual_roughness;
+    float3 emissive_color;
+    float emissive_intensity;
+    float ambient_occlusion;
+};
+
+#define ELEMENTS_TYPE_POSITION_ONLY 0x00
 #define ELEMENTS_TYPE_STATIC_NORMAL 0x01
 #define ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE 0x03
 #define ELEMENTS_TYPE_STATIC_COLOR 0x04
@@ -45,12 +57,18 @@ const static float inv_intervals = 2.f / ((1 << 16) - 1);
 
 ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<PerObjectData> per_object_buffer : register(b1, space0);
+
 StructuredBuffer<float3> vertex_positions : register(t0, space0);
 StructuredBuffer<VertexElement> elements : register(t1, space0);
+StructuredBuffer<uint> srv_indicies : register(t2, space0);
 StructuredBuffer<DirectionalLightParameters> directional_lights : register(t3, space0);
 StructuredBuffer<LightParameters> cullable_lights : register(t4, space0);
 StructuredBuffer<uint2> light_grid : register(t5, space0);
 StructuredBuffer<uint> light_index_list : register(t6, space0);
+
+SamplerState point_sampler : register(s0, space0);
+SamplerState linear_sampler : register(s1, space0);
+SamplerState anisotropic_sampler : register(s2, space0);
 
 VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexOut vs_out;
@@ -91,32 +109,38 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 #define TILE_SIZE 32
 #define NO_LIGHT_ATTENUATION 0
 
-float3 calculate_lighting(float3 n, float3 l, float3 v, float3 light_color)
+float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 specular_color, float shininess)
 {
-    const float no_l = dot(n, l);
-    float specular = 0;
+    float3 color = diffuse_color;
+    const float3 r = reflect(-l, n);
+    const float v_o_r = max(dot(v, r), 0.f);
+    color += pow(v_o_r, max(shininess, 1.f)) * specular_color;
     
-    if (no_l > 0.f)
-    {
-        const float3 r = reflect(-l, n);
-        const float va_r = max(dot(v, r), 0.f);
-        specular = saturate(no_l * pow(va_r, 4.f) * .5f);
-    }
+    return color;
 
-    return (max(0.f, no_l) + specular) * light_color;
 }
 
-float3 point_light(float3 n, float3 world_position, float3 v, LightParameters light)
+float3 calculate_lighting(Surface s, float3 n, float3 l, float3 v, float3 light_color)
+{
+    const float3 n = s.normal;
+    const float n_o_l = saturate(dot(n, l));
+
+    return PhongBRDF(n, l, v, s.base_color, 1, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI * light_color);
+
+}
+
+float3 point_light(Surface s, float3 world_position, float3 v, LightParameters light)
 {
     float3 l = light.position - world_position;
     const float d_sq = dot(l, l);
     float3 color = 0.f;
     
     #if NO_LIGHT_ATTENUATION
+    float3 n = s.normal;
     if(d_sq < light.range * light.range) {
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
-        color = saturate(dot(n, l) * light.color * light.intensity * .01f);
+        color = saturate(dot(n, l) * light.color * light.intensity * .05f);
     }
     return color;
     #else
@@ -125,19 +149,21 @@ float3 point_light(float3 n, float3 world_position, float3 v, LightParameters li
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
         const float attenuation = 1.f - smoothstep(-light.range, light.range, rcp(d_rcp));
-        color = calculate_lighting(n, l, v, light.color * light.intensity * attenuation * .2f);
+        color = calculate_lighting(s, l, v, light.color * light.intensity * attenuation);
     }
     return color;
     #endif
 }
 
-float3 spotlight(float3 n, float3 world_position, float3 v, LightParameters light)
+float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters light)
 {
     float3 l = light.position - world_position;
     const float d_sq = dot(l, l);
     float3 color = 0.f;
     
     #if NO_LIGHT_ATTENUATION
+    float3 n = s.normal;
+    
     if(d_sq < light.range * light.range) {
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
@@ -155,12 +181,45 @@ float3 spotlight(float3 n, float3 world_position, float3 v, LightParameters ligh
         const float attenuation = 1.f - smoothstep(-light.range, light.range, rcp(d_rcp));
         const float cos_angle_to_light = saturate(dot(-l, light.direction));
         const float angular_attenuation = smoothstep(light.cos_penumbra, light.cos_umbra, cos_angle_to_light);
-        color = calculate_lighting(n, l, v, light.intensity * attenuation * angular_attenuation * .2f);
+        color = calculate_lighting(s, l, v, light.intensity * attenuation * angular_attenuation);
 
     }
     
     return color;
     #endif
+}
+
+float4 sample(uint index, SamplerState s, float2 uv)
+{
+    return Texture2D(ResourceDescriptorHeap[srv_indicies[index]]).sample(s, uv);
+}
+
+Surface get_surface(VertexOut ps_in)
+{
+    float2 uv = ps_in.uv;
+    
+    Surface s;
+    s.base_color = 1.f;
+    s.metallic = 0.f;
+    s.normal = ps_in.world_normal;
+    s.perceptual_roughness = 1.f;
+    s.emissive_color = 0.f;
+    s.emissive_intensity = 1.f;
+    s.ambient_occlusion = 1.f;
+    
+    #if TEXTURED_MTL
+    s.ambient_occlusion = sample(0, linear_sampler, uv).r;
+    s.base_color = sample(1, linear_sampler, uv).rgb;
+    s.emissive_color = sample(2, linear_sampler, uv).rgb;
+    float2 metal_rough = sample(3, linear_sampler, uv).rg;
+    s.metallic = metal_rough.r;
+    s.perceptual_roughness = metal_rough.g;
+    s.emissive_intensity = 1.f;
+    float3 noise = sample(4, linear_sampler, uv).rgb;
+    s.normal = ps_in.world_normal;
+    #endif
+    
+    return s;
 }
 
 uint get_grid_index(float2 pos_xy, float view_width)
@@ -174,8 +233,8 @@ uint get_grid_index(float2 pos_xy, float view_width)
 PixelOut test_shader_ps(in VertexOut ps_in) {
     PixelOut ps_out;
     
-    float3 normal = normalize(ps_in.world_normal);
     float3 view_dir = normalize(global_data.camera_position - ps_in.world_position);
+    Surface s = get_surface(ps_in);
     
     float3 color = 0;
     
@@ -186,12 +245,14 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         
         float3 light_direction = light.direction;
         
+        /*
         if (abs(light_direction.z - 1.f) < .001f)
         {
             light_direction = global_data.camera_direction;
         }
+        */
         
-        color += .02f * calculate_lighting(normal, -light_direction, view_dir, light.color * light.intensity);
+        color += calculate_lighting(s, -light_direction, view_dir, light.color * light.intensity);
     }
     
     const uint grid_index = get_grid_index(ps_in.homogeneous_position.xy, global_data.view_width);
@@ -205,13 +266,13 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     for(i = light_start_index; i < num_point_lights; ++i) {
         const uint light_index = light_index_list[i];
         LightParameters light = cullable_lights[light_index];
-        color += point_light(normal, ps_in.world_position, view_dir, light);
+        color += point_light(s, ps_in.world_position, view_dir, light);
     }
     
     for(i = num_point_lights; i < num_spotlights; ++i) {
         const uint light_index = light_index_list[i];
         LightParameters light = cullable_lights[light_index];
-        color += spotlight(normal, ps_in.world_position, view_dir, light);
+        color += spotlight(s, ps_in.world_position, view_dir, light);
     }
     #else
     for (i = 0; i < light_count; ++i)
@@ -221,18 +282,17 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         
         if (light.type == LIGHT_TYPE_POINT_LIGHT)
         {
-            color += point_light(normal, ps_in.world_position, view_dir, light);
+            color += point_light(s, ps_in.world_position, view_dir, light);
         }
         else if (light.type == LIGHT_TYPE_SPOTLIGHT)
         {
-            color += spotlight(normal, ps_in.world_position, view_dir, light);
+            color += spotlight(s, ps_in.world_position, view_dir, light);
         }
 
     }
     #endif
     
-    float3 ambient = 0 / 255.f;
-    ps_out.color = saturate(float4(color + ambient , 1.f));
+    ps_out.color = float4(color * s.ambient_occlusion + s.emissive_color * s.emissive_intensity, 1.f);
     
     return ps_out;
 }
