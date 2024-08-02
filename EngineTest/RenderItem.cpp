@@ -45,7 +45,9 @@ namespace {
 
 	id::id_type vs_id{ id::invalid_id };
 	id::id_type ps_id{ id::invalid_id };
+	id::id_type textured_ps_id{ id::invalid_id };
 	id::id_type material_id{ id::invalid_id };
+	id::id_type fembot_material_id{ id::invalid_id };
 
 	std::unordered_map<id::id_type, game_entity::entity_id> render_item_entity_map;
 
@@ -101,14 +103,25 @@ namespace {
 
 		info.function = "test_shader_ps";
 		info.type = ShaderType::PIXEL;
+		util::vector<std::unique_ptr<u8[]>> pixel_shaders;
 
-		auto pixel_shader = compile_shader(info, shader_path, extra_args);
-		assert(pixel_shader.get());
+		pixel_shaders.emplace_back(compile_shader(info, shader_path, extra_args));
+		assert(pixel_shaders.back().get());
+
+		defines[0] = L"TEXTURED_MTL=1";
+		extra_args.emplace_back(L"-D");
+		extra_args.emplace_back(defines[0]);
+
+		pixel_shaders.emplace_back(compile_shader(info, shader_path, extra_args));
+		assert(pixel_shaders.back().get());
 
 		vs_id = content::add_shader_group(vertex_shader_pointers.data(), vertex_shader_pointers.size(), keys.data());
 
-		const u8* pixel_shaders[]{ pixel_shader.get() };
-		ps_id = content::add_shader_group(&pixel_shaders[0], 1, &u32_invalid_id);
+		const u8* pixel_shader_pointers[]{ pixel_shaders[0].get()};
+		ps_id = content::add_shader_group(pixel_shader_pointers, 1, &u32_invalid_id);
+
+		pixel_shader_pointers[0] = pixel_shaders[0].get();
+		textured_ps_id = content::add_shader_group(pixel_shader_pointers, 1, &u32_invalid_id);
 	}
 }
 
@@ -118,8 +131,12 @@ void create_material() {
 	info.shader_ids[graphics::ShaderType::VERTEX] = vs_id;
 	info.shader_ids[graphics::ShaderType::PIXEL] = ps_id;
 	info.type = graphics::MaterialType::OPAQUE;
-
 	material_id = content::create_resource(&info, content::AssetType::MATERIAL);
+
+	info.shader_ids[graphics::ShaderType::PIXEL] = textured_ps_id;
+	info.texture_count = TextureUsage::count;
+	info.texture_ids = &texture_ids[0];
+	fembot_material_id = content::create_resource(&info, content::AssetType::MATERIAL);
 }
 
 void remove_item(id::id_type item_id, id::id_type model_id) {
@@ -162,6 +179,7 @@ void create_render_items() {
 
 	create_material();
 	id::id_type materials[]{ material_id };
+	id::id_type fembot_materials[]{ fembot_material_id };
 
 	building_item_id = graphics::add_render_item(building_entity_id, building_model_id, _countof(materials), &materials[0]);
 	fan_item_id = graphics::add_render_item(fan_entity_id, fan_model_id, _countof(materials), &materials[0]);
@@ -179,6 +197,7 @@ void destroy_render_items() {
 	remove_item(blades_item_id, blades_model_id);
 
 	if (id::is_valid(material_id)) content::destroy_resource(material_id, content::AssetType::MATERIAL);
+	if (id::is_valid(fembot_material_id)) content::destroy_resource(fembot_material_id, content::AssetType::MATERIAL);
 
 	for (id::id_type id : texture_ids) {
 		if (id::is_valid(id)) {
@@ -188,6 +207,8 @@ void destroy_render_items() {
 
 	if (id::is_valid(vs_id)) content::remove_shader_group(vs_id);
 	if (id::is_valid(ps_id)) content::remove_shader_group(ps_id);
+	if (id::is_valid(textured_ps_id)) content::remove_shader_group(textured_ps_id);
+
 }
 
 void get_render_items(id::id_type* items, [[maybe_unused]] u32 count) {

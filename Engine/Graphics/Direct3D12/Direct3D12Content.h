@@ -32,11 +32,13 @@ namespace lightning::graphics::direct3d12::content {
 		struct MaterialsCache {
 			ID3D12RootSignature** const root_signatures;
 			MaterialType::Type* const material_types;
+			u32** const descriptor_indices;
+			u32* const texture_count;
 		};
 
 		id::id_type add(MaterialInitInfo info);
 		void remove(id::id_type id);
-		void get_materials(const id::id_type* const material_ids, u32 material_count, const MaterialsCache& cache);
+		void get_materials(const id::id_type* const material_ids, u32 material_count, const MaterialsCache& cache, u32& descriptor_index_count);
 	}
 
 	namespace render_item {

@@ -126,7 +126,16 @@ namespace lightning::graphics::direct3d12::content {
 					parameters[params::LIGHT_GRID].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 5);
 					parameters[params::LIGHT_INDEX_LIST].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 6);
 
-					root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters), get_root_signature_flags(flags) }.create();
+					const D3D12_STATIC_SAMPLER_DESC samplers[]{
+						d3dx::static_sampler(d3dx::sampler_state.static_point, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL),
+						d3dx::static_sampler(d3dx::sampler_state.static_linear, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL),
+						d3dx::static_sampler(d3dx::sampler_state.static_anisotropic, 2, 0, D3D12_SHADER_VISIBILITY_PIXEL),
+					};
+
+					root_signature = d3dx::D3D12RootSignatureDesc {
+						&parameters[0], _countof(parameters), get_root_signature_flags(flags),
+						&samplers[0], _countof(samplers)
+					}.create();
 
 					break;
 			}
@@ -637,17 +646,24 @@ namespace lightning::graphics::direct3d12::content {
 			materials.remove(id);
 		}
 
-		void get_materials(const id::id_type* const material_ids, u32 material_count, const MaterialsCache& cache) {
+		void get_materials(const id::id_type* const material_ids, u32 material_count, const MaterialsCache& cache, u32& descriptor_index_count) {
 			assert(material_ids && material_count);
 			assert(cache.root_signatures && cache.material_types);
 
 			std::lock_guard lock{ material_mutex };
 
+			u32 total_index_count{ 0 };
+
 			for (u32 i{ 0 }; i < material_count; ++i) {
 				const D3D12MaterialStream stream{ materials[material_ids[i]].get() };
 				cache.root_signatures[i] = root_signatures[stream.root_signature_id()];
 				cache.material_types[i] = stream.material_type();
+				cache.descriptor_indices[i] = stream.descriptor_indicies();
+				cache.texture_count[i] = stream.texture_count();
+				total_index_count += stream.texture_count();
 			}
+
+			descriptor_index_count = total_index_count;
 		}
 	}
 

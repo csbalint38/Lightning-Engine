@@ -224,6 +224,65 @@ namespace lightning::graphics::direct3d12::d3dx {
 		};
 	} blend_state;
 
+	constexpr struct {
+		const D3D12_STATIC_SAMPLER_DESC static_point {
+			D3D12_FILTER_MIN_MAG_MIP_POINT,			// Filter
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address U
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address V
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address W
+			0.f,									// Mip LOD bias
+			1,										// Max anisotropy
+			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
+			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
+			0.f										// Min LOD
+			D3D12_FLOAT32_MAX,						// Max LOD
+			0,										// Shader Register
+			0,										// Register Space
+			D3D12_SHADER_VISIBILITY_PIXEL			// Shader Visibility
+		};
+
+		const D3D12_STATIC_SAMPLER_DESC static_linear {
+			D3D12_FILTER_MIN_MAG_MIP_LINEAR,		// Filter
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address U
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address V
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address W
+			0.f,									// Mip LOD bias
+			1,										// Max anisotropy
+			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
+			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
+			0.f										// Min LOD
+			D3D12_FLOAT32_MAX,						// Max LOD
+			0,										// Shader Register
+			0,										// Register Space
+			D3D12_SHADER_VISIBILITY_PIXEL			// Shader Visibility
+		};
+
+		const D3D12_STATIC_SAMPLER_DESC static_anisotropic {
+			D3D12_FILTER_ANISOTROPIC,				// Filter
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address U
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address V
+			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address W
+			0.f,									// Mip LOD bias
+			1,										// Max anisotropy
+			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
+			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
+			0.f										// Min LOD
+			D3D12_FLOAT32_MAX,						// Max LOD
+			0,										// Shader Register
+			0,										// Register Space
+			D3D12_SHADER_VISIBILITY_PIXEL			// Shader Visibility
+		};
+	} sampler_state;
+
+	constexpr D3D12_STATIC_SAMPLER_DESC static_sampler(D3D12_STATIC_SAMPLER_DESC static_sampler, u32 shader_register, u32 register_space, D3D12_SHADER_VISIBILITY visibility) {
+		D3D12_STATIC_SAMPLER_DESC sampler{ static_sampler };
+		sampler.ShaderRegister = shader_register;
+		sampler.RegisterSpace = register_space;
+		sampler.ShaderVisibility = visibility;
+
+		return sampler;
+	}
+ 
 	constexpr u64 align_size_for_constant_buffer(u64 size) {
 		return math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(size);
 	}

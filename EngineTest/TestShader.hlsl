@@ -100,6 +100,14 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     vs_out.world_position = world_position.xyz;
     vs_out.world_normal = mul(float4(normal, 0.f), per_object_buffer.inv_world).xyz;
     vs_out.world_tangent = 0.f;
+    vs_out.uv = float2(element.uv.x, 1.f - elements.uv.y);
+    
+    #else
+    #undef ELEMENTS_TYPE
+    vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
+    vs_out.world_position = world_position.xyz;
+    vs_out.world_normal = 0.f;
+    vs_out.world_tangent = 0.f;
     vs_out.uv = 0.f;
     #endif
 
@@ -290,6 +298,15 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         }
 
     }
+    #endif
+    
+    #if TEXTURED_MTL
+    float v_o_n = dot(view_dir, s.normal) * 1.3f;
+    float v_o_n_2 = v_o_n * v_o_n;
+    float v_o_n_4 = v_o_n_2 * v_o_n_2;
+    float3 e = s.emissive_color;
+    s.emissive_color = max(v_o_n_4 * v_o_n_4, .1f) * e * e;
+    
     #endif
     
     ps_out.color = float4(color * s.ambient_occlusion + s.emissive_color * s.emissive_intensity, 1.f);
