@@ -301,14 +301,14 @@
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			if (_surfaces[i].surface.surface.is_valid()) {
 
-				f32 thresholds[3]{};
+				f32 thresholds[4]{};
 
-				id::id_type render_items[3]{};
-				get_render_items(&render_items[0], 3);
+				id::id_type render_items[4]{};
+				get_render_items(&render_items[0], 4);
 
 				graphics::FrameInfo info{};
 				info.render_item_ids = &render_items[0];
-				info.render_item_count = 3;
+				info.render_item_count = 4;
 				info.thresholds = &thresholds[0];
 				info.light_set_key = light_set_key;
 				info.average_frame_time = dt;

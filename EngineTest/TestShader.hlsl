@@ -100,7 +100,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     vs_out.world_position = world_position.xyz;
     vs_out.world_normal = mul(float4(normal, 0.f), per_object_buffer.inv_world).xyz;
     vs_out.world_tangent = 0.f;
-    vs_out.uv = float2(element.uv.x, 1.f - elements.uv.y);
+    vs_out.uv = float2(element.uv.x, 1.f - element.uv.y);
     
     #else
     #undef ELEMENTS_TYPE
@@ -125,15 +125,14 @@ float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 spec
     color += pow(v_o_r, max(shininess, 1.f)) * specular_color;
     
     return color;
-
 }
 
-float3 calculate_lighting(Surface s, float3 n, float3 l, float3 v, float3 light_color)
+float3 calculate_lighting(Surface s, float3 l, float3 v, float3 light_color)
 {
     const float3 n = s.normal;
     const float n_o_l = saturate(dot(n, l));
 
-    return PhongBRDF(n, l, v, s.base_color, 1, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI * light_color);
+    return PhongBRDF(n, l, v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
 
 }
 
@@ -199,7 +198,7 @@ float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters lig
 
 float4 sample(uint index, SamplerState s, float2 uv)
 {
-    return Texture2D(ResourceDescriptorHeap[srv_indicies[index]]).sample(s, uv);
+    return Texture2D(ResourceDescriptorHeap[srv_indicies[index]]).Sample(s, uv);
 }
 
 Surface get_surface(VertexOut ps_in)

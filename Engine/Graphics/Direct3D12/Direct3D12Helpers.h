@@ -234,7 +234,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 			1,										// Max anisotropy
 			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
 			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
-			0.f										// Min LOD
+			0.f,									// Min LOD
 			D3D12_FLOAT32_MAX,						// Max LOD
 			0,										// Shader Register
 			0,										// Register Space
@@ -250,7 +250,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 			1,										// Max anisotropy
 			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
 			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
-			0.f										// Min LOD
+			0.f,									// Min LOD
 			D3D12_FLOAT32_MAX,						// Max LOD
 			0,										// Shader Register
 			0,										// Register Space
@@ -266,7 +266,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 			1,										// Max anisotropy
 			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
 			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
-			0.f										// Min LOD
+			0.f,									// Min LOD
 			D3D12_FLOAT32_MAX,						// Max LOD
 			0,										// Shader Register
 			0,										// Register Space

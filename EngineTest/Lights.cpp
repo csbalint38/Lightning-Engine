@@ -3,7 +3,7 @@
 #include "EngineAPI/TransformComponent.h"
 #include "Graphics/Renderer.h"
 
-#define RANDOM_LIGHTS 1
+#define RANDOM_LIGHTS 0
 
 using namespace lightning;
 
@@ -29,7 +29,7 @@ namespace {
 		info.entity_id = entity_id;
 		info.type = type;
 		info.light_set_key = light_set_key;
-		info.intensity = 10.f;
+		info.intensity = 1.f;
 		info.color = { random(.2f), random(.2f), random(.2f) };
 		
 		#if RANDOM_LIGHTS
