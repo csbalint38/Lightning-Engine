@@ -99,13 +99,13 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     float2 n_xy = element.normal * inv_intervals - 1.f;
     float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     
-    float2 t_xy = elements.tangent * inv_intervals - 1.f;
-    float3 tangent = float3(t_xy, sqrt(saturate(1.f16tof32 - dot(t_xy, t_xy))) * t_sign);
-    tangent = tangent - normalize * dot(normalize, tangent);
+    float2 t_xy = element.tangent * inv_intervals - 1.f;
+    float3 tangent = float3(t_xy, sqrt(saturate(1.f - dot(t_xy, t_xy))) * t_sign);
+    tangent = tangent - normal * dot(normal, tangent);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
-    vs_out.world_normal = normalize(mul(normalize, (float3x3)per_object_buffer.inv_world));
+    vs_out.world_normal = normalize(mul(normal, (float3x3)per_object_buffer.inv_world));
     vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), h_sign);
     vs_out.uv = float2(element.uv.x, 1.f - element.uv.y);
     

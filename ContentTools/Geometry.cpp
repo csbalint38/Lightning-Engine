@@ -16,7 +16,7 @@ namespace lightning::tools {
 			util::vector<XMVECTOR> positions(num_indicies);
 
 			for (u32 i{ 0 }; i < num_indicies; ++i) {
-				positions[i] = XMLoadFloat3(&m.vertices[m.indices[i]].position);
+				positions[i] = XMLoadFloat3(&m.verticies[m.indicies[i]].position);
 			}
 
 			for (u32 i{ 0 }; i < num_indicies; i += 3) {
@@ -62,7 +62,7 @@ namespace lightning::tools {
 				math::v3 tangent;
 				XMStoreFloat3(&tangent, XMVector3Normalize(t - n * XMVector3Dot(n, t)));
 				f32 handedness;
-				XMStoreFloat(&handedness, XMVecdor3Dot(XMVector3Cross(t, b), n));
+				XMStoreFloat(&handedness, XMVector3Dot(XMVector3Cross(t, b), n));
 
 				handedness = handedness > 0.f ? 1.f : -1.f;
 
