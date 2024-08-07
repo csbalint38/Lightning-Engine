@@ -7,6 +7,69 @@ namespace lightning::tools {
 		using namespace math;
 		using namespace DirectX;
 
+		void calculate_tangents(Mesh& m) {
+			m.tangents.clear();
+
+			const u32 num_indicies{ (u32)m.raw_indicies.size() };
+			util::vector<XMVECTOR> tangents(num_indicies, XMVectorZero());
+			util::vector<XMVECTOR> bitangents(num_indicies, XMVectorZero());
+			util::vector<XMVECTOR> positions(num_indicies);
+
+			for (u32 i{ 0 }; i < num_indicies; ++i) {
+				positions[i] = XMLoadFloat3(&m.vertices[m.indices[i]].position);
+			}
+
+			for (u32 i{ 0 }; i < num_indicies; i += 3) {
+				const u32 i0{ i };
+				const u32 i1{ i + 1 };
+				const u32 i2{ i + 2 };
+
+				const XMVECTOR& p0{ positions[i0] };
+				const XMVECTOR& p1{ positions[i1] };
+				const XMVECTOR& p2{ positions[i2] };
+
+				const math::v2& uv0{ m.verticies[m.indicies[i0]].uv };
+				const math::v2& uv1{ m.verticies[m.indicies[i1]].uv };
+				const math::v2& uv2{ m.verticies[m.indicies[i2]].uv };
+
+				const math::v2 duv1{ uv1.x - uv0.x, uv1.y - uv0.y };
+				const math::v2 duv2{ uv2.x - uv0.x, uv2.y - uv0.y };
+
+				const XMVECTOR dp1{ p1 - p0 };
+				const XMVECTOR dp2{ p2 - p0 };
+
+				f32 det{ duv1.x * duv2.y - duv1.y * duv2.x };
+
+				if (abs(det) < math::EPSILON) det = math::EPSILON;
+
+				const f32 inv_det{ 1.f / det };
+				const XMVECTOR t{ (dp1 * duv2.y - dp2 * duv1.y) * inv_det };
+				const XMVECTOR b{ (dp2 * duv1.x - dp1 * duv2.x) * inv_det };
+
+				tangents[i0] += t;
+				tangents[i1] += t;
+				tangents[i2] += t;
+				bitangents[i0] += b;
+				bitangents[i1] += b;
+				bitangents[i2] += b;
+			}
+
+			for (u32 i{ 0 }; i < num_indicies; ++i) {
+				const XMVECTOR& t{ tangents[i] };
+				const XMVECTOR& b{ bitangents[i] };
+				const XMVECTOR& n{ XMLoadFloat3(&m.verticies[m.indicies[i]].normal) };
+
+				math::v3 tangent;
+				XMStoreFloat3(&tangent, XMVector3Normalize(t - n * XMVector3Dot(n, t)));
+				f32 handedness;
+				XMStoreFloat(&handedness, XMVecdor3Dot(XMVector3Cross(t, b), n));
+
+				handedness = handedness > 0.f ? 1.f : -1.f;
+
+				m.verticies[m.indicies[i]].tangent = { tangent.x, tangent.y, tangent.z, handedness };
+			}
+		}
+
 		void recalculate_normals(Mesh& m) {
 			const u32 num_indicies{ (u32)m.raw_indicies.size() };
 			m.normals.reserve(num_indicies);
@@ -47,7 +110,7 @@ namespace lightning::tools {
 			}
 
 			for (u32 i{ 0 }; i < num_verticies; ++i) {
-				auto& refs{ idx_ref[i] };
+				util::vector<u32>& refs{ idx_ref[i] };
 				u32 num_refs{ (u32)refs.size() };
 
 				for (u32 j{ 0 }; j < num_refs; ++j) {
@@ -95,7 +158,7 @@ namespace lightning::tools {
 				idx_ref[old_indicies[i]].emplace_back(i);
 			}
 			for (u32 i{ 0 }; i < num_indicies; ++i) {
-				auto& refs{ idx_ref[i] };
+				util::vector<u32>& refs{ idx_ref[i] };
 				u32 num_refs{ (u32)refs.size() };
 				for (u32 j{ 0 }; j < num_refs; ++j) {
 					m.indicies[refs[j]] = (u32)m.verticies.size();
@@ -155,7 +218,7 @@ namespace lightning::tools {
 			if (m.elements_type & elements::ElementsType::STATIC_NORMAL) {
 				for (u32 i{ 0 }; i < num_verticies; ++i) {
 					Vertex& v{ m.verticies[i] };
-					t_signs[i] = (u8)((v.normal.z > 0.f) << 1);
+					t_signs[i] = (u8)((v.normal.z > 0.f) << 2);
 					normals[i] = {
 						(u16)pack_float<16>(v.normal.x, -1.f, 1.f),
 						(u16)pack_float<16>(v.normal.y, -1.f, 1.f)
@@ -165,7 +228,7 @@ namespace lightning::tools {
 				if (m.elements_type & elements::ElementsType::STATIC_NORMAL_TEXTURE) {
 					for (u32 i{ 0 }; i < num_verticies; ++i) {
 						Vertex& v{ m.verticies[i] };
-						t_signs[i] |= (u8)((v.tangent.w > 0.f) && (v.tangent.z > 0.f));
+						t_signs[i] |= (u8)((v.tangent.w > 0.f) | ((v.tangent.z > 0.f) << 1));
 						tangents[i] = {
 							(u16)pack_float<16>(v.tangent.x, -1.f, 1.f),
 							(u16)pack_float<16>(v.tangent.y, -1.f, 1.f)
@@ -354,6 +417,10 @@ namespace lightning::tools {
 
 			if (!m.uv_sets.empty()) {
 				process_uvs(m);
+			}
+
+			if ((settings.calculate_tangents || m.tangents.empty()) && !m.uv_sets.empty()) {
+				calculate_tangents(m);
 			}
 
 			m.elements_type = determine_elements_type(m);

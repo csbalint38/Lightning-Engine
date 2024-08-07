@@ -4,7 +4,7 @@ struct VertexOut {
     float4 homogeneous_position : SV_POSITION;
     float3 world_position : POSITIONT;
     float3 world_normal : NORMAL;
-    float3 world_tangent : TANGENT;
+    float4 world_tangent : TANGENT;
     float2 uv : TEXTURE;
 };
 
@@ -91,15 +91,22 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
     VertexElement element = elements[vertex_idx];
-    float2 n_xy = element.normal * inv_intervals - 1.f;
     uint signs = (element.color_t_sign >> 24) & 0xff;
     float n_sign = float((signs & 0x04) >> 1) - 1.f;
+    float t_sign = float(signs & 0x02) - 1.f;
+    float h_sign = float((signs & 0x01) << 1) - 1.f;
+    
+    float2 n_xy = element.normal * inv_intervals - 1.f;
     float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
+    
+    float2 t_xy = elements.tangent * inv_intervals - 1.f;
+    float3 tangent = float3(t_xy, sqrt(saturate(1.f16tof32 - dot(t_xy, t_xy))) * t_sign);
+    tangent = tangent - normalize * dot(normalize, tangent);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
-    vs_out.world_normal = mul(float4(normal, 0.f), per_object_buffer.inv_world).xyz;
-    vs_out.world_tangent = 0.f;
+    vs_out.world_normal = normalize(mul(normalize, (float3x3)per_object_buffer.inv_world));
+    vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), h_sign);
     vs_out.uv = float2(element.uv.x, 1.f - element.uv.y);
     
     #else
