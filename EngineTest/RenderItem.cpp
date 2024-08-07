@@ -137,7 +137,7 @@ void create_material() {
 	info.type = graphics::MaterialType::OPAQUE;
 	material_id = content::create_resource(&info, content::AssetType::MATERIAL);
 
-	info.shader_ids[graphics::ShaderType::PIXEL] = ps_id;
+	info.shader_ids[graphics::ShaderType::PIXEL] = textured_ps_id;
 	info.texture_count = TextureUsage::count;
 	info.texture_ids = &texture_ids[0];
 	fembot_material_id = content::create_resource(&info, content::AssetType::MATERIAL);

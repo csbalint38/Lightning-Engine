@@ -80,8 +80,8 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexElement element = elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
     uint signs = (element.color_t_sign >> 24) & 0xff;
-    float n_sign = float(signs & 0x02) - 1;
-    float3 normal = float3(n_xy.x, n_xy.y, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
+    float n_sign = float((signs & 0x04) >> 1) - 1.f;
+    float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
@@ -93,8 +93,8 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexElement element = elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
     uint signs = (element.color_t_sign >> 24) & 0xff;
-    float n_sign = float(signs & 0x02) - 1;
-    float3 normal = float3(n_xy.x, n_xy.y, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
+    float n_sign = float((signs & 0x04) >> 1) - 1.f;
+    float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
@@ -309,6 +309,6 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     #endif
     
     ps_out.color = float4(color * s.ambient_occlusion + s.emissive_color * s.emissive_intensity, 1.f);
-    
+
     return ps_out;
 }
