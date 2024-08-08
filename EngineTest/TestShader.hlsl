@@ -91,7 +91,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
     VertexElement element = elements[vertex_idx];
-    uint signs = (element.color_t_sign >> 24) & 0xff;
+    uint signs = element.color_t_sign >> 24;
     float n_sign = float((signs & 0x04) >> 1) - 1.f;
     float t_sign = float(signs & 0x02) - 1.f;
     float h_sign = float((signs & 0x01) << 1) - 1.f;
@@ -106,7 +106,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
     vs_out.world_normal = normalize(mul(normal, (float3x3)per_object_buffer.inv_world));
-    vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), h_sign);
+    vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), -h_sign);
     vs_out.uv = float2(element.uv.x, 1.f - element.uv.y);
     
     #else
@@ -162,7 +162,7 @@ float3 point_light(Surface s, float3 world_position, float3 v, LightParameters l
     {
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
-        const float attenuation = 1.f - smoothstep(-light.range, light.range, rcp(d_rcp));
+        const float attenuation = 1.f - smoothstep(.1f * light.range, light.range, rcp(d_rcp));
         color = calculate_lighting(s, l, v, light.color * light.intensity * attenuation);
     }
     return color;
@@ -192,7 +192,7 @@ float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters lig
     {
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
-        const float attenuation = 1.f - smoothstep(-light.range, light.range, rcp(d_rcp));
+        const float attenuation = 1.f - smoothstep(.1f * light.range, light.range, rcp(d_rcp));
         const float cos_angle_to_light = saturate(dot(-l, light.direction));
         const float angular_attenuation = smoothstep(light.cos_penumbra, light.cos_umbra, cos_angle_to_light);
         color = calculate_lighting(s, l, v, light.intensity * attenuation * angular_attenuation);
@@ -215,7 +215,7 @@ Surface get_surface(VertexOut ps_in)
     Surface s;
     s.base_color = 1.f;
     s.metallic = 0.f;
-    s.normal = ps_in.world_normal;
+    s.normal = normalize(ps_in.world_normal);
     s.perceptual_roughness = 1.f;
     s.emissive_color = 0.f;
     s.emissive_intensity = 1.f;
@@ -229,8 +229,16 @@ Surface get_surface(VertexOut ps_in)
     s.metallic = metal_rough.r;
     s.perceptual_roughness = metal_rough.g;
     s.emissive_intensity = 1.f;
-    float3 noise = sample(4, linear_sampler, uv).rgb;
-    s.normal = ps_in.world_normal;
+    float3 n = sample(4, linear_sampler, uv).rgb;
+    n = n * 2.f - 1.f;
+    n.z = sqrt(1.f - saturate(dot(n.xy, n.xy)));
+    
+    const float3 N = normalize(ps_in.world_normal);
+    const float3 T = normalize(ps_in.world_tangent.xyz);
+    const float3 B = cross(N, T) * ps_in.world_tangent.w;
+    const float3x3 TBN = float3x3(T, B, N);
+    
+    s.normal = normalize(mul(n, TBN));
     #endif
     
     return s;
