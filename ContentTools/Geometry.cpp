@@ -10,15 +10,15 @@ namespace lightning::tools {
 
 		s32 mikk_get_num_faces(const SMikkTSpaceContext* context) {
 			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
-			return (s32)m.indices.size() / 3;
+			return (s32)m.indicies.size() / 3;
 		}
 
 		s32 mikk_get_num_verticies_of_face([[maybe_unused]] const SMikkTSpaceContext* context, [[maybe_unused]] s32 face_index) { return 3; }
 
 		void mikk_get_position(const SMikkTSpaceContext* context, f32 position[3], s32 face_index, s32 vert_index) {
 			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
-			const u32 index{ m.indices[face_index * 3 + vert_index] };
-			const math::v3& p{ m.vertices[index].position };
+			const u32 index{ m.indicies[face_index * 3 + vert_index] };
+			const math::v3& p{ m.verticies[index].position };
 			position[0] = p.x;
 			position[1] = p.y;
 			position[2] = p.z;
@@ -26,8 +26,8 @@ namespace lightning::tools {
 
 		void mikk_get_normal(const SMikkTSpaceContext* context, f32 normal[3], s32 face_index, s32 vert_index) {
 			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
-			const u32 index{ m.indices[face_index * 3 + vert_index] };
-			const math::v3& n{ m.vertices[index].normal };
+			const u32 index{ m.indicies[face_index * 3 + vert_index] };
+			const math::v3& n{ m.verticies[index].normal };
 			normal[0] = n.x;
 			normal[1] = n.y;
 			normal[2] = n.z;
@@ -35,16 +35,16 @@ namespace lightning::tools {
 
 		void mikk_get_tex_coord(const SMikkTSpaceContext* context, f32 texture[2], s32 face_index, s32 vert_index) {
 			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
-			const u32 index{ m.indices[face_index * 3 + vert_index] };
-			const math::v2& uv{ m.vertices[index].uv };
+			const u32 index{ m.indicies[face_index * 3 + vert_index] };
+			const math::v2& uv{ m.verticies[index].uv };
 			texture[0] = uv.x;
 			texture[1] = uv.y;
 		}
 
 		void mikk_set_tspace_basic(const SMikkTSpaceContext* context, const f32 tangent[3], f32 sign, s32 face_index, s32 vert_index) {
 			Mesh& m{ *(Mesh*)(context->m_pUserData) };
-			const u32 index{ m.indices[face_index * 3 + vertex_index] };
-			math::v4& t{ m.vertices[index] };
+			const u32 index{ m.indicies[face_index * 3 + vert_index] };
+			math::v4& t{ m.verticies[index].tangent };
 			t.x = tangent[0];
 			t.y = tangent[1];
 			t.z = tangent[2];
@@ -58,7 +58,7 @@ namespace lightning::tools {
 			mikk_interface.m_getNumFaces = mikk_get_num_faces;
 			mikk_interface.m_getNumVerticesOfFace = mikk_get_num_verticies_of_face;
 			mikk_interface.m_getPosition = mikk_get_position;
-			mikk_interface.m_getNormla = mikk_get_normal;
+			mikk_interface.m_getNormal = mikk_get_normal;
 			mikk_interface.m_getTexCoord = mikk_get_tex_coord;
 			mikk_interface.m_setTSpaceBasic = mikk_set_tspace_basic;
 			mikk_interface.m_setTSpace = nullptr;
@@ -246,13 +246,13 @@ namespace lightning::tools {
 			if (m.tangents.size() != m.positions.size()) { return; }
 
 			util::vector<Vertex> old_vertices;
-			old_vertices.swap(m.vertices);
-			util::vector<u32> old_indices(m.indices.size());
-			old_indices.swap(m.indices);
+			old_vertices.swap(m.verticies);
+			util::vector<u32> old_indices(m.indicies.size());
+			old_indices.swap(m.indicies);
 
 			const u32 num_vertices{ (u32)old_vertices.size() };
 			const u32 num_indices{ (u32)old_indices.size() };
-			assert(nume_vertices && num_indices);
+			assert(num_vertices && num_indices);
 
 			util::vector<util::vector<u32>> idx_ref{ num_vertices };
 
@@ -262,13 +262,14 @@ namespace lightning::tools {
 
 			for (u32 i{ 0 }; i < num_vertices; ++i) {
 				util::vector<u32>& refs{ idx_ref[i] };
+				u32 num_refs{ (u32)refs.size() };
 
 				for (u32 j{ 0 }; j < num_refs; ++j) {
 					const v4& tj{ m.tangents[refs[j]] };
 					Vertex& v{ old_vertices[old_indices[refs[j]]] };
 					v.tangent = tj;
-					m.indices[refs[j]] = (u32)m.vertices.size();
-					m.vertices.emplace_back(v);
+					m.indicies[refs[j]] = (u32)m.verticies.size();
+					m.verticies.emplace_back(v);
 
 					XMVECTOR xm_tj{ XMLoadFloat4(&tj) };
 					XMVECTOR xm_epsilon(XMVectorReplicate(EPSILON));
@@ -277,7 +278,7 @@ namespace lightning::tools {
 						XMVECTOR xm_tangent{ XMLoadFloat4(&m.tangents[refs[k]]) };
 
 						if (XMVector4NearEqual(xm_tj, xm_tangent, xm_epsilon)) {
-							m.indices[refs[k]] = m.indices[refs[j]];
+							m.indicies[refs[k]] = m.indicies[refs[j]];
 							refs.erease(refs.begin() + k);
 							--num_refs;
 							--k;
