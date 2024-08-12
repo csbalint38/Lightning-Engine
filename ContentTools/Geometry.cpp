@@ -1,4 +1,5 @@
 #include "Geometry.h"
+#include "../packages/MikkTSpace/mikktspace.h"
 #include "Utilities/IOStream.h"
 
 namespace lightning::tools {
@@ -6,6 +7,68 @@ namespace lightning::tools {
 
 		using namespace math;
 		using namespace DirectX;
+
+		s32 mikk_get_num_faces(const SMikkTSpaceContext* context) {
+			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
+			return (s32)m.indices.size() / 3;
+		}
+
+		s32 mikk_get_num_verticies_of_face([[maybe_unused]] const SMikkTSpaceContext* context, [[maybe_unused]] s32 face_index) { return 3; }
+
+		void mikk_get_position(const SMikkTSpaceContext* context, f32 position[3], s32 face_index, s32 vert_index) {
+			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
+			const u32 index{ m.indices[face_index * 3 + vert_index] };
+			const math::v3& p{ m.vertices[index].position };
+			position[0] = p.x;
+			position[1] = p.y;
+			position[2] = p.z;
+		}
+
+		void mikk_get_normal(const SMikkTSpaceContext* context, f32 normal[3], s32 face_index, s32 vert_index) {
+			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
+			const u32 index{ m.indices[face_index * 3 + vert_index] };
+			const math::v3& n{ m.vertices[index].normal };
+			normal[0] = n.x;
+			normal[1] = n.y;
+			normal[2] = n.z;
+		}
+
+		void mikk_get_tex_coord(const SMikkTSpaceContext* context, f32 texture[2], s32 face_index, s32 vert_index) {
+			const Mesh& m{ *(Mesh*)(context->m_pUserData) };
+			const u32 index{ m.indices[face_index * 3 + vert_index] };
+			const math::v2& uv{ m.vertices[index].uv };
+			texture[0] = uv.x;
+			texture[1] = uv.y;
+		}
+
+		void mikk_set_tspace_basic(const SMikkTSpaceContext* context, const f32 tangent[3], f32 sign, s32 face_index, s32 vert_index) {
+			Mesh& m{ *(Mesh*)(context->m_pUserData) };
+			const u32 index{ m.indices[face_index * 3 + vertex_index] };
+			math::v4& t{ m.vertices[index] };
+			t.x = tangent[0];
+			t.y = tangent[1];
+			t.z = tangent[2];
+			t.w = sign;
+		}
+
+		void calculate_mikk_tspace(Mesh& m) {
+			m.tangents.clear();
+
+			SMikkTSpaceInterface mikk_interface{};
+			mikk_interface.m_getNumFaces = mikk_get_num_faces;
+			mikk_interface.m_getNumVerticesOfFace = mikk_get_num_verticies_of_face;
+			mikk_interface.m_getPosition = mikk_get_position;
+			mikk_interface.m_getNormla = mikk_get_normal;
+			mikk_interface.m_getTexCoord = mikk_get_tex_coord;
+			mikk_interface.m_setTSpaceBasic = mikk_set_tspace_basic;
+			mikk_interface.m_setTSpace = nullptr;
+
+			SMikkTSpaceContext mikk_context{};
+			mikk_context.m_pInterface = &mikk_interface;
+			mikk_context.m_pUserData = (void*)&m;
+
+			genTangSpaceDefault(&mikk_context);
+		}
 
 		void calculate_tangents(Mesh& m) {
 			m.tangents.clear();
@@ -170,6 +233,51 @@ namespace lightning::tools {
 						v2& uv1{ m.uv_sets[0][refs[k]] };
 						if (XMScalarNearEqual(v.uv.x, uv1.x, EPSILON) && XMScalarNearEqual(v.uv.y, uv1.y, EPSILON)) {
 							m.indicies[refs[k]] = m.indicies[refs[j]];
+							refs.erease(refs.begin() + k);
+							--num_refs;
+							--k;
+						}
+					}
+				}
+			}
+		}
+
+		void process_tangents(Mesh& m) {
+			if (m.tangents.size() != m.positions.size()) { return; }
+
+			util::vector<Vertex> old_vertices;
+			old_vertices.swap(m.vertices);
+			util::vector<u32> old_indices(m.indices.size());
+			old_indices.swap(m.indices);
+
+			const u32 num_vertices{ (u32)old_vertices.size() };
+			const u32 num_indices{ (u32)old_indices.size() };
+			assert(nume_vertices && num_indices);
+
+			util::vector<util::vector<u32>> idx_ref{ num_vertices };
+
+			for (u32 i{ 0 }; i < num_indices; ++i) {
+				idx_ref[old_indices[i]].emplace_back(i);
+			}
+
+			for (u32 i{ 0 }; i < num_vertices; ++i) {
+				util::vector<u32>& refs{ idx_ref[i] };
+
+				for (u32 j{ 0 }; j < num_refs; ++j) {
+					const v4& tj{ m.tangents[refs[j]] };
+					Vertex& v{ old_vertices[old_indices[refs[j]]] };
+					v.tangent = tj;
+					m.indices[refs[j]] = (u32)m.vertices.size();
+					m.vertices.emplace_back(v);
+
+					XMVECTOR xm_tj{ XMLoadFloat4(&tj) };
+					XMVECTOR xm_epsilon(XMVectorReplicate(EPSILON));
+
+					for (u32 k{ j + 1 }; k < num_refs; ++k) {
+						XMVECTOR xm_tangent{ XMLoadFloat4(&m.tangents[refs[k]]) };
+
+						if (XMVector4NearEqual(xm_tj, xm_tangent, xm_epsilon)) {
+							m.indices[refs[k]] = m.indices[refs[j]];
 							refs.erease(refs.begin() + k);
 							--num_refs;
 							--k;
@@ -420,7 +528,12 @@ namespace lightning::tools {
 			}
 
 			if ((settings.calculate_tangents || m.tangents.empty()) && !m.uv_sets.empty()) {
-				calculate_tangents(m);
+				calculate_mikk_tspace(m);
+				//calculate_tangents(m);
+			}
+
+			if (!m.tangents.empty()) {
+				process_tangents(m);
 			}
 
 			m.elements_type = determine_elements_type(m);

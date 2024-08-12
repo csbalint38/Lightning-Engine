@@ -233,8 +233,8 @@ Surface get_surface(VertexOut ps_in)
     n = n * 2.f - 1.f;
     n.z = sqrt(1.f - saturate(dot(n.xy, n.xy)));
     
-    const float3 N = normalize(ps_in.world_normal);
-    const float3 T = normalize(ps_in.world_tangent.xyz);
+    const float3 N = ps_in.world_normal;
+    const float3 T = ps_in.world_tangent.xyz;
     const float3 B = cross(N, T) * ps_in.world_tangent.w;
     const float3x3 TBN = float3x3(T, B, N);
     
