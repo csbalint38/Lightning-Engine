@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:editor/common/mvvm/observable_list.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/game_project/scene.dart';
+import 'package:editor/common/list_notifier.dart';
+import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -11,7 +12,7 @@ class Project {
 
   final String name;
   final String path;
-  final ObservableList<Scene> scenes = ObservableList<Scene>();
+  final ListNotifier<Scene> scenes = ListNotifier<Scene>();
   late Scene activeScene;
 
   late String fullPath;
@@ -23,7 +24,7 @@ class Project {
     fullPath = '$path\\$name\\$name.$extension';
     if (scenes == null) {
       this.scenes.add(Scene(name: "Default Scene", isActive: true));
-      activeScene = this.scenes.first;
+      activeScene = this.scenes.value.first;
     } else {
       for (final Scene scene in scenes) {
         this.scenes.add(scene);
@@ -35,9 +36,9 @@ class Project {
 
     addScene = RelayCommand(
       (x) {
-        _addScene("New Scene ${this.scenes.length}");
-        Scene newScene = this.scenes.last;
-        int index = this.scenes.length - 1;
+        _addScene("New Scene ${this.scenes.value.length}");
+        Scene newScene = this.scenes.value.last;
+        int index = this.scenes.value.length - 1;
         _undoRedo.add(
           UndoRedoAction(
             name: "Add ${newScene.name}",
@@ -50,7 +51,7 @@ class Project {
 
     removeScene = RelayCommand<Scene>(
       (x) {
-        int index = this.scenes.indexOf(x);
+        int index = this.scenes.value.indexOf(x);
         _removeScene(x);
         _undoRedo.add(
           UndoRedoAction(
@@ -65,8 +66,20 @@ class Project {
   }
 
   factory Project.fromXMLFile(File file) {
-    String content = file.readAsStringSync();
-    return Project.fromXML(content);
+    try {
+      String content = file.readAsStringSync();
+      Project instance = Project.fromXML(content);
+
+      return instance;
+    } catch (err) {
+      debugLogger.e(err);
+      EditorLogger().log(
+        LogLevel.error,
+        "Failed to open $file",
+        trace: StackTrace.current,
+      );
+      rethrow;
+    }
   }
 
   factory Project.fromXML(String xmlStr) {
@@ -96,7 +109,7 @@ class Project {
       builder.element("Name", nest: name);
       builder.element("Path", nest: path);
       builder.element("Scenes", nest: () {
-        for (final scene in scenes) {
+        for (final scene in scenes.value) {
           builder.xml(scene.toXML());
         }
       });
@@ -106,16 +119,33 @@ class Project {
   }
 
   void toXMLFile(String path) {
-    final String xmlString = toXML();
-    final File file = File(path);
-    file.writeAsStringSync(xmlString);
+    try {
+      final String xmlString = toXML();
+      final File file = File(path);
+      file.writeAsStringSync(xmlString);
+    } catch (err) {
+      debugLogger.e(err);
+      EditorLogger().log(
+        LogLevel.error,
+        "Failed to save project to location $path",
+        trace: StackTrace.current,
+      );
+    }
   }
 
   static void save(Project project) {
+    EditorLogger().log(
+      LogLevel.info,
+      "Saved project to ${project.fullPath}",
+      trace: StackTrace.current,
+    );
+    print(EditorLogger().logs);
     return project.toXMLFile(project.fullPath);
   }
 
-  void unload() {}
+  void unload() {
+    UndoRedo().resset();
+  }
 
   void _addScene(String sceneName) {
     scenes.add(Scene(name: sceneName));

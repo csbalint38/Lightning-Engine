@@ -1,7 +1,8 @@
-import 'package:editor/common/mvvm/observer.dart';
+import 'package:editor/Components/game_entity.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ScenesList extends StatefulWidget {
   const ScenesList({super.key});
@@ -10,28 +11,27 @@ class ScenesList extends StatefulWidget {
   State<ScenesList> createState() => _ScenesListState();
 }
 
-class _ScenesListState extends State<ScenesList> implements EventObserver {
+class _ScenesListState extends State<ScenesList> {
   final _pageBucket = PageStorageBucket();
   final _controller = WorldEditorController();
 
-  int selectedEntityIndex = 0;
-
-  void _selectedEntityChanged(int index) {
-    setState(() {
-      selectedEntityIndex = index;
-      _controller.notify(SelectedEntityIndexChanged(index: index));
-    });
+  void _changeSelection(int index) {
+    if (HardwareKeyboard.instance.isControlPressed) {
+      _controller.changeSelection(index, false);
+    } else if (HardwareKeyboard.instance.isShiftPressed) {
+      _controller.changeSelection(index, true);
+    } else {
+      _controller.changeSelection(index, null);
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    _controller.subscribe(this);
   }
 
   @override
   void dispose() {
-    _controller.unsubscribe(this);
     super.dispose();
   }
 
@@ -56,99 +56,143 @@ class _ScenesListState extends State<ScenesList> implements EventObserver {
             child: PageStorage(
               bucket: _pageBucket,
               child: Material(
-                child: ListView.builder(
-                  itemCount: _controller.getScenes().length,
-                  itemBuilder: (context, index) {
-                    return ListTileTheme(
-                      minVerticalPadding: 0,
-                      child: ExpansionTile(
-                        controlAffinity: ListTileControlAffinity.leading,
-                        minTileHeight: 0,
-                        initiallyExpanded:
-                            _controller.getScenes()[index].isActive,
-                        iconColor: Colors.blueGrey,
-                        collapsedIconColor: Colors.blueGrey,
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _controller.getScenes()[index].name,
-                              style: Theme.of(context).accentSmall,
-                            ),
-                            Row(
+                child: ValueListenableBuilder(
+                  valueListenable: _controller.getScenes(),
+                  builder: (context, _, __) {
+                    return ListView.builder(
+                      itemCount: _controller.getScenes().value.length,
+                      itemBuilder: (context, index) {
+                        return ListTileTheme(
+                          minVerticalPadding: 0,
+                          child: ExpansionTile(
+                            controlAffinity: ListTileControlAffinity.leading,
+                            minTileHeight: 0,
+                            initiallyExpanded:
+                                _controller.getScenes().value[index].isActive,
+                            iconColor: Colors.blueGrey,
+                            collapsedIconColor: Colors.blueGrey,
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Tooltip(
-                                  message: "Add new GameEntity",
-                                  child: OutlinedButton(
-                                    style: Theme.of(context).smallIcon,
-                                    onPressed: _controller
-                                            .getScenes()[index]
-                                            .isActive
-                                        ? () => _controller.addGameEntity(index)
-                                        : null,
-                                    child: const Icon(
-                                        Icons.add_circle_outline_sharp),
-                                  ),
+                                Text(
+                                  _controller.getScenes().value[index].name,
+                                  style: Theme.of(context).accentSmall,
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: OutlinedButton(
-                                    style: Theme.of(context).smallButton,
-                                    onPressed: () =>
-                                        _controller.removeScene(index),
-                                    child: const Text("Remove"),
-                                  ),
+                                Row(
+                                  children: [
+                                    Tooltip(
+                                      message: "Add new GameEntity",
+                                      child: OutlinedButton(
+                                        style: Theme.of(context).smallIcon,
+                                        onPressed: _controller
+                                                .getScenes()
+                                                .value[index]
+                                                .isActive
+                                            ? () =>
+                                                _controller.addGameEntity(index)
+                                            : null,
+                                        child: const Icon(
+                                            Icons.add_circle_outline_sharp),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: OutlinedButton(
+                                        style: Theme.of(context).smallButton,
+                                        onPressed: () =>
+                                            _controller.removeScene(index),
+                                        child: const Text("Remove"),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        children: _controller
-                            .getScenes()[index]
-                            .entities
-                            .asMap()
-                            .entries
-                            .map((entity) => GestureDetector(
-                                  onTapUp: (_) =>
-                                      _selectedEntityChanged(entity.key),
-                                  child: ListTile(
-                                    selectedTileColor:
-                                        Theme.of(context).outlineColor,
-                                    selectedColor:
-                                        Theme.of(context).primaryColor,
-                                    minTileHeight: 0,
-                                    title: MouseRegion(
-                                      cursor: SystemMouseCursors.click,
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            entity.value.name,
-                                            style: Theme.of(context).smallText,
+                            children: [
+                              ValueListenableBuilder<List<GameEntity>>(
+                                valueListenable:
+                                    _controller.getActiveScene.entities,
+                                builder: (context, value, _) {
+                                  return Column(
+                                    children: value
+                                        .asMap()
+                                        .entries
+                                        .map(
+                                          (entity) => GestureDetector(
+                                            onTapUp: (_) {
+                                              _changeSelection(entity.key);
+                                            },
+                                            child: ValueListenableBuilder(
+                                              valueListenable: _controller
+                                                  .selectedEntityIndices,
+                                              builder: (context, value, __) {
+                                                return ListTile(
+                                                  selectedTileColor:
+                                                      Theme.of(context)
+                                                          .outlineColor,
+                                                  selectedColor:
+                                                      Theme.of(context)
+                                                          .primaryColor,
+                                                  minTileHeight: 0,
+                                                  title: MouseRegion(
+                                                    cursor: SystemMouseCursors
+                                                        .click,
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        ValueListenableBuilder(
+                                                          valueListenable:
+                                                              entity.value.name,
+                                                          builder: (context, _,
+                                                                  __) =>
+                                                              Text(
+                                                            entity.value.name
+                                                                .value,
+                                                            style: Theme.of(
+                                                                    context)
+                                                                .smallText,
+                                                          ),
+                                                        ),
+                                                        OutlinedButton(
+                                                          onPressed: _controller
+                                                                  .getScenes()
+                                                                  .value[index]
+                                                                  .isActive
+                                                              ? () => _controller
+                                                                  .removeGameEntity(
+                                                                      index,
+                                                                      entity
+                                                                          .value)
+                                                              : null,
+                                                          style:
+                                                              Theme.of(context)
+                                                                  .smallIcon,
+                                                          child: const Icon(Icons
+                                                              .cancel_outlined),
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  titleTextStyle:
+                                                      Theme.of(context)
+                                                          .accentSmall,
+                                                  selected: value
+                                                      .contains(entity.key),
+                                                );
+                                              },
+                                            ),
                                           ),
-                                          OutlinedButton(
-                                            onPressed: _controller
-                                                    .getScenes()[index]
-                                                    .isActive
-                                                ? () => _controller
-                                                    .removeGameEntity(
-                                                        index, entity.value)
-                                                : null,
-                                            style: Theme.of(context).smallIcon,
-                                            child: const Icon(
-                                                Icons.cancel_outlined),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                    titleTextStyle:
-                                        Theme.of(context).accentSmall,
-                                    selected: entity.key == selectedEntityIndex,
-                                  ),
-                                ))
-                            .toList(),
-                      ),
+                                        )
+                                        .toList(),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
@@ -158,15 +202,5 @@ class _ScenesListState extends State<ScenesList> implements EventObserver {
         ),
       ],
     );
-  }
-
-  @override
-  void notify(ViewEvent event) {
-    if (event is ScenesListChanged) {
-      setState(() {});
-    }
-    if (event is ActiveSceneEntitiesListChanged) {
-      setState(() {});
-    }
   }
 }

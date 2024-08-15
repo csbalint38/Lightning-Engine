@@ -8,6 +8,8 @@
  - Add/remove Scenes
  - Undo/redo functionality
  - Add/remove Entities
+ - Select, rename, enable/disable Entities
+ - Developer console
 
 # Engine
  - Create/remove Entities

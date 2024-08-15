@@ -42,6 +42,7 @@ class Transform implements Component {
     Transform(position: position, rotation: rotation, scale: scale);
   }
 
+  @override
   String toXML() {
     final builder = xml.XmlBuilder();
     builder.element("Position", nest: () {

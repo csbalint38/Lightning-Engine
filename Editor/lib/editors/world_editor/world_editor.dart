@@ -1,5 +1,5 @@
-import 'package:editor/common/mvvm/observer.dart';
 import 'package:editor/editors/world_editor/components.dart';
+import 'package:editor/editors/world_editor/console.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/editors/world_editor/history.dart';
 import 'package:editor/editors/world_editor/icons.dart';
@@ -18,21 +18,21 @@ class WorldEditor extends StatefulWidget {
   State<WorldEditor> createState() => _WorldEditorState();
 }
 
-class _WorldEditorState extends State<WorldEditor> implements EventObserver {
+class _WorldEditorState extends State<WorldEditor> {
   late final Project project;
   final _controller = WorldEditorController();
+  final FocusNode mainFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     project = widget.project;
     WorldEditorController().setProject(project);
-    _controller.subscribe(this);
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _controller.unsubscribe(this);
     super.dispose();
   }
 
@@ -68,6 +68,7 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
           },
           child: Focus(
             autofocus: true,
+            focusNode: mainFocusNode,
             child: MultiSplitViewTheme(
               data: Theme.of(context).msvTheme,
               child: TabbedViewTheme(
@@ -101,6 +102,10 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
                                     DockingTabs(
                                       [
                                         DockingItem(
+                                          name: "Console",
+                                          widget: const Console(),
+                                        ),
+                                        DockingItem(
                                           name: "Content Browser",
                                           widget: const Text("B2.1"),
                                         ),
@@ -115,6 +120,7 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
                               ],
                             ),
                             DockingColumn(
+                              minimalSize: 150,
                               size: 350,
                               [
                                 DockingItem(
@@ -123,7 +129,7 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
                                 ),
                                 DockingItem(
                                   name: "Components",
-                                  widget: const Components(),
+                                  widget: Components(focusNode: mainFocusNode),
                                 ),
                               ],
                             ),
@@ -152,9 +158,6 @@ class _WorldEditorState extends State<WorldEditor> implements EventObserver {
   void _save() {
     _controller.saveCommand.execute(null);
   }
-
-  @override
-  void notify(ViewEvent event) {}
 }
 
 class UndoIntent extends Intent {

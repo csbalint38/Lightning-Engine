@@ -1,22 +1,23 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
-import 'package:editor/common/mvvm/observer.dart';
-import 'package:editor/common/mvvm/viewmodel.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_template.dart';
 import 'package:editor/utilities/logger.dart';
 
-class NewProjectController extends ViewModelBase {
+class NewProjectController {
   static final NewProjectController _newProjectController =
       NewProjectController._internal();
 
   final Directory _templatesDir = Directory("ProjectTemplates");
-  String name = "NewProject";
-  String path = p.join(
-      Platform.environment['USERPROFILE']!, 'Documents', 'LightningProjects');
-  String errorMessage = "";
-  final List<ProjectTemplate> _templates = [];
-  bool isValid = true;
+  final ValueNotifier<String> name = ValueNotifier<String>("NewProject");
+  final ValueNotifier<String> path = ValueNotifier<String>(p.join(
+      Platform.environment['USERPROFILE']!, 'Documents', 'LightningProjects'));
+  final ValueNotifier<String> errorMessage = ValueNotifier<String>("");
+  final ValueNotifier<List<ProjectTemplate>> templates =
+      ValueNotifier<List<ProjectTemplate>>([]);
+  final ValueNotifier<bool> isValid = ValueNotifier<bool>(true);
 
   factory NewProjectController() {
     return _newProjectController;
@@ -27,40 +28,36 @@ class NewProjectController extends ViewModelBase {
   }
 
   void setName(name) {
-    this.name = name;
+    this.name.value = name;
     setValidationState(validate());
-    notify(NameChanged(name: name));
   }
 
   void setPath(String path) {
-    this.path = path;
+    this.path.value = path;
     setValidationState(validate());
-    notify(PathChanged(path: path));
   }
 
   void setValidationState(bool isValid) {
-    this.isValid = isValid;
-    notify(ValidationStateChanged(isValid: isValid));
+    this.isValid.value = isValid;
   }
 
   void setErrorMessage(String errorMessage) {
-    this.errorMessage = errorMessage;
-    notify(ErrorMessageChanged(errorMessage: errorMessage));
+    this.errorMessage.value = errorMessage;
   }
 
   List<ProjectTemplate> getTemplates() {
-    return _templates;
+    return templates.value;
   }
 
   bool validate() {
-    String path = this.path;
+    String path = this.path.value;
 
     if (!path.endsWith('\\')) {
       path += '\\';
     }
-    path += '$name\\';
+    path += '${name.value}\\';
 
-    if (name.trim().isEmpty) {
+    if (name.value.trim().isEmpty) {
       setErrorMessage("Project name can't be empty or just white spaces");
       return false;
     }
@@ -90,20 +87,31 @@ class NewProjectController extends ViewModelBase {
   }
 
   Future<void> createProject(ProjectTemplate template) async {
-    String fullPath = p.join(path, name);
+    String fullPath = p.join(path.value, name.value);
 
     if (!fullPath.endsWith('\\')) {
       fullPath += '\\';
     }
 
-    Directory projectDir = Directory(fullPath);
-    if (!projectDir.existsSync()) {
-      await projectDir.create(recursive: true);
+    try {
+      Directory projectDir = Directory(fullPath);
+      if (!projectDir.existsSync()) {
+        await projectDir.create(recursive: true);
+      }
+      for (final String folder in template.folders) {
+        await Directory(p.join(fullPath, folder)).create();
+      }
+      await Process.run('attrib', ['+h', '$fullPath\\.Lightning']);
+    } catch (err) {
+      debugLogger.e(
+          "Failed to create project from template. The following error occured:$err");
+      EditorLogger().log(
+        LogLevel.error,
+        "Failed to create project from template.",
+        trace: StackTrace.current,
+      );
+      rethrow;
     }
-    for (final String folder in template.folders) {
-      await Directory(p.join(fullPath, folder)).create();
-    }
-    await Process.run('attrib', ['+h', '$fullPath\\.Lightning']);
 
     try {
       await template.icon.copy(p.join(fullPath, '.Lightning', 'icon.jpg'));
@@ -114,16 +122,17 @@ class NewProjectController extends ViewModelBase {
     }
 
     String templateString = await File(template.projectFilePath).readAsString();
-    templateString =
-        templateString.replaceAll('{{0}}', name).replaceAll('{{1}}', path);
+    templateString = templateString
+        .replaceAll('{{0}}', name.value)
+        .replaceAll('{{1}}', path.value);
     final Project project = Project.fromXML(templateString);
-    project.toXMLFile(p.join(fullPath, '$name.${Project.extension}'));
+    project.toXMLFile(p.join(fullPath, '${name.value}.${Project.extension}'));
   }
 
   void _getProjectTemplates() {
     _templatesDir.listSync().forEach((item) {
       if (item is Directory) {
-        _templates.add(
+        templates.value.add(
           ProjectTemplate.fromXMLFile(
             File(p.join(item.path, 'template.xml')),
           ),
@@ -131,31 +140,4 @@ class NewProjectController extends ViewModelBase {
       }
     });
   }
-}
-
-// EVENTS:
-class NameChanged extends ViewEvent {
-  String name;
-
-  NameChanged({required this.name}) : super("NameChanged");
-}
-
-class PathChanged extends ViewEvent {
-  String path;
-
-  PathChanged({required this.path}) : super("PathChanged");
-}
-
-class ValidationStateChanged extends ViewEvent {
-  bool isValid;
-
-  ValidationStateChanged({required this.isValid})
-      : super("ValidationStateChanged");
-}
-
-class ErrorMessageChanged extends ViewEvent {
-  String errorMessage;
-
-  ErrorMessageChanged({required this.errorMessage})
-      : super("ErrorMessageChanged");
 }

@@ -1,12 +1,11 @@
 import 'dart:io';
 import "package:collection/collection.dart";
 import 'package:path/path.dart' as p;
-import 'package:editor/common/mvvm/viewmodel.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_data.dart';
 import 'package:editor/utilities/logger.dart';
 
-class OpenProjectController extends ViewModelBase {
+class OpenProjectController {
   static final OpenProjectController _openProjectController =
       OpenProjectController._internal();
 
@@ -57,7 +56,18 @@ class OpenProjectController extends ViewModelBase {
   }
 
   Project open(ProjectData projectData) {
-    _readProjectData();
+    try {
+      _readProjectData();
+    } catch (err) {
+      debugLogger
+          .e("Failed to open project. The following error occured: $err");
+      EditorLogger().log(
+        LogLevel.error,
+        "Failed to open project ${projectData.fullPath}",
+        trace: StackTrace.current,
+      );
+      rethrow;
+    }
 
     ProjectData? selectedProject = projects.firstWhereOrNull(
       (project) => project.fullPath == projectData.fullPath,

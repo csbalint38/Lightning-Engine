@@ -1,5 +1,5 @@
-import 'package:editor/common/mvvm/observer.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
+import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/material.dart';
 
 class History extends StatefulWidget {
@@ -9,18 +9,16 @@ class History extends StatefulWidget {
   State<History> createState() => _HistoryState();
 }
 
-class _HistoryState extends State<History> implements EventObserver {
+class _HistoryState extends State<History> {
   final _controller = WorldEditorController();
 
   @override
   void initState() {
-    _controller.subscribe(this);
     super.initState();
   }
 
   @override
   void dispose() {
-    _controller.unsubscribe(this);
     super.dispose();
   }
 
@@ -28,30 +26,26 @@ class _HistoryState extends State<History> implements EventObserver {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: ListView.builder(
-        itemCount: _controller.undoRedo.undoList.length +
-            _controller.undoRedo.redoList.length,
-        itemBuilder: (context, index) {
-          if (index < _controller.undoRedo.undoList.length) {
-            return Text(_controller.undoRedo.undoList[index].name);
-          }
-          final int idx = index - _controller.undoRedo.undoList.length;
-          return Text(
-            _controller.undoRedo.redoList[idx].name,
-            style: const TextStyle(color: Colors.black38),
+      child: ValueListenableBuilder(
+        valueListenable: UndoRedo().undoList,
+        builder: (context, _, __) {
+          return ListView.builder(
+            itemCount: _controller.undoRedo.undoList.value.length +
+                _controller.undoRedo.redoList.value.length,
+            itemBuilder: (context, index) {
+              if (index < _controller.undoRedo.undoList.value.length) {
+                return Text(_controller.undoRedo.undoList.value[index].name);
+              }
+              final int idx =
+                  index - _controller.undoRedo.undoList.value.length;
+              return Text(
+                _controller.undoRedo.redoList.value[idx].name,
+                style: const TextStyle(color: Colors.black38),
+              );
+            },
           );
         },
       ),
     );
-  }
-
-  @override
-  void notify(ViewEvent event) {
-    if (event is UndoListChanged) {
-      setState(() {});
-    }
-    if (event is RedoListChanged) {
-      setState(() {});
-    }
   }
 }

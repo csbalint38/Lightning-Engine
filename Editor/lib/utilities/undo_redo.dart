@@ -1,4 +1,4 @@
-import 'package:editor/common/mvvm/observable_list.dart';
+import 'package:editor/common/list_notifier.dart';
 
 abstract class IUndoRedo {
   String get name;
@@ -31,8 +31,8 @@ class UndoRedo {
 
   UndoRedo._internal();
 
-  final ObservableList<IUndoRedo> redoList = ObservableList();
-  final ObservableList<IUndoRedo> undoList = ObservableList();
+  final ListNotifier<IUndoRedo> redoList = ListNotifier<IUndoRedo>();
+  final ListNotifier<IUndoRedo> undoList = ListNotifier<IUndoRedo>();
 
   void add(IUndoRedo cmd) {
     undoList.add(cmd);
@@ -40,17 +40,17 @@ class UndoRedo {
   }
 
   void undo() {
-    if (undoList.isNotEmpty) {
-      var cmd = undoList.last;
-      undoList.remove(undoList.last);
+    if (undoList.value.isNotEmpty) {
+      var cmd = undoList.value.last;
+      undoList.remove(undoList.value.last);
       cmd.undo();
       redoList.insert(0, cmd);
     }
   }
 
   void redo() {
-    if (redoList.isNotEmpty) {
-      var cmd = redoList.first;
+    if (redoList.value.isNotEmpty) {
+      var cmd = redoList.value.first;
       redoList.removeAt(0);
       cmd.redo();
       undoList.add(cmd);

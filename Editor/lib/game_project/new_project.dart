@@ -1,9 +1,9 @@
-import 'package:editor/common/mvvm/observer.dart';
 import 'package:editor/editor.dart';
 import 'package:editor/game_project/controllers/new_project_controller.dart';
 import 'package:editor/game_project/controllers/open_project_controller.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_data.dart';
+import 'package:editor/game_project/project_template.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +14,7 @@ class NewProject extends StatefulWidget {
   State<NewProject> createState() => _NewProjectState();
 }
 
-class _NewProjectState extends State<NewProject> implements EventObserver {
+class _NewProjectState extends State<NewProject> {
   final _controller = NewProjectController();
 
   late final TextEditingController _nameController;
@@ -35,8 +35,8 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
         .createProject(_controller.getTemplates()[selectedTemplateIndex]);
     final Project project = OpenProjectController().open(
       ProjectData(
-        projectName: _controller.name,
-        projectPath: _controller.path,
+        projectName: _controller.name.value,
+        projectPath: _controller.path.value,
         lastModified: DateTime.now(),
       ),
     );
@@ -52,11 +52,9 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
   void initState() {
     super.initState();
 
-    _nameController = TextEditingController(text: _controller.name);
-    _pathController = TextEditingController(text: _controller.path);
+    _nameController = TextEditingController(text: _controller.name.value);
+    _pathController = TextEditingController(text: _controller.path.value);
     _controller.validate();
-
-    _controller.subscribe(this);
   }
 
   @override
@@ -64,7 +62,6 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
     _listFocus.dispose();
     _nameController.dispose();
     _pathController.dispose();
-    _controller.unsubscribe(this);
     super.dispose();
   }
 
@@ -89,32 +86,40 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                             color: Theme.of(context).borderColor, width: 1),
                       ),
                       child: Material(
-                        child: ListView.builder(
-                          itemCount: _controller.getTemplates().length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Listener(
-                              onPointerUp: (_) => _selectedThemeChanged(index),
-                              child: ListTile(
-                                title: MouseRegion(
-                                  cursor: SystemMouseCursors.click,
-                                  child: Row(
-                                    children: [
-                                      Image.file(
-                                        _controller.getTemplates()[index].icon,
-                                        width: 25,
-                                        height: 25,
+                        child: ValueListenableBuilder<List<ProjectTemplate>>(
+                          valueListenable: _controller.templates,
+                          builder: (context, value, _) {
+                            return ListView.builder(
+                              itemCount: _controller.getTemplates().length,
+                              itemBuilder: (BuildContext context, int index) {
+                                return Listener(
+                                  onPointerUp: (_) =>
+                                      _selectedThemeChanged(index),
+                                  child: ListTile(
+                                    title: MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: Row(
+                                        children: [
+                                          Image.file(
+                                            _controller
+                                                .getTemplates()[index]
+                                                .icon,
+                                            width: 25,
+                                            height: 25,
+                                          ),
+                                          const SizedBox(width: 15),
+                                          Text(
+                                            _controller
+                                                .getTemplates()[index]
+                                                .projectName,
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 15),
-                                      Text(
-                                        _controller
-                                            .getTemplates()[index]
-                                            .projectName,
-                                      ),
-                                    ],
+                                    ),
+                                    selected: index == selectedTemplateIndex,
                                   ),
-                                ),
-                                selected: index == selectedTemplateIndex,
-                              ),
+                                );
+                              },
                             );
                           },
                         ),
@@ -126,11 +131,16 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                   flex: 4,
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 16, 40, 16),
-                    child: Image.file(
-                      _controller
-                          .getTemplates()[selectedTemplateIndex]
-                          .screenshot,
-                      alignment: Alignment.centerRight,
+                    child: ValueListenableBuilder<List<ProjectTemplate>>(
+                      valueListenable: _controller.templates,
+                      builder: (context, value, child) {
+                        return Image.file(
+                          _controller
+                              .getTemplates()[selectedTemplateIndex]
+                              .screenshot,
+                          alignment: Alignment.centerRight,
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -203,11 +213,17 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text(
-                          _controller.errorMessage,
-                          style: const TextStyle(color: Colors.red),
-                        )),
+                      padding: const EdgeInsets.only(top: 16),
+                      child: ValueListenableBuilder<String>(
+                        valueListenable: _controller.errorMessage,
+                        builder: (context, value, _) {
+                          return Text(
+                            value,
+                            style: const TextStyle(color: Colors.red),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
                 Expanded(
@@ -216,15 +232,20 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       OutlinedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
+                        onPressed: Navigator.canPop(context)
+                            ? () => Navigator.pop(context)
+                            : null,
                         child: const Text("Back"),
                       ),
                       const SizedBox(width: 50),
-                      ElevatedButton(
-                        onPressed: _controller.isValid ? _createProject : null,
-                        child: const Text("Create"),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _controller.isValid,
+                        builder: (context, value, _) {
+                          return ElevatedButton(
+                            onPressed: value ? _createProject : null,
+                            child: const Text("Create"),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -235,18 +256,5 @@ class _NewProjectState extends State<NewProject> implements EventObserver {
         ],
       ),
     );
-  }
-
-  @override
-  void notify(ViewEvent event) {
-    if (event is NameChanged) {
-      setState(() {
-        _nameController.text = event.name;
-      });
-    } else if (event is PathChanged) {
-      setState(() {
-        _pathController.text = event.path;
-      });
-    }
   }
 }

@@ -1,12 +1,12 @@
 import 'package:editor/Components/game_entity.dart';
-import 'package:editor/common/mvvm/observer.dart';
-import 'package:editor/common/mvvm/viewmodel.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';
+import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/undo_redo.dart';
+import 'package:flutter/material.dart';
 
-class WorldEditorController extends ViewModelBase {
+class WorldEditorController {
   static final WorldEditorController _worldEditorController =
       WorldEditorController._internal();
 
@@ -17,90 +17,123 @@ class WorldEditorController extends ViewModelBase {
   late RelayCommand redoCommand;
   late RelayCommand saveCommand;
 
-  bool _canSave = false;
+  final ValueNotifier<bool> canSave = ValueNotifier(false);
+  final ListNotifier<int> selectedEntityIndices = ListNotifier<int>();
 
   factory WorldEditorController() {
     return _worldEditorController;
   }
 
   WorldEditorController._internal() {
-    undoRedo.undoList.addListener((list) => notify(UndoListChanged()));
-    undoRedo.redoList.addListener((list) => notify(RedoListChanged()));
-    undoRedo.undoList.addListener((list) {
-      _canSave = true;
-    });
-    undoRedo.redoList.addListener((list) {
-      _canSave = true;
-    });
-
     undoCommand = RelayCommand((x) => undoRedo.undo());
     redoCommand = RelayCommand((x) => undoRedo.redo());
-    saveCommand = RelayCommand((x) => save(), (x) => _canSave);
+    saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
+
+    undoRedo.undoList.addListener(_canSaveChanged);
+    undoRedo.redoList.addListener(_canSaveChanged);
+  }
+
+  _canSaveChanged() {
+    canSave.value = true;
   }
 
   void setProject(Project project) {
     _project = project;
-    _project.scenes.addListener((list) => notify(ScenesListChanged()));
-    _project.activeScene.entities
-        .addListener((list) => notify(ActiveSceneEntitiesListChanged()));
   }
 
-  List<Scene> getScenes() {
+  ValueNotifier<List<Scene>> getScenes() {
     return _project.scenes;
   }
 
   Scene get getActiveScene => _project.activeScene;
 
   void addScene() {
-    final sceneName = "Scene ${_project.scenes.length}";
+    final sceneName = "Scene ${_project.scenes.value.length}";
     _project.addScene.execute(sceneName);
   }
 
+  void setEntityName(GameEntity entity, String name) {
+    entity.renameEntity.execute(name);
+  }
+
+  void enabeEntity(GameEntity entity, bool isEnabled) {
+    entity.setEntityState.execute(isEnabled);
+  }
+
   void removeScene(int index) {
-    final Scene scene = _project.scenes[index];
+    final Scene scene = _project.scenes.value[index];
     _project.removeScene.execute(scene);
   }
 
   void addGameEntity(int sceneIndex) {
     final GameEntity entity = GameEntity([], name: "Empty GameEntity");
-    _project.scenes[sceneIndex].addGameEntity.execute(entity);
+    _project.scenes.value[sceneIndex].addGameEntity.execute(entity);
   }
 
   void removeGameEntity(int sceneIndex, GameEntity entity) {
-    _project.scenes[sceneIndex].removeGameEntity.execute(entity);
+    int index =
+        _project.scenes.value[sceneIndex].entities.value.indexOf(entity);
+    selectedEntityIndices.remove(index);
+    _project.scenes.value[sceneIndex].removeGameEntity.execute(entity);
   }
 
   void save() {
     Project.save(_project);
-    _canSave = false;
-    notify(ProjectSaved());
+    canSave.value = false;
   }
-}
 
-// EVENTS:
-class ScenesListChanged extends ViewEvent {
-  ScenesListChanged() : super("ScenesListChanged");
-}
+  // modifier:
+  // * null - nothing
+  // * 0    - Ctrl
+  // * 1    - Shift
+  void changeSelection(int index, bool? modifier) {
+    List<int> prevSelection = List.from(selectedEntityIndices.value);
 
-class UndoListChanged extends ViewEvent {
-  UndoListChanged() : super("UndoListChanged");
-}
+    // Ctrl
+    if (modifier != null && !modifier) {
+      if (selectedEntityIndices.value.contains(index)) {
+        selectedEntityIndices.remove(index);
+      } else {
+        selectedEntityIndices.add(index);
+      }
+    }
+    // Shift
+    else if (modifier != null && modifier) {
+      if (selectedEntityIndices.value.isEmpty) {
+        selectedEntityIndices.add(index);
+      } else {
+        int a = selectedEntityIndices.value[0];
+        int b = index;
+        if (a > b) {
+          a = a ^ b;
+          b = a ^ b;
+          a = a ^ b;
+        }
 
-class RedoListChanged extends ViewEvent {
-  RedoListChanged() : super("RedoListChanged");
-}
+        final newList = [for (int i = a; i <= b; i++) i];
 
-class ProjectSaved extends ViewEvent {
-  ProjectSaved() : super("ProjectSaved");
-}
-
-class ActiveSceneEntitiesListChanged extends ViewEvent {
-  ActiveSceneEntitiesListChanged() : super("ActiveSceneEntitiesListChanged");
-}
-
-class SelectedEntityIndexChanged extends ViewEvent {
-  int index;
-
-  SelectedEntityIndexChanged({required this.index})
-      : super("SelectedEntityIndexChanged");
+        selectedEntityIndices.clear(notify: false);
+        selectedEntityIndices.addAll(newList);
+      }
+    }
+    // No modifier
+    else {
+      selectedEntityIndices.clear(notify: false);
+      selectedEntityIndices.add(index);
+    }
+    List<int> currentSelection = List.from(selectedEntityIndices.value);
+    if (selectedEntityIndices.value != prevSelection) {
+      undoRedo.add(UndoRedoAction(
+        name: "Selection changed",
+        undoAction: () {
+          selectedEntityIndices.clear(notify: false);
+          selectedEntityIndices.addAll(prevSelection);
+        },
+        redoAction: () {
+          selectedEntityIndices.clear(notify: false);
+          selectedEntityIndices.addAll(currentSelection);
+        },
+      ));
+    }
+  }
 }

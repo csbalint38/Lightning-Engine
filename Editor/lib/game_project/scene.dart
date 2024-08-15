@@ -1,6 +1,6 @@
 import 'package:editor/Components/game_entity.dart';
-import 'package:editor/common/mvvm/observable_list.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -9,7 +9,7 @@ class Scene {
 
   String name;
   bool isActive;
-  final ObservableList<GameEntity> entities = ObservableList<GameEntity>();
+  final ListNotifier<GameEntity> entities = ListNotifier<GameEntity>();
 
   late RelayCommand addGameEntity;
   late RelayCommand removeGameEntity;
@@ -24,10 +24,10 @@ class Scene {
     addGameEntity = RelayCommand<GameEntity>(
       (x) {
         _addGameEntity(x);
-        int index = this.entities.length - 1;
+        int index = this.entities.value.length - 1;
         _undoRedo.add(
           UndoRedoAction(
-            name: "Add ${x.name} to $name",
+            name: "Add ${x.name.value} to $name",
             undoAction: () => _removeGameEntity(x),
             redoAction: () => this.entities.insert(index, x),
           ),
@@ -37,11 +37,11 @@ class Scene {
 
     removeGameEntity = RelayCommand<GameEntity>(
       (x) {
-        int index = this.entities.indexOf(x);
+        int index = this.entities.value.indexOf(x);
         _removeGameEntity(x);
         _undoRedo.add(
           UndoRedoAction(
-            name: "Remove ${x.name}",
+            name: "Remove ${x.name.value}",
             undoAction: () => this.entities.insert(index, x),
             redoAction: () => _removeGameEntity(x),
           ),
@@ -75,7 +75,7 @@ class Scene {
       builder.element("Name", nest: name);
       builder.element("IsActive", nest: isActive.toString());
       builder.element("Entities", nest: () {
-        for (final entity in entities) {
+        for (final entity in entities.value) {
           builder.xml(entity.toXML());
         }
       });

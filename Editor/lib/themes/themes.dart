@@ -36,17 +36,34 @@ ThemeData lightTheme = ThemeData(
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: ButtonStyle(
-      overlayColor: const WidgetStatePropertyAll(
-        Color.fromARGB(27, 138, 169, 184),
+      overlayColor: WidgetStateProperty.resolveWith<Color?>(
+        (Set<WidgetState> state) {
+          if (state.contains(WidgetState.disabled)) {
+            return null;
+          }
+          return const Color.fromARGB(27, 138, 169, 184);
+        },
       ),
-      foregroundColor: const WidgetStatePropertyAll(Colors.blueGrey),
+      foregroundColor: WidgetStateProperty.resolveWith<Color>(
+        (Set<WidgetState> state) {
+          if (state.contains(WidgetState.disabled)) {
+            return Colors.grey;
+          }
+          return Colors.blueGrey;
+        },
+      ),
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
         ),
       ),
-      side: const WidgetStatePropertyAll(
-        BorderSide(color: Colors.blueGrey),
+      side: WidgetStateProperty.resolveWith<BorderSide>(
+        (Set<WidgetState> state) {
+          if (state.contains(WidgetState.disabled)) {
+            return const BorderSide(color: Colors.grey);
+          }
+          return const BorderSide(color: Colors.blueGrey);
+        },
       ),
     ),
   ),
@@ -105,6 +122,19 @@ ThemeData lightTheme = ThemeData(
     ),
   ),
   dividerColor: Colors.blueGrey.withAlpha(180),
+  checkboxTheme: CheckboxThemeData(
+    fillColor: WidgetStateProperty.resolveWith<Color>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) {
+          return Colors.blueGrey;
+        }
+        return Colors.white;
+      },
+    ),
+    side: const BorderSide(color: Colors.blueGrey),
+    checkColor: const WidgetStatePropertyAll(Colors.white),
+    overlayColor: WidgetStatePropertyAll(Colors.black.withOpacity(0)),
+  ),
 );
 
 ThemeData darkTheme = ThemeData(
@@ -125,6 +155,9 @@ extension CustomTheme on ThemeData {
       brightness == Brightness.light ? Colors.black38 : Colors.black38;
   Color? get outlineColor =>
       brightness == Brightness.light ? Colors.blueGrey[100] : Colors.blueGrey;
+  Color get lightColor => brightness == Brightness.light
+      ? const Color.fromARGB(255, 109, 142, 158)
+      : Colors.black;
   MultiSplitViewThemeData get msvTheme => brightness == Brightness.light
       ? MultiSplitViewThemeData(
           dividerPainter: DividerPainters.background(
@@ -200,4 +233,20 @@ extension CustomTheme on ThemeData {
           ),
         )
       : const ButtonStyle();
+
+  InputDecoration get smallInput => brightness == Brightness.light
+      ? InputDecoration(
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(2),
+            borderSide: const BorderSide(width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(2),
+            borderSide: const BorderSide(width: 1, color: Colors.blueGrey),
+          ),
+        )
+      : const InputDecoration();
 }
