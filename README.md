@@ -19,4 +19,8 @@ E.g. accessability issues, minior feature malfunction, UX/UI bugs
 E.g. expecting better/faster... result, broken convenience features, typos, UX/UI inconsistency
 
 ### 5 - Nice to have
-E.g. feature suggestions, documentation issues 
+E.g. feature suggestions, documentation issues
+
+## Copiright
+
+*This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2008 Autodesk, Inc. All rights, reserved.*
