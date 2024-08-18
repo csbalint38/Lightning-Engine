@@ -1,4 +1,4 @@
-# v0.2.0-alpha - 2024.08.x
+# v0.2.0-alpha - 2024.08.18
 
 # Editor
  - Added project templates
@@ -10,6 +10,7 @@
  - Add/remove Entities
  - Select, rename, enable/disable Entities
  - Developer console
+ - Entity multiselection
 
 # Engine
  - Create/remove Entities

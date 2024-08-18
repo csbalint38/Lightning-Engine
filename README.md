@@ -4,6 +4,18 @@
 - Forward:  -z
 - Up:        y
 
+## Requirements
+
+### Minimum
+**CPU:** Intel Pentium 110 MHz / AMD K5 75-133 MHz  **Storage:**: 8 GB available space
+**RAM:** 512 MB                                     **OS:** Windows 7 64 bit
+**GPU:** Integrated with 400 MB memory              **DirectX:** DirectX 12
+
+### Recommended
+**CPU:** Intel Pentium II 220 MHz / AMD K6 166-300 MHz  **Storage:** 16GB SSD
+**RAM:** 1 GB                                           **OS:** Windows 10 Home
+**GPU:** NVidia GeForce GT 420                          **DirectX:** DirectX 12
+
 ## Bug Types
 
 ### 1 - Critical

@@ -1,0 +1,45 @@
+# Software License Agreement
+
+This Software License Agreement ("Agreement") is a legal agreement between you ("Licensee") and Cséfalvay Bálint ("Licensor"), the owner of the software product described below ("Software"). By using the Software, you agree to be bound by the terms of this Agreement.
+
+## 1. Ownership and Rights
+
+1.1. The Licensor retains all rights, title, and interest in and to the Software. This includes, but is not limited to, the rights to modify, enhance, update, distribute, and sublicense the Software.
+
+1.2. The Licensee acknowledges that they have no ownership rights in the Software and that their rights to use the Software are limited to those expressly granted by this Agreement.
+
+## 2. License Grant
+
+2.1. The Licensor hereby grants the Licensee a non-exclusive, royalty-free right to distribute and sublicense products made using the Software, subject to the terms of this Agreement.
+
+2.2. The Licensee may freely distribute and sublicense products created with the Software, provided that any sublicense includes a copy of this Agreement or a similar agreement that provides equivalent terms.
+
+## 3. Restrictions
+
+3.1. The Licensee may not modify, reverse engineer, decompile, or disassemble the Software unless explicitly permitted by the Licensor.
+
+3.2. The Licensee may not remove or alter any proprietary notices, labels, or marks from the Software.
+
+## 4. Disclaimer of Warranties
+
+4.1. The Software is provided "as is," without any express or implied warranties, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.
+
+4.2. The Licensor does not warrant that the Software will meet the Licensee's requirements, operate without interruption, or be error-free.
+
+## 5. Limitation of Liability
+
+5.1. In no event shall the Licensor be liable for any damages, including but not limited to direct, indirect, special, incidental, or consequential damages arising out of the use or inability to use the Software, even if the Licensor has been advised of the possibility of such damages.
+
+## 6. Termination
+
+6.1. This Agreement is effective until terminated by either party. The Licensee may terminate this Agreement at any time by ceasing all use of the Software and destroying all copies of the Software in their possession.
+
+6.2. The Licensor may terminate this Agreement immediately if the Licensee fails to comply with any term or condition of this Agreement. Upon termination, the Licensee must cease all use of the Software and destroy all copies of the Software in their possession.
+
+## 7. Entire Agreement
+
+7.1. This Agreement constitutes the entire agreement between the parties with respect to the Software and supersedes all prior or contemporaneous understandings or agreements, whether written or oral, regarding such subject matter.
+
+*This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2008 Autodesk, Inc. All rights, reserved.*
+
+By using the Software, you acknowledge that you have read, understood, and agree to be bound by the terms of this Agreement.
