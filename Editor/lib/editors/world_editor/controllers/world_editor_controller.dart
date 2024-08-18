@@ -3,7 +3,9 @@ import 'package:editor/common/relay_command.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
+import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class WorldEditorController {
@@ -16,9 +18,14 @@ class WorldEditorController {
   late RelayCommand undoCommand;
   late RelayCommand redoCommand;
   late RelayCommand saveCommand;
+  late RelayCommand renameMultipleCommand;
+  late RelayCommand enableMultipleCommand;
 
   final ValueNotifier<bool> canSave = ValueNotifier(false);
   final ListNotifier<int> selectedEntityIndices = ListNotifier<int>();
+  late MSGameEntity msEntity;
+
+  final _logger = EditorLogger();
 
   factory WorldEditorController() {
     return _worldEditorController;
@@ -29,8 +36,76 @@ class WorldEditorController {
     redoCommand = RelayCommand((x) => undoRedo.redo());
     saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
 
+    renameMultipleCommand = RelayCommand<String>(
+      (x) {
+        Map<GameEntity, String> oldData = Map.fromIterables(
+          List.from(msEntity.selectedEntities),
+          msEntity.selectedEntities.map((e) => e.name.value).toList(),
+        );
+
+        msEntity.name.value = x;
+
+        UndoRedo().add(
+          UndoRedoAction(
+            name: "Rename ${msEntity.selectedEntities.length} entities to '$x'",
+            undoAction: () {
+              for (final data in oldData.entries) {
+                data.key.name.value = data.value;
+              }
+            },
+            redoAction: () {
+              msEntity.name.value = x;
+            },
+          ),
+        );
+      },
+      (x) => x != msEntity.name.value,
+    );
+
+    enableMultipleCommand = RelayCommand<bool>(
+      (x) {
+        Map<GameEntity, bool> oldData = Map.fromIterables(
+          List.from(msEntity.selectedEntities),
+          msEntity.selectedEntities.map((e) => e.isEnabled.value).toList(),
+        );
+
+        msEntity.isEnabled.value = x;
+
+        UndoRedo().add(
+          UndoRedoAction(
+            name:
+                "${x ? "'En" : "'Dis"}able' ${msEntity.selectedEntities.length} GameEntities",
+            undoAction: () {
+              for (final data in oldData.entries) {
+                data.key.isEnabled.value = data.value;
+              }
+            },
+            redoAction: () {
+              msEntity.isEnabled.value = x;
+            },
+          ),
+        );
+      },
+      (x) => x != msEntity.isEnabled.value,
+    );
+
+    selectedEntityIndices.addListener(_setMsEntity);
     undoRedo.undoList.addListener(_canSaveChanged);
     undoRedo.redoList.addListener(_canSaveChanged);
+  }
+
+  EditorLogger get logger => _logger;
+
+  clearLogs() {
+    _logger.clear();
+  }
+
+  filterLogs(LogLevel filter) {
+    List<LogLevel> newFilter = List<LogLevel>.from(_logger.levels);
+    _logger.levels.contains(filter)
+        ? newFilter.remove(filter)
+        : newFilter.add(filter);
+    _logger.filterLogs(newFilter);
   }
 
   _canSaveChanged() {
@@ -52,14 +127,6 @@ class WorldEditorController {
     _project.addScene.execute(sceneName);
   }
 
-  void setEntityName(GameEntity entity, String name) {
-    entity.renameEntity.execute(name);
-  }
-
-  void enabeEntity(GameEntity entity, bool isEnabled) {
-    entity.setEntityState.execute(isEnabled);
-  }
-
   void removeScene(int index) {
     final Scene scene = _project.scenes.value[index];
     _project.removeScene.execute(scene);
@@ -75,6 +142,24 @@ class WorldEditorController {
         _project.scenes.value[sceneIndex].entities.value.indexOf(entity);
     selectedEntityIndices.remove(index);
     _project.scenes.value[sceneIndex].removeGameEntity.execute(entity);
+  }
+
+  void _setMsEntity() {
+    final List<GameEntity> selectedEntities = selectedEntityIndices.value
+        .map((index) => _project.activeScene.entities.value[index])
+        .toList();
+
+    if (selectedEntities.isNotEmpty) {
+      msEntity = MSGameEntity(selectedEntities);
+    }
+  }
+
+  void setMsEntityName(String name) {
+    renameMultipleCommand.execute(name);
+  }
+
+  void enableMsEntity(bool? isEnabled) {
+    enableMultipleCommand.execute(isEnabled);
   }
 
   void save() {
@@ -122,7 +207,8 @@ class WorldEditorController {
       selectedEntityIndices.add(index);
     }
     List<int> currentSelection = List.from(selectedEntityIndices.value);
-    if (selectedEntityIndices.value != prevSelection) {
+
+    if (!listEquals(selectedEntityIndices.value, prevSelection)) {
       undoRedo.add(UndoRedoAction(
         name: "Selection changed",
         undoAction: () {

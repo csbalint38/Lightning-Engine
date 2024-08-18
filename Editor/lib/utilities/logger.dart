@@ -22,7 +22,7 @@ class LogMessage {
   String toString() {
     final String time =
         "${this.time.hour}:${this.time.minute}:${this.time.second}";
-    return "[$time] [${level.name.toUpperCase()}] [$trace:$line] $message";
+    return "$time [${level.name.toUpperCase()}] $trace($line): $message";
   }
 }
 
@@ -46,6 +46,7 @@ class EditorLogger {
   List<LogMessage> get logs => _logs;
   ListNotifier<LogMessage> get logsNotifier => _filteredLogs;
   List<LogMessage> get filteredLogs => _filteredLogs.value;
+  List<LogLevel> get levels => _levels;
 
   void log(LogLevel level, String message, {required StackTrace trace}) {
     final String frame = trace.toString().split('\n')[0];
@@ -60,7 +61,7 @@ class EditorLogger {
       final LogMessage logMessage = LogMessage(
         time: DateTime.now(),
         level: level,
-        trace: "$fileName ->  $traceString",
+        trace: "$fileName [func]$traceString",
         message: message,
         line: line,
       );
@@ -74,15 +75,19 @@ class EditorLogger {
   }
 
   void filterLogs(List<LogLevel>? levels) {
-    if (levels == null || levels.isEmpty) {
-      _levels.addAll([LogLevel.error, LogLevel.warning, LogLevel.info]);
-    } else {
-      _levels.clear();
-      _levels.addAll(levels);
+    if(levels == null) {
+      levels = [
+        LogLevel.error,
+        LogLevel.warning,
+        LogLevel.info,
+      ];
     }
 
-    _filteredLogs
-        .addAll(_logs.where((log) => _levels.contains(log.level)).toList());
+    _levels.clear();
+    _levels.addAll(levels);
+
+    _filteredLogs.clear(notify: false);
+    _filteredLogs.addAll(_logs.where((log) => _levels.contains(log.level)).toList());
   }
 
   void clear() {

@@ -136,10 +136,9 @@ class Project {
   static void save(Project project) {
     EditorLogger().log(
       LogLevel.info,
-      "Saved project to ${project.fullPath}",
+      "Saved project to ${project.path}\\${project.name}",
       trace: StackTrace.current,
     );
-    print(EditorLogger().logs);
     return project.toXMLFile(project.fullPath);
   }
 

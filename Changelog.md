@@ -4,7 +4,7 @@
  - Added project templates
  - Switch from tkinter (Python) to Flutter (Dart)
  - Create new Project from Project Template
- - Open existing projec
+ - Open existing project
  - Add/remove Scenes
  - Undo/redo functionality
  - Add/remove Entities

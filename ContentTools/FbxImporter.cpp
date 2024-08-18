@@ -6,9 +6,9 @@
 #pragma comment (lib, "../packages/FBX SDK/lib/x64/debug/libxml2-md.lib")
 #pragma comment (lib, "../packages/FBX SDK/lib/x64/debug/zlib-md.lib")
 #else
-#pragma comment (lib, "../packages/FBX SDK/x64/release/libfbxsdk-md.lib")
-#pragma comment (lib, "../packages/FBX SDK/x64/release/libxml2-md.lib")
-#pragma comment (lib, "../packages/FBX SDK/x64/release/zlib-md.lib")
+#pragma comment (lib, "../packages/FBX SDK/lib/x64/release/libfbxsdk-md.lib")
+#pragma comment (lib, "../packages/FBX SDK/lib/x64/release/libxml2-md.lib")
+#pragma comment (lib, "../packages/FBX SDK/lib/x64/release/zlib-md.lib")
 #endif
 
 namespace lightning::tools {

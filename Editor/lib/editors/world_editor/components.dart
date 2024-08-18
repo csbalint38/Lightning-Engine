@@ -1,4 +1,3 @@
-import 'package:editor/Components/game_entity.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +16,6 @@ class _ComponentsState extends State<Components> {
   final TextEditingController _nameController = TextEditingController();
   final FocusNode _localFocus = FocusNode();
 
-  GameEntity? entity;
-
   @override
   void initState() {
     super.initState();
@@ -30,11 +27,6 @@ class _ComponentsState extends State<Components> {
     super.dispose();
   }
 
-  setGameEntity(int index) {
-    entity = _controller.getActiveScene.entities.value[index];
-    _nameController.text = entity!.name.value;
-  }
-
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -43,8 +35,7 @@ class _ComponentsState extends State<Components> {
         if (value.isEmpty) {
           return const Column();
         }
-        setGameEntity(value[0]);
-
+        _nameController.text = _controller.msEntity.name.value;
         return SingleChildScrollView(
             child: Padding(
           padding: const EdgeInsets.all(8),
@@ -85,7 +76,7 @@ class _ComponentsState extends State<Components> {
                           style: Theme.of(context).smallText,
                           decoration: Theme.of(context).smallInput,
                           onSubmitted: (name) {
-                            _controller.setEntityName(entity!, name);
+                            _controller.setMsEntityName(name);
                             widget.focusNode.requestFocus();
                           },
                         ),
@@ -104,9 +95,16 @@ class _ComponentsState extends State<Components> {
                                 color: Theme.of(context).lightColor),
                           ),
                           Checkbox(
-                            value: entity?.isEnabled.value,
-                            onChanged: (isEnabled) {
-                              _controller.enabeEntity(entity!, isEnabled!);
+                            tristate: true,
+                            value: _controller.msEntity.isEnabled.value,
+                            onChanged: (_) {
+                              if (_controller.msEntity.isEnabled.value ==
+                                  null) {
+                                _controller.enableMsEntity(true);
+                              } else {
+                                _controller.enableMsEntity(
+                                    !_controller.msEntity.isEnabled.value!);
+                              }
                               setState(() {});
                             },
                           ),
@@ -116,9 +114,9 @@ class _ComponentsState extends State<Components> {
                   ),
                 ],
               ),
-              Row(
+              const Row(
                 children: [
-                  Text(entity!.components.toString()),
+                  //Text('entity!.components.toString()'),
                 ],
               )
             ],

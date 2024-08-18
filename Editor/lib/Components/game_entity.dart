@@ -1,18 +1,14 @@
 import 'package:editor/Components/components.dart';
 import 'package:editor/Components/transform.dart' as lng;
-import 'package:editor/common/relay_command.dart';
-import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
+import '../utilities/math.dart';
 
 class GameEntity {
   final ValueNotifier<String> name = ValueNotifier<String>("");
-  final ValueNotifier<bool> isEnabled = ValueNotifier(false);
+  final ValueNotifier<bool> isEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<List<Component>> components =
       ValueNotifier<List<Component>>([]);
-
-  late RelayCommand renameEntity;
-  late RelayCommand setEntityState;
 
   GameEntity(List<Component>? components, {required name, isEnabled = true}) {
     this.name.value = name;
@@ -22,42 +18,6 @@ class GameEntity {
       components?.add(lng.Transform());
     }
     this.components.value.addAll(components!);
-
-    renameEntity = RelayCommand<String>(
-      (x) {
-        String oldName = name;
-        _renameEntity(x);
-
-        UndoRedo().add(
-          UndoRedoAction(
-            name: "Rename GameEntity '$oldName' to '$x'",
-            undoAction: () => _renameEntity(oldName),
-            redoAction: () => _renameEntity(x),
-          ),
-        );
-      },
-      (x) => x != name,
-    );
-
-    setEntityState = RelayCommand<bool>((x) {
-      _setEntityState(x);
-
-      UndoRedo().add(
-        UndoRedoAction(
-          name: x ? "Enable GameEntity $name" : "Disable GameEntity $name",
-          undoAction: () => _setEntityState(!x),
-          redoAction: () => _setEntityState(x),
-        ),
-      );
-    });
-  }
-
-  void _renameEntity(String name) {
-    this.name.value = name;
-  }
-
-  void _setEntityState(bool isEnabled) {
-    this.isEnabled.value = isEnabled;
   }
 
   factory GameEntity.fromXML(String xmlStr) {
@@ -95,5 +55,77 @@ class GameEntity {
     });
 
     return builder.buildDocument().toXmlString(pretty: true);
+  }
+}
+
+enum GameEntityProperty { name, isEnabled, component }
+
+class MSGameEntity {
+  final ValueNotifier<String> name = ValueNotifier<String>("");
+  final ValueNotifier<bool?> isEnabled = ValueNotifier<bool?>(null);
+  final ValueNotifier<List<IMSComponent>> components =
+      ValueNotifier<List<IMSComponent>>([]);
+  final List<GameEntity> selectedEntities;
+
+  bool _enableUpdates = true;
+
+  MSGameEntity(this.selectedEntities) {
+    name.addListener(() =>
+        _enableUpdates ? updateGameEntities(GameEntityProperty.name) : null);
+    isEnabled.addListener(() => _enableUpdates
+        ? updateGameEntities(GameEntityProperty.isEnabled)
+        : null);
+    components.addListener(() => _enableUpdates
+        ? updateGameEntities(GameEntityProperty.component)
+        : null);
+
+    refresh();
+  }
+
+  static T? getMixedValue<T>(
+      List<GameEntity> entities, T Function(GameEntity) getProperty) {
+    T value = getProperty(entities.first);
+
+    if (value is double) {
+      for (final GameEntity entity in entities) {
+        if (!Math.isNearEqual(value, getProperty(entity) as double?)) {
+          return null;
+        }
+      }
+    } else {
+      for (final GameEntity entity in entities) {
+        if (value != getProperty(entity)) {
+          return null;
+        }
+      }
+    }
+
+    return value;
+  }
+
+  bool updateGameEntities(GameEntityProperty prop) {
+    switch (prop) {
+      case GameEntityProperty.name:
+        for (final GameEntity entity in selectedEntities) {
+          entity.name.value = name.value;
+        }
+        return true;
+      case GameEntityProperty.isEnabled:
+        for (final GameEntity entity in selectedEntities) {
+          entity.isEnabled.value = isEnabled.value!;
+        }
+        return true;
+      case GameEntityProperty.component:
+        return false;
+    }
+  }
+
+  void refresh() {
+    _enableUpdates = false;
+    name.value =
+        getMixedValue<String>(selectedEntities, ((x) => x.name.value)) ?? "";
+    isEnabled.value =
+        getMixedValue<bool>(selectedEntities, ((x) => x.isEnabled.value));
+    _enableUpdates = true;
   }
 }

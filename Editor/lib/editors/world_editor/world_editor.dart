@@ -104,6 +104,7 @@ class _WorldEditorState extends State<WorldEditor> {
                                         DockingItem(
                                           name: "Console",
                                           widget: const Console(),
+                                          keepAlive: true,
                                         ),
                                         DockingItem(
                                           name: "Content Browser",
