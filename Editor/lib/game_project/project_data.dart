@@ -5,7 +5,7 @@ class ProjectData {
   final String projectName;
   final String projectPath;
   DateTime lastModified;
-  final engineVersion = "0.1.0";
+  final engineVersion = "0.2.0";
   late final String fullPath;
   late File icon;
   late File screenshot;

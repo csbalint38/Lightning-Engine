@@ -30,7 +30,53 @@ class _NewProjectState extends State<NewProject> {
     });
   }
 
+  void _locateEngine() {
+    String path = "";
+
+    showDialog(context: context, builder: (BuildContext context) {
+      return Dialog(
+        child: Column(children: [
+          const Text("Where is Lighning Engine installed?\nTypycal installation path is 'C:/USER/Documents/LightningEngine/"),
+          Row(
+            children: [
+              Text("Engine path:"),
+              SizedBox(
+                width: 80,
+                child: TextField(
+                  onChanged: (value) {
+                    if(_controller.validateEnginePath(path)) {
+                      path = value;
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          Row(children: [
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Close"))
+          ],),
+
+        ],
+        ),
+      );
+    });
+  }
+
   void _createProject() async {
+    if(!_controller.canFindEngine) {
+      showDialog(context: context, builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Error!", style: TextStyle(color: Colors.red)),
+          content: const Text("Can't locate Lightning Engine.\nEnvironmental variable 'LIGHTNING_ENGINE' is not set. Set it before create new projects."),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Close')),
+            TextButton(onPressed: _locateEngine, child: const Text('Locate')),
+          ]
+        );
+      },);
+      return;
+    }
+
     await _controller
         .createProject(_controller.getTemplates()[selectedTemplateIndex]);
     final Project project = OpenProjectController().open(

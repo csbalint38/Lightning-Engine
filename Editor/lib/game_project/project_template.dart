@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:xml/xml.dart' as xml;
+import 'package:path/path.dart' as p;
 
 class ProjectTemplate {
   final Directory _templatesDir = Directory("ProjectTemplates");
@@ -8,6 +9,7 @@ class ProjectTemplate {
   String projectFile;
   List<String> folders;
 
+  late final Directory templateFolder;
   late String projectName;
   late File icon;
   late File screenshot;
@@ -19,12 +21,12 @@ class ProjectTemplate {
       {required this.projectType,
       required this.projectFile,
       required this.folders}) {
-    final Directory templateFolderPath =
-        Directory('${_templatesDir.path}/$projectType');
+    templateFolder =
+        Directory(p.join(_templatesDir.path, projectType));
     projectName = _getProjectName();
-    iconPath = '${templateFolderPath.path}/icon.png';
-    screenshotPath = '${templateFolderPath.path}/screenshot.png';
-    projectFilePath = '${templateFolderPath.path}/project.lightning';
+    iconPath = p.join(templateFolder.path, 'icon.png');
+    screenshotPath = p.join(templateFolder.path, 'screenshot.png');
+    projectFilePath = p.join(templateFolder.path, 'project.lightning');
     icon = File(iconPath);
     screenshot = File(screenshotPath);
   }

@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_template.dart';
 import 'package:editor/utilities/logger.dart';
+import 'package:uuid/uuid.dart';
 
 class NewProjectController {
   static final NewProjectController _newProjectController =
@@ -18,6 +19,7 @@ class NewProjectController {
   final ValueNotifier<List<ProjectTemplate>> templates =
       ValueNotifier<List<ProjectTemplate>>([]);
   final ValueNotifier<bool> isValid = ValueNotifier<bool>(true);
+  final String? enginePath = Platform.environment['LIGHTNING_ENGINE'];
 
   factory NewProjectController() {
     return _newProjectController;
@@ -48,6 +50,8 @@ class NewProjectController {
   List<ProjectTemplate> getTemplates() {
     return templates.value;
   }
+
+  bool get canFindEngine => enginePath != null;
 
   bool validate() {
     String path = this.path.value;
@@ -84,6 +88,10 @@ class NewProjectController {
 
     setErrorMessage("");
     return true;
+  }
+
+  bool validateEnginePath(String path) {
+    return Directory(path).existsSync();
   }
 
   Future<void> createProject(ProjectTemplate template) async {
@@ -127,6 +135,26 @@ class NewProjectController {
         .replaceAll('{{1}}', path.value);
     final Project project = Project.fromXML(templateString);
     project.toXMLFile(p.join(fullPath, '${name.value}.${Project.extension}'));
+
+    await _createMSVCSolution(template, path.value);
+  }
+
+  Future<void> _createMSVCSolution(ProjectTemplate template, String projectPath) async {
+    File solutionTemplate = File(p.join(template.templateFolder.path, "SolutionTemplate.txt"));
+    File projectTemplate = File(p.join(template.templateFolder.path, "ProjectTemplate.txt"));
+    Directory engineAPIDirectory = Directory(p.join(this.enginePath!, 'Engine', 'EngineAPI'));
+
+    if(solutionTemplate.existsSync() && projectTemplate.existsSync() && engineAPIDirectory.existsSync()) {
+      final String projectUuid = Uuid().v4().toUpperCase();
+
+      String solutionString = solutionTemplate.readAsStringSync();
+      solutionString = solutionString.replaceAll('{{0}}', this.name.value).replaceAll('{{1}}', projectUuid).replaceAll('{{2}}', Uuid().v4().toUpperCase(),);
+      await File(p.join(projectPath, this.name.value, '${this.name.value}.sln')).writeAsString(solutionString);
+
+      String projectString = projectTemplate.readAsStringSync();
+      projectString = projectString.replaceAll('{{0}}', this.name.value).replaceAll('{{1}}', projectUuid).replaceAll('{{2}}', engineAPIDirectory.path).replaceAll('{{3}}', enginePath!);
+      await File(p.join(projectPath, this.name.value, 'Code', '${this.name.value}.vcxproj')).writeAsString(projectString);
+    }
   }
 
   void _getProjectTemplates() {
