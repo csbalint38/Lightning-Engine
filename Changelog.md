@@ -1,6 +1,11 @@
+# v0.3.0-beta - 20xx.x.x
+
+## Engine
+ - Geometry component
+
 # v0.2.0-alpha - 2024.08.18
 
-# Editor
+## Editor
  - Added project templates
  - Switch from tkinter (Python) to Flutter (Dart)
  - Create new Project from Project Template
@@ -12,7 +17,7 @@
  - Developer console
  - Entity multiselection
 
-# Engine
+## Engine
  - Create/remove Entities
  - Create Transform Component
  - Create game Script in C++
@@ -37,7 +42,6 @@
 
 
 # v0.1.0-pre-alpha - 2024.04.23
-
 
 ## Editor
  - tkinter setup
