@@ -6,7 +6,7 @@ namespace lightning::id {
 	using id_type = u32;
 
 	namespace internal {
-		constexpr u32 generation_bits{ 10 };
+		constexpr u32 generation_bits{ 8 };
 		constexpr u32 index_bits{ sizeof(id_type) * 8 - generation_bits };
 		constexpr id_type index_mask{ (id_type{1} << index_bits) - 1 };
 		constexpr id_type generation_mask{ (id_type{1} << generation_bits) - 1 };
@@ -17,6 +17,8 @@ namespace lightning::id {
 	using generation_type = std::conditional_t<internal::generation_bits <= 16, std::conditional_t<internal::generation_bits <= 8, u8, u16>, u32>;
 	static_assert(sizeof(generation_type) * 8 >= internal::generation_bits);
 	static_assert((sizeof(id_type) - sizeof(generation_type)) > 0);
+
+	constexpr generation_type max_generation{ (generation_type)(internal::generation_mask - 1) };
 
 	constexpr bool is_valid(id_type id) {
 		return id != invalid_id;

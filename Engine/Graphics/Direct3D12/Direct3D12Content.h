@@ -22,8 +22,8 @@ namespace lightning::graphics::direct3d12::content {
 	}
 
 	namespace texture {
-		id::id_type add(const u8* const);
-		void remove(id::id_type);
+		id::id_type add(const u8* const data);
+		void remove(id::id_type id);
 		void get_descriptor_indicies(const id::id_type* const texture_ids, u32 id_count, u32* const indicies);
 	}
 
@@ -34,6 +34,7 @@ namespace lightning::graphics::direct3d12::content {
 			MaterialType::Type* const material_types;
 			u32** const descriptor_indices;
 			u32* const texture_count;
+			MaterialSurface** const material_surfaces;
 		};
 
 		id::id_type add(MaterialInitInfo info);

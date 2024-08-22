@@ -243,7 +243,7 @@ namespace lightning::tools {
 		}
 
 		void process_tangents(Mesh& m) {
-			if (m.tangents.size() != m.positions.size()) { return; }
+			if (m.tangents.size() != m.raw_indicies.size()) { return; }
 
 			util::vector<Vertex> old_vertices;
 			old_vertices.swap(m.verticies);
@@ -288,7 +288,7 @@ namespace lightning::tools {
 			}
 		}
 
-		u64 get_vertex_element_size(elements::ElementsType::Type elements_type) {
+		u64 get_vertex_elements_size(elements::ElementsType::Type elements_type) {
 			using namespace elements;
 
 			switch (elements_type) {
@@ -357,7 +357,7 @@ namespace lightning::tools {
 				}
 			}
 
-			m.element_buffer.resize(get_vertex_element_size(m.elements_type)* num_verticies);
+			m.element_buffer.resize(get_vertex_elements_size(m.elements_type)* num_verticies);
 
 			using namespace elements;
 
@@ -545,7 +545,7 @@ namespace lightning::tools {
 			const u64 position_buffer_size{ m.position_buffer.size() };
 			assert(position_buffer_size == sizeof(math::v3) * num_verticies);
 			const u64 element_buffer_size{ m.element_buffer.size() };
-			assert(element_buffer_size == get_vertex_element_size(m.elements_type) * num_verticies);
+			assert(element_buffer_size == get_vertex_elements_size(m.elements_type) * num_verticies);
 			const u64 index_size{ (num_verticies < (1 << 16)) ? sizeof(u16) : sizeof(u32) };
 			const u64 index_buffer_size{ index_size * m.indicies.size() };
 			constexpr u64 su32{ sizeof(u32) };
@@ -595,7 +595,7 @@ namespace lightning::tools {
 			blob.write(m.name.c_str(), m.name.size());
 			blob.write(m.lod_id);
 
-			const u32 elements_size{ (u32)get_vertex_element_size(m.elements_type) };
+			const u32 elements_size{ (u32)get_vertex_elements_size(m.elements_type) };
 			blob.write(elements_size);
 			blob.write((u32)m.elements_type);
 

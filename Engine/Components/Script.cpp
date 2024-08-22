@@ -31,13 +31,15 @@ namespace lightning::script {
 		}
 		#endif
 
+		#if _DEBUG
 		bool exists(script_id id) {
 			assert(id::is_valid(id));
 			const id::id_type index{ id::index(id) };
-			assert(index < generations.size() && id_mapping[index] < entity_scripts.size());
+			assert(index < generations.size() && !(id::is_valid(id_mapping[index]) && id_mapping[index] >= entity_scripts.size()));
 			assert(generations[index] == id::generation(id));
-			return (generations[index] == id::generation(id)) && entity_scripts[id_mapping[index]] && entity_scripts[id_mapping[index]]->is_valid();
+			return generations[index] == id::generation(id) && entity_scripts[id_mapping[index]] && entity_scripts[id_mapping[index]]->is_valid();
 		}
+		#endif
 
 		#if USE_TRANSFORM_CACHE_MAP
 		transform::ComponentCache* const get_cache_ptr(const game_entity::Entity* const entity) {
@@ -137,10 +139,14 @@ namespace lightning::script {
 		util::erease_unordered(entity_scripts, index);
 		id_mapping[id::index(last_id)] = index;
 		id_mapping[id::index(id)] = id::invalid_id;
+
+		if(generations[index] < id::max_generation) {
+			free_ids.push_back(id);
+		}
 	}
 
-	void update(float dt) {
-		for (auto& ptr : entity_scripts) {
+	void update(f32 dt) {
+		for (const auto& ptr : entity_scripts) {
 			ptr->update(dt);
 		}
 

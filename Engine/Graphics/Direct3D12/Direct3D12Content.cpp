@@ -175,6 +175,7 @@ namespace lightning::graphics::direct3d12::content {
 						sizeof(ShaderFlags::Flags) +								// shader flags
 						sizeof(id::id_type) +										// root signature id
 						sizeof(u32) +												// texture count
+						sizeof(MaterialSurface) +										// PBR material properties
 						sizeof(id::id_type) * shader_count +						// shader ids
 						(sizeof(id::id_type) + sizeof(u32)) * info.texture_count	// texture ids and descriptor indicies 
 					};
@@ -187,6 +188,7 @@ namespace lightning::graphics::direct3d12::content {
 					*(ShaderFlags::Flags*)(&buffer[shader_flags_index]) = (ShaderFlags::Flags)flags;
 					*(id::id_type*)(&buffer[root_signature_index]) = create_root_signature(info.type, (ShaderFlags::Flags)flags);
 					*(u32*)(&buffer[texture_count_index]) = info.texture_count;
+					*(MaterialSurface*)&buffer[material_surface_index] = info.surface;
 
 					initialize();
 
@@ -213,6 +215,7 @@ namespace lightning::graphics::direct3d12::content {
 				[[nodiscard]] constexpr id::id_type* texture_ids() const { return _texture_ids; }
 				[[nodiscard]] constexpr u32* descriptor_indicies() const { return _descriptor_indicies; }
 				[[nodiscard]] constexpr id::id_type* shader_ids() const { return _shader_ids; }
+				[[nodiscard]] constexpr MaterialSurface* surface() const { return _material_surface; }
 
 			private:
 				void initialize() {
@@ -221,20 +224,23 @@ namespace lightning::graphics::direct3d12::content {
 					u8* const buffer{ _buffer };
 
 					_type = *(MaterialType::Type*)buffer;
-					_shader_flags = *(ShaderFlags::Flags*)(&buffer[shader_flags_index]);
-					_root_signature_id = *(id::id_type*)(&buffer[root_signature_index]);
-					_texture_count = *(u32*)(&buffer[texture_count_index]);
+					_shader_flags = *(ShaderFlags::Flags*)&buffer[shader_flags_index];
+					_root_signature_id = *(id::id_type*)&buffer[root_signature_index];
+					_texture_count = *(u32*)&buffer[texture_count_index];
+					_material_surface = (MaterialSurface*)&buffer[material_surface_index];
 
-					_shader_ids = (id::id_type*)(&buffer[texture_count_index + sizeof(u32)]);
+					_shader_ids = (id::id_type*)&buffer[material_surface_index + sizeof(MaterialSurface)];
 					_texture_ids = _texture_count ? &_shader_ids[_mm_popcnt_u32(_shader_flags)] : nullptr;
-					_descriptor_indicies = _texture_count ? (u32*)(&_texture_ids[_texture_count]) : nullptr;
+					_descriptor_indicies = _texture_count ? (u32*)&_texture_ids[_texture_count] : nullptr;
 				}
 
 				constexpr static u32 shader_flags_index{ sizeof(MaterialType::Type) };
 				constexpr static u32 root_signature_index{ shader_flags_index + sizeof(ShaderFlags::Flags) };
 				constexpr static u32 texture_count_index{ root_signature_index + sizeof(id::id_type) };
+				constexpr static u32 material_surface_index{ texture_count_index + sizeof(u32) };
 
 				u8* _buffer;
+				MaterialSurface* _material_surface;
 				id::id_type* _texture_ids;
 				u32* _descriptor_indicies;
 				id::id_type* _shader_ids;
@@ -625,6 +631,7 @@ namespace lightning::graphics::direct3d12::content {
 			std::lock_guard lock{ texture_mutex };
 
 			for (u32 i{ 0 }; i < id_count; ++i) {
+				assert(id::is_valid(texture_ids[i]));
 				indicies[i] = descriptor_indicies[texture_ids[i]];
 			}
 		}
@@ -660,6 +667,7 @@ namespace lightning::graphics::direct3d12::content {
 				cache.material_types[i] = stream.material_type();
 				cache.descriptor_indices[i] = stream.descriptor_indicies();
 				cache.texture_count[i] = stream.texture_count();
+				cache.material_surfaces[i] = stream.surface();
 				total_index_count += stream.texture_count();
 			}
 

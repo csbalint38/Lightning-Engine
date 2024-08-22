@@ -4,6 +4,17 @@
 - Forward:  -z
 - Up:        y
 
+## Languages
+| language | files | lines |
+| :--- | ---: | ---: |
+| C++ | 112 | 14,342 |
+| Dart | 28 |  3,042 |
+| HLSL | 11 |  1,209 |
+| XML | 5 | 384 |
+| Python | 8 | 244 |
+| Markdown | 3 | 104 |
+... +4 others (less tha 100 lines)
+
 ## Requirements
 
 ### Minimum
