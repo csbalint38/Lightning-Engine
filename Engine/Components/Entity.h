@@ -8,6 +8,7 @@ namespace lightning {
   
     INIT_INFO(transform);
     INIT_INFO(script);
+    INIT_INFO(geometry);
 
     #undef INIT_INFO
 
@@ -16,6 +17,7 @@ namespace lightning {
         {
         transform::InitInfo* transform{ nullptr };
         script::InitInfo* script{ nullptr };
+        geometry::InitInfo* geometry{ nullptr };
         };
 
         Entity create(EntityInfo info);

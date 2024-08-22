@@ -10,5 +10,5 @@ namespace lightning::script {
 
     Component create(InitInfo info, game_entity::Entity entity);
     void remove(Component component);
-    void update(float dt);
+    void update(f32 dt);
 }

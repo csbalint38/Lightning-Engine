@@ -199,11 +199,21 @@ namespace lightning::graphics {
 		};
 	};
 
+	struct MaterialSurface {
+		math::v4 base_color{ 1.f, 1.f, 1.f, 1.f };
+		math::v3 emissive{ 0.f, 0.f, 0.f };
+		f32 emissive_intensity{ 1.f };
+		f32 ambient_occlusion{ 1.f };
+		f32 metallic { 0.f };
+		f32 roughness { 1.f };
+	};
+
 	struct MaterialInitInfo {
+		id::id_type* texture_ids;
+		MaterialSurface surface;
 		MaterialType::Type type;
 		u32 texture_count;
 		id::id_type shader_ids[ShaderType::Type::count]{ id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id };
-		id::id_type* texture_ids;
 	};
 
 	struct PrimitiveTopology {

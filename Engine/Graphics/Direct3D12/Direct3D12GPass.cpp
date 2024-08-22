@@ -47,6 +47,7 @@ namespace lightning::graphics::direct3d12::gpass {
 			MaterialType::Type* material_types{ nullptr };
 			u32** descriptor_indices{ nullptr };
 			u32* texture_counts{ nullptr };
+			MaterialSurface** material_surfaces{ nullptr };
 			D3D12_GPU_VIRTUAL_ADDRESS* position_buffers{ nullptr };
 			D3D12_GPU_VIRTUAL_ADDRESS* element_buffers{ nullptr };
 			D3D12_INDEX_BUFFER_VIEW* index_buffer_views{ nullptr };
@@ -80,7 +81,8 @@ namespace lightning::graphics::direct3d12::gpass {
 					root_signatures,
 					material_types,
 					descriptor_indices,
-					texture_counts
+					texture_counts,
+					material_surfaces
 				};
 			}
 
@@ -108,7 +110,8 @@ namespace lightning::graphics::direct3d12::gpass {
 					material_types = (MaterialType::Type*)&root_signatures[items_count];
 					descriptor_indices = (u32**)&material_types[items_count];
 					texture_counts = (u32*)&descriptor_indices[items_count];
-					position_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)&texture_counts[items_count];
+					material_surfaces = (MaterialSurface**)&texture_counts[items_count];
+					position_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)&material_surfaces[items_count];
 					element_buffers = (D3D12_GPU_VIRTUAL_ADDRESS*)&position_buffers[items_count];
 					index_buffer_views = (D3D12_INDEX_BUFFER_VIEW*)&element_buffers[items_count];
 					primitive_topologies = (D3D_PRIMITIVE_TOPOLOGY*)&index_buffer_views[items_count];
@@ -129,6 +132,7 @@ namespace lightning::graphics::direct3d12::gpass {
 					sizeof(MaterialType::Type) +
 					sizeof(u32*) + 
 					sizeof(u32) + 
+					sizeof(MaterialSurface*) + 
 					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +
 					sizeof(D3D12_GPU_VIRTUAL_ADDRESS) +
 					sizeof(D3D12_INDEX_BUFFER_VIEW) +
@@ -189,7 +193,7 @@ namespace lightning::graphics::direct3d12::gpass {
 			return gpass_main_buffer.resource() && gpass_depth_buffer.resource();
 		}
 
-		void fill_per_object_data(const D3D12FrameInfo& info) {
+		void fill_per_object_data(const D3D12FrameInfo& info, const content::material::MaterialsCache& materials_cache) {
 			const GPassCache& cache{ frame_cache };
 			const u32 render_items_count{ (u32)cache.size() };
 			id::id_type current_entity_id{ id::invalid_id };
@@ -206,6 +210,9 @@ namespace lightning::graphics::direct3d12::gpass {
 					XMMATRIX world{ XMLoadFloat4x4(&data.world) };
 					XMMATRIX wvp{ XMMatrixMultiply(world, info.camera->view_projection()) };
 					XMStoreFloat4x4(&data.world_view_projection, wvp);
+
+					const MaterialSurface* const surface{ materials_cache.material_surfaces[i] };
+					memcpy(&data.base_color, surface, sizeof(MaterialSurface));
 
 					current_data_pointer = cbuffer.allocate<hlsl::PerObjectData>();
 					memcpy(current_data_pointer, &data, sizeof(hlsl::PerObjectData));
@@ -256,7 +263,7 @@ namespace lightning::graphics::direct3d12::gpass {
 			const material::MaterialsCache materials_cache{ cache.materials_cache() };
 			material::get_materials(items_cache.material_ids, items_count, materials_cache, cache.descriptor_index_count);
 
-			fill_per_object_data(info);
+			fill_per_object_data(info, materials_cache);
 
 			if (cache.descriptor_index_count) {
 				ConstantBuffer& cbuffer{ core::c_buffer() };

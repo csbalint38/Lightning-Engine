@@ -239,8 +239,9 @@ namespace lightning::tools {
 
 		if (import_tangents) {
 			FbxLayerElementArrayTemplate<FbxVector4>* tangents{ nullptr };
+			fbx_mesh->GenerateTangentsData()
 
-			if (fbx_mesh->GenerateTangentsData() && fbx_mesh->GetTangents(&tangents) && tangents && tangents->GetCount() > 0) {
+			if (fbx_mesh->GetTangents(&tangents) && tangents && tangents->GetCount() == m.raw_indicies.size()) {
 				const s32 num_tangents{ tangents->GetCount() };
 				for (s32 i{ 0 }; i < num_tangents; ++i) {
 					FbxVector4 t{ tangents->GetAt(i) };
@@ -248,7 +249,7 @@ namespace lightning::tools {
 					t[3] = .0f;
 					t = transform.MultT(t);
 					t.Normalize();
-					m.tangents.emplace_back((f32)t[0], (f32)t[1], (f32)t[2], handedness);
+					m.tangents.emplace_back((f32)t[0], (f32)t[1], (f32)t[2], -handedness);
 				}
 			}
 			else {
@@ -267,7 +268,7 @@ namespace lightning::tools {
 			if (fbx_mesh->GetPolygonVertexUVs(uv_names.GetStringAt(i), uvs)) {
 				const s32 num_uvs{ uvs.Size() };
 				for (s32 j{ 0 }; j < num_uvs; ++j) {
-					m.uv_sets[i].emplace_back((f32)uvs[j][0], (f32)uvs[j][1]);
+					m.uv_sets[i].emplace_back((f32)uvs[j][0], 1.f - (f32)uvs[j][1]);
 				}
 			}
 		}

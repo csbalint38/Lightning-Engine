@@ -187,10 +187,9 @@ namespace lightning::tools {
 		}
 
 		void copy_subresources(const ScratchImage& scratch, TextureData* const data) {
-			const TexMetadata& metadata{ scratch.GetMetadata() };
 			const Image* const images{ scratch.GetImages() };
 			const u32 image_count{ (u32)scratch.GetImageCount() };
-			assert(images && metadata.mipLevels && metadata.mipLevels <= TextureData::max_mips);
+			assert(images && scratch.GetMetadata().mipLevels && scratch.GetMetadata().mipLevels <= TextureData::max_mips);
 
 			u64 subresource_size{ 0 };
 

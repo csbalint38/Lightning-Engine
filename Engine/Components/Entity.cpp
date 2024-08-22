@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include "Transform.h"
 #include "Script.h"
+#include "Geometry.h"
 
 namespace lightning::game_entity {
 
@@ -11,13 +12,14 @@ namespace lightning::game_entity {
        
         util::vector<transform::Component> transforms;
         util::vector<script::Component> scripts;
+        util::vector<geometry::Component> geometries;
     }
 
     Entity create(EntityInfo info) {
         assert(info.transform);
-        if (!info.transform) return Entity{};
+        if (!info.transform) return {};
 
-        entity_id id;
+        entity_id id{};
 
         if(free_ids.size() > id::min_deleted_elements) {
             id = free_ids.front();
@@ -32,6 +34,7 @@ namespace lightning::game_entity {
 
             transforms.emplace_back();
             scripts.emplace_back();
+            geometries.emplace_back();
         }
 
         const Entity new_entity{ id };
@@ -40,6 +43,7 @@ namespace lightning::game_entity {
         // Create transform component
         assert(!transforms[index].is_valid());
         transforms[index] = transform::create(*info.transform, new_entity);
+        assert(transforms[index].get_id() == id);
         if (!transforms[index].is_valid()) return {};
 
         // Create script component
@@ -49,11 +53,22 @@ namespace lightning::game_entity {
             assert(scripts[index].is_valid());
         }
 
+        if(info.geometry) {
+            assert(!geometries[index].is_valid());
+            geometries[index] = geometry::create(*info.geometry, new_entity);
+            assert(geometries[index].is_valid());
+        }
+
         return new_entity;
     }
     void remove(entity_id  id) {
         const id::id_type index{ id::index(id) };
         assert(is_alive(id));
+
+        if(geometries[index].is_valid()) {
+            geometry::remove(geometries[index]);
+            geometries[index] = {};
+        }
 
         if (scripts[index].is_valid()) {
             script::remove(scripts[index]);
@@ -62,25 +77,31 @@ namespace lightning::game_entity {
 
         transform::remove(transforms[index]);
         transforms[index] = {};
-        free_ids.push_back(id);
+        
+        if(generations[index] < id::max_generation) {
+            free_ids.push_back(id);
+        }
     }
     bool is_alive(entity_id id) {
         assert(id::is_valid(id));
         const id::id_type index{ id::index(id) };
         assert(index < generations.size());
-        return (generations[index] == id::generation(id) && transforms[index].is_valid());
+        return generations[index] == id::generation(id) && transforms[index].is_valid();
     }
 
     transform::Component Entity::transform() const {
         assert(is_alive(_id));
-        const id::id_type index{ id::index(_id) };
-        return transforms[index];
+        return transforms[id::index(_id)];
     }
 
     script::Component Entity::script() const {
         assert(is_alive(_id));
-        const id::id_type index{ id::index(_id) };
-        return scripts[index];
+        return scripts[id::index(_id)];
+    }
+
+    geometry::Component Entity::geometry() const {
+        assert(is_alive(_id));
+        return geometries[id::index(_id)];
     }
 }
 

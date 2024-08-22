@@ -106,8 +106,8 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
     vs_out.world_position = world_position.xyz;
     vs_out.world_normal = normalize(mul(normal, (float3x3)per_object_buffer.inv_world));
-    vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), -h_sign);
-    vs_out.uv = float2(element.uv.x, 1.f - element.uv.y);
+    vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), h_sign);
+    vs_out.uv = element.uv;
     
     #else
     #undef ELEMENTS_TYPE
