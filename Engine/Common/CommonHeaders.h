@@ -9,15 +9,10 @@
 // C/C++ headers
 #include <cstdint>
 #include <assert.h>
-#include <typeinfo>
 #include <memory>
 #include <unordered_map>
 #include <mutex>
 #include <cstring>
-
-#if defined(_WIN64)
-#include <DirectXMath.h>
-#endif
 
 #ifndef DISABLE_COPY
 #define DISABLE_COPY(T)				\
@@ -44,10 +39,10 @@
 
 // common custom headers
 #include "PrimitiveTypes.h"
-#include "Utilities/Math.h"
-#include "Utilities/Utilities.h"
-#include "Utilities/MathTypes.h"
-#include "Id.h"
+#include "../Utilities/Math.h"
+#include "../Utilities/Utilities.h"
+#include "../Utilities/MathTypes.h"
+#include "../Common/Id.h"
 
 #ifdef DOMAIN
 #undef DOMAIN
