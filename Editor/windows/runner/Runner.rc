@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "Cséfalvay Bálint" "\0"
+            VALUE "CompanyName", "Lightning" "\0"
             VALUE "FileDescription", "3D game editor" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "editor" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 Cséfalvay Bálint. All rights reserved." "\0"
             VALUE "OriginalFilename", "editor.exe" "\0"
-            VALUE "ProductName", "Lightnin Editor" "\0"
+            VALUE "ProductName", "Lightning Editor" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

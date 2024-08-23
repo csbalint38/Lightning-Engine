@@ -10,7 +10,7 @@ class OpenProjectController {
       OpenProjectController._internal();
 
   static final Directory _appData =
-      Directory(p.join(Platform.environment['APPDATA']!, "LightningEditor"));
+      Directory(p.join(Platform.environment['LOCALAPPDATA']!, "LightningEditor"));
   late final File _projectDataFile;
   final List<ProjectData> projects = <ProjectData>[];
 

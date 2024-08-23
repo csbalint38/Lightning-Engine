@@ -15,6 +15,55 @@ ThemeData lightTheme = ThemeData(
     bodyMedium: blackText,
     bodySmall: blackText,
   ),
+  textButtonTheme: TextButtonThemeData(
+  style: ButtonStyle(
+    foregroundColor: WidgetStateProperty.resolveWith<Color>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.disabled)) {
+          return Colors.grey;
+        }
+        return Colors.blueGrey;
+      },
+    ),
+    backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.hovered) && !states.contains(WidgetState.disabled)) {
+          return Colors.blueGrey.withAlpha(30);
+        }
+        return Colors.transparent;
+      },
+    ),
+    overlayColor: WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.hovered)) {
+          return Colors.blueGrey.withAlpha(50);
+        }
+        return null;
+      },
+    ),
+    padding: WidgetStatePropertyAll(const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+    shape: WidgetStatePropertyAll(
+      RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(25),
+      ),
+    ),
+    side: WidgetStateProperty.resolveWith<BorderSide?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
+          return const BorderSide(color: Colors.blueGrey, width: 1);
+        }
+        return null;
+      },
+    ),
+    textStyle: WidgetStatePropertyAll(
+      const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  ),
+)
+  ,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ButtonStyle(
       backgroundColor:

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:editor/congifg/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
@@ -19,7 +20,7 @@ class NewProjectController {
   final ValueNotifier<List<ProjectTemplate>> templates =
       ValueNotifier<List<ProjectTemplate>>([]);
   final ValueNotifier<bool> isValid = ValueNotifier<bool>(true);
-  final String? enginePath = Platform.environment['LIGHTNING_ENGINE'];
+  final Config config = Config();
 
   factory NewProjectController() {
     return _newProjectController;
@@ -51,7 +52,16 @@ class NewProjectController {
     return templates.value;
   }
 
-  bool get canFindEngine => enginePath != null;
+  bool get canFindEngine {
+    final dataFile = File(p.join(Platform.environment['LOCALAPPDATA']!, "LightningEditor", "environment.json"));
+    if(!dataFile.existsSync()) return false;
+
+    final String? path = config.read(ConfigProps.ENGINE_PATH);
+
+    if(path == null) return false;
+
+    return Directory(p.join(path, 'Engine', 'EngineAPI')).existsSync();
+  }
 
   bool validate() {
     String path = this.path.value;
@@ -91,7 +101,11 @@ class NewProjectController {
   }
 
   bool validateEnginePath(String path) {
-    return Directory(path).existsSync();
+    final RegExp pathCharacters = RegExp(
+        r'^(?:[a-zA-Z]:\\|\\)(?:[^\\/:*?"<>|\r\n]+\\)*(?:[^\\/:*?"<>|\r\n]*[^\\/:*?"<>|\r\n. ])?$');
+    if (!pathCharacters.hasMatch(path)) return false;
+
+    return Directory(p.join(path, "Engine", "EngineAPI")).existsSync();
   }
 
   Future<void> createProject(ProjectTemplate template) async {
@@ -139,10 +153,17 @@ class NewProjectController {
     await _createMSVCSolution(template, path.value);
   }
 
+  void setEnginePath(String path) async {
+    if(!validateEnginePath(path)) return;
+
+    config.write(ConfigProps.ENGINE_PATH, path);
+  }
+
   Future<void> _createMSVCSolution(ProjectTemplate template, String projectPath) async {
+    final String? enginePath = config.read(ConfigProps.ENGINE_PATH);
     File solutionTemplate = File(p.join(template.templateFolder.path, "SolutionTemplate.txt"));
     File projectTemplate = File(p.join(template.templateFolder.path, "ProjectTemplate.txt"));
-    Directory engineAPIDirectory = Directory(p.join(this.enginePath!, 'Engine', 'EngineAPI'));
+    Directory engineAPIDirectory = Directory(p.join(enginePath!, 'Engine', 'EngineAPI'));
 
     if(solutionTemplate.existsSync() && projectTemplate.existsSync() && engineAPIDirectory.existsSync()) {
       final String projectUuid = Uuid().v4().toUpperCase();
@@ -152,7 +173,7 @@ class NewProjectController {
       await File(p.join(projectPath, this.name.value, '${this.name.value}.sln')).writeAsString(solutionString);
 
       String projectString = projectTemplate.readAsStringSync();
-      projectString = projectString.replaceAll('{{0}}', this.name.value).replaceAll('{{1}}', projectUuid).replaceAll('{{2}}', engineAPIDirectory.path).replaceAll('{{3}}', enginePath!);
+      projectString = projectString.replaceAll('{{0}}', this.name.value).replaceAll('{{1}}', projectUuid).replaceAll('{{2}}', engineAPIDirectory.path).replaceAll('{{3}}', enginePath);
       await File(p.join(projectPath, this.name.value, 'Code', '${this.name.value}.vcxproj')).writeAsString(projectString);
     }
   }
