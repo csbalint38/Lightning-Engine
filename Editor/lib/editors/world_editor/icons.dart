@@ -61,6 +61,12 @@ class _IconsRowState extends State<IconsRow> {
               icon: const Icon(Icons.save),
             ),
           ),
+        ),
+        const Tooltip(
+          message: 'Create new script',
+          child: IconButton(
+            icon: Icon(Icons.note_add_rounded),
+          )
         )
       ],
     );

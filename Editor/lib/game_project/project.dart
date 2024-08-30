@@ -5,6 +5,7 @@ import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:xml/xml.dart' as xml;
+import 'package:path/path.dart' as p;
 
 class Project {
   static String extension = "lightning";
@@ -15,13 +16,15 @@ class Project {
   final ListNotifier<Scene> scenes = ListNotifier<Scene>();
   late Scene activeScene;
 
-  late String fullPath;
+  late final String fullPath;
+  late final String solution;
 
   late RelayCommand addScene;
   late RelayCommand removeScene;
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
-    fullPath = '$path\\$name\\$name.$extension';
+    fullPath = p.join(path, name ,'$name.$extension');
+    solution = p.join(path, '$name.sln');
     if (scenes == null) {
       this.scenes.add(Scene(name: "Default Scene", isActive: true));
       activeScene = this.scenes.value.first;

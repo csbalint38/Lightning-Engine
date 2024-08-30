@@ -1,5 +1,4 @@
 import 'package:editor/editor.dart';
-import 'package:editor/game_code/visual_studio.dart';
 import 'package:editor/game_project/controllers/new_project_controller.dart';
 import 'package:editor/game_project/controllers/open_project_controller.dart';
 import 'package:editor/game_project/project.dart';
@@ -314,9 +313,7 @@ class _NewProjectState extends State<NewProject> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8),
                         child: OutlinedButton(
-                          onPressed: () {
-                            VisualStudio.openVisualStudio("C:\\Users\\user\\Documents\\Lightning-Engine\\Engine.sln");
-                          },
+                          onPressed: () {},
                           child: const Text("Browse"),
                         ),
                       )
