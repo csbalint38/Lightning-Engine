@@ -1,13 +1,14 @@
 #include "EngineAPI/GameEntity.h"
 #include "EngineAPI/Light.h"
 #include "EngineAPI/TransformComponent.h"
+#include "Components/Geometry.h"
 #include "Graphics/Renderer.h"
 
 #define RANDOM_LIGHTS 0
 
 using namespace lightning;
 
-game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, const char* script_name);
+game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, geometry::InitInfo* geometry_info, const char* script_name);
 void remove_game_entity(game_entity::entity_id id);
 
 namespace {
@@ -23,7 +24,7 @@ namespace {
 
 	void create_light(math::v3 position, math::v3 rotation, graphics::Light::Type type, u64 light_set_key) {
 		const char* script_name{ nullptr }; //{ type == graphics::Light::SPOT ? "RotatorScript" : nullptr };
-		game_entity::entity_id entity_id{ create_one_game_entity(position, rotation, script_name).get_id() };
+		game_entity::entity_id entity_id{ create_one_game_entity(position, rotation, nullptr, script_name).get_id() };
 
 		graphics::LightInitInfo info{};
 		info.entity_id = entity_id;
@@ -67,7 +68,7 @@ void generate_lights() {
 	graphics::create_light_set(right_set);
 
 	graphics::LightInitInfo info{};
-	info.entity_id = create_one_game_entity({}, { 0, 0, 0 }, nullptr).get_id();
+	info.entity_id = create_one_game_entity({}, { 0, 0, 0 }, nullptr, nullptr).get_id();
 	info.type = graphics::Light::DIRECTIONAL;
 	info.light_set_key = left_set;
 	info.intensity = 1.f;
@@ -75,24 +76,24 @@ void generate_lights() {
 
 	lights.emplace_back(graphics::create_light(info));
 
-	info.entity_id = create_one_game_entity({}, { math::PI * .5f, 0, 0 }, nullptr).get_id();
+	info.entity_id = create_one_game_entity({}, { math::PI * .5f, 0, 0 }, nullptr, nullptr).get_id();
 	info.color = rgb_to_color(17, 27, 48);
 	lights.emplace_back(graphics::create_light(info));
 
-	info.entity_id = create_one_game_entity({}, { -math::PI * .5f, 0, 0 }, nullptr).get_id();
+	info.entity_id = create_one_game_entity({}, { -math::PI * .5f, 0, 0 }, nullptr, nullptr).get_id();
 	info.color = rgb_to_color(63, 47, 30);
 	lights.emplace_back(graphics::create_light(info));
 
-	info.entity_id = create_one_game_entity({}, { 0, 0, 0 }, nullptr).get_id();
+	info.entity_id = create_one_game_entity({}, { 0, 0, 0 }, nullptr, nullptr).get_id();
 	info.light_set_key = right_set;
 	info.color = rgb_to_color(150, 100, 200);
 	lights.emplace_back(graphics::create_light(info));
 
-	info.entity_id = create_one_game_entity({}, { math::PI * .5f, 0, 0 }, nullptr).get_id();
+	info.entity_id = create_one_game_entity({}, { math::PI * .5f, 0, 0 }, nullptr, nullptr).get_id();
 	info.color = rgb_to_color(17, 27, 48);
 	lights.emplace_back(graphics::create_light(info));
 
-	info.entity_id = create_one_game_entity({}, { -math::PI * .5f, 0, 0 }, nullptr).get_id();
+	info.entity_id = create_one_game_entity({}, { -math::PI * .5f, 0, 0 }, nullptr, nullptr).get_id();
 	info.color = rgb_to_color(63, 47, 130);
 	lights.emplace_back(graphics::create_light(info));
 

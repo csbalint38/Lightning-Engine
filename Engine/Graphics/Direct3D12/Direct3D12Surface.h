@@ -5,7 +5,7 @@ namespace lightning::graphics::direct3d12 {
 	class D3D12Surface {
 		public:
 			constexpr static u32 buffer_count{ 3 };
-			constexpr static DXGI_FORMAT default_back_buffer_format{ DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };
+			constexpr static DXGI_FORMAT default_back_buffer_format{ DXGI_FORMAT_R16G16B16A16_FLOAT };
 
 			explicit D3D12Surface(platform::Window window) : _window{ window } {
 				assert(window.handle());
@@ -15,8 +15,7 @@ namespace lightning::graphics::direct3d12 {
 			DISABLE_COPY(D3D12Surface);
 			constexpr D3D12Surface(D3D12Surface&& o) : _swap_chain{ o._swap_chain }, _window{ o._window }, _current_bb_index{ o._current_bb_index }, _viewport{ o._viewport }, _scissor_rect{ o._scissor_rect }, _allow_tearing{ o._allow_tearing }, _present_flags{ o._present_flags }, _light_culling_id{ o._light_culling_id } {
 				for (u32 i{ 0 }; i < buffer_count; ++i) {
-					_render_target_data[i].resource = o._render_target_data[i].resource;
-					_render_target_data[i].rtv = o._render_target_data[i].rtv;
+					_render_target_data[i] = o._render_target_data[i];
 				}
 				o.reset();
 				}

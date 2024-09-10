@@ -1,29 +1,35 @@
 #pragma once
 
 #include "CommonHeaders.h"
+
+#if defined(_WIN64)
+#include <DirectXMath.h>
+#endif
+
 #include "MathTypes.h"
 
 namespace lightning::math {
 
-	constexpr bool is_equal(f32 a, f32 b, f32 eps = EPSILON) {
+	[[nodiscard]] constexpr bool is_equal(f32 a, f32 b, f32 eps = EPSILON) {
 		f32 diff{ a - b };
 		if (diff < 0.f) diff = -diff;
 		return diff < eps;
 	}
 
 	template<typename T> [[nodiscard]] constexpr T clamp(T value, T min, T max) {
+		assert(min <= max);
 		return (value < min) ? min : (value > max) ? max : value;
 	}
 	
 	template<u32 bits> [[nodiscard]] constexpr u32 pack_unit_float(f32 f) {
-		static_assert(bits <= sizeof(u32) * 8);
+		static_assert(bits && bits <= sizeof(u32) * 8);
 		assert(f >= 0.f && f <= 1.f);
 		constexpr f32 intervals{ (f32)(((u32)1 << bits) - 1) };
 		return (u32)(intervals * f + .5f);
 	}
 	
 	template<u32 bits> [[nodiscard]] constexpr f32 unpack_to_unit_float(u32 i) {
-		static_assert(bits <= sizeof(u32) * 8);
+		static_assert(bits && bits <= sizeof(u32) * 8);
 		assert(i < ((u32)1) << bits);
 		constexpr f32 intervals{ (f32)(((u32)1 << bits) - 1) };
 		return (f32)i / intervals;

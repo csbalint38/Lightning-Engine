@@ -1,11 +1,12 @@
-#include "Platform\Platform.h"
-#include "Platform\PlatformTypes.h"
-#include "Graphics\Renderer.h"
-#include "Graphics\Direct3D12\Direct3D12Core.h"
-#include "Content\ContentToEngine.h"
+#include "Platform/Platform.h"
+#include "Platform/PlatformTypes.h"
+#include "Graphics/Renderer.h"
+#include "Graphics/Direct3D12/Direct3D12Core.h"
+#include "Content/ContentToEngine.h"
 #include "Components/Entity.h"
 #include "Components/Transform.h"
 #include "Components/Script.h"
+#include "Components/Geometry.h"
 #include "Input/Input.h"
 #include "TestRenderer.h"
 #include "ShaderCompilation.h"
@@ -58,20 +59,19 @@
 		graphics::RenderSurface surface{};
 	};
 
-	id::id_type model_id{ id::invalid_id };
-	id::id_type item_id{ id::invalid_id };
-
 	CameraSurface _surfaces[4]{};
 	TimeIt timer;
 
 	bool resized{ false };
 	bool is_restarting{ false };
+
+	util::vector<id::id_type> render_item_id_cache;
+
 	void destroy_camera_surface(CameraSurface& surface);
 	bool test_initialize();
 	void test_shutdown();
 	void create_render_items();
 	void destroy_render_items();
-	void get_render_items(id::id_type* items, u32 count);
 	void generate_lights();
 	void remove_lights();
 	void test_lights(f32 dt);
@@ -140,7 +140,7 @@
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 
-	game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, const char* script_name) {
+	game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, geometry::InitInfo* geometry_info, const char* script_name) {
 		transform::InitInfo transform_info{};
 		DirectX::XMVECTOR quat{ DirectX::XMQuaternionRotationRollPitchYawFromVector(DirectX::XMLoadFloat3(&rotation)) };
 		math::v4a rot_quat;
@@ -157,6 +157,7 @@
 		game_entity::EntityInfo entity_info{};
 		entity_info.transform = &transform_info;
 		entity_info.script = &script_info;
+		entity_info.geometry = geometry_info;
 		game_entity::Entity entity{ game_entity::create(entity_info) };
 		assert(entity.is_valid());
 		return entity;
@@ -185,7 +186,7 @@
 	void create_camera_surface(CameraSurface& surface, platform::WindowInitInfo info) {
 		surface.surface.window = platform::create_window(&info);
 		surface.surface.surface = graphics::create_surface(surface.surface.window);
-		surface.entity = create_one_game_entity({ 0, 0, 0 }, { 0, 3.14f, 0 }, "CameraScript");
+		surface.entity = create_one_game_entity({ 0, 0, 0 }, { 0, 3.14f, 0 }, nullptr, "CameraScript");
 		surface.camera = graphics::create_camera(graphics::PerspectiveCameraInitInfo{ surface.entity.get_id() });
 		surface.camera.aspect_ratio((f32)surface.surface.window.width() / surface.surface.window.height());
 	}
@@ -220,18 +221,14 @@
 			create_camera_surface(_surfaces[i], info[i]);
 		}
 
-		std::unique_ptr<u8[]> model;
-		u64 size{ 0 };
-		if (!read_file("..\\..\\EngineTest\\model.model", model, size)) return false;
-
-		model_id = content::create_resource(model.get(), content::AssetType::MESH);
-		if (!id::is_valid(model_id)) return false;
-
 		init_test_workers(buffer_test_worker);
 
 		create_render_items();
 
 		generate_lights();
+
+		render_item_id_cache.resize(4 + 12);
+		geometry::get_render_item_ids(render_item_id_cache.data(), (u32)render_item_id_cache.size());
 
 		input::InputSource source{};
 		source.binding = std::hash<std::string>()("move");
@@ -274,10 +271,6 @@
 		destroy_render_items();
 		joint_test_workers();
 
-		if (id::is_valid(model_id)) {
-			content::destroy_resource(model_id, content::AssetType::MESH);
-		}
-
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			destroy_camera_surface(_surfaces[i]);
 		}
@@ -301,14 +294,11 @@
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			if (_surfaces[i].surface.surface.is_valid()) {
 
-				f32 thresholds[4]{};
-
-				id::id_type render_items[4]{};
-				get_render_items(&render_items[0], 4);
+				f32 thresholds[4 + 12]{};
 
 				graphics::FrameInfo info{};
-				info.render_item_ids = &render_items[0];
-				info.render_item_count = 4;
+				info.render_item_ids = render_item_id_cache.data();
+				info.render_item_count = 4 + 12;
 				info.thresholds = &thresholds[0];
 				info.light_set_key = light_set_key;
 				info.average_frame_time = dt;

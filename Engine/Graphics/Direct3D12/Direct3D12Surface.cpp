@@ -90,8 +90,8 @@ namespace lightning::graphics::direct3d12 {
 		assert(_window.width() == width && _window.height() == height);
 		_viewport.TopLeftX = 0.f;
 		_viewport.TopLeftY = 0.f;
-		_viewport.Width = (float)width;
-		_viewport.Height = (float)height;
+		_viewport.Width = (f32)width;
+		_viewport.Height = (f32)height;
 		_viewport.MinDepth = 0.f;
 		_viewport.MaxDepth = 1.f;
 

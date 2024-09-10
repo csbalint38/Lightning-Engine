@@ -4,7 +4,7 @@
 namespace lightning::util {
 	template<typename T, bool destruct = true> class vector {
 		public:
-			vector() = default;
+			constexpr vector() = default;
 
 			constexpr explicit vector(u64 count) {
 				resize(count);
@@ -27,7 +27,7 @@ namespace lightning::util {
 				if (this != std::addressof(o)) {
 					clear();
 					reserve(o._size);
-					for (auto& item : o) emplace_back(item);
+					for (const auto& item : o) emplace_back(item);
 					assert(_size == o._size);
 				}
 				return *this;

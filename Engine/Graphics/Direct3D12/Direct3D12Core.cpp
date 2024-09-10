@@ -74,10 +74,10 @@ namespace lightning::graphics::direct3d12::core {
 
 					surface.present();
 
-					u64& fence_value{ _fence_value };
-					++fence_value;
+					const u64 fence_value{ ++_fence_value };
+					
 					CommandFrame& frame{ _cmd_frames[_frame_index] };
-					frame.fence_value = fence_value;
+					DXCall(_cmd_queue->Signal(_fence, fence_value));
 
 					_cmd_queue->Signal(_fence, fence_value);
 
@@ -317,6 +317,7 @@ namespace lightning::graphics::direct3d12::core {
 		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
 			new (&constant_buffers[i]) ConstantBuffer{ ConstantBuffer::get_default_init_info(1024 * 1024) };
 			NAME_D3D12_OBJECT_INDEXED(constant_buffers[i].buffer(), i, L"Global Constatnt Buffer");
+			if (!constant_buffers[i].buffer()) return failed_init();
 		}
 
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -365,7 +366,7 @@ namespace lightning::graphics::direct3d12::core {
 		process_deferred_releases(0);
 
 		#ifdef _DEBUG
-		{
+		if(main_device) {
 			{
 				ComPtr<ID3D12InfoQueue> info_queue;
 				DXCall(main_device->QueryInterface(IID_PPV_ARGS(&info_queue)));
@@ -459,8 +460,8 @@ namespace lightning::graphics::direct3d12::core {
 		gpass::set_render_targets_for_gpass(cmd_list);
 		gpass::render(cmd_list, frame_info);
 
-		barriers.add(current_back_buffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);
 		gpass::add_transitions_for_post_process(barriers);
+		barriers.add(current_back_buffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);
 		barriers.apply(cmd_list);
 
 		fx::post_process(cmd_list, frame_info, surface.rtv());
