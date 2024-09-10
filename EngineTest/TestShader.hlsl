@@ -1,5 +1,5 @@
 #include "Common.hlsli"
-#include "BDRF.hlsli"
+#include "BRDF.hlsli"
 
 struct VertexOut {
     float4 homogeneous_position : SV_POSITION;
@@ -129,7 +129,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 
 #define TILE_SIZE 32
 #define NO_LIGHT_ATTENUATION 0  // Turn on to test light edges
-#define USE_PHONG 0             // Turn on to use old-style Phong shading
+#define USE_PHONG 1             // Turn on to use old-style Phong shading
 #define USE_BURLEY_BRDF 0       // Turn on to achive more precise lighting
 // If both USE_PHONG and USE_BURLEY_BRDF is off, the shader uses physic-based Lambert shading
 
@@ -157,7 +157,7 @@ float3 Cook_Torrence_BRDF(Surface s, float3 l)
     const float n_o_h = saturate(dot(n, h));
     const float v_o_h = saturate(dot(s.v, h));
     
-    const float d = d_ggc(n_o_h, s.a2);
+    const float d = d_ggx(n_o_h, s.a2);
     const float g = v_Smith_ggx_correlated(n_o_v, n_o_l, s.a2);
     const float3 f = f_Schlick(s.specular_color, v_o_h);
     
@@ -173,14 +173,14 @@ float3 Cook_Torrence_BRDF(Surface s, float3 l)
     return (diffuse_brdf + specular_brdf) * n_o_l;
 }
 
-float3 calculate_lighting(Surface s, float3 l, float3 v, float3 light_color)
+float3 calculate_lighting(Surface s, float3 l, float3 light_color)
 {
     float3 color = 0;
     
     #if USE_PHONG
     const float3 n = s.normal;
     const float n_o_l = saturate(dot(n, l));
-    color = PhongBRDF(n, l, v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
+    color = PhongBRDF(n, l, s.v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
     #else
     color = Cook_Torrence_BRDF(s, l) * light_color;
     #endif
@@ -190,7 +190,7 @@ float3 calculate_lighting(Surface s, float3 l, float3 v, float3 light_color)
     return color;
 }
 
-float3 point_light(Surface s, float3 world_position, float3 v, LightParameters light)
+float3 point_light(Surface s, float3 world_position, LightParameters light)
 {
     float3 l = light.position - world_position;
     const float d_sq = dot(l, l);
@@ -210,13 +210,13 @@ float3 point_light(Surface s, float3 world_position, float3 v, LightParameters l
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
         const float attenuation = 1.f - smoothstep(.1f * light.range, light.range, rcp(d_rcp));
-        color = calculate_lighting(s, l, v, light.color * light.intensity * attenuation);
+        color = calculate_lighting(s, l, light.color * light.intensity * attenuation);
     }
     return color;
     #endif
 }
 
-float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters light)
+float3 spotlight(Surface s, float3 world_position, LightParameters light)
 {
     float3 l = light.position - world_position;
     const float d_sq = dot(l, l);
@@ -242,7 +242,7 @@ float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters lig
         const float attenuation = 1.f - smoothstep(.1f * light.range, light.range, rcp(d_rcp));
         const float cos_angle_to_light = saturate(dot(-l, light.direction));
         const float angular_attenuation = smoothstep(light.cos_penumbra, light.cos_umbra, cos_angle_to_light);
-        color = calculate_lighting(s, l, v, light.intensity * attenuation * angular_attenuation);
+        color = calculate_lighting(s, l, light.intensity * attenuation * angular_attenuation);
 
     }
     

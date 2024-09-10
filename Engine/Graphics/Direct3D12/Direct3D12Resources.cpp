@@ -105,7 +105,7 @@ namespace lightning::graphics::direct3d12 {
 
 	#pragma region D3D12_BUFFER
 
-	D3D12Buffer::D3D12Buffer(D3D12BufferInitInfo info, bool is_cpu_accessible) {
+	D3D12Buffer::D3D12Buffer(const D3D12BufferInitInfo& info, bool is_cpu_accessible) {
 		assert(!_buffer && info.size && info.alignment);
 
 		_size = (u32)math::align_size_up(info.size, info.alignment);

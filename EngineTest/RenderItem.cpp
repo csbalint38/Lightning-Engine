@@ -184,7 +184,7 @@ void create_render_items() {
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
 		std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }},
 		std::thread{ [] { fembot_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/fembot.model"); }},
-		std::thread{ [] { sphere_model_id = load_model("C:/Users/balint/Documents/Lightning-Engine/EngineTest/sphere.model"); }},
+		std::thread{ [] { sphere_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/sphere.model"); }},
 		std::thread{ [] { load_shaders(); } },
 	};
 
@@ -212,7 +212,7 @@ void create_render_items() {
 	geometry_info.geometry_content_id = fembot_model_id;
 	geometry_info.material_count = _countof(fembot_materials);
 	geometry_info.material_ids = &fembot_materials[0];
-	fembot_entity_id = create_one_game_entity({ -6.f, 0.f, 10.f }, { 0.f, math::pi, 0.f }, &geometry_info, "RotatorScript").get_id();
+	fembot_entity_id = create_one_game_entity({ -6.f, 0.f, 10.f }, { 0.f, math::PI, 0.f }, &geometry_info, "RotatorScript").get_id();
 
 	geometry_info.geometry_content_id = sphere_model_id;
 	geometry_info.material_count = 1;
@@ -223,7 +223,7 @@ void create_render_items() {
 		geometry_info.material_ids = &sphere_materials[0];
 		const f32 x{ -6.f + i % 6 };
 		const f32 y{ (i < 6) ? 7.f : 5.5f };
-		const z = x;
+		const f32 z = x;
 		sphere_entity_ids[i] = create_one_game_entity({ x, y, z }, {}, &geometry_info, nullptr).get_id();
 	}
 }

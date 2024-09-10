@@ -75,11 +75,9 @@ namespace lightning::graphics::direct3d12::core {
 					surface.present();
 
 					const u64 fence_value{ ++_fence_value };
-					
 					CommandFrame& frame{ _cmd_frames[_frame_index] };
+					frame.fence_value = fence_value;
 					DXCall(_cmd_queue->Signal(_fence, fence_value));
-
-					_cmd_queue->Signal(_fence, fence_value);
 
 					_frame_index = (_frame_index + 1) % FRAME_BUFFER_COUNT;
 				}

@@ -112,7 +112,7 @@ namespace lightning::graphics::direct3d12 {
 	class ConstantBuffer {
 		public:
 			ConstantBuffer() = default;
-			explicit ConstantBuffer(D3D12BufferInitInfo info);
+			explicit ConstantBuffer(const D3D12BufferInitInfo& info);
 			DISABLE_COPY_AND_MOVE(ConstantBuffer);
 
 			void release() { 
