@@ -135,7 +135,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 
 float4 sample(uint index, SamplerState s, float2 uv)
 {
-    return Texture2D( ResourceDescriptorHeap[srv_indicies[index]]).Sample(s, uv);
+    return Texture2D( ResourceDescriptorHeap[index]).Sample(s, uv);
 }
 
 float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 specular_color, float shininess)
