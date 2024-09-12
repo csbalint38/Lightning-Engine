@@ -1,5 +1,5 @@
 #pragma once
-#include "GeometryComponent.h"
+#include "ComponentsCommonHeaders.h"
 
 namespace lightning::geometry {
   struct InitInfo {

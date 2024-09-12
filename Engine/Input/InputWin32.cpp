@@ -375,7 +375,7 @@ namespace lightning::input {
 			}
 			break;
 
-			case WM_MOUSEHWHEEL: {
+			case WM_MOUSEWHEEL: {
 				set(InputSource::MOUSE, InputCode::MOUSE_WHEEL, { (f32)(GET_WHEEL_DELTA_WPARAM(wparam)), 0.f, 0.f });
 			}
 			break;

@@ -43,7 +43,7 @@ namespace lightning::graphics::direct3d12 {
 			[[nodiscard]] constexpr bool is_shader_visible() const { return _gpu_start.ptr != 0; }
 
 		private:
-			ID3D12DescriptorHeap* _heap;
+			ID3D12DescriptorHeap* _heap{ nullptr };
 			D3D12_CPU_DESCRIPTOR_HANDLE _cpu_start{};
 			D3D12_GPU_DESCRIPTOR_HANDLE _gpu_start{};
 			std::unique_ptr<u32[]> _free_handles{};
@@ -59,7 +59,7 @@ namespace lightning::graphics::direct3d12 {
 		ID3D12Heap1* heap{ nullptr };
 		const void* data{ nullptr };
 		D3D12_RESOURCE_ALLOCATION_INFO1 allocation_info{};
-		D3D12_RESOURCE_STATES initial_state{};
+		D3D12_RESOURCE_STATES initial_state{ D3D12_RESOURCE_STATE_COMMON };
 		D3D12_RESOURCE_FLAGS flags{ D3D12_RESOURCE_FLAG_NONE };
 		u32 size{ 0 };
 		u32 alignment{ 0 };
@@ -68,7 +68,7 @@ namespace lightning::graphics::direct3d12 {
 	class D3D12Buffer {
 		public:
 			D3D12Buffer() = default;
-			explicit D3D12Buffer(D3D12BufferInitInfo info, bool is_cpu_accessible);
+			explicit D3D12Buffer(const D3D12BufferInitInfo& info, bool is_cpu_accessible);
 			DISABLE_COPY(D3D12Buffer);
 			constexpr D3D12Buffer(D3D12Buffer&& o) : _buffer{ o._buffer }, _gpu_address{ o._gpu_address }, _size{ o._size } { o.reset(); }
 
@@ -112,7 +112,7 @@ namespace lightning::graphics::direct3d12 {
 	class ConstantBuffer {
 		public:
 			ConstantBuffer() = default;
-			explicit ConstantBuffer(D3D12BufferInitInfo info);
+			explicit ConstantBuffer(const D3D12BufferInitInfo& info);
 			DISABLE_COPY_AND_MOVE(ConstantBuffer);
 
 			void release() { 
@@ -123,7 +123,7 @@ namespace lightning::graphics::direct3d12 {
 
 			constexpr void clear() { _cpu_offset = 0; }
 			[[nodiscard]] u8* const allocate(u32 size);
-			template<typename T> [[nodiscard]] T* const allocate() { return (T* const)allocate(sizeof(T)); }
+			template<typename T> [[nodiscard]] constexpr T* const allocate() { return (T* const)allocate(sizeof(T)); }
 			[[nodiscard]] constexpr ID3D12Resource* const buffer() const { return _buffer.buffer(); }
 			[[nodiscard]] constexpr D3D12_GPU_VIRTUAL_ADDRESS gpu_address() const { return _buffer.gpu_address(); }
 			[[nodiscard]] constexpr u32 size() const { return _buffer.size(); }

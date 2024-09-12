@@ -10,7 +10,7 @@ namespace lightning::util {
 				assert(buffer);
 			}
 
-			template<typename T> [[nodiscard]] T read() {
+			template<typename T> [[nodiscard]] constexpr T read() {
 				static_assert(std::is_arithmetic_v<T>, "Template argument should be primitive type.");
 				T value{ *((T*)_position) };
 				_position += sizeof(T);
@@ -22,7 +22,7 @@ namespace lightning::util {
 				_position += length;
 			}
 
-			void skip(size_t offset) { _position += offset; }
+			constexpr void skip(size_t offset) { _position += offset; }
 			[[nodiscard]] constexpr const u8* const buffer_start() const { return _buffer; }
 			[[nodiscard]] constexpr const u8* const position() const { return _position; }
 			[[nodiscard]] constexpr size_t const offset() const { return _position - _buffer; }
@@ -40,7 +40,7 @@ namespace lightning::util {
 				assert(buffer && buffer_size);
 			}
 
-			template<typename T> void write(T value) {
+			template<typename T> constexpr void write(T value) {
 				static_assert(std::is_arithmetic_v<T>, "Template argument should be primitive type.");
 				assert(&_position[sizeof(T)] <= &_buffer[_buffer_size]);
 				*((T*)_position) = value;
@@ -59,7 +59,7 @@ namespace lightning::util {
 				_position += length;
 			}
 
-			void skip(size_t offset) {
+			constexpr void skip(size_t offset) {
 				assert(&_position[offset] <= &_buffer[_buffer_size]);
 				_position += offset;
 			}

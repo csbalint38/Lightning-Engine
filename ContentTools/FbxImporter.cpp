@@ -239,7 +239,7 @@ namespace lightning::tools {
 
 		if (import_tangents) {
 			FbxLayerElementArrayTemplate<FbxVector4>* tangents{ nullptr };
-			fbx_mesh->GenerateTangentsData()
+			fbx_mesh->GenerateTangentsData();
 
 			if (fbx_mesh->GetTangents(&tangents) && tangents && tangents->GetCount() == m.raw_indicies.size()) {
 				const s32 num_tangents{ tangents->GetCount() };

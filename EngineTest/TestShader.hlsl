@@ -1,4 +1,5 @@
 #include "Common.hlsli"
+#include "BRDF.hlsli"
 
 struct VertexOut {
     float4 homogeneous_position : SV_POSITION;
@@ -20,7 +21,12 @@ struct Surface
     float perceptual_roughness;
     float3 emissive_color;
     float emissive_intensity;
+    float3 v;                   // View direction
     float ambient_occlusion;
+    float3 diffuse_color;
+    float a2;                   // perceptual_roughness^4
+    float3 specular_color;
+    float n_o_v;
 };
 
 #define ELEMENTS_TYPE_POSITION_ONLY 0x00
@@ -79,7 +85,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
     VertexElement element = elements[vertex_idx];
     float2 n_xy = element.normal * inv_intervals - 1.f;
-    uint signs = (element.color_t_sign >> 24) & 0xff;
+    uint signs = element.color_t_sign >> 24;
     float n_sign = float((signs & 0x04) >> 1) - 1.f;
     float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     
@@ -122,7 +128,15 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 }
 
 #define TILE_SIZE 32
-#define NO_LIGHT_ATTENUATION 0
+#define NO_LIGHT_ATTENUATION 0  // Turn on to test light edges
+#define USE_PHONG 0             // Turn on to use old-style Phong shading
+#define USE_BURLEY_BRDF 1       // Turn on to achive more precise lighting
+// If both USE_PHONG and USE_BURLEY_BRDF is off, the shader uses physic-based Lambert shading
+
+float4 sample(uint index, SamplerState s, float2 uv)
+{
+    return Texture2D( ResourceDescriptorHeap[index]).Sample(s, uv);
+}
 
 float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 specular_color, float shininess)
 {
@@ -134,16 +148,49 @@ float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 spec
     return color;
 }
 
-float3 calculate_lighting(Surface s, float3 l, float3 v, float3 light_color)
+float3 Cook_Torrence_BRDF(Surface s, float3 l)
 {
     const float3 n = s.normal;
+    const float3 h = normalize(s.v + l);
+    const float n_o_v = abs(s.n_o_v) + 1e-5;
     const float n_o_l = saturate(dot(n, l));
-
-    return PhongBRDF(n, l, v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
-
+    const float n_o_h = saturate(dot(n, h));
+    const float v_o_h = saturate(dot(s.v, h));
+    
+    const float d = d_ggx(n_o_h, s.a2);
+    const float g = v_Smith_ggx_correlated(n_o_v, n_o_l, s.a2);
+    const float3 f = f_Schlick(s.specular_color, v_o_h);
+    
+    float3 specular_brdf = (d * g) * f;
+    float3 rho = 1.f - f;
+    
+    #if USE_BURLEY_BRDF
+    float3 diffuse_brdf = diffuse_Burley(n_o_v, n_o_l, v_o_h, s.perceptual_roughness * s.perceptual_roughness) * s.diffuse_color * rho;
+    #else
+    float3 diffuse_brdf = diffuse_Lambert() * s.diffuse_color * rho;
+    #endif
+    
+    return (diffuse_brdf + specular_brdf) * n_o_l;
 }
 
-float3 point_light(Surface s, float3 world_position, float3 v, LightParameters light)
+float3 calculate_lighting(Surface s, float3 l, float3 light_color)
+{
+    float3 color = 0;
+    
+    #if USE_PHONG
+    const float3 n = s.normal;
+    const float n_o_l = saturate(dot(n, l));
+    color = PhongBRDF(n, l, s.v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
+    #else
+    color = Cook_Torrence_BRDF(s, l) * light_color;
+    #endif
+    
+    color *= PI;
+
+    return color;
+}
+
+float3 point_light(Surface s, float3 world_position, LightParameters light)
 {
     float3 l = light.position - world_position;
     const float d_sq = dot(l, l);
@@ -163,13 +210,13 @@ float3 point_light(Surface s, float3 world_position, float3 v, LightParameters l
         const float d_rcp = rsqrt(d_sq);
         l *= d_rcp;
         const float attenuation = 1.f - smoothstep(.1f * light.range, light.range, rcp(d_rcp));
-        color = calculate_lighting(s, l, v, light.color * light.intensity * attenuation);
+        color = calculate_lighting(s, l, light.color * light.intensity * attenuation);
     }
     return color;
     #endif
 }
 
-float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters light)
+float3 spotlight(Surface s, float3 world_position, LightParameters light)
 {
     float3 l = light.position - world_position;
     const float d_sq = dot(l, l);
@@ -195,7 +242,7 @@ float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters lig
         const float attenuation = 1.f - smoothstep(.1f * light.range, light.range, rcp(d_rcp));
         const float cos_angle_to_light = saturate(dot(-l, light.direction));
         const float angular_attenuation = smoothstep(light.cos_penumbra, light.cos_umbra, cos_angle_to_light);
-        color = calculate_lighting(s, l, v, light.intensity * attenuation * angular_attenuation);
+        color = calculate_lighting(s, l, light.intensity * attenuation * angular_attenuation);
 
     }
     
@@ -203,33 +250,28 @@ float3 spotlight(Surface s, float3 world_position, float3 v, LightParameters lig
     #endif
 }
 
-float4 sample(uint index, SamplerState s, float2 uv)
-{
-    return Texture2D(ResourceDescriptorHeap[srv_indicies[index]]).Sample(s, uv);
-}
-
-Surface get_surface(VertexOut ps_in)
-{
-    float2 uv = ps_in.uv;
-    
+Surface get_surface(VertexOut ps_in, float3 v)
+{   
     Surface s;
-    s.base_color = 1.f;
-    s.metallic = 0.f;
+    
+    s.base_color = per_object_buffer.base_color.rgb;
+    s.metallic = per_object_buffer.metallic;
     s.normal = normalize(ps_in.world_normal);
-    s.perceptual_roughness = 1.f;
-    s.emissive_color = 0.f;
-    s.emissive_intensity = 1.f;
-    s.ambient_occlusion = 1.f;
+    s.perceptual_roughness = max(per_object_buffer.roughness, .045f);
+    s.emissive_color = per_object_buffer.emissive;
+    s.emissive_intensity = per_object_buffer.emissive_intensity;
+    s.ambient_occlusion = per_object_buffer.ambient_occlusion;
     
     #if TEXTURED_MTL
-    s.ambient_occlusion = sample(0, linear_sampler, uv).r;
-    s.base_color = sample(1, linear_sampler, uv).rgb;
-    s.emissive_color = sample(2, linear_sampler, uv).rgb;
-    float2 metal_rough = sample(3, linear_sampler, uv).rg;
+    float2 uv = ps_in.uv;
+    s.ambient_occlusion = sample(srv_indicies[0], linear_sampler, uv).r;
+    s.base_color = sample(srv_indicies[1], linear_sampler, uv).rgb;
+    s.emissive_color = sample(srv_indicies[2], linear_sampler, uv).rgb;
+    float2 metal_rough = sample(srv_indicies[3], linear_sampler, uv).rg;
     s.metallic = metal_rough.r;
-    s.perceptual_roughness = metal_rough.g;
+    s.perceptual_roughness = max(metal_rough.g, .045f);
     s.emissive_intensity = 1.f;
-    float3 n = sample(4, linear_sampler, uv).rgb;
+    float3 n = sample(srv_indicies[4], linear_sampler, uv).rgb;
     n = n * 2.f - 1.f;
     n.z = sqrt(1.f - saturate(dot(n.xy, n.xy)));
     
@@ -241,22 +283,27 @@ Surface get_surface(VertexOut ps_in)
     s.normal = normalize(mul(n, TBN));
     #endif
     
+    s.v = v;
+    const float roughness = s.perceptual_roughness * s.perceptual_roughness;
+    s.a2 = roughness * roughness;
+    s.n_o_v = dot(v, s.normal);
+    s.diffuse_color = s.base_color * (1.f - s.metallic);
+    s.specular_color = lerp(.04f, s.base_color, s.metallic);
+    
     return s;
 }
 
 uint get_grid_index(float2 pos_xy, float view_width)
 {
     const uint2 pos = uint2(pos_xy);
-    const uint tile_x = ceil(view_width / TILE_SIZE);
-    return (pos.x / TILE_SIZE) + (tile_x * (pos.y / TILE_SIZE));
+    const uint tiles_x = ceil(view_width / TILE_SIZE);
+    return (pos.x / TILE_SIZE) + (tiles_x * (pos.y / TILE_SIZE));
 }
 
 [earlydepthstencil]
 PixelOut test_shader_ps(in VertexOut ps_in) {
-    PixelOut ps_out;
-    
     float3 view_dir = normalize(global_data.camera_position - ps_in.world_position);
-    Surface s = get_surface(ps_in);
+    Surface s = get_surface(ps_in, view_dir);
     
     float3 color = 0;
     
@@ -274,7 +321,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         }
         */
         
-        color += calculate_lighting(s, -light_direction, view_dir, light.color * light.intensity);
+        color += calculate_lighting(s, -light_direction, light.color * light.intensity);
     }
     
     const uint grid_index = get_grid_index(ps_in.homogeneous_position.xy, global_data.view_width);
@@ -288,13 +335,13 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     for(i = light_start_index; i < num_point_lights; ++i) {
         const uint light_index = light_index_list[i];
         LightParameters light = cullable_lights[light_index];
-        color += point_light(s, ps_in.world_position, view_dir, light);
+        color += point_light(s, ps_in.world_position, light);
     }
     
     for(i = num_point_lights; i < num_spotlights; ++i) {
         const uint light_index = light_index_list[i];
         LightParameters light = cullable_lights[light_index];
-        color += spotlight(s, ps_in.world_position, view_dir, light);
+        color += spotlight(s, ps_in.world_position, light);
     }
     #else
     for (i = 0; i < light_count; ++i)
@@ -304,18 +351,18 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         
         if (light.type == LIGHT_TYPE_POINT_LIGHT)
         {
-            color += point_light(s, ps_in.world_position, view_dir, light);
+            color += point_light(s, ps_in.world_position, light);
         }
         else if (light.type == LIGHT_TYPE_SPOTLIGHT)
         {
-            color += spotlight(s, ps_in.world_position, view_dir, light);
+            color += spotlight(s, ps_in.world_position, light);
         }
 
     }
     #endif
     
     #if TEXTURED_MTL
-    float v_o_n = dot(view_dir, s.normal) * 1.3f;
+    float v_o_n = s.n_o_v * 1.3f;
     float v_o_n_2 = v_o_n * v_o_n;
     float v_o_n_4 = v_o_n_2 * v_o_n_2;
     float3 e = s.emissive_color;
@@ -323,6 +370,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     
     #endif
     
+    PixelOut ps_out;
     ps_out.color = float4(color * s.ambient_occlusion + s.emissive_color * s.emissive_intensity, 1.f);
 
     return ps_out;

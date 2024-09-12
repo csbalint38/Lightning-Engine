@@ -16,7 +16,7 @@ namespace lightning::graphics::direct3d12 {
 
 		release();
 
-		auto* const device{ core::device() };
+		id3d12_device* const device{ core::device() };
 		assert(device);
 
 		D3D12_DESCRIPTOR_HEAP_DESC desc{};
@@ -29,7 +29,7 @@ namespace lightning::graphics::direct3d12 {
 		DXCall(hr = device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&_heap)));
 		if (FAILED(hr)) return false;
 
-		_free_handles = std::move(std::make_unique<u32[]>(capacity));
+		_free_handles = std::make_unique<u32[]>(capacity);
 		_capacity = capacity;
 		_size = 0;
 
@@ -105,7 +105,7 @@ namespace lightning::graphics::direct3d12 {
 
 	#pragma region D3D12_BUFFER
 
-	D3D12Buffer::D3D12Buffer(D3D12BufferInitInfo info, bool is_cpu_accessible) {
+	D3D12Buffer::D3D12Buffer(const D3D12BufferInitInfo& info, bool is_cpu_accessible) {
 		assert(!_buffer && info.size && info.alignment);
 
 		_size = (u32)math::align_size_up(info.size, info.alignment);
@@ -124,7 +124,7 @@ namespace lightning::graphics::direct3d12 {
 
 	#pragma region D3D12_CONSTANT_BUFFER
 
-	ConstantBuffer::ConstantBuffer(D3D12BufferInitInfo info) : _buffer{ info, true } {
+	ConstantBuffer::ConstantBuffer(const D3D12BufferInitInfo& info) : _buffer{ info, true } {
 		NAME_D3D12_OBJECT_INDEXED(buffer(), size(), L"Constant Buffer - size");
 
 		D3D12_RANGE range{};
@@ -157,7 +157,7 @@ namespace lightning::graphics::direct3d12 {
 
 		NAME_D3D12_OBJECT_INDEXED(buffer(), info.size, L"UAV Clearable Buffer - size");
 
-		assert(info.flags && D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		assert(info.flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 		_uav = core::uav_heap().allocate();
 		_uav_shader_visible = core::srv_heap().allocate();
 		D3D12_UNORDERED_ACCESS_VIEW_DESC desc{};

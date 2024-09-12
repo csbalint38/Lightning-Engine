@@ -3,15 +3,18 @@
 #include "Graphics/Renderer.h"
 #include "ShaderCompilation.h"
 #include "Components/Entity.h"
+#include "Components/Geometry.h"
 #include "../ContentTools/Geometry.h"
+#include "Test.h"
 
 #include <filesystem>
 
 #undef OPAQUE
 
+#if TEST_RENDERER
 using namespace lightning;
 
-game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, const char* script_name);
+game_entity::Entity create_one_game_entity(math::v3 position, math::v3 rotation, geometry::InitInfo* geometry_info, const char* script_name);
 void remove_game_entity(game_entity::entity_id id);
 
 bool read_file(std::filesystem::path, std::unique_ptr<u8[]>&, u64&);
@@ -21,16 +24,13 @@ namespace {
 	id::id_type fan_model_id{ id::invalid_id };
 	id::id_type blades_model_id{ id::invalid_id };
 	id::id_type fembot_model_id{ id::invalid_id };
-
-	id::id_type building_item_id{ id::invalid_id };
-	id::id_type fan_item_id{ id::invalid_id };
-	id::id_type blades_item_id{ id::invalid_id };
-	id::id_type fembot_item_id{ id::invalid_id };
+	id::id_type sphere_model_id{ id::invalid_id };
 
 	game_entity::entity_id building_entity_id{ id::invalid_id };
 	game_entity::entity_id fan_entity_id{ id::invalid_id };
 	game_entity::entity_id blades_entity_id{ id::invalid_id };
 	game_entity::entity_id fembot_entity_id{ id::invalid_id };
+	game_entity::entity_id sphere_entity_ids[12];
 
 	struct TextureUsage {
 		enum Usage : u32 {
@@ -49,31 +49,27 @@ namespace {
 	id::id_type vs_id{ id::invalid_id };
 	id::id_type ps_id{ id::invalid_id };
 	id::id_type textured_ps_id{ id::invalid_id };
-	id::id_type material_id{ id::invalid_id };
+	id::id_type default_material_id{ id::invalid_id };
 	id::id_type fembot_material_id{ id::invalid_id };
+	id::id_type pbr_material_ids[12];
 
-	std::unordered_map<id::id_type, game_entity::entity_id> render_item_entity_map;
+	[[nodiscard]] id::id_type load_asset(const char* path, content::AssetType::Type type) {
+		std::unique_ptr<u8[]> buffer;
+		u64 size{ 0 };
+		read_file(path, buffer, size);
+
+		const id::id_type asset_id{ content::create_resource(buffer.get(), type) };
+		assert(id::is_valid(asset_id));
+
+		return asset_id;
+	}
 
 	[[nodiscard]] id::id_type load_model(const char* path) {
-		std::unique_ptr<u8[]> model;
-		u64 size{ 0 };
-		read_file(path, model, size);
-
-		const id::id_type model_id{ content::create_resource(model.get(), content::AssetType::MESH) };
-		assert(id::is_valid(model_id));
-
-		return model_id;
+		return load_asset(path, content::AssetType::MESH);
 	}
 
 	[[nodiscard]] id::id_type load_texture(const char* path) {
-		std::unique_ptr<u8[]> texture;
-		u64 size{ 0 };
-		read_file(path, texture, size);
-
-		const id::id_type texture_id{ content::create_resource(texture.get(), content::AssetType::TEXTURE) };
-		assert(id::is_valid(texture_id));
-
-		return texture_id;
+		return load_asset(path, content::AssetType::TEXTURE);
 	}
 
 	void load_shaders() {
@@ -127,30 +123,47 @@ namespace {
 		pixel_shader_pointers[0] = pixel_shaders[1].get();
 		textured_ps_id = content::add_shader_group(pixel_shader_pointers, 1, &u32_invalid_id);
 	}
-}
 
-void create_material() {
-	assert(id::is_valid(vs_id) && id::is_valid(ps_id));
-	graphics::MaterialInitInfo info{};
-	info.shader_ids[graphics::ShaderType::VERTEX] = vs_id;
-	info.shader_ids[graphics::ShaderType::PIXEL] = ps_id;
-	info.type = graphics::MaterialType::OPAQUE;
-	material_id = content::create_resource(&info, content::AssetType::MATERIAL);
+	void create_material() {
+		assert(id::is_valid(vs_id) && id::is_valid(ps_id) && id::is_valid(textured_ps_id));
+		graphics::MaterialInitInfo info{};
+		info.shader_ids[ShaderType::VERTEX] = vs_id;
+		info.shader_ids[ShaderType::PIXEL] = ps_id;
+		info.type = graphics::MaterialType::OPAQUE;
+		default_material_id = content::create_resource(&info, content::AssetType::MATERIAL);
 
-	info.shader_ids[graphics::ShaderType::PIXEL] = textured_ps_id;
-	info.texture_count = TextureUsage::count;
-	info.texture_ids = &texture_ids[0];
-	fembot_material_id = content::create_resource(&info, content::AssetType::MATERIAL);
-}
+		memset(pbr_material_ids, 0xff, sizeof(pbr_material_ids));
+		math::v2 metal_rough[_countof(pbr_material_ids)]{
+			{0.f, 0.f},
+			{0.f, 0.2f},
+			{0.f, 0.4f},
+			{0.f, 0.6f},
+			{0.f, 0.8f},
+			{0.f, 1.f},
+			{1.f, 0.f},
+			{1.f, 0.2f},
+			{1.f, 0.4f},
+			{1.f, 0.6f},
+			{1.f, 0.8f},
+			{1.f, 1.f},
+		};
 
-void remove_item(id::id_type item_id, id::id_type model_id) {
-	if (id::is_valid(item_id)) {
-		graphics::remove_render_item(item_id);
-		auto pair = render_item_entity_map.find(item_id);
-		if (pair != render_item_entity_map.end()) {
-			remove_game_entity(pair->second);
+		graphics::MaterialSurface& s{ info.surface };
+		s.base_color = { .5f, .5f, .5f, 1.f };
+
+		for (u32 i{ 0 }; i < _countof(pbr_material_ids); ++i) {
+			s.metallic = metal_rough[i].x;
+			s.roughness = metal_rough[i].y;
+			pbr_material_ids[i] = content::create_resource(&info, content::AssetType::MATERIAL);
 		}
 
+		info.shader_ids[ShaderType::PIXEL] = textured_ps_id;
+		info.texture_count = TextureUsage::count;
+		info.texture_ids = &texture_ids[0];
+		fembot_material_id = content::create_resource(&info, content::AssetType::MATERIAL);
+	}
+
+	void remove_model(id::id_type model_id) {
 		if (id::is_valid(model_id)) {
 			content::destroy_resource(model_id, content::AssetType::MESH);
 		}
@@ -161,16 +174,17 @@ void create_render_items() {
 	memset(&texture_ids[0], 0xff, sizeof(id::id_type) * _countof(texture_ids));
 
 	std::thread threads[]{
-		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSIN] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ambient_occlusion.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::BASE_COLOR] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/base_color.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::EMISSIVE] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/emissive.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::METAL_ROUGH] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/metal_rough.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.texture"); }},
+		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSIN] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ambient_occlusion.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::BASE_COLOR] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/base_color.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::EMISSIVE] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/emissive.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::METAL_ROUGH] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/metal_rough.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.img"); }},
 
 		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
 		std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }},
 		std::thread{ [] { fembot_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/fembot.model"); }},
+		std::thread{ [] { sphere_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/sphere.model"); }},
 		std::thread{ [] { load_shaders(); } },
 	};
 
@@ -178,35 +192,66 @@ void create_render_items() {
 		t.join();
 	}
 
-	building_entity_id = create_one_game_entity({0, 0, 0}, {}, nullptr).get_id();
-	fan_entity_id = create_one_game_entity({0, 0, 69.78f}, {}, nullptr).get_id();
-	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362f }, {}, "TurbineScript").get_id();
-	fembot_entity_id = create_one_game_entity({-1, 0, 0}, {0, 3.14f, 0}, nullptr).get_id();
-
 	create_material();
-	id::id_type materials[]{ material_id };
+	id::id_type materials[]{ default_material_id };
 	id::id_type fembot_materials[]{ fembot_material_id, fembot_material_id };
 
-	building_item_id = graphics::add_render_item(building_entity_id, building_model_id, _countof(materials), &materials[0]);
-	fan_item_id = graphics::add_render_item(fan_entity_id, fan_model_id, _countof(materials), &materials[0]);
-	blades_item_id = graphics::add_render_item(blades_entity_id, blades_model_id, _countof(materials), &materials[0]);
-	fembot_item_id = graphics::add_render_item(fembot_entity_id, fembot_model_id, _countof(fembot_materials), &fembot_materials[0]);
+	geometry::InitInfo geometry_info{};
+	geometry_info.material_count = _countof(materials);
+	geometry_info.material_ids = &materials[0];
 
-	render_item_entity_map[building_item_id] = building_entity_id;
-	render_item_entity_map[fan_item_id] = fan_entity_id;
-	render_item_entity_map[blades_item_id] = blades_entity_id;
-	render_item_entity_map[fembot_item_id] = fembot_entity_id;
+	geometry_info.geometry_content_id = building_model_id;
+	building_entity_id = create_one_game_entity({}, {}, &geometry_info, nullptr).get_id();
+
+	geometry_info.geometry_content_id = fan_model_id;
+	fan_entity_id = create_one_game_entity({ 0, 0, 69.78f }, {}, &geometry_info, nullptr).get_id();
+
+	geometry_info.geometry_content_id = blades_model_id;
+	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362f }, {}, &geometry_info, "TurbineScript").get_id();
+
+	geometry_info.geometry_content_id = fembot_model_id;
+	geometry_info.material_count = _countof(fembot_materials);
+	geometry_info.material_ids = &fembot_materials[0];
+	fembot_entity_id = create_one_game_entity({ -6.f, 0.f, 10.f }, { 0.f, math::PI, 0.f }, &geometry_info, "RotatorScript").get_id();
+
+	geometry_info.geometry_content_id = sphere_model_id;
+	geometry_info.material_count = 1;
+
+	for (u32 i{ 0 }; i < _countof(sphere_entity_ids); ++i) {
+		id::id_type id{ pbr_material_ids[i] };
+		id::id_type sphere_materials[]{ id };
+		geometry_info.material_ids = &sphere_materials[0];
+		const f32 x{ -6.f + i % 6 };
+		const f32 y{ (i < 6) ? 7.f : 5.5f };
+		const f32 z = x;
+		sphere_entity_ids[i] = create_one_game_entity({ x, y, z }, {}, &geometry_info, nullptr).get_id();
+	}
 }
 
 void destroy_render_items() {
+	remove_game_entity(building_entity_id);
+	remove_game_entity(fan_entity_id);
+	remove_game_entity(blades_entity_id);
+	remove_game_entity(fembot_entity_id);
 
-	remove_item(building_item_id, building_model_id);
-	remove_item(fan_item_id, fan_model_id);
-	remove_item(blades_item_id, blades_model_id);
-	remove_item(fembot_item_id, fembot_model_id);
+	for (u32 i{ 0 }; i < _countof(sphere_entity_ids); ++i) {
+		remove_game_entity(sphere_entity_ids[i]);
+	}
 
-	if (id::is_valid(material_id)) content::destroy_resource(material_id, content::AssetType::MATERIAL);
+	remove_model(building_model_id);
+	remove_model(fan_model_id);
+	remove_model(blades_model_id);
+	remove_model(fembot_model_id);
+	remove_model(sphere_model_id);
+
+	if (id::is_valid(default_material_id)) content::destroy_resource(default_material_id, content::AssetType::MATERIAL);
 	if (id::is_valid(fembot_material_id)) content::destroy_resource(fembot_material_id, content::AssetType::MATERIAL);
+
+	for (id::id_type id : pbr_material_ids) {
+		if (id::is_valid(id)) {
+			content::destroy_resource(id, content::AssetType::MATERIAL);
+		}
+	}
 
 	for (id::id_type id : texture_ids) {
 		if (id::is_valid(id)) {
@@ -220,10 +265,4 @@ void destroy_render_items() {
 
 }
 
-void get_render_items(id::id_type* items, [[maybe_unused]] u32 count) {
-	assert(count == 4);
-	items[0] = building_item_id;
-	items[1] = fan_item_id;
-	items[2] = blades_item_id;
-	items[3] = fembot_item_id;
-}
+#endif
