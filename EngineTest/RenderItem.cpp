@@ -174,11 +174,11 @@ void create_render_items() {
 	memset(&texture_ids[0], 0xff, sizeof(id::id_type) * _countof(texture_ids));
 
 	std::thread threads[]{
-		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSIN] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ambient_occlusion.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::BASE_COLOR] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/base_color.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::EMISSIVE] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/emissive.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::METAL_ROUGH] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/metal_rough.texture"); }},
-		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.texture"); }},
+		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSIN] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ambient_occlusion.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::BASE_COLOR] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/base_color.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::EMISSIVE] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/emissive.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::METAL_ROUGH] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/metal_rough.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.img"); }},
 
 		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},

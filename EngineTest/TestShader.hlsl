@@ -129,8 +129,8 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 
 #define TILE_SIZE 32
 #define NO_LIGHT_ATTENUATION 0  // Turn on to test light edges
-#define USE_PHONG 1             // Turn on to use old-style Phong shading
-#define USE_BURLEY_BRDF 0       // Turn on to achive more precise lighting
+#define USE_PHONG 0             // Turn on to use old-style Phong shading
+#define USE_BURLEY_BRDF 1       // Turn on to achive more precise lighting
 // If both USE_PHONG and USE_BURLEY_BRDF is off, the shader uses physic-based Lambert shading
 
 float4 sample(uint index, SamplerState s, float2 uv)
