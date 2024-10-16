@@ -90,6 +90,8 @@ class GameEntity {
 enum GameEntityProperty { name, isEnabled, component }
 
 class MSGameEntity {
+  static MSGameEntity? _currentInstance;
+
   final ValueNotifier<String> name = ValueNotifier<String>("");
   final ValueNotifier<bool?> isEnabled = ValueNotifier<bool?>(null);
   final ListNotifier<MSComponent> components = ListNotifier<MSComponent>();
@@ -98,6 +100,8 @@ class MSGameEntity {
   bool _enableUpdates = true;
 
   MSGameEntity(this.selectedEntities) {
+    _currentInstance = this;
+
     name.addListener(() =>
         _enableUpdates ? updateGameEntities(GameEntityProperty.name) : null);
     isEnabled.addListener(() => _enableUpdates
@@ -108,6 +112,10 @@ class MSGameEntity {
         : null);
 
     refresh();
+  }
+
+  static MSGameEntity? getMSGameEntity() {
+    return _currentInstance;
   }
 
   static U? getMixedValue<T, U>(List<T> objects, U Function(T) getProperty) {
@@ -128,6 +136,10 @@ class MSGameEntity {
     }
 
     return value;
+  }
+
+  T? getComponent<T extends MSComponent>() {
+    return components.value .whereType<T>().firstOrNull;
   }
 
   bool updateGameEntities(GameEntityProperty prop) {
@@ -177,5 +189,15 @@ class MSGameEntity {
     updateMSGameEntity();
     makeComponentsList();
     _enableUpdates = true;
+  }
+
+  void dispose() {
+    name.dispose();
+    isEnabled.dispose();
+    components.dispose();
+
+    if(_currentInstance == this) {
+      _currentInstance = null;
+    }
   }
 }

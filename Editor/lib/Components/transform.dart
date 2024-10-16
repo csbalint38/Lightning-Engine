@@ -83,48 +83,36 @@ class MSTransform extends MSComponent<Transform> {
   late RelayCommand updateComponentsCommand;
 
   MSTransform(super.msEntity) {
-    updateComponentsCommand = RelayCommand<TransformProperty>((x) {
-      final List<Vector3> oldValues;
-      switch (x) {
-        case TransformProperty.position:
-          oldValues = selectedComponents
-              .map((transform) => transform.position.clone())
-              .toList();
-          break;
-        case TransformProperty.rotation:
-          oldValues = selectedComponents
-              .map((transform) => transform.rotation.clone())
-              .toList();
-          break;
-        case TransformProperty.scale:
-          oldValues = selectedComponents
-              .map((transform) => transform.scale.clone())
-              .toList();
-          break;
-      }
-
-      updateComponents(x);
-
+    updateComponentsCommand = RelayCommand<Map<TransformProperty, Vector3>>((x) {
+      print(x['vector']);
       UndoRedo().add(
         UndoRedoAction(
-          name: "Something changed-----------",
+          name: "Something changed-----------$x",
           undoAction: () {
-            for (int i = 0; i < oldValues.length; i++) {
-              selectedComponents[i].position.setFrom(oldValues[i]);
+            final MSTransform? newMSTransform = MSGameEntity.getMSGameEntity()?.getComponent<MSTransform>();
+            if(newMSTransform != null) {
+              newMSTransform.updateComponents(x);
             }
           },
-          redoAction: () {},
+          redoAction: () {
+            final MSTransform? newMSTransform = MSGameEntity.getMSGameEntity()?.getComponent<MSTransform>();
+            if(newMSTransform != null) {
+              newMSTransform.updateComponents(x);
+            }
+          },
         ),
       );
+
+      updateComponents(x);
     });
 
     refresh();
     position.addListener(
-        () => updateComponentsCommand.execute(TransformProperty.position));
+        () => updateComponentsCommand.execute());
     rotation.addListener(
-        () => updateComponentsCommand.execute(TransformProperty.rotation));
+        () => updateComponentsCommand.execute());
     scale.addListener(
-        () => updateComponentsCommand.execute(TransformProperty.scale));
+        () => updateComponentsCommand.execute());
   }
 
   @override
