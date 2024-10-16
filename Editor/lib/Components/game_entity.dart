@@ -3,6 +3,7 @@ import 'package:editor/Components/components.dart';
 import 'package:editor/Components/transform.dart' as lng;
 import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/utilities/id.dart';
+import 'package:editor/common/list_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:editor/utilities/math.dart';
@@ -91,8 +92,7 @@ enum GameEntityProperty { name, isEnabled, component }
 class MSGameEntity {
   final ValueNotifier<String> name = ValueNotifier<String>("");
   final ValueNotifier<bool?> isEnabled = ValueNotifier<bool?>(null);
-  final ValueNotifier<List<IMSComponent>> components =
-      ValueNotifier<List<IMSComponent>>([]);
+  final ListNotifier<MSComponent> components = ListNotifier<MSComponent>();
   final List<GameEntity> selectedEntities;
 
   bool _enableUpdates = true;
@@ -110,19 +110,18 @@ class MSGameEntity {
     refresh();
   }
 
-  static T? getMixedValue<T>(
-      List<GameEntity> entities, T Function(GameEntity) getProperty) {
-    T value = getProperty(entities.first);
+  static U? getMixedValue<T, U>(List<T> objects, U Function(T) getProperty) {
+    U value = getProperty(objects.first);
 
     if (value is double) {
-      for (final GameEntity entity in entities) {
-        if (!Math.isNearEqual(value, getProperty(entity) as double?)) {
+      for (final T item in objects) {
+        if (!Math.isNearEqual(value, getProperty(item) as double?)) {
           return null;
         }
       }
     } else {
-      for (final GameEntity entity in entities) {
-        if (value != getProperty(entity)) {
+      for (final T item in objects) {
+        if (value != getProperty(item)) {
           return null;
         }
       }
@@ -148,12 +147,35 @@ class MSGameEntity {
     }
   }
 
+  void makeComponentsList() {
+    components.clear(notify: false);
+    GameEntity? firstEntity = selectedEntities.firstOrNull;
+
+    if (firstEntity == null) return;
+
+    for (final component in firstEntity.components.value) {
+      final Type type = component.runtimeType;
+      if (!selectedEntities
+          .any((entity) => entity.getComponentByRuntimeType(type) == null)) {
+        components.add(component.getMultiselectComponent(this));
+      }
+    }
+  }
+
+  bool updateMSGameEntity() {
+    name.value = getMixedValue<GameEntity, String>(
+            selectedEntities, ((x) => x.name.value)) ??
+        "";
+    isEnabled.value = getMixedValue<GameEntity, bool>(
+        selectedEntities, ((x) => x.isEnabled.value));
+
+    return true;
+  }
+
   void refresh() {
     _enableUpdates = false;
-    name.value =
-        getMixedValue<String>(selectedEntities, ((x) => x.name.value)) ?? "";
-    isEnabled.value =
-        getMixedValue<bool>(selectedEntities, ((x) => x.isEnabled.value));
+    updateMSGameEntity();
+    makeComponentsList();
     _enableUpdates = true;
   }
 }

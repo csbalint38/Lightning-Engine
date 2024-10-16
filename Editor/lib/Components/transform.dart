@@ -1,4 +1,8 @@
 import 'package:editor/Components/components.dart';
+import 'package:editor/Components/game_entity.dart';
+import 'package:editor/common/relay_command.dart';
+import 'package:editor/common/vector_notifier.dart';
+import 'package:editor/utilities/undo_redo.dart';
 import 'package:vector_math/vector_math.dart';
 import 'package:xml/xml.dart' as xml;
 
@@ -62,5 +66,142 @@ class Transform implements Component {
     });
 
     return builder.buildDocument().toXmlString(pretty: true);
+  }
+
+  @override
+  MSComponent<Component> getMultiselectComponent(MSGameEntity msEntity) =>
+      MSTransform(msEntity);
+}
+
+enum TransformProperty { position, rotation, scale }
+
+class MSTransform extends MSComponent<Transform> {
+  final Vector3Notifier position = Vector3Notifier();
+  final Vector3Notifier rotation = Vector3Notifier();
+  final Vector3Notifier scale = Vector3Notifier();
+
+  late RelayCommand updateComponentsCommand;
+
+  MSTransform(super.msEntity) {
+    updateComponentsCommand = RelayCommand<TransformProperty>((x) {
+      final List<Vector3> oldValues;
+      switch (x) {
+        case TransformProperty.position:
+          oldValues = selectedComponents
+              .map((transform) => transform.position.clone())
+              .toList();
+          break;
+        case TransformProperty.rotation:
+          oldValues = selectedComponents
+              .map((transform) => transform.rotation.clone())
+              .toList();
+          break;
+        case TransformProperty.scale:
+          oldValues = selectedComponents
+              .map((transform) => transform.scale.clone())
+              .toList();
+          break;
+      }
+
+      updateComponents(x);
+
+      UndoRedo().add(
+        UndoRedoAction(
+          name: "Something changed-----------",
+          undoAction: () {
+            for (int i = 0; i < oldValues.length; i++) {
+              selectedComponents[i].position.setFrom(oldValues[i]);
+            }
+          },
+          redoAction: () {},
+        ),
+      );
+    });
+
+    refresh();
+    position.addListener(
+        () => updateComponentsCommand.execute(TransformProperty.position));
+    rotation.addListener(
+        () => updateComponentsCommand.execute(TransformProperty.rotation));
+    scale.addListener(
+        () => updateComponentsCommand.execute(TransformProperty.scale));
+  }
+
+  @override
+  bool updateComponents(dynamic propertyName) {
+    if (propertyName is! TransformProperty) return false;
+    switch (propertyName) {
+      case TransformProperty.position:
+        for (var c in selectedComponents) {
+          c.position.setValues(
+            position.x ?? c.position.x,
+            position.y ?? c.position.y,
+            position.z ?? c.position.z,
+          );
+        }
+        return true;
+      case TransformProperty.rotation:
+        for (var c in selectedComponents) {
+          c.rotation.setValues(
+            rotation.x ?? c.rotation.x,
+            rotation.y ?? c.rotation.y,
+            rotation.z ?? c.rotation.z,
+          );
+        }
+        return true;
+      case TransformProperty.scale:
+        for (var c in selectedComponents) {
+          c.rotation.setValues(
+            scale.x ?? c.scale.x,
+            scale.y ?? c.scale.y,
+            scale.z ?? c.scale.z,
+          );
+        }
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  @override
+  bool updateMSComponent() {
+    position.x = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.position.x),
+    );
+    position.y = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.position.y),
+    );
+    position.z = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.position.z),
+    );
+    rotation.x = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.rotation.x),
+    );
+    rotation.y = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.rotation.y),
+    );
+    rotation.z = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.rotation.z),
+    );
+    scale.x = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.scale.x),
+    );
+    scale.y = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.scale.y),
+    );
+    scale.z = MSGameEntity.getMixedValue(
+      selectedComponents,
+      ((x) => x.scale.z),
+    );
+
+    return true;
   }
 }

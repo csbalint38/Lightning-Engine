@@ -256,6 +256,7 @@ extension CustomTheme on ThemeData {
   TextStyle get smallText => brightness == Brightness.light
       ? const TextStyle(
           fontSize: 12,
+          height: 1.2,
         )
       : const TextStyle();
 
@@ -288,6 +289,22 @@ extension CustomTheme on ThemeData {
       ? InputDecoration(
           contentPadding:
               const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(2),
+            borderSide: const BorderSide(width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(2),
+            borderSide: const BorderSide(width: 1, color: Colors.blueGrey),
+          ),
+        )
+      : const InputDecoration();
+
+  InputDecoration get smallScalarInput => brightness == Brightness.light
+      ? InputDecoration(
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
           isDense: true,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(2),

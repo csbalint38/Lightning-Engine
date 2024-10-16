@@ -69,8 +69,8 @@ class _ScenesListState extends State<ScenesList> {
                             minTileHeight: 0,
                             initiallyExpanded:
                                 _controller.getScenes().value[index].isActive,
-                            iconColor: Colors.blueGrey,
-                            collapsedIconColor: Colors.blueGrey,
+                            iconColor: Theme.of(context).primaryColor,
+                            collapsedIconColor: Theme.of(context).primaryColor,
                             title: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [

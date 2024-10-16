@@ -1,3 +1,5 @@
+import 'package:editor/Components/game_entity.dart';
+
 abstract class Component {
   factory Component.fromXML() {
     throw UnimplementedError();
@@ -6,7 +8,28 @@ abstract class Component {
   String toXML() {
     throw UnimplementedError();
   }
+
+  MSComponent getMultiselectComponent(MSGameEntity msEntity);
 }
 
-abstract class IMSComponent{}
-abstract class MSComponent<T extends Component> implements IMSComponent {}
+abstract class MSComponent<T extends Component> {
+  late final List<T> selectedComponents;
+  bool enableUpdates = true;
+  late Enum properties;
+
+  bool updateComponents(dynamic propertyName);
+  bool updateMSComponent();
+
+  void refresh() {
+    enableUpdates = false;
+    updateMSComponent();
+    enableUpdates = true;
+  }
+
+  MSComponent(MSGameEntity msEntity) {
+    selectedComponents = msEntity.selectedEntities
+        .where((entity) => entity.getComponent<T>() != null)
+        .map((entity) => entity.getComponent<T>()!)
+        .toList();
+  }
+}

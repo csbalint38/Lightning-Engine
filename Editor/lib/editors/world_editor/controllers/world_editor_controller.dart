@@ -208,17 +208,19 @@ class WorldEditorController {
     List<int> currentSelection = List.from(selectedEntityIndices.value);
 
     if (!listEquals(selectedEntityIndices.value, prevSelection)) {
-      undoRedo.add(UndoRedoAction(
-        name: "Selection changed",
-        undoAction: () {
-          selectedEntityIndices.clear(notify: false);
-          selectedEntityIndices.addAll(prevSelection);
-        },
-        redoAction: () {
-          selectedEntityIndices.clear(notify: false);
-          selectedEntityIndices.addAll(currentSelection);
-        },
-      ));
+      undoRedo.add(
+        UndoRedoAction(
+          name: "Selection changed",
+          undoAction: () {
+            selectedEntityIndices.clear(notify: false);
+            selectedEntityIndices.addAll(prevSelection);
+          },
+          redoAction: () {
+            selectedEntityIndices.clear(notify: false);
+            selectedEntityIndices.addAll(currentSelection);
+          },
+        ),
+      );
     }
   }
 }
