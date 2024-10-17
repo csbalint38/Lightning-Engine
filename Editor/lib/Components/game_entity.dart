@@ -1,14 +1,19 @@
+import 'package:collection/collection.dart';
 import 'package:editor/Components/components.dart';
 import 'package:editor/Components/transform.dart' as lng;
+import 'package:editor/dll_wrappers/engine_api.dart';
+import 'package:editor/utilities/id.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
-import '../utilities/math.dart';
+import 'package:editor/utilities/math.dart';
 
 class GameEntity {
   final ValueNotifier<String> name = ValueNotifier<String>("");
   final ValueNotifier<bool> isEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<List<Component>> components =
       ValueNotifier<List<Component>>([]);
+  int entityId = Id.invalidId;
+  bool _isActive = false;
 
   GameEntity(List<Component>? components, {required name, isEnabled = true}) {
     this.name.value = name;
@@ -41,6 +46,20 @@ class GameEntity {
     return GameEntity(components, name: name, isEnabled: isEnabled);
   }
 
+  bool get isActive => _isActive;
+
+  set isActive(bool value) {
+    if (_isActive != value) {
+      _isActive = value;
+
+      if (_isActive) {
+        entityId = EngineAPI.createGameEntity(this);
+      } else {
+        EngineAPI.removeGameEntity(this);
+      }
+    }
+  }
+
   String toXML() {
     final builder = xml.XmlBuilder();
 
@@ -55,6 +74,15 @@ class GameEntity {
     });
 
     return builder.buildDocument().toXmlString(pretty: true);
+  }
+
+  Component? getComponentByRuntimeType(Type type) {
+    return components.value
+        .firstWhereOrNull((components) => components.runtimeType == type);
+  }
+
+  T? getComponent<T extends Component>() {
+    return components.value.whereType<T>().firstOrNull;
   }
 }
 

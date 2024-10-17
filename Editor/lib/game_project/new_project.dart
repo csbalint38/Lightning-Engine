@@ -34,88 +34,111 @@ class _NewProjectState extends State<NewProject> {
     String enginePath = "";
     ValueNotifier<bool> isPathValid = ValueNotifier<bool>(true);
 
-    showDialog(context: context, builder: (BuildContext context) {
-      return Dialog(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Text("Where is Lighning Engine installed?", style: Theme.of(context).textTheme.headlineSmall,),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: SelectableText("Typycal installation path is 'C:/USER/Documents/LightningEngine/"),
-            ),
-            Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Text("Engine path:"),
-                ),
-                SizedBox(
-                  width: 480,
-                  child: TextField(
-                    textAlignVertical: TextAlignVertical.center,
-                    cursorHeight: 16,
-                    maxLines: 1,
-                    style: Theme.of(context).smallText,
-                    decoration: Theme.of(context).smallInput,
-                    onChanged: (value) {
-                      isPathValid.value = _controller.validateEnginePath(value);
-                      if(_controller.validateEnginePath(value)) {
-                        enginePath = value;
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-            ValueListenableBuilder(valueListenable: isPathValid, builder: (context, value, _) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(value ? "" : "This isn't it", style: TextStyle(color: Colors.red),),
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Text(
+                      "Where is Lighning Engine installed?",
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8.0),
+                    child: SelectableText(
+                        "Typycal installation path is 'C:/USER/Documents/LightningEngine/"),
+                  ),
+                  Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8),
+                        child: Text("Engine path:"),
+                      ),
+                      SizedBox(
+                        width: 480,
+                        child: TextField(
+                          textAlignVertical: TextAlignVertical.center,
+                          cursorHeight: 16,
+                          maxLines: 1,
+                          style: Theme.of(context).smallText,
+                          decoration: Theme.of(context).smallInput,
+                          onChanged: (value) {
+                            isPathValid.value =
+                                _controller.validateEnginePath(value);
+                            if (_controller.validateEnginePath(value)) {
+                              enginePath = value;
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  ValueListenableBuilder(
+                      valueListenable: isPathValid,
+                      builder: (context, value, _) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                value ? "" : "This isn't it",
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text("Close")),
+                      TextButton(
+                        onPressed: () {
+                          _controller.setEnginePath(enginePath);
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Ok"),
+                      )
+                    ],
                   ),
                 ],
-              );
-            }),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("Close")),
-              TextButton(onPressed: () {
-                _controller.setEnginePath(enginePath);
-                Navigator.of(context).pop();
-                Navigator.of(context).pop();
-              }, child: Text("Ok"),)
-            ],),
-          
-          ],
-          ),
-        ),
-      );
-    });
+              ),
+            ),
+          );
+        });
   }
 
   void _createProject() async {
-    if(!await _controller.canFindEngine) {
-      showDialog(context: context, builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Error!", style: TextStyle(color: Colors.red)),
-          content: const Text("Can't locate Lightning Engine. You need to locate it before creating new project."),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('Close')),
-            TextButton(onPressed: _locateEngine, child: const Text('Locate')),
-          ]
-        );
-      },);
+    if (!_controller.canFindEngine) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+              title: const Text("Error!", style: TextStyle(color: Colors.red)),
+              content: const Text(
+                  "Can't locate Lightning Engine. You need to locate it before creating new project."),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close')),
+                TextButton(
+                    onPressed: _locateEngine, child: const Text('Locate')),
+              ]);
+        },
+      );
       return;
     }
 

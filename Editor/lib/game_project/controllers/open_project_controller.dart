@@ -1,5 +1,5 @@
 import 'dart:io';
-import "package:collection/collection.dart";
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/project_data.dart';
@@ -9,8 +9,8 @@ class OpenProjectController {
   static final OpenProjectController _openProjectController =
       OpenProjectController._internal();
 
-  static final Directory _appData =
-      Directory(p.join(Platform.environment['LOCALAPPDATA']!, "LightningEditor"));
+  static final Directory _appData = Directory(
+      p.join(Platform.environment['LOCALAPPDATA']!, "LightningEditor"));
   late final File _projectDataFile;
   final List<ProjectData> projects = <ProjectData>[];
 

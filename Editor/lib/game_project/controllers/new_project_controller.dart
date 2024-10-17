@@ -53,12 +53,13 @@ class NewProjectController {
   }
 
   bool get canFindEngine {
-    final dataFile = File(p.join(Platform.environment['LOCALAPPDATA']!, "LightningEditor", "environment.json"));
-    if(!dataFile.existsSync()) return false;
+    final dataFile = File(p.join(Platform.environment['LOCALAPPDATA']!,
+        "LightningEditor", "environment.json"));
+    if (!dataFile.existsSync()) return false;
 
-    final String? path = config.read(ConfigProps.ENGINE_PATH);
+    final String? path = config.read(ConfigProps.enginePath);
 
-    if(path == null) return false;
+    if (path == null) return false;
 
     return Directory(p.join(path, 'Engine', 'EngineAPI')).existsSync();
   }
@@ -154,27 +155,46 @@ class NewProjectController {
   }
 
   void setEnginePath(String path) async {
-    if(!validateEnginePath(path)) return;
+    if (!validateEnginePath(path)) return;
 
-    config.write(ConfigProps.ENGINE_PATH, path);
+    config.write(ConfigProps.enginePath, path);
   }
 
-  Future<void> _createMSVCSolution(ProjectTemplate template, String projectPath) async {
-    final String? enginePath = config.read(ConfigProps.ENGINE_PATH);
-    File solutionTemplate = File(p.join(template.templateFolder.path, "SolutionTemplate.txt"));
-    File projectTemplate = File(p.join(template.templateFolder.path, "ProjectTemplate.txt"));
-    Directory engineAPIDirectory = Directory(p.join(enginePath!, 'Engine', 'EngineAPI'));
+  Future<void> _createMSVCSolution(
+      ProjectTemplate template, String projectPath) async {
+    final String? enginePath = config.read(ConfigProps.enginePath);
+    File solutionTemplate =
+        File(p.join(template.templateFolder.path, "SolutionTemplate.txt"));
+    File projectTemplate =
+        File(p.join(template.templateFolder.path, "ProjectTemplate.txt"));
+    Directory engineAPIDirectory =
+        Directory(p.join(enginePath!, 'Engine', 'EngineAPI'));
 
-    if(solutionTemplate.existsSync() && projectTemplate.existsSync() && engineAPIDirectory.existsSync()) {
-      final String projectUuid = Uuid().v4().toUpperCase();
+    if (solutionTemplate.existsSync() &&
+        projectTemplate.existsSync() &&
+        engineAPIDirectory.existsSync()) {
+      final String projectUuid = const Uuid().v4().toUpperCase();
 
       String solutionString = solutionTemplate.readAsStringSync();
-      solutionString = solutionString.replaceAll('{{0}}', this.name.value).replaceAll('{{1}}', projectUuid).replaceAll('{{2}}', Uuid().v4().toUpperCase(),);
-      await File(p.join(projectPath, this.name.value, '${this.name.value}.sln')).writeAsString(solutionString);
+      solutionString = solutionString
+          .replaceAll('{{0}}', name.value)
+          .replaceAll('{{1}}', projectUuid)
+          .replaceAll(
+            '{{2}}',
+            const Uuid().v4().toUpperCase(),
+          );
+      await File(p.join(projectPath, name.value, '${name.value}.sln'))
+          .writeAsString(solutionString);
 
       String projectString = projectTemplate.readAsStringSync();
-      projectString = projectString.replaceAll('{{0}}', this.name.value).replaceAll('{{1}}', projectUuid).replaceAll('{{2}}', engineAPIDirectory.path).replaceAll('{{3}}', enginePath);
-      await File(p.join(projectPath, this.name.value, 'Code', '${this.name.value}.vcxproj')).writeAsString(projectString);
+      projectString = projectString
+          .replaceAll('{{0}}', name.value)
+          .replaceAll('{{1}}', projectUuid)
+          .replaceAll('{{2}}', engineAPIDirectory.path)
+          .replaceAll('{{3}}', enginePath);
+      await File(
+              p.join(projectPath, name.value, 'Code', '${name.value}.vcxproj'))
+          .writeAsString(projectString);
     }
   }
 
