@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
-import 'package:editor/Components/components.dart';
-import 'package:editor/Components/transform.dart' as lng;
+import 'package:editor/components/components.dart';
+import 'package:editor/components/transform.dart' as lng;
+import 'package:editor/common/list_notifier.dart';
 import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/utilities/id.dart';
 import 'package:flutter/material.dart';
@@ -54,8 +55,9 @@ class GameEntity {
 
       if (_isActive) {
         entityId = EngineAPI.createGameEntity(this);
-      } else {
+      } else if (Id.isValid(entityId)) {
         EngineAPI.removeGameEntity(this);
+        entityId = Id.invalidId;
       }
     }
   }
@@ -89,15 +91,18 @@ class GameEntity {
 enum GameEntityProperty { name, isEnabled, component }
 
 class MSGameEntity {
+  static MSGameEntity? _currentInstance;
+
   final ValueNotifier<String> name = ValueNotifier<String>("");
   final ValueNotifier<bool?> isEnabled = ValueNotifier<bool?>(null);
-  final ValueNotifier<List<IMSComponent>> components =
-      ValueNotifier<List<IMSComponent>>([]);
+  final ListNotifier<MSComponent> components = ListNotifier<MSComponent>();
   final List<GameEntity> selectedEntities;
 
   bool _enableUpdates = true;
 
   MSGameEntity(this.selectedEntities) {
+    _currentInstance = this;
+
     name.addListener(() =>
         _enableUpdates ? updateGameEntities(GameEntityProperty.name) : null);
     isEnabled.addListener(() => _enableUpdates
@@ -110,25 +115,32 @@ class MSGameEntity {
     refresh();
   }
 
-  static T? getMixedValue<T>(
-      List<GameEntity> entities, T Function(GameEntity) getProperty) {
-    T value = getProperty(entities.first);
+  static MSGameEntity? getMSGameEntity() {
+    return _currentInstance;
+  }
+
+  static U? getMixedValue<T, U>(List<T> objects, U Function(T) getProperty) {
+    U value = getProperty(objects.first);
 
     if (value is double) {
-      for (final GameEntity entity in entities) {
-        if (!Math.isNearEqual(value, getProperty(entity) as double?)) {
+      for (final T item in objects) {
+        if (!Math.isNearEqual(value, getProperty(item) as double?)) {
           return null;
         }
       }
     } else {
-      for (final GameEntity entity in entities) {
-        if (value != getProperty(entity)) {
+      for (final T item in objects) {
+        if (value != getProperty(item)) {
           return null;
         }
       }
     }
 
     return value;
+  }
+
+  T? getComponent<T extends MSComponent>() {
+    return components.value.whereType<T>().firstOrNull;
   }
 
   bool updateGameEntities(GameEntityProperty prop) {
@@ -148,12 +160,45 @@ class MSGameEntity {
     }
   }
 
+  void makeComponentsList() {
+    components.clear(notify: false);
+    GameEntity? firstEntity = selectedEntities.firstOrNull;
+
+    if (firstEntity == null) return;
+
+    for (final component in firstEntity.components.value) {
+      final Type type = component.runtimeType;
+      if (!selectedEntities
+          .any((entity) => entity.getComponentByRuntimeType(type) == null)) {
+        components.add(component.getMultiselectComponent(this));
+      }
+    }
+  }
+
+  bool updateMSGameEntity() {
+    name.value = getMixedValue<GameEntity, String>(
+            selectedEntities, ((x) => x.name.value)) ??
+        "";
+    isEnabled.value = getMixedValue<GameEntity, bool>(
+        selectedEntities, ((x) => x.isEnabled.value));
+
+    return true;
+  }
+
   void refresh() {
     _enableUpdates = false;
-    name.value =
-        getMixedValue<String>(selectedEntities, ((x) => x.name.value)) ?? "";
-    isEnabled.value =
-        getMixedValue<bool>(selectedEntities, ((x) => x.isEnabled.value));
+    updateMSGameEntity();
+    makeComponentsList();
     _enableUpdates = true;
+  }
+
+  void dispose() {
+    name.dispose();
+    isEnabled.dispose();
+    components.dispose();
+
+    if (_currentInstance == this) {
+      _currentInstance = null;
+    }
   }
 }

@@ -127,7 +127,8 @@ class _ConsoleState extends State<Console> {
                                 TextSpan(
                                   text: value[index].level.name.toUpperCase(),
                                   style: TextStyle(
-                                      color: _getLogColor(value[index].level)),
+                                    color: _getLogColor(value[index].level),
+                                  ),
                                 ),
                                 const TextSpan(text: "]"),
                               ],

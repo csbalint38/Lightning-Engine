@@ -1,4 +1,4 @@
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/undo_redo.dart';

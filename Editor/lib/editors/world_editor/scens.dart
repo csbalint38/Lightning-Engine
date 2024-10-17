@@ -1,4 +1,4 @@
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
@@ -69,8 +69,8 @@ class _ScenesListState extends State<ScenesList> {
                             minTileHeight: 0,
                             initiallyExpanded:
                                 _controller.getScenes().value[index].isActive,
-                            iconColor: Colors.blueGrey,
-                            collapsedIconColor: Colors.blueGrey,
+                            iconColor: Theme.of(context).primaryColor,
+                            collapsedIconColor: Theme.of(context).primaryColor,
                             title: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -124,7 +124,7 @@ class _ScenesListState extends State<ScenesList> {
                                             },
                                             child: ValueListenableBuilder(
                                               valueListenable: _controller
-                                                  .selectedEntityIndices,
+                                                  .msEntity,
                                               builder: (context, value, __) {
                                                 return ListTile(
                                                   selectedTileColor:
@@ -178,8 +178,7 @@ class _ScenesListState extends State<ScenesList> {
                                                   titleTextStyle:
                                                       Theme.of(context)
                                                           .accentSmall,
-                                                  selected: value
-                                                      .contains(entity.key),
+                                                  selected: value?.selectedEntities.contains(entity.value) ?? false,
                                                 );
                                               },
                                             ),
