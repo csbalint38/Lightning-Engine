@@ -2,7 +2,6 @@ import 'package:editor/Components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';
-import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/foundation.dart';
@@ -21,8 +20,8 @@ class WorldEditorController {
   late RelayCommand enableMultipleCommand;
 
   final ValueNotifier<bool> canSave = ValueNotifier(false);
-  final ListNotifier<int> selectedEntityIndices = ListNotifier<int>();
-  late MSGameEntity msEntity;
+  final List<int> selectedEntityIndices = <int>[];
+  final ValueNotifier<MSGameEntity?> msEntity = ValueNotifier(null);
 
   final _logger = EditorLogger();
 
@@ -86,12 +85,12 @@ class WorldEditorController {
   }
 
   void _setMsEntity() {
-    final List<GameEntity> selectedEntities = selectedEntityIndices.value
+    final List<GameEntity> selectedEntities = selectedEntityIndices
         .map((index) => _project.activeScene.entities.value[index])
         .toList();
 
     if (selectedEntities.isNotEmpty) {
-      msEntity = MSGameEntity(selectedEntities);
+      msEntity.value = MSGameEntity(selectedEntities);
     }
   }
 
@@ -113,11 +112,11 @@ class WorldEditorController {
   // * 0    - Ctrl
   // * 1    - Shift
   void changeSelection(int index, bool? modifier) {
-    List<int> prevSelection = List.from(selectedEntityIndices.value);
+    List<int> prevSelection = List.from(selectedEntityIndices);
 
     // Ctrl
     if (modifier != null && !modifier) {
-      if (selectedEntityIndices.value.contains(index)) {
+      if (selectedEntityIndices.contains(index)) {
         selectedEntityIndices.remove(index);
       } else {
         selectedEntityIndices.add(index);
@@ -125,10 +124,10 @@ class WorldEditorController {
     }
     // Shift
     else if (modifier != null && modifier) {
-      if (selectedEntityIndices.value.isEmpty) {
+      if (selectedEntityIndices.isEmpty) {
         selectedEntityIndices.add(index);
       } else {
-        int a = selectedEntityIndices.value[0];
+        int a = selectedEntityIndices[0];
         int b = index;
         if (a > b) {
           a = a ^ b;
@@ -138,32 +137,36 @@ class WorldEditorController {
 
         final newList = [for (int i = a; i <= b; i++) i];
 
-        selectedEntityIndices.clear(notify: false);
+        selectedEntityIndices.clear();
         selectedEntityIndices.addAll(newList);
       }
     }
     // No modifier
     else {
-      selectedEntityIndices.clear(notify: false);
+      selectedEntityIndices.clear();
       selectedEntityIndices.add(index);
     }
-    List<int> currentSelection = List.from(selectedEntityIndices.value);
+    List<int> currentSelection = List.from(selectedEntityIndices);
 
-    if (!listEquals(selectedEntityIndices.value, prevSelection)) {
+    if (!listEquals(selectedEntityIndices, prevSelection)) {
       undoRedo.add(
         UndoRedoAction(
           name: "Selection changed",
           undoAction: () {
-            selectedEntityIndices.clear(notify: false);
+            selectedEntityIndices.clear();
             selectedEntityIndices.addAll(prevSelection);
+            _setMsEntity();
           },
           redoAction: () {
-            selectedEntityIndices.clear(notify: false);
+            selectedEntityIndices.clear();
             selectedEntityIndices.addAll(currentSelection);
+            _setMsEntity();
           },
         ),
       );
     }
+
+    _setMsEntity();
   }
 
   void _createCommands() {
@@ -174,59 +177,62 @@ class WorldEditorController {
     renameMultipleCommand = RelayCommand<String>(
       (x) {
         Map<GameEntity, String> oldData = Map.fromIterables(
-          List.from(msEntity.selectedEntities),
-          msEntity.selectedEntities.map((e) => e.name.value).toList(),
+          List.from(msEntity.value!.selectedEntities),
+          msEntity.value!.selectedEntities.map((e) => e.name.value).toList(),
         );
 
-        msEntity.name.value = x;
+        msEntity.value!.name.value = x;
 
         UndoRedo().add(
           UndoRedoAction(
-            name: "Rename ${msEntity.selectedEntities.length} entities to '$x'",
+            name: "Rename ${msEntity.value!.selectedEntities.length} entities to '$x'",
             undoAction: () {
               for (final data in oldData.entries) {
                 data.key.name.value = data.value;
               }
+              _setMsEntity();
             },
             redoAction: () {
-              msEntity.name.value = x;
+              msEntity.value?.name.value = x;
+              _setMsEntity();
             },
           ),
         );
       },
-      (x) => x != msEntity.name.value,
+      (x) => x != msEntity.value?.name.value,
     );
 
     enableMultipleCommand = RelayCommand<bool>(
       (x) {
         Map<GameEntity, bool> oldData = Map.fromIterables(
-          List.from(msEntity.selectedEntities),
-          msEntity.selectedEntities.map((e) => e.isEnabled.value).toList(),
+          List.from(msEntity.value!.selectedEntities),
+          msEntity.value!.selectedEntities.map((e) => e.isEnabled.value).toList(),
         );
 
-        msEntity.isEnabled.value = x;
+        msEntity.value?.isEnabled.value = x;
 
         UndoRedo().add(
           UndoRedoAction(
             name:
-                "${x ? "'En" : "'Dis"}able' ${msEntity.selectedEntities.length} GameEntities",
+                "${x ? "'En" : "'Dis"}able' ${msEntity.value?.selectedEntities.length} GameEntities",
             undoAction: () {
               for (final data in oldData.entries) {
                 data.key.isEnabled.value = data.value;
               }
+              _setMsEntity();
             },
             redoAction: () {
-              msEntity.isEnabled.value = x;
+              msEntity.value?.isEnabled.value = x;
+              _setMsEntity();
             },
           ),
         );
       },
-      (x) => x != msEntity.isEnabled.value,
+      (x) => x != msEntity.value?.isEnabled.value,
     );
   }
 
   void _addListeners() {
-    selectedEntityIndices.addListener(_setMsEntity);
     undoRedo.undoList.addListener(_canSaveChanged);
     undoRedo.redoList.addListener(_canSaveChanged);
   }

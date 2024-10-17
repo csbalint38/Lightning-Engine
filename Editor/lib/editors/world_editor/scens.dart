@@ -124,7 +124,7 @@ class _ScenesListState extends State<ScenesList> {
                                             },
                                             child: ValueListenableBuilder(
                                               valueListenable: _controller
-                                                  .selectedEntityIndices,
+                                                  .msEntity,
                                               builder: (context, value, __) {
                                                 return ListTile(
                                                   selectedTileColor:
@@ -178,8 +178,7 @@ class _ScenesListState extends State<ScenesList> {
                                                   titleTextStyle:
                                                       Theme.of(context)
                                                           .accentSmall,
-                                                  selected: value
-                                                      .contains(entity.key),
+                                                  selected: value?.selectedEntities.contains(entity.value) ?? false,
                                                 );
                                               },
                                             ),

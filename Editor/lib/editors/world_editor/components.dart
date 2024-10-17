@@ -33,12 +33,13 @@ class _ComponentsState extends State<Components> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: _controller.selectedEntityIndices,
-      builder: (context, value, _) {
-        if (value.isEmpty) {
+      valueListenable: _controller.msEntity,
+      builder: (context, msEntity, _) {
+        if (msEntity == null || msEntity.components.value.length == 0) {
           return const Column();
         }
-        _nameController.text = _controller.msEntity.name.value;
+        print('updated');
+        _nameController.text = msEntity.name.value;
         return SingleChildScrollView(
           child: Column(
             children: [
@@ -101,14 +102,14 @@ class _ComponentsState extends State<Components> {
                             ),
                             Checkbox(
                               tristate: true,
-                              value: _controller.msEntity.isEnabled.value,
+                              value: msEntity.isEnabled.value,
                               onChanged: (_) {
-                                if (_controller.msEntity.isEnabled.value ==
+                                if (msEntity.isEnabled.value ==
                                     null) {
                                   _controller.enableMsEntity(true);
                                 } else {
                                   _controller.enableMsEntity(
-                                      !_controller.msEntity.isEnabled.value!);
+                                      !msEntity.isEnabled.value!);
                                 }
                                 setState(() {});
                               },
@@ -126,7 +127,7 @@ class _ComponentsState extends State<Components> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: ValueListenableBuilder(
-                        valueListenable: _controller.msEntity.components,
+                        valueListenable: msEntity.components,
                         builder: (context, value, _) {
                           final List<Widget> componentsWidget = value.map(
                             (MSComponent component) {
