@@ -31,66 +31,8 @@ class WorldEditorController {
   }
 
   WorldEditorController._internal() {
-    undoCommand = RelayCommand((x) => undoRedo.undo());
-    redoCommand = RelayCommand((x) => undoRedo.redo());
-    saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
-
-    renameMultipleCommand = RelayCommand<String>(
-      (x) {
-        Map<GameEntity, String> oldData = Map.fromIterables(
-          List.from(msEntity.selectedEntities),
-          msEntity.selectedEntities.map((e) => e.name.value).toList(),
-        );
-
-        msEntity.name.value = x;
-
-        UndoRedo().add(
-          UndoRedoAction(
-            name: "Rename ${msEntity.selectedEntities.length} entities to '$x'",
-            undoAction: () {
-              for (final data in oldData.entries) {
-                data.key.name.value = data.value;
-              }
-            },
-            redoAction: () {
-              msEntity.name.value = x;
-            },
-          ),
-        );
-      },
-      (x) => x != msEntity.name.value,
-    );
-
-    enableMultipleCommand = RelayCommand<bool>(
-      (x) {
-        Map<GameEntity, bool> oldData = Map.fromIterables(
-          List.from(msEntity.selectedEntities),
-          msEntity.selectedEntities.map((e) => e.isEnabled.value).toList(),
-        );
-
-        msEntity.isEnabled.value = x;
-
-        UndoRedo().add(
-          UndoRedoAction(
-            name:
-                "${x ? "'En" : "'Dis"}able' ${msEntity.selectedEntities.length} GameEntities",
-            undoAction: () {
-              for (final data in oldData.entries) {
-                data.key.isEnabled.value = data.value;
-              }
-            },
-            redoAction: () {
-              msEntity.isEnabled.value = x;
-            },
-          ),
-        );
-      },
-      (x) => x != msEntity.isEnabled.value,
-    );
-
-    selectedEntityIndices.addListener(_setMsEntity);
-    undoRedo.undoList.addListener(_canSaveChanged);
-    undoRedo.redoList.addListener(_canSaveChanged);
+    _createCommands();
+    _addListeners();
   }
 
   EditorLogger get logger => _logger;
@@ -222,5 +164,70 @@ class WorldEditorController {
         ),
       );
     }
+  }
+
+  void _createCommands() {
+    undoCommand = RelayCommand((x) => undoRedo.undo());
+    redoCommand = RelayCommand((x) => undoRedo.redo());
+    saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
+
+    renameMultipleCommand = RelayCommand<String>(
+      (x) {
+        Map<GameEntity, String> oldData = Map.fromIterables(
+          List.from(msEntity.selectedEntities),
+          msEntity.selectedEntities.map((e) => e.name.value).toList(),
+        );
+
+        msEntity.name.value = x;
+
+        UndoRedo().add(
+          UndoRedoAction(
+            name: "Rename ${msEntity.selectedEntities.length} entities to '$x'",
+            undoAction: () {
+              for (final data in oldData.entries) {
+                data.key.name.value = data.value;
+              }
+            },
+            redoAction: () {
+              msEntity.name.value = x;
+            },
+          ),
+        );
+      },
+      (x) => x != msEntity.name.value,
+    );
+
+    enableMultipleCommand = RelayCommand<bool>(
+      (x) {
+        Map<GameEntity, bool> oldData = Map.fromIterables(
+          List.from(msEntity.selectedEntities),
+          msEntity.selectedEntities.map((e) => e.isEnabled.value).toList(),
+        );
+
+        msEntity.isEnabled.value = x;
+
+        UndoRedo().add(
+          UndoRedoAction(
+            name:
+                "${x ? "'En" : "'Dis"}able' ${msEntity.selectedEntities.length} GameEntities",
+            undoAction: () {
+              for (final data in oldData.entries) {
+                data.key.isEnabled.value = data.value;
+              }
+            },
+            redoAction: () {
+              msEntity.isEnabled.value = x;
+            },
+          ),
+        );
+      },
+      (x) => x != msEntity.isEnabled.value,
+    );
+  }
+
+  void _addListeners() {
+    selectedEntityIndices.addListener(_setMsEntity);
+    undoRedo.undoList.addListener(_canSaveChanged);
+    undoRedo.redoList.addListener(_canSaveChanged);
   }
 }

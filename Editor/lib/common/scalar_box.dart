@@ -9,10 +9,15 @@ class ScalarBox extends StatelessWidget {
   final TextEditingController _controller = TextEditingController();
 
   ScalarBox(this.globalFocus, this.callback, double? initValue, {super.key}) {
-    _controller.text = initValue != null ? initValue.toString() : '---';
+    _controller.text = initValue?.toString() ?? '---';
   }
 
   void _update(String value) {
+    if (value == '-') {
+      _controller.text = '0.0';
+      value = '0.0';
+    }
+
     if (double.tryParse(value) != null) {
       callback(double.parse(value));
     }
@@ -53,17 +58,14 @@ class ScalarBox extends StatelessWidget {
             ),
           ),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(
-              RegExp(r"[0-9.]"),
-            ),
             TextInputFormatter.withFunction(
               (oldValue, newValue) {
-                final text = newValue.text;
-                return text.isEmpty
-                    ? newValue
-                    : double.tryParse(text) == null
-                        ? oldValue
-                        : newValue;
+                final RegExp regex = RegExp(r"^-?(\d+\.?\d*|\.\d*)?$");
+
+                if (regex.hasMatch(newValue.text)) {
+                  return newValue;
+                }
+                return oldValue;
               },
             ),
           ],
@@ -71,11 +73,13 @@ class ScalarBox extends StatelessWidget {
             globalFocus.requestFocus();
             _update(value);
           },
-          onTapOutside: (event) {
+        ),
+        onFocusChange: (value) {
+          if (!value) {
             globalFocus.requestFocus();
             _update(_controller.text);
-          },
-        ),
+          }
+        },
       ),
     );
   }

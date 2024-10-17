@@ -2,6 +2,7 @@ import 'package:editor/Components/components.dart';
 import 'package:editor/Components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/common/vector_notifier.dart';
+import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:vector_math/vector_math.dart';
 import 'package:xml/xml.dart' as xml;
@@ -83,72 +84,28 @@ class MSTransform extends MSComponent<Transform> {
   late RelayCommand updateComponentsCommand;
 
   MSTransform(super.msEntity) {
-    updateComponentsCommand = RelayCommand<Map<TransformProperty, Vector3>>((x) {
-      print(x['vector']);
-      UndoRedo().add(
-        UndoRedoAction(
-          name: "Something changed-----------$x",
-          undoAction: () {
-            final MSTransform? newMSTransform = MSGameEntity.getMSGameEntity()?.getComponent<MSTransform>();
-            if(newMSTransform != null) {
-              newMSTransform.updateComponents(x);
-            }
-          },
-          redoAction: () {
-            final MSTransform? newMSTransform = MSGameEntity.getMSGameEntity()?.getComponent<MSTransform>();
-            if(newMSTransform != null) {
-              newMSTransform.updateComponents(x);
-            }
-          },
-        ),
-      );
-
-      updateComponents(x);
-    });
-
+    _createCommands();
     refresh();
-    position.addListener(
-        () => updateComponentsCommand.execute());
-    rotation.addListener(
-        () => updateComponentsCommand.execute());
-    scale.addListener(
-        () => updateComponentsCommand.execute());
+    _initializeListeners();
   }
 
   @override
   bool updateComponents(dynamic propertyName) {
     if (propertyName is! TransformProperty) return false;
-    switch (propertyName) {
-      case TransformProperty.position:
-        for (var c in selectedComponents) {
-          c.position.setValues(
-            position.x ?? c.position.x,
-            position.y ?? c.position.y,
-            position.z ?? c.position.z,
-          );
-        }
-        return true;
-      case TransformProperty.rotation:
-        for (var c in selectedComponents) {
-          c.rotation.setValues(
-            rotation.x ?? c.rotation.x,
-            rotation.y ?? c.rotation.y,
-            rotation.z ?? c.rotation.z,
-          );
-        }
-        return true;
-      case TransformProperty.scale:
-        for (var c in selectedComponents) {
-          c.rotation.setValues(
-            scale.x ?? c.scale.x,
-            scale.y ?? c.scale.y,
-            scale.z ?? c.scale.z,
-          );
-        }
-        return true;
-      default:
-        return false;
+
+    final updateMap = {
+      TransformProperty.position: (Transform c) =>
+          c.position.setFrom(position.value),
+      TransformProperty.rotation: (Transform c) =>
+          c.rotation.setFrom(rotation.value),
+      TransformProperty.scale: (Transform c) => c.scale.setFrom(scale.value),
+    };
+
+    for (var c in selectedComponents) {
+      updateMap[propertyName]?.call(c);
     }
+
+    return true;
   }
 
   @override
@@ -191,5 +148,72 @@ class MSTransform extends MSComponent<Transform> {
     );
 
     return true;
+  }
+
+  void _initializeListeners() {
+    position.addListener(
+        () => updateComponentsCommand.execute(TransformProperty.position));
+    rotation.addListener(
+        () => updateComponentsCommand.execute(TransformProperty.rotation));
+    scale.addListener(
+        () => updateComponentsCommand.execute(TransformProperty.scale));
+  }
+
+  void _createCommands() {
+    updateComponentsCommand = RelayCommand<TransformProperty>(
+      (x) {
+        final List<Vector3> oldValues;
+        final Vector3 newValue;
+        switch (x) {
+          case TransformProperty.position:
+            newValue = position.value;
+            oldValues = selectedComponents
+                .map((transform) => transform.position.clone())
+                .toList();
+            break;
+          case TransformProperty.rotation:
+            newValue = rotation.value;
+            oldValues = selectedComponents
+                .map((transform) => transform.rotation.clone())
+                .toList();
+            break;
+          case TransformProperty.scale:
+            newValue = scale.value;
+            oldValues = selectedComponents
+                .map((transform) => transform.scale.clone())
+                .toList();
+            break;
+        }
+
+        updateComponents(x);
+
+        final Map<TransformProperty, void Function(int, Vector3)> actions = {
+          TransformProperty.position: (i, other) =>
+              selectedComponents[i].position.setFrom(other),
+          TransformProperty.rotation: (i, other) =>
+              selectedComponents[i].rotation.setFrom(other),
+          TransformProperty.scale: (i, other) =>
+              selectedComponents[i].scale.setFrom(other),
+        };
+
+        UndoRedo().add(
+          UndoRedoAction(
+            name: "${capitalize(x.name)} changed",
+            undoAction: () {
+              for (int i = 0; i < oldValues.length; i++) {
+                actions[x]?.call(i, oldValues[i]);
+              }
+              MSGameEntity.getMSGameEntity()?.refresh();
+            },
+            redoAction: () {
+              for (int i = 0; i < oldValues.length; i++) {
+                actions[x]?.call(i, newValue);
+              }
+              MSGameEntity.getMSGameEntity()?.refresh();
+            },
+          ),
+        );
+      },
+    );
   }
 }
