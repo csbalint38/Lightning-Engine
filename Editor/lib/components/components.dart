@@ -1,4 +1,4 @@
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/game_entity.dart';
 
 abstract class Component {
   factory Component.fromXML() {

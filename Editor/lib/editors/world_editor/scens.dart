@@ -1,4 +1,4 @@
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';

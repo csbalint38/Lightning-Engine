@@ -1,4 +1,4 @@
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';

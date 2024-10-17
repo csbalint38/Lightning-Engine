@@ -1,8 +1,5 @@
-import 'package:collection/collection.dart';
-import 'package:editor/Components/components.dart';
-import 'package:editor/Components/transform.dart' as lng;
-import 'package:editor/dll_wrappers/engine_api.dart';
-import 'package:editor/utilities/id.dart';
+import 'package:editor/components/components.dart';
+import 'package:editor/components/transform.dart' as lng;
 import 'package:editor/common/list_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
@@ -139,7 +136,7 @@ class MSGameEntity {
   }
 
   T? getComponent<T extends MSComponent>() {
-    return components.value .whereType<T>().firstOrNull;
+    return components.value.whereType<T>().firstOrNull;
   }
 
   bool updateGameEntities(GameEntityProperty prop) {
@@ -196,7 +193,7 @@ class MSGameEntity {
     isEnabled.dispose();
     components.dispose();
 
-    if(_currentInstance == this) {
+    if (_currentInstance == this) {
       _currentInstance = null;
     }
   }

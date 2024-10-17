@@ -1,4 +1,4 @@
-import 'package:editor/Components/transform.dart';
+import 'package:editor/components/transform.dart';
 import 'package:editor/common/vector_box.dart';
 import 'package:editor/editors/world_editor/components/base_component.dart';
 import 'package:flutter/material.dart';

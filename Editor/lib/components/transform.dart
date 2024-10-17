@@ -1,5 +1,5 @@
-import 'package:editor/Components/components.dart';
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/components.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/common/vector_notifier.dart';
 import 'package:editor/utilities/capitalize.dart';

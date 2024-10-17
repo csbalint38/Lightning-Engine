@@ -1,5 +1,5 @@
-import 'package:editor/Components/components.dart';
-import 'package:editor/Components/transform.dart';
+import 'package:editor/components/components.dart';
+import 'package:editor/components/transform.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/editors/world_editor/components/transform.dart' as view;
 import 'package:editor/themes/themes.dart';
