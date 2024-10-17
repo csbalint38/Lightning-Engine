@@ -75,19 +75,18 @@ class EditorLogger {
   }
 
   void filterLogs(List<LogLevel>? levels) {
-    if(levels == null) {
-      levels = [
-        LogLevel.error,
-        LogLevel.warning,
-        LogLevel.info,
-      ];
-    }
+    levels ??= [
+      LogLevel.error,
+      LogLevel.warning,
+      LogLevel.info,
+    ];
 
     _levels.clear();
     _levels.addAll(levels);
 
     _filteredLogs.clear(notify: false);
-    _filteredLogs.addAll(_logs.where((log) => _levels.contains(log.level)).toList());
+    _filteredLogs
+        .addAll(_logs.where((log) => _levels.contains(log.level)).toList());
   }
 
   void clear() {

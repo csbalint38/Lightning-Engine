@@ -6,7 +6,6 @@ import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 class WorldEditorController {
   static final WorldEditorController _worldEditorController =

@@ -21,6 +21,10 @@ class Scene {
   }) {
     this.entities.addAll(entities);
 
+    for (final entity in entities) {
+      entity.isActive = isActive;
+    }
+
     addGameEntity = RelayCommand<GameEntity>(
       (x) {
         _addGameEntity(x);
@@ -29,7 +33,7 @@ class Scene {
           UndoRedoAction(
             name: "Add ${x.name.value} to $name",
             undoAction: () => _removeGameEntity(x),
-            redoAction: () => this.entities.insert(index, x),
+            redoAction: () => _addGameEntity(x, index: index),
           ),
         );
       },
@@ -42,7 +46,7 @@ class Scene {
         _undoRedo.add(
           UndoRedoAction(
             name: "Remove ${x.name.value}",
-            undoAction: () => this.entities.insert(index, x),
+            undoAction: () => _addGameEntity(x, index: index),
             redoAction: () => _removeGameEntity(x),
           ),
         );
@@ -84,11 +88,18 @@ class Scene {
     return builder.buildDocument().toXmlString(pretty: true);
   }
 
-  _addGameEntity(GameEntity entity) {
-    entities.add(entity);
+  _addGameEntity(GameEntity entity, {int index = -1}) {
+    entity.isActive = isActive;
+
+    if (index == -1) {
+      entities.add(entity);
+    } else {
+      entities.insert(index, entity);
+    }
   }
 
   _removeGameEntity(GameEntity entity) {
+    entity.isActive = isActive;
     entities.remove(entity);
   }
 }
