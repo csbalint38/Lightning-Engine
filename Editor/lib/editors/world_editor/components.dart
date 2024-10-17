@@ -35,7 +35,7 @@ class _ComponentsState extends State<Components> {
     return ValueListenableBuilder(
       valueListenable: _controller.msEntity,
       builder: (context, msEntity, _) {
-        if (msEntity == null || msEntity.components.value.length == 0) {
+        if (msEntity == null || msEntity.components.value.isEmpty) {
           return const Column();
         }
         print('updated');
@@ -104,8 +104,7 @@ class _ComponentsState extends State<Components> {
                               tristate: true,
                               value: msEntity.isEnabled.value,
                               onChanged: (_) {
-                                if (msEntity.isEnabled.value ==
-                                    null) {
+                                if (msEntity.isEnabled.value == null) {
                                   _controller.enableMsEntity(true);
                                 } else {
                                   _controller.enableMsEntity(

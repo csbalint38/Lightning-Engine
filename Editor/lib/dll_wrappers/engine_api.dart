@@ -2,8 +2,8 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/congifg/config.dart';
-import 'package:editor/Components/transform.dart';
-import 'package:editor/Components/game_entity.dart';
+import 'package:editor/components/transform.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/utilities/id.dart';
 
 typedef _CreateGameEntityNativeType = IdType Function(

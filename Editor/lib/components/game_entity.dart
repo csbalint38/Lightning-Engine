@@ -1,6 +1,9 @@
+import 'package:collection/collection.dart';
 import 'package:editor/components/components.dart';
 import 'package:editor/components/transform.dart' as lng;
 import 'package:editor/common/list_notifier.dart';
+import 'package:editor/dll_wrappers/engine_api.dart';
+import 'package:editor/utilities/id.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:editor/utilities/math.dart';
