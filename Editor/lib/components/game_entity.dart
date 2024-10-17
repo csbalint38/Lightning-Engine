@@ -55,8 +55,9 @@ class GameEntity {
 
       if (_isActive) {
         entityId = EngineAPI.createGameEntity(this);
-      } else {
+      } else if (Id.isValid(entityId)) {
         EngineAPI.removeGameEntity(this);
+        entityId = Id.invalidId;
       }
     }
   }
