@@ -1,4 +1,4 @@
-# v0.3.0-beta - 20xx.x.x
+# v0.3.0-beta - 2025.x.x
 
 ## Editor
  - Locate the Engine if it was moved or installed to a different location than default
@@ -12,6 +12,7 @@
 ## Engine
  - Geometry component
  - Support of Physically Based Rendering (PBR)
+ - HDR as Cubemap support (CPU conversion only)
 
 # v0.2.0-alpha - 2024.08.18
 

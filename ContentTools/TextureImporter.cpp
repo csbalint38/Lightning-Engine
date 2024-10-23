@@ -10,6 +10,8 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 
 	bool is_normal_map(const Image* const image);
+	// HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
+	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 
 	namespace {
 
@@ -47,6 +49,9 @@ namespace lightning::tools {
 			u32 prefer_bc7;
 			u32 output_format;
 			u32 compress;
+			u32 cubemap_size;
+			u32 mirror_cubemap;
+			u32 prefilter_cubemap;
 		};
 
 		struct TextureInfo {
@@ -134,7 +139,7 @@ namespace lightning::tools {
 
 			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapters_by_performance() };
 			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
-			constexpr D3D_FEATURE_LEVEL feature_levels[]{ D3D_FEATURE_LEVEL_11_0 };
+			constexpr D3D_FEATURE_LEVEL feature_levels[]{ D3D_FEATURE_LEVEL_11_1, };
 
 			for (u32 i{ 0 }; i < adapters.size(); ++i) {
 				ID3D11Device** device{ &devices[i] };
@@ -149,6 +154,38 @@ namespace lightning::tools {
 					d3d11_devices.back().device = devices[i];
 				}
 			}
+		}
+
+		bool try_create_device() {
+			std::lock_guard lock{ device_creation_mutex };
+			static bool try_once = false;
+
+			if (!try_once) {
+				try_once = true;
+				create_device();
+			}
+
+			return d3d11_devices.size() > 0;
+		}
+
+		template<typename T> bool run_on_gpu(T func) {
+			if (!try_create_device()) return false;
+			bool wait{ true };
+
+			while (wait) {
+				for (u32 i{ 0 }; i < d3d11_devices.size(); ++i) {
+					if (d3d11_devices[i].hw_compression_mutex.try_lock()) {
+						func(d3d11_devices[i].device.Get());
+						d3d11_devices[i].hw_compression_mutex.unlock();
+						wait = false;
+						break;
+					}
+				}
+
+				if (wait) std::this_thread::sleep_for(std::chrono::milliseconds(200));
+			}
+
+			return true;
 		}
 
 		constexpr void set_or_clear_flags(u32& flags, u32 flag, bool set) {
@@ -170,6 +207,21 @@ namespace lightning::tools {
 			return mip_levels;
 		}
 
+		bool is_hdr(DXGI_FORMAT format) {
+			switch (format) {
+			case DXGI_FORMAT_BC6H_UF16:
+			case DXGI_FORMAT_BC6H_SF16:
+			case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
+			case DXGI_FORMAT_R10G10B10A2_UINT:
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			case DXGI_FORMAT_R32G32B32_FLOAT:
+				return true;
+			};
+
+			return false;
+		}
+
 		void texture_info_from_metadata(const TexMetadata& metadata, TextureInfo& info) {
 			using namespace lightning::content;
 
@@ -180,7 +232,7 @@ namespace lightning::tools {
 			info.array_size = metadata.IsVolumemap() ? (u32)metadata.depth : (u32)metadata.arraySize;
 			info.mip_levels = (u32)metadata.mipLevels;
 			set_or_clear_flags(info.flags, TextureFlags::HAS_ALPHA, HasAlpha(format));
-			set_or_clear_flags(info.flags, TextureFlags::IS_HDR, format == DXGI_FORMAT_BC6H_UF16 || format == DXGI_FORMAT_BC6H_SF16);
+			set_or_clear_flags(info.flags, TextureFlags::IS_HDR, is_hdr(format));
 			set_or_clear_flags(info.flags, TextureFlags::IS_CUBE_MAP, metadata.IsCubemap());
 			set_or_clear_flags(info.flags, TextureFlags::IS_VOLUME_MAP, metadata.IsVolumemap());
 			set_or_clear_flags(info.flags, TextureFlags::IS_SRGB, IsSRGB(format));
@@ -337,6 +389,28 @@ namespace lightning::tools {
 			return scratch;
 		}
 
+		[[nodiscard]] ScratchImage generate_mipmaps(const ScratchImage& source, TextureInfo& info, u32 mip_levels, bool is_3d) {
+			const TexMetadata& metadata{ source.GetMetadata() };
+			mip_levels = math::clamp(mip_levels, (u32)0, get_max_mip_count((u32)metadata.width, (u32)metadata.height, (u32)metadata.depth));
+			HRESULT hr{ S_OK };
+
+			ScratchImage mip_scratch{};
+
+			if (!is_3d) {
+				hr = GenerateMipMaps(source.GetImages(), source.GetImageCount(), source.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
+			}
+			else {
+				hr = GenerateMipMaps3D(source.GetImages(), source.GetImageCount(), source.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
+			}
+
+			if (FAILED(hr)) {
+				info.import_error = ImportError::MIPMAP_GENERATION;
+				return {};
+			}
+
+			return mip_scratch;
+		}
+
 		[[nodiscard]] ScratchImage initialize_from_images(TextureData* const data, const util::vector<Image>& images) {
 			assert(data);
 			const TextureImportSettings& settings{ data->import_settings };
@@ -355,12 +429,20 @@ namespace lightning::tools {
 
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
-					if (array_size % 6) {
+					const Image& image{ images[0] };
+					/*
+					if (math::is_equal((f32)image.width / (f32)image.height, 2.f)) {
+						if (!run_on_gpu([&](ID3D11Device* device) {hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch); })) {
+							hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
+						}
+					}
+					else if (array_size % 6 || image.width != image.height) {
 						data->info.import_error = ImportError::NEED_SIX_IMAGES;
 						return {};
 					}
-
-					hr = working_scratch.InitializeCubeFromImages(images.data(), images.size());
+					else {
+						hr = working_scratch.InitializeCubeFromImages(images.data(), images.size());
+					}*/
 				}
 				else {
 					assert(settings.dimension == TextureDimension::TEXTURE_3D);
@@ -375,24 +457,8 @@ namespace lightning::tools {
 				scratch = std::move(working_scratch);
 			}
 
-			if (settings.mip_levels != 1) {
-				ScratchImage mip_scratch;
-				const TexMetadata& metadata{ scratch.GetMetadata() };
-				u32 mip_levels{ math::clamp(settings.mip_levels, (u32)0, get_max_mip_count((u32)metadata.width, (u32)metadata.height, (u32)metadata.depth)) };
-
-				if (settings.dimension != TextureDimension::TEXTURE_3D) {
-					hr = GenerateMipMaps(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
-				}
-				else {
-					hr = GenerateMipMaps3D(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
-				}
-
-				if (FAILED(hr)) {
-					data->info.import_error = ImportError::MIPMAP_GENERATION;
-					return{};
-				}
-
-				scratch = std::move(mip_scratch);
+			if (settings.mip_levels != 1 || settings.prefilter_cubemap) {
+				scratch = generate_mipmaps(scratch, data->info, settings.prefilter_cubemap ? 0 : settings.mip_levels, settings.dimension == TextureDimension::TEXTURE_3D);
 			}
 
 			return scratch;
@@ -442,15 +508,7 @@ namespace lightning::tools {
 			case DXGI_FORMAT_BC7_TYPELESS:
 			case DXGI_FORMAT_BC7_UNORM:
 			case DXGI_FORMAT_BC7_UNORM_SRGB: {
-				std::lock_guard lock{ device_creation_mutex };
-				static bool try_once = false;
-
-				if (!try_once) {
-					try_once = true;
-					create_device();
-				}
-
-				return d3d11_devices.size() > 0;
+				return true;
 			}
 			}
 
@@ -470,22 +528,7 @@ namespace lightning::tools {
 			HRESULT hr{ S_OK };
 			ScratchImage bc_scratch;
 
-			if (can_use_gpu(output_format)) {
-				bool wait{ true };
-
-				while (wait) {
-					for (u32 i{ 0 }; i < d3d11_devices.size(); ++i) {
-						if (d3d11_devices[i].hw_compression_mutex.try_lock()) {
-							hr = Compress(d3d11_devices[i].device.Get(), scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch);
-							d3d11_devices[i].hw_compression_mutex.unlock();
-							wait = false;
-							break;
-						}
-					}
-					if (wait) std::this_thread::sleep_for(std::chrono::milliseconds(200));
-				}
-			}
-			else {
+			if (!(can_use_gpu(output_format) && run_on_gpu([&](ID3D11Device* device) { hr = Compress(device, scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch); }))) {
 				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
 			}
 
@@ -495,6 +538,38 @@ namespace lightning::tools {
 			}
 
 			return bc_scratch;
+		}
+
+		[[nodiscard]] ScratchImage decompress_image(TextureData* const data) {
+			using namespace lightning::content;
+			assert(data->import_settings.compress);
+			TextureInfo& info{ data->info };
+			const DXGI_FORMAT format{ (DXGI_FORMAT)info.format };
+			assert(IsCompressed(format));
+			util::vector<Image> images = subresource_data_to_images(data);
+			const bool is_3d{ (info.flags & TextureFlags::IS_VOLUME_MAP) != 0 };
+
+			TexMetadata metadata{};
+			metadata.width = info.width;
+			metadata.height = info.height;
+			metadata.depth = is_3d ? info.array_size : 1;
+			metadata.arraySize = is_3d ? 1 : info.array_size;
+			metadata.mipLevels = info.mip_levels;
+			metadata.miscFlags = info.flags & TextureFlags::IS_CUBE_MAP ? TEX_MISC_TEXTURECUBE : 0;
+			metadata.miscFlags2 = info.flags & TextureFlags::IS_PREMULTIPLIED_ALPHA ? TEX_ALPHA_MODE_PREMULTIPLIED : info.flags & TextureFlags::HAS_ALPHA ? TEX_ALPHA_MODE_STRAIGHT : TEX_ALPHA_MODE_OPAQUE;
+			metadata.format = format;
+
+			metadata.dimension = is_3d ? TEX_DIMENSION_TEXTURE3D : TEX_DIMENSION_TEXTURE2D;
+
+			ScratchImage scratch;
+			HRESULT hr{ Decompress(images.data(), (size_t)images.size(), metadata, DXGI_FORMAT_UNKNOWN, scratch) };
+
+			if (FAILED(hr)) {
+				data->info.import_error = ImportError::DECOMPRESS;
+				return {};
+			}
+
+			return scratch;
 		}
 	}
 
@@ -513,35 +588,11 @@ namespace lightning::tools {
 	}
 
 	EDITOR_INTERFACE void decompress(TextureData* const data) {
-		using namespace lightning::content;
-		assert(data->import_settings.compress);
-		TextureInfo& info{ data->info };
-		const DXGI_FORMAT format{ (DXGI_FORMAT)info.format };
-		assert(IsCompressed(format));
-		util::vector<Image> images = subresource_data_to_images(data);
-		const bool is_3d{ (info.flags & TextureFlags::IS_VOLUME_MAP) != 0 };
+		ScratchImage scratch{ decompress_image(data) };
 
-		TexMetadata metadata{};
-		metadata.width = info.width;
-		metadata.height = info.height;
-		metadata.depth = is_3d ? info.array_size : 1;
-		metadata.arraySize = is_3d ? 1 : info.array_size;
-		metadata.mipLevels = info.mip_levels;
-		metadata.miscFlags = info.flags & TextureFlags::IS_CUBE_MAP ? TEX_MISC_TEXTURECUBE : 0;
-		metadata.miscFlags2 = info.flags & TextureFlags::IS_PREMULTIPLIED_ALPHA ? TEX_ALPHA_MODE_PREMULTIPLIED : info.flags & TextureFlags::HAS_ALPHA ? TEX_ALPHA_MODE_STRAIGHT : TEX_ALPHA_MODE_OPAQUE;
-		metadata.format = format;
-
-		metadata.dimension = is_3d ? TEX_DIMENSION_TEXTURE3D : TEX_DIMENSION_TEXTURE2D;
-
-		ScratchImage scratch;
-		HRESULT hr{ Decompress(images.data(), (size_t)images.size(), metadata, DXGI_FORMAT_UNKNOWN, scratch) };
-
-		if (SUCCEEDED(hr)) {
+		if (!data->info.import_error) {
 			copy_subresources(scratch, data);
 			texture_info_from_metadata(scratch.GetMetadata(), data->info);
-		}
-		else {
-			info.import_error = ImportError::DECOMPRESS;
 		}
 	}
 

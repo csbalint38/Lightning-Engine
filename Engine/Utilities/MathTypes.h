@@ -3,8 +3,10 @@
 
 namespace lightning::math {
 	constexpr f32 PI{ 3.14159274101257324219f };
+	constexpr f32 INV_PI{ 1.f / PI };
 	constexpr f32 TWO_PI{ 2.f * PI };
 	constexpr f32 HALF_PI{ PI * .5f };
+	constexpr f32 INV_TWO_PI{ 1.f / TWO_PI };
 	constexpr f32 EPSILON{ 1e-5f };
 	
 	#if defined(_WIN64)
