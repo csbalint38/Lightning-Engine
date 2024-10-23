@@ -61,10 +61,10 @@ packages:
     dependency: "direct main"
     description:
       name: docking
-      sha256: "2ffbb645d90567501cecd71d94ae64458ae3cd0d9dc570cf912b6bd998a98c2c"
+      sha256: "9f1aafd5d3adff37f7b2edf3e6d35ead1a8fb0081b7fa7b371ff5c596f0a6224"
       url: "https://pub.dev"
     source: hosted
-    version: "1.16.0"
+    version: "1.16.1"
   fake_async:
     dependency: transitive
     description:
@@ -376,6 +376,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.2.1"
+  win32:
+    dependency: "direct main"
+    description:
+      name: win32
+      sha256: "68d1e89a91ed61ad9c370f9f8b6effed9ae5e0ede22a270bdfa6daf79fc2290a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.5.4"
   window_manager:
     dependency: "direct main"
     description:

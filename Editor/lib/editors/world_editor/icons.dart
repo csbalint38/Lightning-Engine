@@ -1,4 +1,5 @@
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
+import 'package:editor/game_code/new_script_dialog.dart';
 import 'package:flutter/material.dart';
 
 class IconsRow extends StatefulWidget {
@@ -60,6 +61,21 @@ class _IconsRowState extends State<IconsRow> {
                   : null,
               icon: const Icon(Icons.save),
             ),
+          ),
+        ),
+        Tooltip(
+          message: 'Create new script',
+          child: IconButton(
+            icon: const Icon(Icons.note_add_rounded),
+            onPressed: () {
+              showDialog(
+                barrierDismissible: false,
+                context: context,
+                builder: (BuildContext context) {
+                  return NewScriptDialog(_controller.project);
+                },
+              );
+            },
           ),
         )
       ],

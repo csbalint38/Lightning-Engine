@@ -1,5 +1,4 @@
 // PrimitiveTypes.h
-
 #pragma once
 #include <cstdint>
 

@@ -34,6 +34,7 @@ class WorldEditorController {
     _addListeners();
   }
 
+  Project get project => _project;
   EditorLogger get logger => _logger;
 
   clearLogs() {
@@ -185,7 +186,8 @@ class WorldEditorController {
 
         UndoRedo().add(
           UndoRedoAction(
-            name: "Rename ${msEntity.value!.selectedEntities.length} entities to '$x'",
+            name:
+                "Rename ${msEntity.value!.selectedEntities.length} entities to '$x'",
             undoAction: () {
               for (final data in oldData.entries) {
                 data.key.name.value = data.value;
@@ -206,7 +208,9 @@ class WorldEditorController {
       (x) {
         Map<GameEntity, bool> oldData = Map.fromIterables(
           List.from(msEntity.value!.selectedEntities),
-          msEntity.value!.selectedEntities.map((e) => e.isEnabled.value).toList(),
+          msEntity.value!.selectedEntities
+              .map((e) => e.isEnabled.value)
+              .toList(),
         );
 
         msEntity.value?.isEnabled.value = x;

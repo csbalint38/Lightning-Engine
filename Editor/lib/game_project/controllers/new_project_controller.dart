@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:editor/common/constants.dart';
 import 'package:editor/congifg/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -77,16 +78,12 @@ class NewProjectController {
       return false;
     }
 
-    final RegExp fileInvalidCharacters = RegExp(
-        r'^(?!^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..+)?$)[^\\/:*?"<>|\r\n]{0,254}[^\\/:*?"<>|\r\n. ]$');
     if (fileInvalidCharacters.hasMatch(path)) {
       setErrorMessage("Project name contains invalid characters");
       return false;
     }
 
-    final RegExp pathCharacters = RegExp(
-        r'^(?:[a-zA-Z]:\\|\\)(?:[^\\/:*?"<>|\r\n]+\\)*(?:[^\\/:*?"<>|\r\n]*[^\\/:*?"<>|\r\n. ])?$');
-    if (!pathCharacters.hasMatch(path)) {
+    if (!pathAllowedCharacters.hasMatch(path)) {
       setErrorMessage("Path contains invalid characters");
       return false;
     }
@@ -102,9 +99,7 @@ class NewProjectController {
   }
 
   bool validateEnginePath(String path) {
-    final RegExp pathCharacters = RegExp(
-        r'^(?:[a-zA-Z]:\\|\\)(?:[^\\/:*?"<>|\r\n]+\\)*(?:[^\\/:*?"<>|\r\n]*[^\\/:*?"<>|\r\n. ])?$');
-    if (!pathCharacters.hasMatch(path)) return false;
+    if (!pathAllowedCharacters.hasMatch(path)) return false;
 
     return Directory(p.join(path, "Engine", "EngineAPI")).existsSync();
   }
