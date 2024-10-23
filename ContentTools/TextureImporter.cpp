@@ -10,7 +10,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 
 	bool is_normal_map(const Image* const image);
-	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
+	// HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 
 	namespace {
@@ -133,9 +133,9 @@ namespace lightning::tools {
 			if (!d3d11_create_device) return;
 
 			u32 create_device_flags{ 0 };
-#ifdef _DEBUG
+			#ifdef _DEBUG
 			create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+			#endif
 
 			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapters_by_performance() };
 			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
@@ -165,7 +165,7 @@ namespace lightning::tools {
 				create_device();
 			}
 
-			return d3d12_device.size() > 0;
+			return d3d11_devices.size() > 0;
 		}
 
 		template<typename T> bool run_on_gpu(T func) {
@@ -173,10 +173,10 @@ namespace lightning::tools {
 			bool wait{ true };
 
 			while (wait) {
-				for (u32 i{ 0 }; i < d3d12_devices.size(); ++i) {
+				for (u32 i{ 0 }; i < d3d11_devices.size(); ++i) {
 					if (d3d11_devices[i].hw_compression_mutex.try_lock()) {
-						func(d3d12_devices[i].device.Get());
-						d3d12_devices[i].hw_compression_mutex.unlock();
+						func(d3d11_devices[i].device.Get());
+						d3d11_devices[i].hw_compression_mutex.unlock();
 						wait = false;
 						break;
 					}
@@ -212,11 +212,11 @@ namespace lightning::tools {
 			case DXGI_FORMAT_BC6H_UF16:
 			case DXGI_FORMAT_BC6H_SF16:
 			case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
-			case DXGI_FORMAT_R10G10B10S2_UINT:
-				case DXGI_FORMAT R16G16B16A16_FLOAT :
-				case DXGI_FORMAT_R32G32B32A32_FLOAT:
-				case DXGI_FORMAT_R32G32B32_FLOAT:
-					return true;
+			case DXGI_FORMAT_R10G10B10A2_UINT:
+			case DXGI_FORMAT_R16G16B16A16_FLOAT:
+			case DXGI_FORMAT_R32G32B32A32_FLOAT:
+			case DXGI_FORMAT_R32G32B32_FLOAT:
+				return true;
 			};
 
 			return false;
@@ -394,10 +394,10 @@ namespace lightning::tools {
 			mip_levels = math::clamp(mip_levels, (u32)0, get_max_mip_count((u32)metadata.width, (u32)metadata.height, (u32)metadata.depth));
 			HRESULT hr{ S_OK };
 
-			ScratchImaage mip_scratch{};
+			ScratchImage mip_scratch{};
 
 			if (!is_3d) {
-				hr = GenerateMipMaps(source.GetImages(), source.GetImageCount, source.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
+				hr = GenerateMipMaps(source.GetImages(), source.GetImageCount(), source.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
 			}
 			else {
 				hr = GenerateMipMaps3D(source.GetImages(), source.GetImageCount(), source.GetMetadata(), TEX_FILTER_DEFAULT, mip_levels, mip_scratch);
@@ -430,19 +430,19 @@ namespace lightning::tools {
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
 					const Image& image{ images[0] };
-
+					/*
 					if (math::is_equal((f32)image.width / (f32)image.height, 2.f)) {
-						if (!run_on_gpu([&](ID3D12Device* device) {hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch); })) {
+						if (!run_on_gpu([&](ID3D11Device* device) {hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch); })) {
 							hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
 						}
 					}
 					else if (array_size % 6 || image.width != image.height) {
-						data->info - import_error = ImportError::NEED_SIX_IMAGES;
+						data->info.import_error = ImportError::NEED_SIX_IMAGES;
 						return {};
 					}
 					else {
 						hr = working_scratch.InitializeCubeFromImages(images.data(), images.size());
-					}
+					}*/
 				}
 				else {
 					assert(settings.dimension == TextureDimension::TEXTURE_3D);
@@ -528,7 +528,7 @@ namespace lightning::tools {
 			HRESULT hr{ S_OK };
 			ScratchImage bc_scratch;
 
-			if (!(can_use_gpu(output_format) && run_on_gpu([&](ID3D11Device* device) { hr = Compress(device, scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch) }))) {
+			if (!(can_use_gpu(output_format) && run_on_gpu([&](ID3D11Device* device) { hr = Compress(device, scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch); }))) {
 				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
 			}
 
@@ -541,6 +541,7 @@ namespace lightning::tools {
 		}
 
 		[[nodiscard]] ScratchImage decompress_image(TextureData* const data) {
+			using namespace lightning::content;
 			assert(data->import_settings.compress);
 			TextureInfo& info{ data->info };
 			const DXGI_FORMAT format{ (DXGI_FORMAT)info.format };
@@ -563,7 +564,7 @@ namespace lightning::tools {
 			ScratchImage scratch;
 			HRESULT hr{ Decompress(images.data(), (size_t)images.size(), metadata, DXGI_FORMAT_UNKNOWN, scratch) };
 
-			if (FAILDE(hr)) {
+			if (FAILED(hr)) {
 				data->info.import_error = ImportError::DECOMPRESS;
 				return {};
 			}
@@ -572,8 +573,8 @@ namespace lightning::tools {
 		}
 	}
 
-	void shut_down_texture_tools() {
-		d3d12_devices.clear();
+	void shutdown_texture_tools() {
+		d3d11_devices.clear();
 
 		if (dxgi_module) {
 			FreeLibrary(dxgi_module);

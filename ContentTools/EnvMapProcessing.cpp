@@ -8,7 +8,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 	namespace {
 		namespace shaders {
-			#include "EnvMapProcessing_EquirectangularToCubeMapCS.inc"
+			//#include "EnvMapProcessing_EquirectangularToCubeMapCS.inc"
 		};
 
 		constexpr u32 prefiltered_diffuse_cubemap_size{ 64 };
@@ -52,7 +52,7 @@ namespace lightning::tools {
 			return { s, t };
 		}
 
-		void_sample_cube_face(const Image& env_map, const Image& cube_face, u32 face_index, bool mirror) {
+		void sample_cube_face(const Image& env_map, const Image& cube_face, u32 face_index, bool mirror) {
 			assert(cube_face.width == cube_face.height);
 
 			const f32 inv_width{ 1.f / (f32)cube_face.height };
@@ -67,7 +67,7 @@ namespace lightning::tools {
 			for (u32 y{ 0 }; y < cube_face.height; ++y) {
 				const f32 v{ (y * inv_height) * 2.f - 1.f };
 
-				for (u32 x{ 0 }; x < cub_face.width; ++x) {
+				for (u32 x{ 0 }; x < cube_face.width; ++x) {
 					const f32 u{ (x * inv_width) * 2.f - 1.f };
 					const math::v3 sample_direction{ get_sample_direction_equirectangular(face_index, u, v) };
 					math::v2 uv{ direction_to_equirectangular(sample_direction) };
@@ -85,7 +85,7 @@ namespace lightning::tools {
 		}
 	}
 
-	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefiltered_size, bool mirror_cubemap, ScratchImage& cube_maps) {
+	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cube_maps) {
 		if (use_prefilter_size) {
 			cubemap_size = prefiltered_specular_cubemap_size;
 		}
@@ -109,7 +109,7 @@ namespace lightning::tools {
 			ScratchImage f32_env_map{};
 
 			if (env_maps[0].format != DXGI_FORMAT_R32G32B32A32_FLOAT) {
-				hr = Conveert(env_map, DXGI_FORMAT_R32G32B32A32_FLOAT, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, f32_env_map);
+				hr = Convert(env_map, DXGI_FORMAT_R32G32B32A32_FLOAT, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, f32_env_map);
 
 				if (FAILED(hr)) {
 					return hr;
@@ -121,16 +121,16 @@ namespace lightning::tools {
 
 			assert(f32_env_map.GetImageCount() == 1);
 
-			const Image* dst_images{ &working_scratch.getImages()[i * 6] };
+			const Image* dst_images{ &working_scratch.GetImages()[i * 6] };
 			const Image& env_map_image{ f32_env_map.GetImages()[i] };
 			const bool mirror{ mirror_cubemap };
 
 			std::thread threads[]{
-				std::thread { [&] { sample_cube_face(env_map_image, dst_images[0], 0, mirror); } };
-				std::thread { [&] { sample_cube_face(env_map_image, dst_images[1], 1, mirror); } };
-				std::thread { [&] { sample_cube_face(env_map_image, dst_images[2], 2, mirror); } };
-				std::thread { [&] { sample_cube_face(env_map_image, dst_images[3], 3, mirror); } };
-				std::thread { [&] { sample_cube_face(env_map_image, dst_images[4], 4, mirror); } };
+				std::thread { [&] { sample_cube_face(env_map_image, dst_images[0], 0, mirror); } },
+				std::thread { [&] { sample_cube_face(env_map_image, dst_images[1], 1, mirror); } },
+				std::thread { [&] { sample_cube_face(env_map_image, dst_images[2], 2, mirror); } },
+				std::thread { [&] { sample_cube_face(env_map_image, dst_images[3], 3, mirror); } },
+				std::thread { [&] { sample_cube_face(env_map_image, dst_images[4], 4, mirror); } },
 			};
 
 			sample_cube_face(f32_env_map.GetImages()[i], dst_images[5], 5, mirror);
@@ -139,7 +139,7 @@ namespace lightning::tools {
 		}
 
 		if (env_maps[0].format != DXGI_FORMAT_R32G32B32A32_FLOAT) {
-			hr = Convert(working_scratch.GetImages(), working_scratch.GetImageCount, working_scratch.GetMetadata(), env_maps[0].format, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, cube_maps);
+			hr = Convert(working_scratch.GetImages(), working_scratch.GetImageCount(), working_scratch.GetMetadata(), env_maps[0].format, TEX_FILTER_DEFAULT, TEX_THRESHOLD_DEFAULT, cube_maps);
 		}
 		else {
 			cube_maps = std::move(working_scratch);
