@@ -38,7 +38,6 @@ class _ComponentsState extends State<Components> {
         if (msEntity == null || msEntity.components.value.isEmpty) {
           return const Column();
         }
-        print('updated');
         _nameController.text = msEntity.name.value;
         return SingleChildScrollView(
           child: Column(

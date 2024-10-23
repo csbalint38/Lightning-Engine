@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/logger.dart';
@@ -23,8 +24,8 @@ class Project {
   late RelayCommand removeScene;
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
-    fullPath = p.join(path, name ,'$name.$extension');
-    solution = p.join(path, '$name.sln');
+    fullPath = p.join(path, name, '$name.$extension');
+    solution = p.join(path, name, '$name.sln');
     if (scenes == null) {
       this.scenes.add(Scene(name: "Default Scene", isActive: true));
       activeScene = this.scenes.value.first;
@@ -146,6 +147,7 @@ class Project {
   }
 
   void unload() {
+    VisualStudio.closeVisualStudio();
     UndoRedo().resset();
   }
 
