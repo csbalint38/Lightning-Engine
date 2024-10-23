@@ -1,7 +1,17 @@
 # v0.3.0-beta - 20xx.x.x
 
+## Editor
+ - Locate the Engine if it was moved or installed to a different location than default
+ - Transform Component
+ - Entities are now also created on the Engine side
+ - Transform Component also created on the Engine side
+ - Added Visual Studio Solution and Visual Studio Project to the templates
+ - Create GameScript
+ - Open Visual Studio using the Editor
+
 ## Engine
  - Geometry component
+ - Support of Physically Based Rendering (PBR)
 
 # v0.2.0-alpha - 2024.08.18
 
