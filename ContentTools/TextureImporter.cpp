@@ -10,7 +10,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 
 	bool is_normal_map(const Image* const image);
-	// HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
+	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 
 	namespace {
@@ -430,7 +430,7 @@ namespace lightning::tools {
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
 					const Image& image{ images[0] };
-					/*
+					
 					if (math::is_equal((f32)image.width / (f32)image.height, 2.f)) {
 						if (!run_on_gpu([&](ID3D11Device* device) {hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch); })) {
 							hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
@@ -442,7 +442,7 @@ namespace lightning::tools {
 					}
 					else {
 						hr = working_scratch.InitializeCubeFromImages(images.data(), images.size());
-					}*/
+					}
 				}
 				else {
 					assert(settings.dimension == TextureDimension::TEXTURE_3D);
