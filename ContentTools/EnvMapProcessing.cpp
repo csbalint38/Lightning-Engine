@@ -8,7 +8,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 	namespace {
 		namespace shaders {
-			//#include "EnvMapProcessing_EquirectangularToCubeMapCS.inc"
+			#include "EnvMapProcessing_EquirectangularToCubeMapCS.inc"
 		};
 
 		constexpr u32 prefiltered_diffuse_cubemap_size{ 64 };
@@ -83,7 +83,112 @@ namespace lightning::tools {
 				}
 			}
 		}
-	}
+
+		void reset_d3d11_context(ID3D11DeviceContext* ctx) {
+			u8 zero_mem_block[D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT * sizeof(void*)];
+			memset(&zero_mem_block, 0, sizeof(zero_mem_block));
+
+			ctx->CSSetUnorderedAccessViews(0, D3D11_1_UAV_SLOT_COUNT, (ID3D11UnorderedAccessView**)&zero_mem_block[0], nullptr);
+			ctx->CSSetShaderResources(0, D3D11_COMMONSHADER_INPUT_RESOURCE_SLOT_COUNT, (ID3D11ShaderResourceView**)&zero_mem_block[0]);
+			ctx->CSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, (ID3D11Buffer**)&zero_mem_block[0]);
+		}
+
+		HRESULT set_constants(ID3D11DeviceContext* ctx, ID3D11Buffer* constantbuffer, ShaderConstants constants) {
+			D3D11_MAPPED_SUBRESOURCE mapped_buffer{};
+			HRESULT hr{ ctx->Map(constant_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_buffer) };
+
+			if (FAILED(hr) || !mapped_buffer.pData) {
+				return hr;
+			}
+
+			memcpy(mapped_buffer.pData, &constants, sizeof(ShaderConstants));
+			ctx->Unmap(constant_buffer, 0);
+			
+			return hr;
+		}
+
+		HRESULT create_constant_buffer(ID3D11Device* device, ID3D11Buffer** constant_buffer) {
+			D3D11_BUFFER_DESC desc{};
+			desc.ByteWidth = sizeof(ShaderConstants);
+			desc.Usage = D3D11_USAGE_DYNAMIC;
+			desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.MiscFlags = 0;
+			desc.StructureByteStride = 0;
+
+			HRESULT hr{ device->CreateBuffer(&desc, nullptr, constant_buffer) };
+			return hr;
+		}
+
+		HRESULT create_linear_sampler(ID3D11Device* device, ID3D11SamplerState** linear_sampler) {
+			D3D11_SAMPLER_DESC desc{};
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_MINEAR;
+			desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+			desc.ComprarisonFunc = D3D11_COMPARISON_NEVER;
+			desc.MinLOD = 0;
+			desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+			return device->CreateSamplerState(&desc, linear_sampler);
+		}
+
+		HRESULT create_texture_2d_uav(ID3D11Device* device, DXGI_FORMAT format, u32 array_size, u32 first_array_slice, u32 mip_slice, ID3D11Resource* texture, ID3D11UnorderedAccessView** texture_uav) {
+			D3D11_UNORDERED_ACCESS_VIEW_DESC desc{};
+			desc.Format = format;
+			desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+			desc.Texture2DArray.ArraySize = array_size;
+			desc.Texture2DArray.FirstArraySlice = first_array_slice;
+			desc.Texture2DArray.MipSlice = mip_slice;
+
+			return device->CreateUnorderedAccessView(texture, &desc, texture_uav);
+		}
+
+		HRESULT download_texture_2d(ID3D11DeviceContext* ctx, u32 width, u32 height, u32 array_size, u32 mip_levels, DXGI_FORMAT format, bool is_cubemap, ID3D11Texture2D* gpu_resource, ID3D11Texture2D* cpu_resource, ScratchImage& result) {
+			ctx->CopyResource(cpu_resource, gpu_resource);
+
+			HRESULT hr{ is_cubemap ? result.InitializeCube(format, width, height, array_size / 6, mip_levels) : result.Initialize2D(format, width, height, array_size, mip_levels) };
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+
+			for (u32 img_idx{ 0 }; img_idx < mip_levels; ++mip) {
+				for (u32 mip{ 0 }; mip < mip_levels; ++mip) {
+					D3D11_MAPPED_SUBRESOURCE mapped_resource{};
+					const u32 resource_idx{ mip + (img_idx * mip_levels) };
+					hr = ctx->Map(cpu_resource, resource_idx, D3D11_MAP_READ, 0, &mapped_resource);
+
+					if (FAILED(hr)) {
+						result.Release();
+						return hr;
+					}
+
+					const Image& img{ *result.GetImage(mip, img_idx, 0) };
+					u8* src{ (u8*)mapped_resource.pData };
+					u8* dst{ img.pixels };
+
+					for (u32 row{ 0 }; row < img.height; ++row) {
+						memcpy(dst, src, img.rowPitch);
+						src += mapped_resource.RowPitch;
+						dst += img.rowPitch;
+					}
+
+					ctx->Unmap(cpu_resource, resource_idx);
+				}
+			}
+
+			return hr;
+		}
+
+		void dispatch(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView** const srv_array, ID3D11UnorderedAccessView** const uav_array, ID3D11Buffer** const buffers_array, ID3D11SamplerState** const sampler_array, ID3D11ComputeShader* shader, math::u32v3 goup_count) {
+			ctx->CSSetShaderResources(0, 1, srv_array);
+			ctx->CSSetUnorderedAccessViews(0, 1, uav_array, nullptr);
+			ctx->CSSetConstantBuffers(0, 1, &buffers_array[0]);
+			ctx->CSSetSamplers(shader, nullptr, 0);
+			ctx->Dispatch(group_count.x, group_count.y, group_count.z);
+		}
+ 	}
 
 	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cube_maps) {
 		if (use_prefilter_size) {
@@ -146,5 +251,138 @@ namespace lightning::tools {
 		}
 
 		return hr;
+	}
+
+	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemap_out) {
+		if (use_prefilter_size) {
+			cubemap_size = prefiltered_specular_cubemap_size;
+		}
+
+		assert(env_maps && env_map_count);
+		const DXGI_FORMAT format{ env_maps[0].format };
+		const u32 array_size{ env_map_count * 6 };
+		ComPtr<ID3D11DeviceContext> ctx{};
+		device->GetImmediateContext(ctx.GetAdressOf());
+		assert(ctx.Get());
+
+		HRESULT hr{ S_OK };
+
+		ComPtr<ID3D12Texture2D> cubemaps{};
+		ComPtr<ID3D11Texture2D> cubemaps_cpu{};
+
+		{
+			D3D11_TEXTURE2D_DESC desc{};
+			desc.Widh = desc.Height = cubemap_size;
+			desc.MipLevels = 1;
+			desc.ArraySize = array_size;
+			desc.Format = format;
+			desc.SampleDesc = { 1,0 };
+			desc.Usage = D3D11_USAGE_DEFAULT;
+			desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+			desc.CPUAccessFlags = 0;
+			desc.MiscFlags = 0;
+
+			hr = device->CreateTexture2D(&desc, nullptr, cubemaps.GetAddressOf());
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+
+			desc.BindFlags = 0;
+			desc.Usage = D3D11_USAGE_STAGING;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+			hr = device->CreateTexture2D(&desc, nullptr, cubemaps_cpu.GetAddressOf());
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+		}
+
+		ComPtr<ID3D11ComputeShader> shader{};
+		hr = device->CreateComputeShader(shaders::EnvMapProcessing_equirectangular_to_cube_map_cs), sizeof(shaders::EnvMapProcessing_equirectangular_to_cube_map_cs, nullptr, shader.GetAdressOf());
+
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		ComPtr<ID3D11Buffer> constant_buffer{};
+		{
+			hr = create_constant_buffer(device, constant_buffer.GetAdressOf());
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+
+			ShaderConstants constants{};
+			constants.CubeMapOutSize = cubemap_size;
+			constants.SampleCount = mirror_cubemap ? 1 : 0;
+
+			hr = set_constants(ctx.Get(), constant_buffer.Get(), constants);
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+		}
+
+		ComPtr<ID3D11SamplerState> linear_sampler{};
+		hr = create_linear_sampler(device, linear_sampler.GetAddressOf());
+
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		reset_d3d11_context(ctx.Get());
+
+		for (u32 i{ 0 }; i < env_map_count; ++i) {
+			ComPtr<ID3D11UnorderedAccessView> cubemap_uav{};
+			hr = create_texture_2d_uav(device, env_maps[0].format, 6, i * 6, 0, cubemaps.Get(), cubemap_uav.ReleaseAndGetAddressOf());
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+
+			const Image& src{ env_maps[i] };
+
+			ComPtr<ID3D12Texture2D> env_map{};
+
+			{
+				D3D11_TEXTURE2D_DESC desc{};
+				desc.Width = (u32)src.width;
+				desc.Height = (u32)src.height;
+				desc.MipLevels = 1;
+				desc.ArraySize = 1;
+				desc.Format = FORMAT;
+				desc.SampleDesc = { 1, 0 };
+				desc.Usage = D3D11_USAGE_IMMUTABLE;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = 0;
+				desc.MiscFlags = 0;
+
+				D3D11_SUBRESOURCE_DATA data{};
+				data.pSysMem = src.pixels;
+				data.SysMemPitch = (u32)src.rowPitch;
+
+				hr = device->CreateTexture2D(&desc, &data, env_map.ReleaseAndGetAdressOf());
+
+				if (FAILED(hr)) {
+					return hr;
+				}
+			};
+
+			ComPtr<ID3D11ShaderResourceView> env_map_srv{};
+			hr = device->CreateShaderResourceView(env_map.Get(), nullptr, env_map_srv.ReleaseAndGetAddressOf());
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+
+			const u32 block_size{ (cubemap_size + 15) >> 4 };
+			dispatch(ctx.Get(), env_map_srv.GetAddressOf(), cubemap_uav.GetAddressOf(), constant_buffer.GetAddressOf(), linear_sampler.GetAddressOf(), shader.Get(), { block_size, block_size, 6 });
+		}
+
+		reset_d3d11_context(ctx.Get());
+
+		return download_texture_2d(ctx.Get(), cubemap_size, cubemap_size, array_size, 1, format, true, cubemaps.Get(), cubemaps_cpu.Get(), cubemaps_out);
 	}
 }
