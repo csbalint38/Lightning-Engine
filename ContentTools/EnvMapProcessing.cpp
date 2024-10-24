@@ -8,7 +8,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 	namespace {
 		namespace shaders {
-			#include "EnvMapProcessing_EquirectangularToCubeMapCS.inc"
+			#include "EnvMapProcessing_equirectangular_to_cube_map_cs.inc"
 		};
 
 		constexpr u32 prefiltered_diffuse_cubemap_size{ 64 };
@@ -78,7 +78,7 @@ namespace lightning::tools {
 					const f32 pos_x{ uv.x * env_width };
 					const f32 pos_y{ uv.y * env_height };
 					u8* dst_pixel{ &cube_face.pixels[row_pitch * y + x * bytes_per_pixel] };
-					u8* const src_pixel{ &cube_face.pixels[row_pitch * y + x * bytes_per_pixel] };
+					u8* const src_pixel{ &env_map.pixels[env_row_pitch * (u32)pos_y + (u32)pos_x * bytes_per_pixel] };
 					memcpy(dst_pixel, src_pixel, bytes_per_pixel);
 				}
 			}
@@ -93,7 +93,7 @@ namespace lightning::tools {
 			ctx->CSSetConstantBuffers(0, D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT, (ID3D11Buffer**)&zero_mem_block[0]);
 		}
 
-		HRESULT set_constants(ID3D11DeviceContext* ctx, ID3D11Buffer* constantbuffer, ShaderConstants constants) {
+		HRESULT set_constants(ID3D11DeviceContext* ctx, ID3D11Buffer* constant_buffer, ShaderConstants constants) {
 			D3D11_MAPPED_SUBRESOURCE mapped_buffer{};
 			HRESULT hr{ ctx->Map(constant_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_buffer) };
 
@@ -122,11 +122,11 @@ namespace lightning::tools {
 
 		HRESULT create_linear_sampler(ID3D11Device* device, ID3D11SamplerState** linear_sampler) {
 			D3D11_SAMPLER_DESC desc{};
-			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_MINEAR;
+			desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 			desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 			desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
 			desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-			desc.ComprarisonFunc = D3D11_COMPARISON_NEVER;
+			desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 			desc.MinLOD = 0;
 			desc.MaxLOD = D3D11_FLOAT32_MAX;
 
@@ -153,7 +153,7 @@ namespace lightning::tools {
 				return hr;
 			}
 
-			for (u32 img_idx{ 0 }; img_idx < mip_levels; ++mip) {
+			for (u32 img_idx{ 0 }; img_idx < mip_levels; ++img_idx) {
 				for (u32 mip{ 0 }; mip < mip_levels; ++mip) {
 					D3D11_MAPPED_SUBRESOURCE mapped_resource{};
 					const u32 resource_idx{ mip + (img_idx * mip_levels) };
@@ -181,11 +181,12 @@ namespace lightning::tools {
 			return hr;
 		}
 
-		void dispatch(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView** const srv_array, ID3D11UnorderedAccessView** const uav_array, ID3D11Buffer** const buffers_array, ID3D11SamplerState** const sampler_array, ID3D11ComputeShader* shader, math::u32v3 goup_count) {
+		void dispatch(ID3D11DeviceContext* ctx, ID3D11ShaderResourceView** const srv_array, ID3D11UnorderedAccessView** const uav_array, ID3D11Buffer** const buffers_array, ID3D11SamplerState** const samplers_array, ID3D11ComputeShader* shader, math::u32v3 group_count) {
 			ctx->CSSetShaderResources(0, 1, srv_array);
 			ctx->CSSetUnorderedAccessViews(0, 1, uav_array, nullptr);
 			ctx->CSSetConstantBuffers(0, 1, &buffers_array[0]);
-			ctx->CSSetSamplers(shader, nullptr, 0);
+			ctx->CSSetSamplers(0, 1, &samplers_array[0]);
+			ctx->CSSetShader(shader, nullptr, 0);
 			ctx->Dispatch(group_count.x, group_count.y, group_count.z);
 		}
  	}
@@ -253,7 +254,7 @@ namespace lightning::tools {
 		return hr;
 	}
 
-	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemap_out) {
+	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps_out) {
 		if (use_prefilter_size) {
 			cubemap_size = prefiltered_specular_cubemap_size;
 		}
@@ -262,17 +263,17 @@ namespace lightning::tools {
 		const DXGI_FORMAT format{ env_maps[0].format };
 		const u32 array_size{ env_map_count * 6 };
 		ComPtr<ID3D11DeviceContext> ctx{};
-		device->GetImmediateContext(ctx.GetAdressOf());
+		device->GetImmediateContext(ctx.GetAddressOf());
 		assert(ctx.Get());
 
 		HRESULT hr{ S_OK };
 
-		ComPtr<ID3D12Texture2D> cubemaps{};
+		ComPtr<ID3D11Texture2D> cubemaps{};
 		ComPtr<ID3D11Texture2D> cubemaps_cpu{};
 
 		{
 			D3D11_TEXTURE2D_DESC desc{};
-			desc.Widh = desc.Height = cubemap_size;
+			desc.Width = desc.Height = cubemap_size;
 			desc.MipLevels = 1;
 			desc.ArraySize = array_size;
 			desc.Format = format;
@@ -300,7 +301,7 @@ namespace lightning::tools {
 		}
 
 		ComPtr<ID3D11ComputeShader> shader{};
-		hr = device->CreateComputeShader(shaders::EnvMapProcessing_equirectangular_to_cube_map_cs), sizeof(shaders::EnvMapProcessing_equirectangular_to_cube_map_cs, nullptr, shader.GetAdressOf());
+		hr = device->CreateComputeShader(shaders::EnvMapProcessing_equirectangular_to_cube_map_cs, sizeof(shaders::EnvMapProcessing_equirectangular_to_cube_map_cs), nullptr, shader.GetAddressOf());
 
 		if (FAILED(hr)) {
 			return hr;
@@ -308,15 +309,15 @@ namespace lightning::tools {
 
 		ComPtr<ID3D11Buffer> constant_buffer{};
 		{
-			hr = create_constant_buffer(device, constant_buffer.GetAdressOf());
+			hr = create_constant_buffer(device, constant_buffer.GetAddressOf());
 
 			if (FAILED(hr)) {
 				return hr;
 			}
 
 			ShaderConstants constants{};
-			constants.CubeMapOutSize = cubemap_size;
-			constants.SampleCount = mirror_cubemap ? 1 : 0;
+			constants.cube_map_out_size = cubemap_size;
+			constants.sample_count = mirror_cubemap ? 1 : 0;
 
 			hr = set_constants(ctx.Get(), constant_buffer.Get(), constants);
 
@@ -344,7 +345,7 @@ namespace lightning::tools {
 
 			const Image& src{ env_maps[i] };
 
-			ComPtr<ID3D12Texture2D> env_map{};
+			ComPtr<ID3D11Texture2D> env_map{};
 
 			{
 				D3D11_TEXTURE2D_DESC desc{};
@@ -352,7 +353,7 @@ namespace lightning::tools {
 				desc.Height = (u32)src.height;
 				desc.MipLevels = 1;
 				desc.ArraySize = 1;
-				desc.Format = FORMAT;
+				desc.Format = format;
 				desc.SampleDesc = { 1, 0 };
 				desc.Usage = D3D11_USAGE_IMMUTABLE;
 				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -363,7 +364,7 @@ namespace lightning::tools {
 				data.pSysMem = src.pixels;
 				data.SysMemPitch = (u32)src.rowPitch;
 
-				hr = device->CreateTexture2D(&desc, &data, env_map.ReleaseAndGetAdressOf());
+				hr = device->CreateTexture2D(&desc, &data, env_map.ReleaseAndGetAddressOf());
 
 				if (FAILED(hr)) {
 					return hr;

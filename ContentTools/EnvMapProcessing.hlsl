@@ -30,7 +30,7 @@ float3 get_sample_direction_equirectangular(uint face, float x, float y)
     return normalize(direction[face]);
 }
 
-float direction_to_equirectangular_uv(float3 dir)
+float2 direction_to_equirectangular_uv(float3 dir)
 {
     float phi = atan2(dir.y, dir.x);
     float theta = acos(dir.z);
@@ -46,7 +46,7 @@ void equirectangular_to_cube_map_cs(uint3 dispatch_thread_id : SV_DispatchThread
     uint face = group_id.z;
     uint size = g_cube_map_out_size;
     
-    if (dispatch_thread_id.x >= size || dispatch_thread_id.y || face >= 6) return;
+    if (dispatch_thread_id.x >= size || dispatch_thread_id.y >= size || face >= 6) return;
 
     float2 uv = (float2(dispatch_thread_id.xy) + SAMPLE_OFFSET) / size;
     float2 pos = 2.f * uv - 1.f;

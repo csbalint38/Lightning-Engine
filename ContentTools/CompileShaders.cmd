@@ -14,13 +14,13 @@ set PCFXC=fxc.exe
 if not defined CompileShadersOutput set CompileShadersOutput=x64\Compiled
 @if not exist %CompileShadersOutput% mkdir "%CompileShadersOutput%"
 echo.
-call :CompileShader EnvMapProcessing equirectangulat_to_cube_map_cs
+call :CompileShader EnvMapProcessing equirectangular_to_cube_map_cs
 
 endlocal
 exit /b 0
 
 :CompileShader
-set fxc=%PCFXC% "%1.hlsl" %FXOPTS% /E%2 "Fh%CompileShadersOutput%\%1_%2.inc" "/Fd%CompileShadersOutput%\%1_%2.pdb" /Vn%1_%2
+set fxc=%PCFXC% "%1.hlsl" %FXOPTS% /E%2 "/Fh%CompileShadersOutput%\%1_%2.inc" "/Fd%CompileShadersOutput%\%1_%2.pdb" /Vn%1_%2
 echo compiling %1_%2
 if not exist %CompileShadersOutput%\%1_%2.inc %fxc% || set error=1
 echo.
