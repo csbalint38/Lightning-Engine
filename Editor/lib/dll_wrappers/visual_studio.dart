@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:isolate';
+import 'package:editor/common/constants.dart';
+import 'package:editor/game_project/project.dart';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/congifg/config.dart';
@@ -78,6 +80,9 @@ final class VisualStudio {
       return result;
     });
   }
+
+  static Future<bool> buildSolution(
+      Project project, BuildConfig config, bool show_window) {}
 
   static Future<T> _runInIsolate<T>(FutureOr<T> Function() task) async {
     final ReceivePort port = ReceivePort();
