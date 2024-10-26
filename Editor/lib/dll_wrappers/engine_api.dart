@@ -5,6 +5,7 @@ import 'package:editor/congifg/config.dart';
 import 'package:editor/components/transform.dart';
 import 'package:editor/components/game_entity.dart';
 import 'package:editor/utilities/id.dart';
+import 'package:win32/win32.dart';
 
 typedef _CreateGameEntityNativeType = IdType Function(
     Pointer<GameEntityDescriptor>);
@@ -15,6 +16,8 @@ typedef _LoadGameCodeDllNativeType = Uint32 Function(Pointer<Utf8>);
 typedef _LoadGameCodeDllType = int Function(Pointer<Utf8>);
 typedef _UnloadGameCodeDllNativeType = Uint32 Function();
 typedef _UnloadGameCodeDllType = int Function();
+typedef _GetScriptNamesNativeType = Pointer<SAFEARRAY> Function();
+typedef _GetScriptNamesType = Pointer<SAFEARRAY> Function();
 
 final class TransformComponentDescriptor extends Struct {
   @Array(3)
@@ -50,6 +53,9 @@ class EngineAPI {
   static final _UnloadGameCodeDllType _unloadGameCodeDll = _engineDll
       .lookupFunction<_UnloadGameCodeDllNativeType, _UnloadGameCodeDllType>(
           'unload_game_code_dll');
+  static final _GetScriptNamesType _getScriptNames =
+      _engineDll.lookupFunction<_GetScriptNamesNativeType, _GetScriptNamesType>(
+          'get_script_names');
 
   static int createGameEntity(GameEntity entity) {
     Pointer<GameEntityDescriptor> desc = malloc<GameEntityDescriptor>();
@@ -85,6 +91,19 @@ class EngineAPI {
   }
 
   static bool unloadGameCodeDll() => _unloadGameCodeDll() == 1;
+
+  static List<String> getScriptNames() {
+    final scriptNamesPtr = _getScriptNames();
+
+    if (scriptNamesPtr == nullptr) {
+      return [];
+    }
+
+    final scriptNames = <String>[];
+    final count = SafeArrayGetUBound(scriptNamesPtr, 1) -
+        SafeArrayGetLBound(scriptNamesPtr, 1) +
+        1;
+  }
 
   EngineAPI._();
 }
