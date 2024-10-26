@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'package:editor/common/constants.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
+import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:path/path.dart' as p;
 
@@ -16,12 +18,19 @@ class Project {
   final String path;
   final ListNotifier<Scene> scenes = ListNotifier<Scene>();
   late Scene activeScene;
+  final ValueNotifier<BuildConfig> buildConfig =
+      ValueNotifier<BuildConfig>(BuildConfig.debug);
 
   late final String fullPath;
   late final String solution;
 
   late RelayCommand addScene;
   late RelayCommand removeScene;
+
+  static String getConfigurationName(BuildConfig config) {
+    final String value = config.toString().split('.').last;
+    return value[0].toUpperCase() + value.substring(1);
+  }
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
     fullPath = p.join(path, name, '$name.$extension');
@@ -150,6 +159,24 @@ class Project {
     VisualStudio.closeVisualStudio();
     UndoRedo().resset();
   }
+
+  void _buildGameCodeDll({bool showWindow = true}) {
+    _unloadGameCodeDll();
+
+    if (await VisualStudio.buildSolution(
+      this,
+      buildConfig.value == BuildConfig.debug
+          ? BuildConfig.debugEditor
+          : BuildConfig.releaseEditor,
+      showWindow,
+    )) {
+      _loadGameCodeDll();
+    }
+  }
+
+  void _loadGameCodeDll() {}
+
+  void _unloadGameCodeDll() {}
 
   void _addScene(String sceneName) {
     scenes.add(Scene(name: sceneName));
