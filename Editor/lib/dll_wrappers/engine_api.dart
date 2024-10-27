@@ -113,7 +113,6 @@ class EngineAPI {
 
   static List<String> getScriptNames() {
     final Pointer<SAFEARRAY> scriptNamesPtr = _getScriptNames();
-
     if (scriptNamesPtr == nullptr) {
       return [];
     }
