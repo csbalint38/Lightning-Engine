@@ -18,6 +18,8 @@ typedef _UnloadGameCodeDllNativeType = Uint32 Function();
 typedef _UnloadGameCodeDllType = int Function();
 typedef _GetScriptNamesNativeType = Pointer<SAFEARRAY> Function();
 typedef _GetScriptNamesType = Pointer<SAFEARRAY> Function();
+typedef _GetScriptCreatorNativeType = Pointer Function(Pointer<Utf8>);
+typedef _GetScriptCreatorType = Pointer Function(Pointer<Utf8>);
 
 final class TransformComponentDescriptor extends Struct {
   @Array(3)
@@ -30,8 +32,13 @@ final class TransformComponentDescriptor extends Struct {
   external Array<Float> scale;
 }
 
+final class ScriptComponentDescriptor extends Struct {
+  external Pointer scriptCreator;
+}
+
 final class GameEntityDescriptor extends Struct {
   external TransformComponentDescriptor transform;
+  external ScriptComponentDescriptor script;
 }
 
 class EngineAPI {
@@ -56,6 +63,9 @@ class EngineAPI {
   static final _GetScriptNamesType _getScriptNames =
       _engineDll.lookupFunction<_GetScriptNamesNativeType, _GetScriptNamesType>(
           'get_script_names');
+  static final _GetScriptCreatorType _getScriptCreator = _engineDll
+      .lookupFunction<_GetScriptCreatorNativeType, _GetScriptCreatorType>(
+          'get_script_creator');
 
   static int createGameEntity(GameEntity entity) {
     Pointer<GameEntityDescriptor> desc = malloc<GameEntityDescriptor>();
@@ -75,7 +85,15 @@ class EngineAPI {
       desc.ref.transform.scale[2] = c.scale.z;
     } // Transform component
 
-    return _createGameEntity(desc);
+    {
+      //Script c = entity.getComponent<Script>();
+    }
+
+    final int result = _createGameEntity(desc);
+
+    free(desc);
+
+    return result;
   }
 
   static void removeGameEntity(GameEntity entity) {
@@ -93,16 +111,47 @@ class EngineAPI {
   static bool unloadGameCodeDll() => _unloadGameCodeDll() == 1;
 
   static List<String> getScriptNames() {
-    final scriptNamesPtr = _getScriptNames();
-
+    final Pointer<SAFEARRAY> scriptNamesPtr = _getScriptNames();
     if (scriptNamesPtr == nullptr) {
       return [];
     }
 
-    final scriptNames = <String>[];
-    final count = SafeArrayGetUBound(scriptNamesPtr, 1) -
-        SafeArrayGetLBound(scriptNamesPtr, 1) +
-        1;
+    final List<String> scriptNames = [];
+    final Pointer<Int32> pUbound = calloc<Int32>();
+    final Pointer<Int32> pLbound = calloc<Int32>();
+
+    try {
+      SafeArrayGetLBound(scriptNamesPtr, 1, pLbound);
+      SafeArrayGetUBound(scriptNamesPtr, 1, pUbound);
+
+      final int count = pUbound.value - pLbound.value + 1;
+
+      for (int i = 0; i < count; i++) {
+        final itemPtr = calloc<VARIANT>();
+        SafeArrayGetElement(
+            scriptNamesPtr, calloc<Int32>()..value = i, itemPtr.cast());
+
+        final bstrPtr = itemPtr.ref.bstrVal;
+
+        scriptNames.add(bstrPtr.toDartString());
+
+        free(itemPtr);
+      }
+
+      return scriptNames;
+    } finally {
+      free(pUbound);
+      free(pLbound);
+      SafeArrayDestroy(scriptNamesPtr);
+    }
+  }
+
+  Pointer getScriptCreator(String name) {
+    final Pointer<Utf8> namePointer = name.toNativeUtf8();
+    final Pointer result = _getScriptCreator(namePointer);
+    calloc.free(namePointer);
+
+    return result;
   }
 
   EngineAPI._();
