@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:editor/components/game_entity.dart';
 
 abstract class Component {
@@ -12,6 +13,7 @@ abstract class Component {
   }
 
   MSComponent getMultiselectComponent(MSGameEntity msEntity);
+  void writeToBinary(BytesBuilder builder);
 }
 
 abstract class MSComponent<T extends Component> {
