@@ -160,7 +160,7 @@ class Project {
     UndoRedo().resset();
   }
 
-  void _buildGameCodeDll({bool showWindow = true}) async {
+  void buildGameCodeDll({bool showWindow = true}) async {
     _unloadGameCodeDll();
 
     if (await VisualStudio.buildSolution(

@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:isolate';
 import 'package:editor/common/constants.dart';
 import 'package:editor/game_project/project.dart';
+import 'package:editor/utilities/capitalize.dart';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/congifg/config.dart';
@@ -15,6 +16,10 @@ typedef _AddFilesNativeType = Bool Function(
     Pointer<Utf16>, Pointer<Utf16>, Pointer<Pointer<Utf16>>, Int32);
 typedef _AddFilesType = bool Function(
     Pointer<Utf16>, Pointer<Utf16>, Pointer<Pointer<Utf16>>, int);
+typedef _BuildSolutionNativeType = Bool Function(
+    Pointer<Utf16>, Pointer<Utf16>, Bool);
+typedef _BuildSolutionType = bool Function(
+    Pointer<Utf16>, Pointer<Utf16>, bool);
 
 final class VisualStudio {
   static const String _dllName =
@@ -30,6 +35,9 @@ final class VisualStudio {
           'close_visual_studio');
   static final _AddFilesType _addFiles =
       _vsiDll.lookupFunction<_AddFilesNativeType, _AddFilesType>('add_files');
+  static final _BuildSolutionType _buildSolution =
+      _vsiDll.lookupFunction<_BuildSolutionNativeType, _BuildSolutionType>(
+          'build_solution');
 
   static Future<void> openVisualStudio(String solutionPath) async {
     await _runInIsolate(() {
@@ -76,18 +84,35 @@ final class VisualStudio {
       }
 
       calloc.free(filesPointers);
+      calloc.free(normalizedSolutionPathPtr);
 
       return result;
     });
   }
 
   static Future<bool> buildSolution(
-      Project project, BuildConfig config, bool show_window) async {return true; }
+      Project project, BuildConfig config, bool showWindow) async {
+    return await _runInIsolate<bool>(() {
+      final String solutionName =
+          project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
+      final Pointer<Utf16> solutionNamePtr = solutionName.toNativeUtf16();
+      final String configName = capitalize(config.toString().split('.').last);
+      final Pointer<Utf16> configNamePointer = configName.toNativeUtf16();
+
+      final bool result =
+          _buildSolution(solutionNamePtr, configNamePointer, showWindow);
+
+      calloc.free(solutionNamePtr);
+      calloc.free(configNamePointer);
+
+      return result;
+    });
+  }
 
   static Future<T> _runInIsolate<T>(FutureOr<T> Function() task) async {
     final ReceivePort port = ReceivePort();
     await Isolate.spawn(_isolateEntry, [task, port.sendPort]);
-    return await await port.first as T;
+    return await port.first as T;
   }
 
   static void _isolateEntry<T>(List<dynamic> args) async {

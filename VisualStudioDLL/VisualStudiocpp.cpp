@@ -9,12 +9,25 @@
 
 #import "libid:80CC9F66-E7D8-4DDD-85B6-D9E6CD0E93E2" auto_rename
 
-const wchar_t* vs_name = L"VisualStudio.DTE.17.0";
-CComPtr<EnvDTE::_DTE> vs_instance{ nullptr };
+namespace {
+	const wchar_t* vs_name = L"VisualStudio.DTE.17.0";
+	CComPtr<EnvDTE::_DTE> vs_instance{ nullptr };
 
-struct Project {
-	wchar_t* solution;
-};
+	bool is_debugging() {
+		bool result = false;
+
+		for (int i = 0; i < 3; ++i) {
+			try {
+				result = vs_instance != nullptr && (vs_instance->Debugger->CurrentProgram != nullptr || vs_instance->Debugger->CurrentMode == EnvDTE::dbgRunMode);
+				if (result) return result;
+			}
+			catch (...) {
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+			}
+		}
+		return result;
+	}
+}
 
 EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path) {
 	CComPtr<IRunningObjectTable> rot;
@@ -109,7 +122,7 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 	}
 }
 
-EDITOR_INTERFACE void __stdcall close_visual_studio() {
+EDITOR_INTERFACE void  close_visual_studio() {
 	if (vs_instance != nullptr) {
 		CComPtr<EnvDTE::_Solution> solution;
 		vs_instance->get_Solution(&solution);
@@ -130,7 +143,7 @@ EDITOR_INTERFACE bool add_files(const wchar_t* solution, const wchar_t* project_
 		vs_instance->Solution->Open(solution);
 	}
 	else {
-		vs_instance->ExecuteCommand("File.SaveAll", ("");
+		vs_instance->ExecuteCommand("File.SaveAll", (""));
 	}
 	
 	for (int i = 1; i < vs_instance->Solution->Projects->Count + 1; i++) {
@@ -158,17 +171,17 @@ EDITOR_INTERFACE bool add_files(const wchar_t* solution, const wchar_t* project_
 	return true;
 }
 
-EDITOR_INTERFACE bool buildSolution(Project& project, wchar_t* config_name, bool show_window = true) {
+EDITOR_INTERFACE bool buildSolution(wchar_t* solution, wchar_t* config_name, bool show_window = true) {
 	if (is_debugging()) {
 		return false;
 	}
 
-	open_visual_studio(project.solution);
+	open_visual_studio(solution);
 
 	for (int i = 0; i < 3; ++i) {
 		try {
 			if (!vs_instance->Solution->IsOpen) {
-				vs_instance->Solution->Open(project.solution);
+				vs_instance->Solution->Open(solution);
 			}
 
 			vs_instance->MainWindow->Visible = show_window;
@@ -186,19 +199,4 @@ EDITOR_INTERFACE bool buildSolution(Project& project, wchar_t* config_name, bool
 		}
 	}
 	return false;
-}
-
-bool is_debugging() {
-	bool result = false;
-
-	for (int i = 0; i < 3; ++i) {
-		try {
-			result = vs_instance != nullptr && (vs_instance->Debugger->CurrentProgram != nullptr || vs_instance->Debugger->CurrentMode == EnvDTE::dbgRunMode);
-			if (result) return result;
-		}
-		catch (...) {
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-		}
-	}
-	return result;
 }
