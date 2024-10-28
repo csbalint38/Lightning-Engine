@@ -82,7 +82,7 @@ final class VisualStudio {
   }
 
   static Future<bool> buildSolution(
-      Project project, BuildConfig config, bool show_window) {}
+      Project project, BuildConfig config, bool show_window) async {return true; }
 
   static Future<T> _runInIsolate<T>(FutureOr<T> Function() task) async {
     final ReceivePort port = ReceivePort();
