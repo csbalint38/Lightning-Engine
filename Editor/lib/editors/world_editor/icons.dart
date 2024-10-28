@@ -121,16 +121,22 @@ DropdownMenuItem<BuildConfig>(value: BuildConfig.release, child: Padding(
           ),
         ),
         Tooltip(
-          message: "Stop Debugging\nCtrl + F5",
+          message: "Stop Debugging\nShift + F5",
           child: IconButton(
             icon: const Icon(Icons.stop, color: Colors.red),
             onPressed: (){},
           ),
         ),
         Tooltip(
-          message: "Start Debugging",
+          message: "Start With debugging\nF5",
           child: IconButton(
-            icon: const Icon(Icons.play_arrow_sharp, color: Colors.green,),
+          icon: const Icon(Icons.play_arrow_sharp, color: Colors.green),
+          onPressed: (){},),
+        ),
+        Tooltip(
+          message: "Start\nCtrl + F5",
+          child: IconButton(
+            icon: const Icon(Icons.play_arrow_outlined, color: Colors.green,),
             onPressed: (){},
           ),
         )

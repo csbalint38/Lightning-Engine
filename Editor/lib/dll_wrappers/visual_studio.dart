@@ -31,6 +31,10 @@ final class VisualStudio {
   static final _AddFilesType _addFiles =
       _vsiDll.lookupFunction<_AddFilesNativeType, _AddFilesType>('add_files');
 
+  static bool isDebugging = false;
+  static bool buildDone = true;
+  static bool buildSucceeded = false;
+
   static Future<void> openVisualStudio(String solutionPath) async {
     await _runInIsolate(() {
       final Pointer<Utf16> solutionPathPtr = solutionPath.toNativeUtf16();
@@ -82,7 +86,24 @@ final class VisualStudio {
   }
 
   static Future<bool> buildSolution(
-      Project project, BuildConfig config, bool show_window) async {return true; }
+      Project project, BuildConfig config, bool show_window) async {
+        isDebugging = true;
+        buildDone = false;
+        // call the API
+        buildSucceeded = true; // api result
+        buildDone = true;
+        isDebugging = false;
+
+        return buildSucceeded;
+      }
+
+  static Future<void> run(Project project, BuildConfig config, bool debug) async {
+    isDebugging = true;
+  }
+
+  static Future<void> stop() async {
+    isDebugging = false;
+  }
 
   static Future<T> _runInIsolate<T>(FutureOr<T> Function() task) async {
     final ReceivePort port = ReceivePort();

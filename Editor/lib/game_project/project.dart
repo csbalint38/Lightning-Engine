@@ -1,9 +1,14 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:editor/common/constants.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/components/component_factory.dart';
+import 'package:editor/components/components.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
+import 'package:editor/utilities/binary.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/material.dart';
@@ -160,18 +165,59 @@ class Project {
     UndoRedo().resset();
   }
 
-  void _buildGameCodeDll({bool showWindow = true}) async {
+  Future<void> runGame(bool debug) async {
+    final BuildConfig config = buildConfig.value == BuildConfig.debug
+          ? BuildConfig.debug
+          : BuildConfig.release;
+    await VisualStudio.buildSolution(this, config, debug);
+    if(VisualStudio.buildSucceeded) {
+      _saveAsBinary();
+      await VisualStudio.run(this, config, debug);
+    }
+  }
+
+  Future<void> stopGame() async => await VisualStudio.stop();
+
+  void buildGameCodeDll({bool showWindow = true}) async {
     _unloadGameCodeDll();
 
-    if (await VisualStudio.buildSolution(
+  await VisualStudio.buildSolution(
       this,
       buildConfig.value == BuildConfig.debug
           ? BuildConfig.debugEditor
           : BuildConfig.releaseEditor,
       showWindow,
-    )) {
+    );
+
+    if (VisualStudio.buildSucceeded) {
       _loadGameCodeDll();
     }
+  }
+
+  void _saveAsBinary() {
+    final BuildConfig config = buildConfig.value == BuildConfig.debug
+          ? BuildConfig.debug
+          : BuildConfig.release;
+    final String configName = config.toString().split('.').last.replaceFirstMapped(RegExp(r'^\w'), (match) => match[0]!.toUpperCase());
+    final File bin = File(p.join(path, name, 'x64', configName, 'game.bin'));
+
+    {
+      BytesBuilder builder = BytesBuilder();
+
+      builder.add(intToBytes(this.activeScene.entities.value.length)); // Number of entities
+
+      for(final GameEntity entity in activeScene.entities.value) {
+        builder.add(intToBytes(0));                                    // Placeholder to entity type
+        builder.add(intToBytes(entity.components.value.length));       // Number of components
+
+        for(final Component component in entity.components.value) {
+          builder.add(intToBytes(component.toEnumType().index));      // Component type
+          component.writeToBinary(builder);                           // Component binary data
+        }
+      }
+    }
+
+    bin.open();
   }
 
   void _loadGameCodeDll() {}

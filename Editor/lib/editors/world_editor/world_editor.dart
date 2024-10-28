@@ -53,6 +53,25 @@ class _WorldEditorState extends State<WorldEditor> {
             LogicalKeyboardKey.controlLeft,
             LogicalKeyboardKey.keyS,
           ): const SaveIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.controlLeft,
+            LogicalKeyboardKey.shiftLeft,
+            LogicalKeyboardKey.keyB
+          ) : const BuildIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.f7,
+          ) : const BuildIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.controlLeft,
+            LogicalKeyboardKey.f5,
+          ) : const StartWithoutDebuggingIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.f5,
+          ) : const StartWithDebuggingIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.shiftLeft,
+            LogicalKeyboardKey.f5,
+          ) : const StopDebuggingIntent()
         },
         child: Actions(
           actions: <Type, Action<Intent>>{
@@ -64,6 +83,18 @@ class _WorldEditorState extends State<WorldEditor> {
             ),
             SaveIntent: CallbackAction<SaveIntent>(
               onInvoke: (intent) => _save(),
+            ),
+            BuildIntent: CallbackAction<BuildIntent>(
+              onInvoke: (intent) => _build(),
+            ),
+            StartWithDebuggingIntent: CallbackAction<StartWithDebuggingIntent>(
+              onInvoke: (intent) => _start_with_debugging(),
+            ),
+            StartWithoutDebuggingIntent: CallbackAction<StartWithoutDebuggingIntent>(
+              onInvoke: (intent) => _start_without_debugging(),
+            ),
+            StopDebuggingIntent: CallbackAction<StopDebuggingIntent>(
+              onInvoke: (intent) => _stop_debugging(),
             ),
           },
           child: Focus(
@@ -159,6 +190,22 @@ class _WorldEditorState extends State<WorldEditor> {
   void _save() {
     _controller.saveCommand.execute(null);
   }
+
+  void _build() {
+    _controller.buildCommand.execute(null);
+  }
+
+  void _start_with_debugging() {
+    _controller.debugStartCommand.execute(null);
+  }
+
+  void _start_without_debugging() {
+    _controller.debugStartWithoutDebuggingCommand.execute(null);
+  }
+
+  void _stop_debugging() {
+    _controller.debugStopCommand.execute(null);
+  }
 }
 
 class UndoIntent extends Intent {
@@ -171,4 +218,20 @@ class RedoIntent extends Intent {
 
 class SaveIntent extends Intent {
   const SaveIntent();
+}
+
+class BuildIntent extends Intent {
+  const BuildIntent();
+}
+
+class StartWithDebuggingIntent extends Intent {
+  const StartWithDebuggingIntent();
+}
+
+class StartWithoutDebuggingIntent extends Intent {
+  const StartWithoutDebuggingIntent();
+}
+
+class StopDebuggingIntent extends Intent {
+  const StopDebuggingIntent();
 }

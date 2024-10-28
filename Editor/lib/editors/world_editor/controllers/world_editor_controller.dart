@@ -1,5 +1,6 @@
 import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/utilities/logger.dart';
@@ -18,6 +19,10 @@ class WorldEditorController {
   late RelayCommand saveCommand;
   late RelayCommand renameMultipleCommand;
   late RelayCommand enableMultipleCommand;
+  late RelayCommand buildCommand;
+  late RelayCommand debugStartCommand;
+  late RelayCommand debugStartWithoutDebuggingCommand;
+  late RelayCommand debugStopCommand;
 
   final ValueNotifier<bool> canSave = ValueNotifier(false);
   final List<int> selectedEntityIndices = <int>[];
@@ -174,6 +179,10 @@ class WorldEditorController {
     undoCommand = RelayCommand((x) => undoRedo.undo());
     redoCommand = RelayCommand((x) => undoRedo.redo());
     saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
+    buildCommand = RelayCommand((x) => project.buildGameCodeDll(), (x) => !VisualStudio.isDebugging && VisualStudio.buildDone);
+    debugStartCommand = RelayCommand((x) async => await project.runGame(true), (x) => !VisualStudio.isDebugging && VisualStudio.buildDone);
+    debugStartWithoutDebuggingCommand = RelayCommand((x) async => await project.runGame(false), (x) => !VisualStudio.isDebugging && VisualStudio.buildDone);
+    debugStopCommand = RelayCommand((x) async => await project.stopGame(), (x) => VisualStudio.isDebugging);
 
     renameMultipleCommand = RelayCommand<String>(
       (x) {
