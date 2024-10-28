@@ -1,5 +1,8 @@
+import 'package:editor/common/constants.dart';
+import 'package:editor/common/dropdown_button.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/game_code/new_script_dialog.dart';
+import 'package:editor/game_project/project.dart';
 import 'package:flutter/material.dart';
 
 class IconsRow extends StatefulWidget {
@@ -76,6 +79,59 @@ class _IconsRowState extends State<IconsRow> {
                 },
               );
             },
+          ),
+        ),
+        VerticalDivider(width: 15,
+        endIndent: 2,
+        indent: 2,
+        ),
+        Tooltip(
+          message: "Build configuration",
+          child: ValueListenableBuilder(
+            valueListenable: _controller.project.buildConfig,
+            builder: (context, value, child) => 
+            DropdownButtonHideUnderline(
+                child: LightningDropdownButton<BuildConfig>(
+                  value: _controller.project.buildConfig.value,
+                  isDense: true,
+                  height: 25,
+                  focusColor: Colors.transparent,
+                  items: [
+                  DropdownMenuItem<BuildConfig>(value: BuildConfig.debug, child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                    child: Text(Project.getConfigurationName(BuildConfig.debug), style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center,),
+                  ),),
+DropdownMenuItem<BuildConfig>(value: BuildConfig.release, child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                    child: Text(Project.getConfigurationName(BuildConfig.release), style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center,),
+                  ),),
+                  ],
+                onChanged: (BuildConfig? value) {
+                  _controller.project.buildConfig.value = value!;
+                  }
+                ),
+              ),
+          ),
+        ),
+         Tooltip(
+          message: "Build\nCtrl + Shift + B\nF7",
+          child: IconButton(
+            icon: const Icon(Icons.construction_rounded),
+            onPressed: (){},
+          ),
+        ),
+        Tooltip(
+          message: "Stop Debugging\nCtrl + F5",
+          child: IconButton(
+            icon: const Icon(Icons.stop, color: Colors.red),
+            onPressed: (){},
+          ),
+        ),
+        Tooltip(
+          message: "Start Debugging",
+          child: IconButton(
+            icon: const Icon(Icons.play_arrow_sharp, color: Colors.green,),
+            onPressed: (){},
           ),
         )
       ],
