@@ -132,7 +132,9 @@ class _IconsRowState extends State<IconsRow> {
           message: "Build\nCtrl + Shift + B\nF7",
           child: IconButton(
             icon: const Icon(Icons.construction_rounded),
-            onPressed: () {},
+            onPressed: _controller.buildCommand.canExecute(null)
+                ? () => _controller.buildCommand.execute(null)
+                : null,
           ),
         ),
         Tooltip(

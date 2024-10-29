@@ -162,14 +162,15 @@ class Project {
 
   void buildGameCodeDll({bool showWindow = true}) async {
     _unloadGameCodeDll();
-
-    if (await VisualStudio.buildSolution(
+    await VisualStudio.buildSolution(
       this,
       buildConfig.value == BuildConfig.debug
           ? BuildConfig.debugEditor
           : BuildConfig.releaseEditor,
       showWindow,
-    )) {
+    );
+
+    if (VisualStudio.buildSucceeded) {
       _loadGameCodeDll();
     }
   }

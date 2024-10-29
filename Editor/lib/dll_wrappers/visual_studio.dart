@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:editor/common/constants.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/utilities/capitalize.dart';
+import 'package:editor/utilities/logger.dart';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/congifg/config.dart';
@@ -38,6 +39,10 @@ final class VisualStudio {
   static final _BuildSolutionType _buildSolution =
       _vsiDll.lookupFunction<_BuildSolutionNativeType, _BuildSolutionType>(
           'build_solution');
+
+  static bool isDebugging = false;
+  static bool buildSucceeded = false;
+  static bool buildDone = false;
 
   static Future<void> openVisualStudio(String solutionPath) async {
     await _runInIsolate(() {
@@ -84,7 +89,6 @@ final class VisualStudio {
       }
 
       calloc.free(filesPointers);
-      calloc.free(normalizedSolutionPathPtr);
 
       return result;
     });
@@ -92,6 +96,10 @@ final class VisualStudio {
 
   static Future<bool> buildSolution(
       Project project, BuildConfig config, bool showWindow) async {
+    buildSucceeded = false;
+    buildDone = false;
+    isDebugging = true;
+
     return await _runInIsolate<bool>(() {
       final String solutionName =
           project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
@@ -99,11 +107,29 @@ final class VisualStudio {
       final String configName = capitalize(config.toString().split('.').last);
       final Pointer<Utf16> configNamePointer = configName.toNativeUtf16();
 
+      EditorLogger().log(
+          LogLevel.info, "Building ${project.solution}, $configName",
+          trace: StackTrace.current);
+
       final bool result =
           _buildSolution(solutionNamePtr, configNamePointer, showWindow);
 
       calloc.free(solutionNamePtr);
       calloc.free(configNamePointer);
+
+      if (result) {
+        EditorLogger().log(
+            LogLevel.info, "Building $configName configuration succeeded",
+            trace: StackTrace.current);
+      } else {
+        EditorLogger().log(
+            LogLevel.error, "Building $configName configuration failed",
+            trace: StackTrace.current);
+      }
+
+      buildSucceeded = result;
+      buildDone = false;
+      isDebugging = false;
 
       return result;
     });

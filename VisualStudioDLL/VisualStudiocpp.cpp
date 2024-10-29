@@ -79,6 +79,7 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 						if (wcscmp(opened_solution_path, solution_path) == 0) {
 							vs_instance->MainWindow->Activate();
 							vs_instance->MainWindow->Visible = true;
+							CoTaskMemFree(display_name);
 							break;
 						}
 					}
@@ -86,9 +87,9 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 			}
 		}
 		moniker.Release();
-		CoTaskMemFree(display_name);
 		vs_instance.Release();
 	}
+	moniker.Release();
 	enum_moniker.Release();
 	rot.Release();
 	
