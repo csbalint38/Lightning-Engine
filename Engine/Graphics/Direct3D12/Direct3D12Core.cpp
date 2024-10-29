@@ -270,7 +270,7 @@ namespace lightning::graphics::direct3d12::core {
 				#endif	
 			}
 			else {
-				OutputDebugString("Warning: D3D12 Debug interface is not available. Verify that Graphics Tools optional feature is installed in this system.\n");
+				OutputDebugString(L"Warning: D3D12 Debug interface is not available. Verify that Graphics Tools optional feature is installed in this system.\n");
 			}
 			dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
@@ -407,7 +407,7 @@ namespace lightning::graphics::direct3d12::core {
 		surfaces.remove(id);
 	}
 
-	void resize_surface(surface_id id, u32 width, u32 height) {
+	void resize_surface(surface_id id, u32, u32) {
 		gfx_command.flush();
 		surfaces[id].resize();
 	}

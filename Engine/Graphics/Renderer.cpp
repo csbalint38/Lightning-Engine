@@ -14,7 +14,7 @@ namespace lightning::graphics {
 		bool set_platform_interface(GraphicsPlatform platform, PlatformInterface& pi) {
 			switch (platform) {
 			case lightning::graphics::GraphicsPlatform::DIRECT3D12:
-				direct3d12::get_platform_interface(gfx);
+				direct3d12::get_platform_interface(pi);
 				break;
 			default:
 				return false;

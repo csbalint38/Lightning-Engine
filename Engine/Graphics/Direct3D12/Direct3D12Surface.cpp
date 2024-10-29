@@ -69,7 +69,7 @@ namespace lightning::graphics::direct3d12 {
 
 		finalize();
 
-		DEBUG_OP(OutputDebugString("::D3D12 Surface Resized\n"));
+		DEBUG_OP(OutputDebugString(L"::D3D12 Surface Resized\n"));
 	}
 
 	void D3D12Surface::finalize() {

@@ -205,7 +205,7 @@ namespace lightning::graphics::direct3d12::content {
 						}
 					}
 
-					assert(shader_index == _mm_popcnt_u32(_shader_flags));
+					assert(shader_index == (u32)_mm_popcnt_u32(_shader_flags));
  				}
 
 				[[nodiscard]] constexpr u32 texture_count() const { return _texture_count; }

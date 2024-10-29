@@ -87,7 +87,7 @@ namespace lightning::tools {
 
 		util::vector<ComPtr<IDXGIAdapter>> get_adapters_by_performance() {
 			if (!dxgi_module) {
-				dxgi_module = LoadLibrary(L"dxgi.dll");
+				dxgi_module = LoadLibrary("dxgi.dll");
 
 				if (!dxgi_module) return {};
 			}
@@ -124,7 +124,7 @@ namespace lightning::tools {
 			if (d3d11_devices.size()) return;
 
 			if (!d3d11_module) {
-				d3d11_module = LoadLibrary(L"d3d11.dll");
+				d3d11_module = LoadLibrary("d3d11.dll");
 
 				if (!d3d11_module) return;
 			}

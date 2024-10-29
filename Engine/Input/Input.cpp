@@ -38,7 +38,6 @@ namespace lightning::input {
 		assert(input_bindings.count(binding_key));
 		InputBinding& binding{ input_bindings[binding_key] };
 		util::vector<InputSource>& sources{ binding.sources };
-		u32 index{ u32_invalid_id };
 
 		for (u32 i{ 0 }; i < sources.size(); ++i) {
 			if (sources[i].source_type == type && sources[i].code == code) {

@@ -51,9 +51,7 @@ namespace lightning::transform {
 		changes_from_previous_frame[index] |= ComponentFlags::ROTATION;
 	}
 
-	void set_orientation(transform_id id, const math::v3& orientation) {
-
-	}
+	void set_orientation(transform_id, const math::v3&) {}
 
 	void set_position(transform_id id, const math::v3& position) {
 		const u32 index{ id::index(id) };
