@@ -89,7 +89,7 @@ namespace lightning::script {
 			return result;
 		}
 
-		script_creator get_script_creator(size_t tag) {
+		script_creator get_script_creator_from_engine(size_t tag) {
 			auto script = lightning::script::registry().find(tag);
 			assert(script != lightning::script::registry().end() && script->first == tag);
 			return script->second;
@@ -187,7 +187,7 @@ namespace lightning::script {
 #ifdef USE_WITH_EDITOR
 #include <atlsafe.h>
 
-extern "C" __declspec(dllexport) LPSAFEARRAY get_script_names() {
+extern "C" __declspec(dllexport) LPSAFEARRAY get_script_names_from_engine() {
 	const u32 size{ (u32)lightning::script::script_names().size() };
 	if (!size) return nullptr;
 	CComSafeArray<BSTR> names(size);

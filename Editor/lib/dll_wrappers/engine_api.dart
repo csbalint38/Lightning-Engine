@@ -29,7 +29,7 @@ final class GameEntityDescriptor extends Struct {
 
 class EngineAPI {
   static const String _dllName =
-      "x64/ReleaseEditor/EngineDll.dll"; // TODO: replace with proper path
+      "x64/DebugEditor/EngineDll.dll"; // TODO: replace with proper path
   static final String _dllPath = Config().read<String>(ConfigProps.enginePath)!;
   static final DynamicLibrary _engineDll =
       DynamicLibrary.open(p.join(_dllPath, _dllName));

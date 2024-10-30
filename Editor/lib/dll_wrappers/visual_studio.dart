@@ -4,8 +4,8 @@ import 'dart:isolate';
 import 'package:editor/common/constants.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/utilities/capitalize.dart';
-import 'package:editor/utilities/logger.dart';
 import 'package:ffi/ffi.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/congifg/config.dart';
 
@@ -17,10 +17,12 @@ typedef _AddFilesNativeType = Bool Function(
     Pointer<Utf16>, Pointer<Utf16>, Pointer<Pointer<Utf16>>, Int32);
 typedef _AddFilesType = bool Function(
     Pointer<Utf16>, Pointer<Utf16>, Pointer<Pointer<Utf16>>, int);
-typedef _BuildSolutionNativeType = Bool Function(
+typedef _BuildSolutionNativeType = Void Function(
     Pointer<Utf16>, Pointer<Utf16>, Bool);
-typedef _BuildSolutionType = bool Function(
+typedef _BuildSolutionType = void Function(
     Pointer<Utf16>, Pointer<Utf16>, bool);
+typedef _GetLastBuildInfoNativeType = Bool Function();
+typedef _GetLastBuildInfoType = bool Function();
 
 final class VisualStudio {
   static const String _dllName =
@@ -39,37 +41,35 @@ final class VisualStudio {
   static final _BuildSolutionType _buildSolution =
       _vsiDll.lookupFunction<_BuildSolutionNativeType, _BuildSolutionType>(
           'build_solution');
+  static final _GetLastBuildInfoType _getLastBuildInfo = _vsiDll.lookupFunction<
+      _GetLastBuildInfoNativeType,
+      _GetLastBuildInfoType>('get_last_build_info');
 
   static bool isDebugging = false;
+  static bool buildDone = true;
   static bool buildSucceeded = false;
-  static bool buildDone = false;
 
   static Future<void> openVisualStudio(String solutionPath) async {
-    await _runInIsolate(() {
+    await _runInIsolate((String solutionPath) {
       final Pointer<Utf16> solutionPathPtr = solutionPath.toNativeUtf16();
       _openVisualStudio(solutionPathPtr);
       calloc.free(solutionPathPtr);
-    });
+    }, [solutionPath]);
   }
 
   static Future<void> closeVisualStudio() async {
-    await _runInIsolate(() {
-      _closeVisualStudio();
-    });
+    await _runInIsolate(_closeVisualStudio, List.empty());
   }
 
   static Future<bool> addFiles(String solutionPath, List<String> files) async {
-    return await _runInIsolate<bool>(() {
-      final String normalizedSolutionPath =
-          solutionPath.replaceAll('/', '\\').replaceAll(r'\', r'\\');
+    final String normalizedSolutionPath =
+        solutionPath.replaceAll('/', '\\').replaceAll(r'\', r'\\');
+
+    return await _runInIsolate<bool>((String solutionPath, List<String> files) {
       final Pointer<Utf16> normalizedSolutionPathPtr =
-          normalizedSolutionPath.toNativeUtf16();
-      final Pointer<Utf16> projectPtr = normalizedSolutionPath
-          .split('\\')
-          .last
-          .split('.')
-          .first
-          .toNativeUtf16();
+          solutionPath.toNativeUtf16();
+      final Pointer<Utf16> projectPtr =
+          solutionPath.split('\\').last.split('.').first.toNativeUtf16();
 
       final Pointer<Pointer<Utf16>> filesPointers =
           calloc<Pointer<Utf16>>(files.length);
@@ -91,61 +91,60 @@ final class VisualStudio {
       calloc.free(filesPointers);
 
       return result;
-    });
+    }, [normalizedSolutionPath, files]);
   }
 
-  static Future<bool> buildSolution(
+  static Future<void> buildSolution(
       Project project, BuildConfig config, bool showWindow) async {
     buildSucceeded = false;
     buildDone = false;
     isDebugging = true;
 
-    return await _runInIsolate<bool>(() {
-      final String solutionName =
-          project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
-      final Pointer<Utf16> solutionNamePtr = solutionName.toNativeUtf16();
-      final String configName = capitalize(config.toString().split('.').last);
+    final String solutionName =
+        project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
+    final String configName = capitalize(config.toString().split('.').last);
+
+    await _runInIsolate(
+        (String solutionPath, String configName, bool showWindow) {
+      final Pointer<Utf16> solutionNamePtr = solutionPath.toNativeUtf16();
       final Pointer<Utf16> configNamePointer = configName.toNativeUtf16();
 
-      EditorLogger().log(
-          LogLevel.info, "Building ${project.solution}, $configName",
-          trace: StackTrace.current);
-
-      final bool result =
-          _buildSolution(solutionNamePtr, configNamePointer, showWindow);
+      _buildSolution(solutionNamePtr, configNamePointer, showWindow);
 
       calloc.free(solutionNamePtr);
       calloc.free(configNamePointer);
+    }, [solutionName, configName, showWindow]);
 
-      if (result) {
-        EditorLogger().log(
-            LogLevel.info, "Building $configName configuration succeeded",
-            trace: StackTrace.current);
-      } else {
-        EditorLogger().log(
-            LogLevel.error, "Building $configName configuration failed",
-            trace: StackTrace.current);
-      }
-
-      buildSucceeded = result;
-      buildDone = false;
-      isDebugging = false;
-
-      return result;
-    });
+    buildDone = true;
+    isDebugging = false;
   }
 
-  static Future<T> _runInIsolate<T>(FutureOr<T> Function() task) async {
+  static Future<bool> getLastBuildInfo() async {
+    return await _runInIsolate<bool>(() {
+      return _getLastBuildInfo();
+    }, List.empty());
+  }
+
+  static Future<T> _runInIsolate<T>(Function task, List<dynamic> args) async {
     final ReceivePort port = ReceivePort();
-    await Isolate.spawn(_isolateEntry, [task, port.sendPort]);
+    final ReceivePort exitPort = ReceivePort();
+
+    await Isolate.spawn(
+        _isolateEntry, [task, args, port.sendPort, exitPort.sendPort]);
+
+    exitPort.listen((_) {
+      exitPort.close();
+    });
+
     return await port.first as T;
   }
 
-  static void _isolateEntry<T>(List<dynamic> args) async {
-    Function task = args[0];
-    SendPort port = args[1];
+  static void _isolateEntry(List<dynamic> args) {
+    final Function task = args[0];
+    final List<dynamic> funcArgs = args[1];
+    final SendPort port = args[2];
 
-    final T result = await task();
+    final result = Function.apply(task, funcArgs);
     port.send(result);
   }
 }

@@ -4,6 +4,7 @@ import 'package:editor/common/relay_command.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
+import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/material.dart';
@@ -160,18 +161,34 @@ class Project {
     UndoRedo().resset();
   }
 
-  void buildGameCodeDll({bool showWindow = true}) async {
+  Future<void> buildGameCodeDll({bool showWindow = true}) async {
+    final BuildConfig buildConfigValue = buildConfig.value == BuildConfig.debug
+        ? BuildConfig.debugEditor
+        : BuildConfig.releaseEditor;
+    final String configName =
+        capitalize(buildConfigValue.toString().split('.').last);
+
+    EditorLogger().log(LogLevel.info, "Building $solution, $configName",
+        trace: StackTrace.current);
+
     _unloadGameCodeDll();
     await VisualStudio.buildSolution(
       this,
-      buildConfig.value == BuildConfig.debug
-          ? BuildConfig.debugEditor
-          : BuildConfig.releaseEditor,
+      buildConfigValue,
       showWindow,
     );
+  }
 
-    if (VisualStudio.buildSucceeded) {
+  void _onBuildEnd(String configName) async {
+    if (await VisualStudio.getLastBuildInfo()) {
+      EditorLogger().log(
+          LogLevel.info, "Building $configName configuration succeeded",
+          trace: StackTrace.current);
       _loadGameCodeDll();
+    } else {
+      EditorLogger().log(
+          LogLevel.error, "Building $configName configuration failed",
+          trace: StackTrace.current);
     }
   }
 

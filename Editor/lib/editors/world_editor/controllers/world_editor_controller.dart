@@ -178,8 +178,8 @@ class WorldEditorController {
     redoCommand = RelayCommand(
         (x) => undoRedo.redo(), (x) => undoRedo.redoList.value.isNotEmpty);
     saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
-    buildCommand = RelayCommand((x) => project.buildGameCodeDll(),
-        (x) => !VisualStudio.isDebugging && VisualStudio.buildDone);
+    buildCommand = RelayCommand((x) async => await project.buildGameCodeDll());
+    //(x) => !VisualStudio.isDebugging && VisualStudio.buildDone);
 
     renameMultipleCommand = RelayCommand<String>(
       (x) {

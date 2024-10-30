@@ -172,9 +172,9 @@ EDITOR_INTERFACE bool add_files(const wchar_t* solution, const wchar_t* project_
 	return true;
 }
 
-EDITOR_INTERFACE bool buildSolution(wchar_t* solution, wchar_t* config_name, bool show_window = true) {
+EDITOR_INTERFACE void build_solution(const wchar_t* solution, const wchar_t* config_name, bool show_window = true) {
 	if (is_debugging()) {
-		return false;
+		return;
 	}
 
 	open_visual_studio(solution);
@@ -193,11 +193,20 @@ EDITOR_INTERFACE bool buildSolution(wchar_t* solution, wchar_t* config_name, boo
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 
-			return vs_instance->Solution->SolutionBuild->LastBuildInfo == 0;
+			if (vs_instance->Solution->SolutionBuild->LastBuildInfo == 0) {
+				break;
+			}
 		}
 		catch (...) {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
-	return false;
+}
+
+EDITOR_INTERFACE bool get_last_build_info() {
+	if (vs_instance == nullptr) {
+		return false;
+	}
+	
+	return vs_instance->Solution->SolutionBuild->LastBuildInfo == 0;
 }

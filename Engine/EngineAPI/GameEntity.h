@@ -57,7 +57,7 @@ namespace lightning::script {
 		#ifdef USE_WITH_EDITOR
 		extern "C" __declspec(dllexport)
 		#endif
-		script_creator get_script_creator(size_t tag);
+		script_creator get_script_creator_from_engine(size_t tag);
 
 		template<class ScriptClass>
 		script_ptr create_script(game_entity::Entity entity) {
@@ -68,15 +68,14 @@ namespace lightning::script {
 		#ifdef USE_WITH_EDITOR
 		u8 add_script_name(const char* name);
 
-		#define REGISTER_SCRIPT(TYPE)																															\																																		\
-		namespace {																																				\
-			const u8 _reg_##TYPE {																																\
-				lightning::script::detail::register_script(lightning::script::detail::string_hash()(#TYPE), &lightning::script::detail::create_script<TYPE>)	\
-			};																																					\
-			const u8 _name_##TYPE																																	\
-			{ lightning::script::detail::add_script_name(#TYPE) }																									\
+		#define REGISTER_SCRIPT(TYPE)																			\
+		namespace {																								\
+			const u8 _reg_##TYPE{																				\
+				lightning::script::detail::register_script(lightning::script::detail::string_hash()(#TYPE), &lightning::script::detail::create_script<TYPE>)											  \
+			};																									\
+			const u8 _name_##TYPE																				\
+			{ lightning::script::detail::add_script_name(#TYPE) };												\
 		}
-
 		#else
 		#define REGISTER_SCRIPT(TYPE)																			\
 		namespace {																								\

@@ -34,7 +34,7 @@ EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
 
 	return (game_code_dll && script_creator && script_names) ? TRUE : FALSE;
 }
-EDITOR_INTERFACE u32 unload_game_code_dll(const char* dll_path) {
+EDITOR_INTERFACE u32 unload_game_code_dll() {
 	if (!game_code_dll) return FALSE;
 	assert(game_code_dll);
 	[[maybe_unused]] int result{ FreeLibrary(game_code_dll) };
