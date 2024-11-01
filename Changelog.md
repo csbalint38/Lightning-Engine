@@ -1,5 +1,11 @@
 # v0.3.0-beta - 2025.x.x
 
+# Editor
+ - Build game code
+ - Load game code DLL into editor
+
+# v0.2.1-alpha - 2024.10.29
+
 ## Editor
  - Locate the Engine if it was moved or installed to a different location than default
  - Transform Component
@@ -8,8 +14,6 @@
  - Added Visual Studio Solution and Visual Studio Project to the templates
  - Create GameScript
  - Open Visual Studio using the Editor
- - Build game code
- - Load game code DLL into editor
 
 ## Engine
  - Geometry component
