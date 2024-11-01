@@ -22,7 +22,7 @@ class UndoRedoAction implements IUndoRedo {
   void redo() => redoAction();
 }
 
-class UndoRedo {
+final class UndoRedo {
   static final UndoRedo _undoRedo = UndoRedo._internal();
 
   factory UndoRedo() {

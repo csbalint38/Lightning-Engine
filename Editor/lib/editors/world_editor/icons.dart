@@ -1,5 +1,6 @@
 import 'package:editor/common/constants.dart';
 import 'package:editor/common/dropdown_button.dart';
+import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/game_code/new_script_dialog.dart';
 import 'package:editor/game_project/project.dart';
@@ -68,17 +69,22 @@ class _IconsRowState extends State<IconsRow> {
         ),
         Tooltip(
           message: 'Create new script',
-          child: IconButton(
-            icon: const Icon(Icons.note_add_rounded),
-            onPressed: () {
-              showDialog(
-                barrierDismissible: false,
-                context: context,
-                builder: (BuildContext context) {
-                  return NewScriptDialog(_controller.project);
-                },
-              );
-            },
+          child: ValueListenableBuilder(
+            valueListenable: VisualStudio.isDebugging,
+            builder: (context, value, child) => IconButton(
+              icon: const Icon(Icons.note_add_rounded),
+              onPressed: !value
+                  ? () {
+                      showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (BuildContext context) {
+                          return NewScriptDialog(_controller.project);
+                        },
+                      );
+                    }
+                  : null,
+            ),
           ),
         ),
         const VerticalDivider(
@@ -130,9 +136,15 @@ class _IconsRowState extends State<IconsRow> {
         ),
         Tooltip(
           message: "Build\nCtrl + Shift + B\nF7",
-          child: IconButton(
+          child: ValueListenableBuilder(
+            valueListenable: VisualStudio.isDebugging,
+            builder: (context, value, child) => IconButton(
               icon: const Icon(Icons.construction_rounded),
-              onPressed: () => _controller.buildCommand.execute(null)),
+              onPressed: _controller.buildCommand.canExecute(null)
+                  ? () => _controller.buildCommand.execute(null)
+                  : null,
+            ),
+          ),
         ),
         Tooltip(
           message: "Stop Debugging\nCtrl + F5",

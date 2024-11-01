@@ -19,13 +19,40 @@ namespace {
 		for (int i = 0; i < 3; ++i) {
 			try {
 				result = vs_instance != nullptr && (vs_instance->Debugger->CurrentProgram != nullptr || vs_instance->Debugger->CurrentMode == EnvDTE::dbgRunMode);
-				if (result) return result;
 			}
 			catch (...) {
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}
 		}
+
 		return result;
+	}
+
+	HRESULT register_to_moniker_table(const CComPtr<IRunningObjectTable>& rot) {
+		HRESULT hr;
+		CComPtr<IBindCtx> bind_ctx;
+		CComPtr<IMoniker> instance_moniker;
+		DWORD rot_register;
+
+		hr = CreateBindCtx(0, &bind_ctx);
+
+		if (FAILED(hr)) {
+			bind_ctx.Release();
+			instance_moniker.Release();
+
+			return hr;
+		}
+
+		hr = CreateItemMoniker(L"!", vs_name, &instance_moniker);
+
+		if (SUCCEEDED(hr)) {
+			hr = rot->Register(ROTFLAGS_REGISTRATIONKEEPSALIVE, vs_instance, instance_moniker, &rot_register);
+		}
+
+		instance_moniker.Release();
+		bind_ctx.Release();
+
+		return hr;
 	}
 }
 
@@ -60,14 +87,14 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 
 		LPOLESTR display_name{ nullptr };
 		hr = moniker->GetDisplayName(bind_ctx, nullptr, &display_name);
-		
+
 		if (SUCCEEDED(hr) && wcsstr(display_name, vs_name) != nullptr) {
 			CComPtr<IUnknown> p_unk{ nullptr };
 			hr = rot->GetObject(moniker, &p_unk);
 
 			if (SUCCEEDED(hr)) {
 				p_unk->QueryInterface(__uuidof(EnvDTE::_DTE), (void**)&vs_instance);
-				
+
 				if (vs_instance != nullptr) {
 					CComPtr<EnvDTE::_Solution> solution;
 					vs_instance->get_Solution(&solution);
@@ -80,6 +107,7 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 							vs_instance->MainWindow->Activate();
 							vs_instance->MainWindow->Visible = true;
 							CoTaskMemFree(display_name);
+
 							break;
 						}
 					}
@@ -91,28 +119,35 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 	}
 	moniker.Release();
 	enum_moniker.Release();
-	rot.Release();
-	
+
 	if (vs_instance == nullptr) {
 		CLSID clsid;
 		HRESULT hr = CLSIDFromProgID(vs_name, &clsid);
 		CComPtr<IUnknown> p_unk{ nullptr };
 
 		if (FAILED(hr)) {
-			return;
+			goto _failed;
 		}
 
 		hr = CoCreateInstance(clsid, nullptr, CLSCTX_LOCAL_SERVER, IID_IUnknown, (void**)&p_unk);
 
 		if (FAILED(hr)) {
-			return;
+			goto _failed;
 		}
 
 		hr = p_unk->QueryInterface(__uuidof(EnvDTE::_DTE), (void**)&vs_instance);
 
 		if (FAILED(hr)) {
-			return;
+			goto _failed;
 		}
+
+		hr = register_to_moniker_table(rot);
+
+		if (FAILED(hr)) {
+			goto _failed;
+		}
+
+		rot.Release();
 
 		CComPtr<EnvDTE::_Solution> solution;
 		vs_instance->get_Solution(&solution);
@@ -121,6 +156,10 @@ EDITOR_INTERFACE void __stdcall open_visual_studio(const wchar_t* solution_path)
 		vs_instance->MainWindow->Activate();
 		vs_instance->MainWindow->Visible = true;
 	}
+
+	_failed:
+		rot.Release();
+		return;
 }
 
 EDITOR_INTERFACE void  close_visual_studio() {
@@ -146,7 +185,7 @@ EDITOR_INTERFACE bool add_files(const wchar_t* solution, const wchar_t* project_
 	else {
 		vs_instance->ExecuteCommand("File.SaveAll", (""));
 	}
-	
+
 	for (int i = 1; i < vs_instance->Solution->Projects->Count + 1; i++) {
 		CComPtr<EnvDTE::Project> project;
 		project = vs_instance->Solution->Item(i);
@@ -188,14 +227,14 @@ EDITOR_INTERFACE void build_solution(const wchar_t* solution, const wchar_t* con
 			vs_instance->MainWindow->Visible = show_window;
 			vs_instance->Solution->SolutionBuild->SolutionConfigurations->Item(config_name)->Activate();
 			vs_instance->ExecuteCommand("Build.BuildSolution", "");
-			
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 			while (vs_instance->Solution->SolutionBuild->BuildState == EnvDTE::vsBuildStateInProgress) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 
-			if (vs_instance->Solution->SolutionBuild->LastBuildInfo == 0) {
-				break;
-			}
+			return;
 		}
 		catch (...) {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -207,6 +246,6 @@ EDITOR_INTERFACE bool get_last_build_info() {
 	if (vs_instance == nullptr) {
 		return false;
 	}
-	
+
 	return vs_instance->Solution->SolutionBuild->LastBuildInfo == 0;
 }

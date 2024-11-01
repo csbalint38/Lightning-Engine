@@ -45,9 +45,7 @@ final class VisualStudio {
       _GetLastBuildInfoNativeType,
       _GetLastBuildInfoType>('get_last_build_info');
 
-  static bool isDebugging = false;
-  static bool buildDone = true;
-  static bool buildSucceeded = false;
+  static ValueNotifier<bool> isDebugging = ValueNotifier<bool>(false);
 
   static Future<void> openVisualStudio(String solutionPath) async {
     await _runInIsolate((String solutionPath) {
@@ -96,13 +94,11 @@ final class VisualStudio {
 
   static Future<void> buildSolution(
       Project project, BuildConfig config, bool showWindow) async {
-    buildSucceeded = false;
-    buildDone = false;
-    isDebugging = true;
-
     final String solutionName =
         project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
     final String configName = capitalize(config.toString().split('.').last);
+
+    isDebugging.value = true;
 
     await _runInIsolate(
         (String solutionPath, String configName, bool showWindow) {
@@ -115,14 +111,11 @@ final class VisualStudio {
       calloc.free(configNamePointer);
     }, [solutionName, configName, showWindow]);
 
-    buildDone = true;
-    isDebugging = false;
+    isDebugging.value = false;
   }
 
-  static Future<bool> getLastBuildInfo() async {
-    return await _runInIsolate<bool>(() {
-      return _getLastBuildInfo();
-    }, List.empty());
+  static bool getLastBuildInfo() {
+    return _getLastBuildInfo();
   }
 
   static Future<T> _runInIsolate<T>(Function task, List<dynamic> args) async {
@@ -146,5 +139,6 @@ final class VisualStudio {
 
     final result = Function.apply(task, funcArgs);
     port.send(result);
+    Isolate.exit();
   }
 }

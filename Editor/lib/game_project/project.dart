@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:editor/common/constants.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
@@ -11,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:path/path.dart' as p;
 
-class Project {
+final class Project {
   static String extension = "lightning";
   static final UndoRedo _undoRedo = UndoRedo();
 
@@ -48,35 +49,8 @@ class Project {
       }
     }
 
-    addScene = RelayCommand(
-      (x) {
-        _addScene("New Scene ${this.scenes.value.length}");
-        Scene newScene = this.scenes.value.last;
-        int index = this.scenes.value.length - 1;
-        _undoRedo.add(
-          UndoRedoAction(
-            name: "Add ${newScene.name}",
-            undoAction: () => _removeScene(newScene),
-            redoAction: () => this.scenes.insert(index, newScene),
-          ),
-        );
-      },
-    );
-
-    removeScene = RelayCommand<Scene>(
-      (x) {
-        int index = this.scenes.value.indexOf(x);
-        _removeScene(x);
-        _undoRedo.add(
-          UndoRedoAction(
-            name: "Remove ${x.name}",
-            undoAction: () => this.scenes.insert(index, x),
-            redoAction: () => _removeScene(x),
-          ),
-        );
-      },
-      (x) => !x.isActive,
-    );
+    _bindCommands();
+    buildGameCodeDll(showWindow: false);
   }
 
   factory Project.fromXMLFile(File file) {
@@ -172,29 +146,56 @@ class Project {
         trace: StackTrace.current);
 
     _unloadGameCodeDll();
+
     await VisualStudio.buildSolution(
       this,
       buildConfigValue,
       showWindow,
     );
-  }
 
-  void _onBuildEnd(String configName) async {
-    if (await VisualStudio.getLastBuildInfo()) {
+    if (VisualStudio.getLastBuildInfo()) {
       EditorLogger().log(
-          LogLevel.info, "Building $configName configuration succeeded",
-          trace: StackTrace.current);
-      _loadGameCodeDll();
+        LogLevel.info,
+        "Build succeeded",
+        trace: StackTrace.current,
+      );
+      _loadGameCodeDll(configName);
     } else {
       EditorLogger().log(
-          LogLevel.error, "Building $configName configuration failed",
-          trace: StackTrace.current);
+        LogLevel.error,
+        "Building $configName configuration failed",
+        trace: StackTrace.current,
+      );
     }
   }
 
-  void _loadGameCodeDll() {}
+  void _loadGameCodeDll(final String configName) {
+    String dll = p.join(path, name, 'x64', configName, '$name.dll');
 
-  void _unloadGameCodeDll() {}
+    if (File(dll).existsSync() && EngineAPI.loadGameCodeDll(dll)) {
+      EditorLogger().log(
+        LogLevel.info,
+        "Game code DLL loaded successfully",
+        trace: StackTrace.current,
+      );
+    } else {
+      EditorLogger().log(
+        LogLevel.warning,
+        "Failed to load game code DLL. Try to rebuild the project.",
+        trace: StackTrace.current,
+      );
+    }
+  }
+
+  void _unloadGameCodeDll() {
+    if (EngineAPI.unloadGameCodeDll()) {
+      EditorLogger().log(
+        LogLevel.info,
+        "Game code DLL unloaded",
+        trace: StackTrace.current,
+      );
+    }
+  }
 
   void _addScene(String sceneName) {
     scenes.add(Scene(name: sceneName));
@@ -202,5 +203,37 @@ class Project {
 
   void _removeScene(Scene scene) {
     scenes.remove(scene);
+  }
+
+  void _bindCommands() {
+    addScene = RelayCommand(
+      (x) {
+        _addScene("New Scene ${this.scenes.value.length}");
+        Scene newScene = this.scenes.value.last;
+        int index = this.scenes.value.length - 1;
+        _undoRedo.add(
+          UndoRedoAction(
+            name: "Add ${newScene.name}",
+            undoAction: () => _removeScene(newScene),
+            redoAction: () => scenes.insert(index, newScene),
+          ),
+        );
+      },
+    );
+
+    removeScene = RelayCommand<Scene>(
+      (x) {
+        int index = scenes.value.indexOf(x);
+        _removeScene(x);
+        _undoRedo.add(
+          UndoRedoAction(
+            name: "Remove ${x.name}",
+            undoAction: () => scenes.insert(index, x),
+            redoAction: () => _removeScene(x),
+          ),
+        );
+      },
+      (x) => !x.isActive,
+    );
   }
 }
