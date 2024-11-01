@@ -25,6 +25,7 @@ final class Project {
 
   late final String fullPath;
   late final String solution;
+  List<String> availableScripts = <String>[];
 
   late RelayCommand addScene;
   late RelayCommand removeScene;
@@ -170,9 +171,12 @@ final class Project {
   }
 
   void _loadGameCodeDll(final String configName) {
-    String dll = p.join(path, name, 'x64', configName, '$name.dll');
+    final String dll = p.join(path, name, 'x64', configName, '$name.dll');
+
+    availableScripts = List<String>.empty();
 
     if (File(dll).existsSync() && EngineAPI.loadGameCodeDll(dll)) {
+      availableScripts = EngineAPI.getScriptNames();
       EditorLogger().log(
         LogLevel.info,
         "Game code DLL loaded successfully",
@@ -189,6 +193,8 @@ final class Project {
 
   void _unloadGameCodeDll() {
     if (EngineAPI.unloadGameCodeDll()) {
+      availableScripts = List<String>.empty();
+
       EditorLogger().log(
         LogLevel.info,
         "Game code DLL unloaded",

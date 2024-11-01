@@ -18,6 +18,7 @@ class Transform implements Component {
     this.scale = scale ?? Vector3.all(1);
   }
 
+  @override
   Transform.fromXML(String xmlStr) {
     xml.XmlDocument document = xml.XmlDocument.parse(xmlStr);
 
@@ -162,8 +163,8 @@ class MSTransform extends MSComponent<Transform> {
   void _createCommands() {
     updateComponentsCommand = RelayCommand<TransformProperty>(
       (x) {
-        final List<Vector3> oldValues;
-        final Vector3 newValue;
+        final List<dynamic> oldValues;
+        final dynamic newValue;
         switch (x) {
           case TransformProperty.position:
             newValue = position.value;
@@ -187,7 +188,7 @@ class MSTransform extends MSComponent<Transform> {
 
         updateComponents(x);
 
-        final Map<TransformProperty, void Function(int, Vector3)> actions = {
+        final Map<TransformProperty, void Function(int, dynamic)> actions = {
           TransformProperty.position: (i, other) =>
               selectedComponents[i].position.setFrom(other),
           TransformProperty.rotation: (i, other) =>
