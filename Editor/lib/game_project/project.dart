@@ -1,14 +1,18 @@
 import 'dart:io';
+import 'package:editor/common/constants.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
+import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
+import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:path/path.dart' as p;
 
-class Project {
+final class Project {
   static String extension = "lightning";
   static final UndoRedo _undoRedo = UndoRedo();
 
@@ -16,12 +20,19 @@ class Project {
   final String path;
   final ListNotifier<Scene> scenes = ListNotifier<Scene>();
   late Scene activeScene;
+  final ValueNotifier<BuildConfig> buildConfig =
+      ValueNotifier<BuildConfig>(BuildConfig.debug);
 
   late final String fullPath;
   late final String solution;
 
   late RelayCommand addScene;
   late RelayCommand removeScene;
+
+  static String getConfigurationName(BuildConfig config) {
+    final String value = config.toString().split('.').last;
+    return value[0].toUpperCase() + value.substring(1);
+  }
 
   Project(List<Scene>? scenes, {required this.name, required this.path}) {
     fullPath = p.join(path, name, '$name.$extension');
@@ -38,35 +49,8 @@ class Project {
       }
     }
 
-    addScene = RelayCommand(
-      (x) {
-        _addScene("New Scene ${this.scenes.value.length}");
-        Scene newScene = this.scenes.value.last;
-        int index = this.scenes.value.length - 1;
-        _undoRedo.add(
-          UndoRedoAction(
-            name: "Add ${newScene.name}",
-            undoAction: () => _removeScene(newScene),
-            redoAction: () => this.scenes.insert(index, newScene),
-          ),
-        );
-      },
-    );
-
-    removeScene = RelayCommand<Scene>(
-      (x) {
-        int index = this.scenes.value.indexOf(x);
-        _removeScene(x);
-        _undoRedo.add(
-          UndoRedoAction(
-            name: "Remove ${x.name}",
-            undoAction: () => this.scenes.insert(index, x),
-            redoAction: () => _removeScene(x),
-          ),
-        );
-      },
-      (x) => !x.isActive,
-    );
+    _bindCommands();
+    buildGameCodeDll(showWindow: false);
   }
 
   factory Project.fromXMLFile(File file) {
@@ -151,11 +135,105 @@ class Project {
     UndoRedo().resset();
   }
 
+  Future<void> buildGameCodeDll({bool showWindow = true}) async {
+    final BuildConfig buildConfigValue = buildConfig.value == BuildConfig.debug
+        ? BuildConfig.debugEditor
+        : BuildConfig.releaseEditor;
+    final String configName =
+        capitalize(buildConfigValue.toString().split('.').last);
+
+    EditorLogger().log(LogLevel.info, "Building $solution, $configName",
+        trace: StackTrace.current);
+
+    _unloadGameCodeDll();
+
+    await VisualStudio.buildSolution(
+      this,
+      buildConfigValue,
+      showWindow,
+    );
+
+    if (VisualStudio.getLastBuildInfo()) {
+      EditorLogger().log(
+        LogLevel.info,
+        "Build succeeded",
+        trace: StackTrace.current,
+      );
+      _loadGameCodeDll(configName);
+    } else {
+      EditorLogger().log(
+        LogLevel.error,
+        "Building $configName configuration failed",
+        trace: StackTrace.current,
+      );
+    }
+  }
+
+  void _loadGameCodeDll(final String configName) {
+    String dll = p.join(path, name, 'x64', configName, '$name.dll');
+
+    if (File(dll).existsSync() && EngineAPI.loadGameCodeDll(dll)) {
+      EditorLogger().log(
+        LogLevel.info,
+        "Game code DLL loaded successfully",
+        trace: StackTrace.current,
+      );
+    } else {
+      EditorLogger().log(
+        LogLevel.warning,
+        "Failed to load game code DLL. Try to rebuild the project.",
+        trace: StackTrace.current,
+      );
+    }
+  }
+
+  void _unloadGameCodeDll() {
+    if (EngineAPI.unloadGameCodeDll()) {
+      EditorLogger().log(
+        LogLevel.info,
+        "Game code DLL unloaded",
+        trace: StackTrace.current,
+      );
+    }
+  }
+
   void _addScene(String sceneName) {
     scenes.add(Scene(name: sceneName));
   }
 
   void _removeScene(Scene scene) {
     scenes.remove(scene);
+  }
+
+  void _bindCommands() {
+    addScene = RelayCommand(
+      (x) {
+        _addScene("New Scene ${this.scenes.value.length}");
+        Scene newScene = this.scenes.value.last;
+        int index = this.scenes.value.length - 1;
+        _undoRedo.add(
+          UndoRedoAction(
+            name: "Add ${newScene.name}",
+            undoAction: () => _removeScene(newScene),
+            redoAction: () => scenes.insert(index, newScene),
+          ),
+        );
+      },
+    );
+
+    removeScene = RelayCommand<Scene>(
+      (x) {
+        int index = scenes.value.indexOf(x);
+        _removeScene(x);
+        _undoRedo.add(
+          UndoRedoAction(
+            name: "Remove ${x.name}",
+            undoAction: () => scenes.insert(index, x),
+            redoAction: () => _removeScene(x),
+          ),
+        );
+      },
+      (x) => !x.isActive,
+    );
   }
 }

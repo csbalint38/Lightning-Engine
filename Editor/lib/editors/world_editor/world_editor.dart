@@ -53,6 +53,14 @@ class _WorldEditorState extends State<WorldEditor> {
             LogicalKeyboardKey.controlLeft,
             LogicalKeyboardKey.keyS,
           ): const SaveIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.f7,
+          ): const BuildIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.controlLeft,
+            LogicalKeyboardKey.shiftLeft,
+            LogicalKeyboardKey.keyB,
+          ): const BuildIntent(),
         },
         child: Actions(
           actions: <Type, Action<Intent>>{
@@ -64,6 +72,9 @@ class _WorldEditorState extends State<WorldEditor> {
             ),
             SaveIntent: CallbackAction<SaveIntent>(
               onInvoke: (intent) => _save(),
+            ),
+            BuildIntent: CallbackAction<BuildIntent>(
+              onInvoke: (intent) => _build(),
             ),
           },
           child: Focus(
@@ -159,6 +170,10 @@ class _WorldEditorState extends State<WorldEditor> {
   void _save() {
     _controller.saveCommand.execute(null);
   }
+
+  void _build() {
+    _controller.buildCommand.execute(null);
+  }
 }
 
 class UndoIntent extends Intent {
@@ -171,4 +186,8 @@ class RedoIntent extends Intent {
 
 class SaveIntent extends Intent {
   const SaveIntent();
+}
+
+class BuildIntent extends Intent {
+  const BuildIntent();
 }

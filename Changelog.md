@@ -8,11 +8,13 @@
  - Added Visual Studio Solution and Visual Studio Project to the templates
  - Create GameScript
  - Open Visual Studio using the Editor
+ - Build game code
+ - Load game code DLL into editor
 
 ## Engine
  - Geometry component
  - Support of Physically Based Rendering (PBR)
- - HDR as Cubemap support (CPU conversion only)
+ - HDR as Cubemap support
 
 # v0.2.0-alpha - 2024.08.18
 

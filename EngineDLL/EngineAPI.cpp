@@ -29,12 +29,16 @@ EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
 	game_code_dll = LoadLibraryA(dll_path);
 	assert(game_code_dll);
 
-	script_creator = (_get_script_creator)GetProcAddress(game_code_dll, "get_script_creator");
-	script_names = (_get_script_names)GetProcAddress(game_code_dll, "get_script_names");
+	script_creator = (_get_script_creator)GetProcAddress(game_code_dll, "get_script_creator_from_engine");
+	script_names = (_get_script_names)GetProcAddress(game_code_dll, "get_script_names_from_engine");
+
+	assert(script_creator);
+	assert(script_names);
 
 	return (game_code_dll && script_creator && script_names) ? TRUE : FALSE;
 }
-EDITOR_INTERFACE u32 unload_game_code_dll(const char* dll_path) {
+
+EDITOR_INTERFACE u32 unload_game_code_dll() {
 	if (!game_code_dll) return FALSE;
 	assert(game_code_dll);
 	[[maybe_unused]] int result{ FreeLibrary(game_code_dll) };

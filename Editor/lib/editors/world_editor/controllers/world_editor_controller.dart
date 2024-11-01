@@ -1,5 +1,6 @@
 import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/utilities/logger.dart';
@@ -18,6 +19,7 @@ class WorldEditorController {
   late RelayCommand saveCommand;
   late RelayCommand renameMultipleCommand;
   late RelayCommand enableMultipleCommand;
+  late RelayCommand buildCommand;
 
   final ValueNotifier<bool> canSave = ValueNotifier(false);
   final List<int> selectedEntityIndices = <int>[];
@@ -171,9 +173,13 @@ class WorldEditorController {
   }
 
   void _createCommands() {
-    undoCommand = RelayCommand((x) => undoRedo.undo());
-    redoCommand = RelayCommand((x) => undoRedo.redo());
+    undoCommand = RelayCommand(
+        (x) => undoRedo.undo(), (x) => undoRedo.undoList.value.isNotEmpty);
+    redoCommand = RelayCommand(
+        (x) => undoRedo.redo(), (x) => undoRedo.redoList.value.isNotEmpty);
     saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
+    buildCommand = RelayCommand((x) async => await project.buildGameCodeDll(),
+        (x) => !VisualStudio.isDebugging.value);
 
     renameMultipleCommand = RelayCommand<String>(
       (x) {

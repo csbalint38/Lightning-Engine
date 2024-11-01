@@ -55,7 +55,7 @@ namespace lightning::content {
 			memcpy(&script_name[0], data, name_length);
 			data += name_length;
 			script_name[name_length] = 0;
-			script_info.script_creator = script::detail::get_script_creator(script::detail::string_hash()(script_name));
+			script_info.script_creator = script::detail::get_script_creator_from_engine(script::detail::string_hash()(script_name));
 
 			info.script = &script_info;
 

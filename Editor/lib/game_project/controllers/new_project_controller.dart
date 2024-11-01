@@ -143,8 +143,8 @@ class NewProjectController {
     templateString = templateString
         .replaceAll('{{0}}', name.value)
         .replaceAll('{{1}}', path.value);
-    final Project project = Project.fromXML(templateString);
-    project.toXMLFile(p.join(fullPath, '${name.value}.${Project.extension}'));
+    File(p.join(fullPath, '${name.value}.${Project.extension}'))
+        .writeAsString(templateString);
 
     await _createMSVCSolution(template, path.value);
   }

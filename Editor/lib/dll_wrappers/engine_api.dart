@@ -11,6 +11,10 @@ typedef _CreateGameEntityNativeType = IdType Function(
 typedef _CreateGameEntityType = int Function(Pointer<GameEntityDescriptor>);
 typedef _RemoveGameEntityNativeType = Void Function(IdType);
 typedef _RemoveGameEntityType = void Function(int);
+typedef _LoadGameCodeDllNativeType = Uint32 Function(Pointer<Utf8>);
+typedef _LoadGameCodeDllType = int Function(Pointer<Utf8>);
+typedef _UnloadGameCodeDllNativeType = Uint32 Function();
+typedef _UnloadGameCodeDllType = int Function();
 
 final class TransformComponentDescriptor extends Struct {
   @Array(3)
@@ -29,7 +33,7 @@ final class GameEntityDescriptor extends Struct {
 
 class EngineAPI {
   static const String _dllName =
-      "x64/ReleaseEditor/EngineDll.dll"; // TODO: replace with proper path
+      "x64/DebugEditor/EngineDll.dll"; // TODO: replace with proper path
   static final String _dllPath = Config().read<String>(ConfigProps.enginePath)!;
   static final DynamicLibrary _engineDll =
       DynamicLibrary.open(p.join(_dllPath, _dllName));
@@ -40,6 +44,12 @@ class EngineAPI {
   static final _RemoveGameEntityType _removeGameEntity = _engineDll
       .lookupFunction<_RemoveGameEntityNativeType, _RemoveGameEntityType>(
           'remove_game_entity');
+  static final _LoadGameCodeDllType _loadGameCodeDll = _engineDll
+      .lookupFunction<_LoadGameCodeDllNativeType, _LoadGameCodeDllType>(
+          'load_game_code_dll');
+  static final _UnloadGameCodeDllType _unloadGameCodeDll = _engineDll
+      .lookupFunction<_UnloadGameCodeDllNativeType, _UnloadGameCodeDllType>(
+          'unload_game_code_dll');
 
   static int createGameEntity(GameEntity entity) {
     Pointer<GameEntityDescriptor> desc = malloc<GameEntityDescriptor>();
@@ -65,6 +75,16 @@ class EngineAPI {
   static void removeGameEntity(GameEntity entity) {
     _removeGameEntity(entity.entityId);
   }
+
+  static bool loadGameCodeDll(String dllPath) {
+    Pointer<Utf8> dllPathPtr = dllPath.toNativeUtf8();
+
+    int result = _loadGameCodeDll(dllPathPtr);
+
+    return result == 1;
+  }
+
+  static bool unloadGameCodeDll() => _unloadGameCodeDll() == 1;
 
   EngineAPI._();
 }
