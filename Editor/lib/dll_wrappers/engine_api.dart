@@ -18,8 +18,8 @@ typedef _UnloadGameCodeDllNativeType = Uint32 Function();
 typedef _UnloadGameCodeDllType = int Function();
 typedef _GetScriptNamesNativeType = Pointer<SAFEARRAY> Function();
 typedef _GetScriptNamesType = Pointer<SAFEARRAY> Function();
-typedef _GetScriptCreatorNativeType = Pointer Function(Pointer<Utf8>);
-typedef _GetScriptCreatorType = Pointer Function(Pointer<Utf8>);
+typedef _GetScriptCreatorNativeType = IntPtr Function(Pointer<Utf8>);
+typedef _GetScriptCreatorType = int Function(Pointer<Utf8>);
 
 final class TransformComponentDescriptor extends Struct {
   @Array(3)
@@ -33,7 +33,8 @@ final class TransformComponentDescriptor extends Struct {
 }
 
 final class ScriptComponentDescriptor extends Struct {
-  external Pointer scriptCreator;
+  @IntPtr()
+  external int scriptCreator;
 }
 
 final class GameEntityDescriptor extends Struct {
@@ -146,9 +147,9 @@ class EngineAPI {
     }
   }
 
-  Pointer getScriptCreator(String name) {
+  int getScriptCreator(String name) {
     final Pointer<Utf8> namePointer = name.toNativeUtf8();
-    final Pointer result = _getScriptCreator(namePointer);
+    final int result = _getScriptCreator(namePointer);
     calloc.free(namePointer);
 
     return result;
