@@ -23,6 +23,12 @@ typedef _GetScriptNamesNativeType = Pointer<SAFEARRAY> Function();
 typedef _GetScriptNamesType = Pointer<SAFEARRAY> Function();
 typedef _GetScriptCreatorNativeType = IntPtr Function(Pointer<Utf8>);
 typedef _GetScriptCreatorType = int Function(Pointer<Utf8>);
+typedef _CreateRenderSurfaceNativeType = Uint32 Function(IntPtr, Uint32, Uint32);
+typedef _CreateRenderSurfaceType = int Function(int, int, int);
+typedef _RemoveRenderSurfaceNativeType = Void Function(Uint32);
+typedef _RemoveRenderSurfaceType = void Function(int);
+typedef _GetWindowHandleNativeType = IntPtr Function(Uint32);
+typedef _GetWindowHandleType = int Function(int);
 
 final class TransformComponentDescriptor extends Struct {
   @Array(3)
@@ -70,6 +76,9 @@ class EngineAPI {
   static final _GetScriptCreatorType _getScriptCreator = _engineDll
       .lookupFunction<_GetScriptCreatorNativeType, _GetScriptCreatorType>(
           'get_script_creator');
+  static final _CreateRenderSurfaceType _createRenderSurface = _engineDll.lookupFunction<_CreateRenderSurfaceNativeType, _CreateRenderSurfaceType>('create_render_surface');
+  static final _RemoveRenderSurfaceType _removeRenderSurface = _engineDll.lookupFunction<_RemoveRenderSurfaceNativeType, _RemoveRenderSurfaceType>('remove_render_surface');
+  static final _GetWindowHandleType _getWindowHandle = _engineDll.lookupFunction<_GetWindowHandleNativeType, _GetWindowHandleType>('get_window_handle');
 
   static int createGameEntity(GameEntity entity) {
     Pointer<GameEntityDescriptor> desc = malloc<GameEntityDescriptor>();
@@ -158,6 +167,18 @@ class EngineAPI {
     calloc.free(namePointer);
 
     return result;
+  }
+
+  int createRenderSurface(int host, int width, int height) {
+    return _createRenderSurface(host, width, height);
+  }
+
+  void removeRenderSurface(int surfaceId) {
+    _removeRenderSurface(surfaceId);
+  }
+
+  int getWindowHandle(int surfaceId) {
+    return _getWindowHandle(surfaceId);
   }
 
   EngineAPI._();
