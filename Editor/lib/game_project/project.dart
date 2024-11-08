@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:editor/common/constants.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/components/script.dart';
 import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
@@ -15,6 +16,7 @@ import 'package:path/path.dart' as p;
 final class Project {
   static String extension = "lightning";
   static final UndoRedo _undoRedo = UndoRedo();
+  static Project? instance;
 
   final String name;
   final String path;
@@ -88,7 +90,8 @@ final class Project {
   }
 
   factory Project.load(File file) {
-    return Project.fromXMLFile(file);
+    Project.instance = Project.fromXMLFile(file);
+    return Project.instance!;
   }
 
   String toXML() {
@@ -123,17 +126,19 @@ final class Project {
   }
 
   static void save(Project project) {
+    project.toXMLFile(project.fullPath);
     EditorLogger().log(
       LogLevel.info,
       "Saved project to ${project.path}\\${project.name}",
       trace: StackTrace.current,
     );
-    return project.toXMLFile(project.fullPath);
   }
 
   void unload() {
+    _unloadGameCodeDll();
     VisualStudio.closeVisualStudio();
     UndoRedo().resset();
+    Project.instance = null;
   }
 
   Future<void> buildGameCodeDll({bool showWindow = true}) async {
@@ -177,6 +182,10 @@ final class Project {
 
     if (File(dll).existsSync() && EngineAPI.loadGameCodeDll(dll)) {
       availableScripts.value = EngineAPI.getScriptNames();
+      activeScene.entities.value
+          .where((x) => x.getComponent<Script>() != null)
+          .toList()
+          .forEach((x) => x.isActive = true);
       EditorLogger().log(
         LogLevel.info,
         "Game code DLL loaded successfully",
@@ -192,6 +201,11 @@ final class Project {
   }
 
   void _unloadGameCodeDll() {
+    activeScene.entities.value
+        .where((x) => x.getComponent<Script>() != null)
+        .toList()
+        .forEach((x) => x.isActive = false);
+
     if (EngineAPI.unloadGameCodeDll()) {
       availableScripts.clear();
 

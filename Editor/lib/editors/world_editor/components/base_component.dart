@@ -4,8 +4,14 @@ import 'package:flutter/material.dart';
 class BaseComponent extends StatelessWidget {
   final String title;
   final List<Widget> children;
+  final Function()? deleteFunction;
 
-  const BaseComponent({super.key, required this.title, required this.children});
+  const BaseComponent({
+    super.key,
+    required this.title,
+    required this.children,
+    this.deleteFunction,
+  });
 
   @override
   Widget build(BuildContext context) {

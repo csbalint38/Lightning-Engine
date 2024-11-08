@@ -11,7 +11,7 @@ class Script extends Component {
   Script({required this.name});
 
   @override
-  Script.fromXml(String xmlStr) {
+  factory Script.fromXml(String xmlStr) {
     xml.XmlDocument document = xml.XmlDocument.parse(xmlStr);
 
     xml.XmlElement root = document.rootElement;
@@ -19,15 +19,15 @@ class Script extends Component {
 
     final String name = nameNode?.innerText ?? "UnnamedScript";
 
-    Script(name: name);
+    return Script(name: name);
   }
 
   @override
   String toXML() {
     final builder = xml.XmlBuilder();
 
-    builder.element("Name", nest: () {
-      builder.element(name);
+    builder.element("Script", nest: () {
+      builder.element("Name", nest: name);
     });
 
     return builder.buildDocument().toXmlString(pretty: true);

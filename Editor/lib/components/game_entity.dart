@@ -93,7 +93,7 @@ class GameEntity {
   bool addComponent(Component component) {
     if (!components.value.any((x) => x.runtimeType == component.runtimeType)) {
       isActive = false;
-      components.value.add(component);
+      components.add(component);
       isActive = true;
 
       return true;
@@ -101,7 +101,7 @@ class GameEntity {
 
     EditorLogger().log(
       LogLevel.warning,
-      "Entity $name already has a ${component.runtimeType.toString()} component",
+      "Entity ${name.value} already has a ${component.runtimeType.toString()} component",
       trace: StackTrace.current,
     );
 

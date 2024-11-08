@@ -7,8 +7,10 @@ class ScalarBox extends StatelessWidget {
   final Function(double) callback;
   final FocusNode _localFocus = FocusNode();
   final TextEditingController _controller = TextEditingController();
+  final bool isEnabled;
 
-  ScalarBox(this.globalFocus, this.callback, double? initValue, {super.key}) {
+  ScalarBox(this.globalFocus, this.callback, double? initValue,
+      {super.key, this.isEnabled = true}) {
     _controller.text = initValue?.toString() ?? '---';
   }
 
@@ -43,6 +45,7 @@ class ScalarBox extends StatelessWidget {
           cursorHeight: 14,
           maxLines: 1,
           controller: _controller,
+          enabled: isEnabled,
           style: Theme.of(context).smallText,
           decoration: InputDecoration(
             contentPadding:

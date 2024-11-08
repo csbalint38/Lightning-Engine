@@ -1,7 +1,10 @@
+import 'package:editor/components/component_factory.dart';
 import 'package:editor/components/components.dart';
+import 'package:editor/components/script.dart';
 import 'package:editor/components/transform.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/editors/world_editor/components/transform.dart' as view;
+import 'package:editor/editors/world_editor/components/script.dart' as view;
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -65,7 +68,9 @@ class _ComponentsState extends State<Components> {
                                     .map(
                                       (script) => MenuItemButton(
                                         style: Theme.of(context).menuItemButton,
-                                        onPressed: null,
+                                        onPressed: () =>
+                                            _controller.addComponent(
+                                                ComponentType.script, script),
                                         child: Text(script),
                                       ),
                                     )
@@ -82,19 +87,23 @@ class _ComponentsState extends State<Components> {
                           builder: (BuildContext context,
                               MenuController controller, Widget? child) {
                             return ElevatedButton(
-                              onPressed: () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
-                                }
-                              },
+                              onPressed:
+                                  _controller.msEntity.value?.isEnabled.value ==
+                                          true
+                                      ? () {
+                                          if (controller.isOpen) {
+                                            controller.close();
+                                          } else {
+                                            controller.open();
+                                          }
+                                        }
+                                      : null,
                               style: Theme.of(context).smallButton,
                               child: const Row(
                                 children: [
                                   Padding(
                                     padding: EdgeInsets.only(right: 8.0),
-                                    child: Icon(Icons.menu, size: 18),
+                                    child: Icon(Icons.menu, size: 16),
                                   ),
                                   Text('Add Component'),
                                 ],
@@ -133,6 +142,9 @@ class _ComponentsState extends State<Components> {
                             controller: _nameController,
                             style: Theme.of(context).smallText,
                             decoration: Theme.of(context).smallInput,
+                            enabled:
+                                _controller.msEntity.value?.isEnabled.value ==
+                                    true,
                             onSubmitted: (name) {
                               _controller.setMsEntityName(name);
                               widget.focusNode.requestFocus();
@@ -186,6 +198,12 @@ class _ComponentsState extends State<Components> {
                                 return view.Transform(
                                   component: component,
                                   globalFocus: widget.focusNode,
+                                );
+                              }
+                              if (component is MSScript) {
+                                return view.Script(
+                                  globalFocus: widget.focusNode,
+                                  component: component,
                                 );
                               }
                               return Container();

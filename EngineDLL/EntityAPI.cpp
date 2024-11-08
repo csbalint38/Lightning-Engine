@@ -3,7 +3,7 @@
 #include "Common.h"
 #include "Components/Entity.h"
 #include "Components/Transform.h"
-
+#include "Components/Script.h"
 
 using namespace lightning;
 
@@ -14,7 +14,7 @@ namespace {
 		f32 rotation[3];
 		f32 scale[3];
 
-		transform::InitInfo to_InitInfo() {
+		transform::InitInfo to_init_info() {
 			using namespace DirectX;
 			transform::InitInfo info{};
 			memcpy(&info.position[0], &position[0], sizeof(position));
@@ -24,12 +24,25 @@ namespace {
 			XMFLOAT4A rot_quat{};
 			XMStoreFloat4A(&rot_quat, quat);
 			memcpy(&info.rotation[0], &rot_quat.x, sizeof(info.rotation));
+
+			return info;
+		}
+	};
+
+	struct ScriptComponentDescriptor {
+		script::detail::script_creator script_creator;
+
+		script::InitInfo to_init_info() {
+			script::InitInfo info{};
+			info.script_creator = script_creator;
+
 			return info;
 		}
 	};
 
 	struct EntityDescriptor {
 		TransformComponentDescriptor transform;
+		ScriptComponentDescriptor script;
 	};
 
 	game_entity::Entity entity_from_id(id::id_type id) {
@@ -40,8 +53,12 @@ namespace {
 EDITOR_INTERFACE id::id_type create_game_entity(EntityDescriptor* entity) {
 	assert(entity);
 	EntityDescriptor& desc{ *entity };
-	transform::InitInfo transform_info{ desc.transform.to_InitInfo() };
-	game_entity::EntityInfo entity_info{ &transform_info };
+	transform::InitInfo transform_info{ desc.transform.to_init_info() };
+	script::InitInfo script_info{ desc.script.to_init_info() };
+	game_entity::EntityInfo entity_info{
+		&transform_info,
+		&script_info,
+	};
 
 	return game_entity::create(entity_info).get_id();
 }

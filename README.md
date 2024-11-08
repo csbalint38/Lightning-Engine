@@ -7,11 +7,11 @@
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 105 | 14,331 |
-| Dart | 42 |  4,797 |
-| HLSL | 12 |  1,378 |
+| C++ | 105 | 14,350 |
+| Dart | 45 |  5,320 |
+| HLSL | 13 |  1,378 |
 | Python | 8 | 244 |
-| Markdown | 4 | 144 |
+| Markdown | 4 | 152 |
 | YAML | 2 | 131 |
 ... +3 others (less tha 100 lines)
 
