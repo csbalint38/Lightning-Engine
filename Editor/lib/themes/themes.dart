@@ -285,6 +285,32 @@ extension CustomTheme on ThemeData {
         )
       : const ButtonStyle();
 
+  ButtonStyle get menuItemButton => brightness == Brightness.light
+      ? ButtonStyle(
+          textStyle: WidgetStatePropertyAll(smallText),
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          ),
+          backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.hovered)) {
+                return Colors.blueGrey.withAlpha(30);
+              }
+              return Colors.transparent;
+            },
+          ),
+          overlayColor: WidgetStateProperty.resolveWith<Color?>(
+            (Set<WidgetState> states) {
+              if (states.contains(WidgetState.hovered)) {
+                return Colors.blueGrey.withAlpha(50);
+              }
+              return null;
+            },
+          ),
+          minimumSize: WidgetStatePropertyAll(Size(35, 35)),
+        )
+      : const ButtonStyle();
+
   InputDecoration get smallInput => brightness == Brightness.light
       ? InputDecoration(
           contentPadding:

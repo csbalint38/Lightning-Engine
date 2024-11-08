@@ -25,6 +25,7 @@ final class Project {
 
   late final String fullPath;
   late final String solution;
+  ListNotifier<String> availableScripts = ListNotifier<String>();
 
   late RelayCommand addScene;
   late RelayCommand removeScene;
@@ -170,9 +171,12 @@ final class Project {
   }
 
   void _loadGameCodeDll(final String configName) {
-    String dll = p.join(path, name, 'x64', configName, '$name.dll');
+    final String dll = p.join(path, name, 'x64', configName, '$name.dll');
+
+    availableScripts.clear();
 
     if (File(dll).existsSync() && EngineAPI.loadGameCodeDll(dll)) {
+      availableScripts.value = EngineAPI.getScriptNames();
       EditorLogger().log(
         LogLevel.info,
         "Game code DLL loaded successfully",
@@ -189,6 +193,8 @@ final class Project {
 
   void _unloadGameCodeDll() {
     if (EngineAPI.unloadGameCodeDll()) {
+      availableScripts.clear();
+
       EditorLogger().log(
         LogLevel.info,
         "Game code DLL unloaded",
@@ -208,9 +214,9 @@ final class Project {
   void _bindCommands() {
     addScene = RelayCommand(
       (x) {
-        _addScene("New Scene ${this.scenes.value.length}");
-        Scene newScene = this.scenes.value.last;
-        int index = this.scenes.value.length - 1;
+        _addScene("New Scene ${scenes.value.length}");
+        Scene newScene = scenes.value.last;
+        int index = scenes.value.length - 1;
         _undoRedo.add(
           UndoRedoAction(
             name: "Add ${newScene.name}",

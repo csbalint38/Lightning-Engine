@@ -1,9 +1,11 @@
 import 'package:collection/collection.dart';
 import 'package:editor/components/components.dart';
+import 'package:editor/components/script.dart';
 import 'package:editor/components/transform.dart' as lng;
 import 'package:editor/common/list_notifier.dart';
 import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/utilities/id.dart';
+import 'package:editor/utilities/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:editor/utilities/math.dart';
@@ -11,8 +13,7 @@ import 'package:editor/utilities/math.dart';
 class GameEntity {
   final ValueNotifier<String> name = ValueNotifier<String>("");
   final ValueNotifier<bool> isEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<List<Component>> components =
-      ValueNotifier<List<Component>>([]);
+  final ListNotifier<Component> components = ListNotifier<Component>();
   int entityId = Id.invalidId;
   bool _isActive = false;
 
@@ -23,7 +24,7 @@ class GameEntity {
         !components.any((element) => element is lng.Transform)) {
       components?.add(lng.Transform());
     }
-    this.components.value.addAll(components!);
+    this.components.addAll(components!, notify: false);
   }
 
   factory GameEntity.fromXML(String xmlStr) {
@@ -40,6 +41,8 @@ class GameEntity {
         switch (child.name.toString()) {
           case 'Transform':
             components.add(lng.Transform.fromXML(child.toString()));
+          case 'Script':
+            components.add(Script.fromXml(child.toString()));
         }
       }
     }
@@ -85,6 +88,34 @@ class GameEntity {
 
   T? getComponent<T extends Component>() {
     return components.value.whereType<T>().firstOrNull;
+  }
+
+  bool addComponent(Component component) {
+    if (!components.value.any((x) => x.runtimeType == component.runtimeType)) {
+      isActive = false;
+      components.value.add(component);
+      isActive = true;
+
+      return true;
+    }
+
+    EditorLogger().log(
+      LogLevel.warning,
+      "Entity $name already has a ${component.runtimeType.toString()} component",
+      trace: StackTrace.current,
+    );
+
+    return false;
+  }
+
+  void removeComponent(Component component) {
+    if (component is lng.Transform) return;
+
+    if (components.value.contains(component)) {
+      isActive = false;
+      components.remove(component);
+      isActive = true;
+    }
   }
 }
 

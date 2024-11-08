@@ -1,6 +1,7 @@
 # v0.3.0-beta - 2025.x.x
 
 # Editor
+ - Script component
  - Build game code
  - Load game code DLL into editor
 

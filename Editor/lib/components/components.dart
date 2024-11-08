@@ -1,7 +1,9 @@
 import 'package:editor/components/game_entity.dart';
 
 abstract class Component {
-  factory Component.fromXML() {
+  Component();
+
+  factory Component.fromXML(String xmlStr) {
     throw UnimplementedError();
   }
 

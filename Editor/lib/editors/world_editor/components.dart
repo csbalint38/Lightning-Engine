@@ -46,10 +46,63 @@ class _ComponentsState extends State<Components> {
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: Theme.of(context).smallButton,
-                      child: const Text("Add Component"),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MenuAnchor(
+                          menuChildren: [
+                            MenuItemButton(
+                              style: Theme.of(context).menuItemButton,
+                              onPressed: null,
+                              child: Text('Geometry'),
+                            ),
+                            ValueListenableBuilder(
+                              valueListenable:
+                                  _controller.project.availableScripts,
+                              builder: (context, value, child) => SubmenuButton(
+                                style: Theme.of(context).menuItemButton,
+                                menuChildren: value
+                                    .map(
+                                      (script) => MenuItemButton(
+                                        style: Theme.of(context).menuItemButton,
+                                        onPressed: null,
+                                        child: Text(script),
+                                      ),
+                                    )
+                                    .toList(),
+                                child: Text('Script'),
+                              ),
+                            ),
+                            MenuItemButton(
+                              style: Theme.of(context).menuItemButton,
+                              onPressed: null,
+                              child: Text('Physics'),
+                            ),
+                          ],
+                          builder: (BuildContext context,
+                              MenuController controller, Widget? child) {
+                            return ElevatedButton(
+                              onPressed: () {
+                                if (controller.isOpen) {
+                                  controller.close();
+                                } else {
+                                  controller.open();
+                                }
+                              },
+                              style: Theme.of(context).smallButton,
+                              child: const Row(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 8.0),
+                                    child: Icon(Icons.menu, size: 18),
+                                  ),
+                                  Text('Add Component'),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
