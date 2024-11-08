@@ -7,8 +7,10 @@ enum VectorNotation { xyz, rgb, abc }
 class VectorBox extends StatelessWidget {
   final FocusNode globalFocus;
   final Vector3Notifier notifier;
+  final bool isEnabled;
 
-  const VectorBox(this.globalFocus, this.notifier, {super.key});
+  const VectorBox(this.globalFocus, this.notifier,
+      {super.key, this.isEnabled = true});
 
   @override
   Widget build(BuildContext context) {
@@ -19,17 +21,47 @@ class VectorBox extends StatelessWidget {
           builder: (context, _, __) {
             return Row(
               children: [
-                const Text('X'),
+                Text(
+                  'X',
+                  style: !isEnabled
+                      ? TextStyle(color: Theme.of(context).disabledColor)
+                      : null,
+                ),
                 const SizedBox(width: 5),
-                ScalarBox(globalFocus, (x) => notifier.x = x, notifier.x),
+                ScalarBox(
+                  globalFocus,
+                  (x) => notifier.x = x,
+                  notifier.x,
+                  isEnabled: isEnabled,
+                ),
                 const SizedBox(width: 15),
-                const Text('Y'),
+                Text(
+                  'Y',
+                  style: !isEnabled
+                      ? TextStyle(color: Theme.of(context).disabledColor)
+                      : null,
+                ),
                 const SizedBox(width: 5),
-                ScalarBox(globalFocus, (y) => notifier.y = y, notifier.y),
+                ScalarBox(
+                  globalFocus,
+                  (y) => notifier.y = y,
+                  notifier.y,
+                  isEnabled: isEnabled,
+                ),
                 const SizedBox(width: 15),
-                const Text('Z'),
+                Text(
+                  'Z',
+                  style: !isEnabled
+                      ? TextStyle(color: Theme.of(context).disabledColor)
+                      : null,
+                ),
                 const SizedBox(width: 5),
-                ScalarBox(globalFocus, (z) => notifier.z = z, notifier.z),
+                ScalarBox(
+                  globalFocus,
+                  (z) => notifier.z = z,
+                  notifier.z,
+                  isEnabled: isEnabled,
+                ),
               ],
             );
           },

@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:editor/components/component_factory.dart';
 import 'package:editor/components/components.dart';
 import 'package:editor/components/game_entity.dart';
@@ -6,6 +5,7 @@ import 'package:editor/common/relay_command.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/game_project/scene.dart';
+import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/foundation.dart';
@@ -111,7 +111,7 @@ class WorldEditorController {
   void addComponent(ComponentType componentType, Object data) {
     final Function(Object) creationFunction =
         ComponentFactory.getCreationFunction(componentType);
-    List<List<Object>> changedEntities = List.empty();
+    List<List<Object>> changedEntities = List.empty(growable: true);
     final MSGameEntity vm = msEntity.value!;
 
     for (final entity in vm.selectedEntities) {
@@ -125,24 +125,24 @@ class WorldEditorController {
     if (changedEntities.isNotEmpty) {
       vm.refresh();
 
-      UndoRedo().add(
+      undoRedo.add(
         UndoRedoAction(
           name:
-              "Add ${componentType.toString().split('.')[1]} component to ${msEntity.value?.selectedEntities.length} entities.",
-          undoAction: (x) {
-            for (final pair in IterableZip(x)) {
-              final GameEntity entity = pair[0];
-              final Component component = pair[1];
+              "Add ${capitalize(componentType.toString().split('.')[1])} Component to ${msEntity.value?.selectedEntities.length} entities.",
+          undoAction: () {
+            for (final pair in changedEntities) {
+              final GameEntity entity = pair[0] as GameEntity;
+              final Component component = pair[1] as Component;
 
               entity.removeComponent(component);
 
               MSGameEntity.getMSGameEntity()?.refresh();
             }
           },
-          redoAction: (x) {
-            for (final pair in IterableZip(x)) {
-              final GameEntity entity = pair[0];
-              final Component component = pair[1];
+          redoAction: () {
+            for (final pair in changedEntities) {
+              final GameEntity entity = pair[0] as GameEntity;
+              final Component component = pair[1] as Component;
 
               entity.addComponent(component);
 

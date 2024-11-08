@@ -2,6 +2,7 @@ import 'package:docking/docking.dart';
 import 'package:flutter/material.dart';
 
 const TextStyle blackText = TextStyle(color: Colors.black);
+const TextStyle disabledText = TextStyle(color: Colors.grey);
 const TextStyle whiteText = TextStyle(color: Colors.white);
 
 ThemeData lightTheme = ThemeData(
@@ -208,6 +209,7 @@ extension CustomTheme on ThemeData {
   Color get lightColor => brightness == Brightness.light
       ? const Color.fromARGB(255, 109, 142, 158)
       : Colors.black;
+  Color get disabledColor => Colors.grey;
   MultiSplitViewThemeData get msvTheme => brightness == Brightness.light
       ? MultiSplitViewThemeData(
           dividerPainter: DividerPainters.background(

@@ -1,4 +1,7 @@
 import 'dart:ffi';
+import 'package:editor/components/script.dart';
+import 'package:editor/game_project/project.dart';
+import 'package:editor/utilities/logger.dart';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:editor/congifg/config.dart';
@@ -87,8 +90,23 @@ class EngineAPI {
     } // Transform component
 
     {
-      //Script c = entity.getComponent<Script>();
-    }
+      Script? c = entity.getComponent<Script>();
+
+      if (c != null && Project.instance != null) {
+        if (Project.instance!.availableScripts.value.contains(c.name)) {
+          desc.ref.script.scriptCreator = getScriptCreator(c.name);
+        } else {
+          desc.ref.script.scriptCreator = 0;
+          EditorLogger().log(
+            LogLevel.warning,
+            "Unable to find script with name ${c.name}. Game Entity will be created without Script componen!t",
+            trace: StackTrace.current,
+          );
+        }
+      } else {
+        desc.ref.script.scriptCreator = 0;
+      }
+    } // Script component
 
     final int result = _createGameEntity(desc);
 
@@ -134,7 +152,7 @@ class EngineAPI {
     }
   }
 
-  int getScriptCreator(String name) {
+  static int getScriptCreator(String name) {
     final Pointer<Utf8> namePointer = name.toNativeUtf8();
     final int result = _getScriptCreator(namePointer);
     calloc.free(namePointer);

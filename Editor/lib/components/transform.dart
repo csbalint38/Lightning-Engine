@@ -19,7 +19,7 @@ class Transform implements Component {
   }
 
   @override
-  Transform.fromXML(String xmlStr) {
+  factory Transform.fromXML(String xmlStr) {
     xml.XmlDocument document = xml.XmlDocument.parse(xmlStr);
 
     xml.XmlElement root = document.rootElement;
@@ -45,28 +45,29 @@ class Transform implements Component {
       double.parse((scaleNode?.getElement("Z")?.innerText)!),
     );
 
-    Transform(position: position, rotation: rotation, scale: scale);
+    return Transform(position: position, rotation: rotation, scale: scale);
   }
 
   @override
   String toXML() {
     final builder = xml.XmlBuilder();
-    builder.element("Position", nest: () {
-      builder.element("X", nest: position.x.toString());
-      builder.element("Y", nest: position.y.toString());
-      builder.element("Z", nest: position.z.toString());
+    builder.element("Transform", nest: () {
+      builder.element("Position", nest: () {
+        builder.element("X", nest: position.x.toString());
+        builder.element("Y", nest: position.y.toString());
+        builder.element("Z", nest: position.z.toString());
+      });
+      builder.element("Rotation", nest: () {
+        builder.element("X", nest: rotation.x.toString());
+        builder.element("Y", nest: rotation.y.toString());
+        builder.element("Z", nest: rotation.z.toString());
+      });
+      builder.element("Scale", nest: () {
+        builder.element("X", nest: scale.x.toString());
+        builder.element("Y", nest: scale.y.toString());
+        builder.element("Z", nest: scale.z.toString());
+      });
     });
-    builder.element("Rotation", nest: () {
-      builder.element("X", nest: rotation.x.toString());
-      builder.element("Y", nest: rotation.y.toString());
-      builder.element("Z", nest: rotation.z.toString());
-    });
-    builder.element("Scale", nest: () {
-      builder.element("X", nest: scale.x.toString());
-      builder.element("Y", nest: scale.y.toString());
-      builder.element("Z", nest: scale.z.toString());
-    });
-
     return builder.buildDocument().toXmlString(pretty: true);
   }
 
