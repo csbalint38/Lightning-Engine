@@ -1,3 +1,6 @@
+import 'package:collection/collection.dart';
+import 'package:editor/components/component_factory.dart';
+import 'package:editor/components/components.dart';
 import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
@@ -103,6 +106,52 @@ class WorldEditorController {
 
   void enableMsEntity(bool? isEnabled) {
     enableMultipleCommand.execute(isEnabled);
+  }
+
+  void addComponent(ComponentType componentType, Object data) {
+    final Function(Object) creationFunction =
+        ComponentFactory.getCreationFunction(componentType);
+    List<List<Object>> changedEntities = List.empty();
+    final MSGameEntity vm = msEntity.value!;
+
+    for (final entity in vm.selectedEntities) {
+      final Component component = creationFunction(data);
+
+      if (entity.addComponent(component)) {
+        changedEntities.add([entity, component]);
+      }
+    }
+
+    if (changedEntities.isNotEmpty) {
+      vm.refresh();
+
+      UndoRedo().add(
+        UndoRedoAction(
+          name:
+              "Add ${componentType.toString().split('.')[1]} component to ${msEntity.value?.selectedEntities.length} entities.",
+          undoAction: (x) {
+            for (final pair in IterableZip(x)) {
+              final GameEntity entity = pair[0];
+              final Component component = pair[1];
+
+              entity.removeComponent(component);
+
+              MSGameEntity.getMSGameEntity()?.refresh();
+            }
+          },
+          redoAction: (x) {
+            for (final pair in IterableZip(x)) {
+              final GameEntity entity = pair[0];
+              final Component component = pair[1];
+
+              entity.addComponent(component);
+
+              MSGameEntity.getMSGameEntity()?.refresh();
+            }
+          },
+        ),
+      );
+    }
   }
 
   void save() {

@@ -4,9 +4,6 @@ final RegExp pathAllowedCharacters = RegExp(
     r'^(?:[a-zA-Z]:\\|\\)(?:[^\\/:*?"<>|\r\n]+\\)*(?:[^\\/:*?"<>|\r\n]*[^\\/:*?"<>|\r\n. ])?$');
 final RegExp strictFileNameCharacters = RegExp(r'^[\w\-. ]+$');
 
-enum BuildConfig {
-  debug,
-  debugEditor,
-  release,
-  releaseEditor
-}
+enum ComponentEnum { transform, geometry, physics, script }
+
+enum BuildConfig { debug, debugEditor, release, releaseEditor }

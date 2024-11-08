@@ -183,7 +183,7 @@ EDITOR_INTERFACE bool add_files(const wchar_t* solution, const wchar_t* project_
 		vs_instance->Solution->Open(solution);
 	}
 	else {
-		vs_instance->ExecuteCommand("File.SaveAll", (""));
+		vs_instance->ExecuteCommand("File.SaveAll", "");
 	}
 
 	for (int i = 1; i < vs_instance->Solution->Projects->Count + 1; i++) {
@@ -204,6 +204,7 @@ EDITOR_INTERFACE bool add_files(const wchar_t* solution, const wchar_t* project_
 			if (source_file != nullptr) {
 				vs_instance->ItemOperations->OpenFile(source_file, EnvDTE::vsViewKindTextView)->Visible = true;
 			}
+			vs_instance->ExecuteCommand("File.SaveAll", "");
 			vs_instance->MainWindow->Activate();
 			vs_instance->MainWindow->Visible = true;
 		}

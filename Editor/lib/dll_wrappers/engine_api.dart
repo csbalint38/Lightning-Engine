@@ -118,31 +118,18 @@ class EngineAPI {
     }
 
     final List<String> scriptNames = [];
-    final Pointer<Int32> pUbound = calloc<Int32>();
-    final Pointer<Int32> pLbound = calloc<Int32>();
 
     try {
-      SafeArrayGetLBound(scriptNamesPtr, 1, pLbound);
-      SafeArrayGetUBound(scriptNamesPtr, 1, pUbound);
-
-      final int count = pUbound.value - pLbound.value + 1;
+      final int count = scriptNamesPtr.ref.rgsabound[0].cElements;
+      final Pointer<Pointer<Utf16>> dataPointer =
+          scriptNamesPtr.ref.pvData.cast<Pointer<Utf16>>();
 
       for (int i = 0; i < count; i++) {
-        final itemPtr = calloc<VARIANT>();
-        SafeArrayGetElement(
-            scriptNamesPtr, calloc<Int32>()..value = i, itemPtr.cast());
-
-        final bstrPtr = itemPtr.ref.bstrVal;
-
-        scriptNames.add(bstrPtr.toDartString());
-
-        free(itemPtr);
+        scriptNames.add((dataPointer + i).value.toDartString());
       }
 
       return scriptNames;
     } finally {
-      free(pUbound);
-      free(pLbound);
       SafeArrayDestroy(scriptNamesPtr);
     }
   }

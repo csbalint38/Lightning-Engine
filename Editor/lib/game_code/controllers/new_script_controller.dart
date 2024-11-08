@@ -96,6 +96,7 @@ class NewScriptController {
         if (!await (VisualStudio.addFiles(project.solution, [h, cpp]))) {
           await Future.delayed(const Duration(seconds: 1));
         } else {
+          project.availableScripts.add(name.value);
           break;
         }
       }
