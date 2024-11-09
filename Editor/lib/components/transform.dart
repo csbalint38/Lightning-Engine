@@ -1,7 +1,9 @@
+import 'dart:typed_data';
 import 'package:editor/components/components.dart';
 import 'package:editor/components/game_entity.dart';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/common/vector_notifier.dart';
+import 'package:editor/utilities/binary.dart';
 import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:vector_math/vector_math.dart';
@@ -74,6 +76,19 @@ class Transform implements Component {
   @override
   MSComponent<Component> getMultiselectComponent(MSGameEntity msEntity) =>
       MSTransform(msEntity);
+
+  @override
+  void writeToBinary(BytesBuilder builder) {
+    builder.add(doubleToBytes(position.x));
+    builder.add(doubleToBytes(position.y));
+    builder.add(doubleToBytes(position.z));
+    builder.add(doubleToBytes(rotation.x));
+    builder.add(doubleToBytes(rotation.y));
+    builder.add(doubleToBytes(rotation.z));
+    builder.add(doubleToBytes(scale.x));
+    builder.add(doubleToBytes(scale.y));
+    builder.add(doubleToBytes(scale.z));
+  }
 }
 
 enum TransformProperty { position, rotation, scale }

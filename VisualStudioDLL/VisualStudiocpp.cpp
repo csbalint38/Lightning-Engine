@@ -250,3 +250,20 @@ EDITOR_INTERFACE bool get_last_build_info() {
 
 	return vs_instance->Solution->SolutionBuild->LastBuildInfo == 0;
 }
+
+EDITOR_INTERFACE void run(const wchar_t* solution, const wchar_t* config, bool debug) {
+	if (vs_instance != nullptr && !is_debugging()) {
+		if (debug) {
+			vs_instance->ExecuteCommand("Debug.Start", "");
+		}
+		else {
+			vs_instance->ExecuteCommand("Debug.StartWithoutDebugging", "");
+		}
+	}
+}
+
+EDITOR_INTERFACE void stop() {
+	if (vs_instance != nullptr && is_debugging()) {
+		vs_instance->ExecuteCommand("Debug.StopDebugging", "");
+	}
+}

@@ -1,3 +1,4 @@
+import 'package:editor/components/components.dart';
 import 'package:editor/components/script.dart';
 import 'package:editor/components/transform.dart';
 
@@ -8,9 +9,7 @@ enum ComponentType {
   script,
 }
 
-final class ComponentFactory {
-  ComponentFactory._();
-
+extension ComponentFactory on Component {
   static final List<CreationFunctionType> _functions = [
     (data) => Transform(),
     (data) => Script(name: data as String)
@@ -18,5 +17,15 @@ final class ComponentFactory {
 
   static CreationFunctionType getCreationFunction(ComponentType componentType) {
     return _functions[componentType.index];
+  }
+
+  ComponentType toEnumType() {
+    if (this is Transform) {
+      return ComponentType.trasnsform;
+    } else if (this is Script) {
+      return ComponentType.script;
+    } else {
+      throw ArgumentError('Unknown component type');
+    }
   }
 }

@@ -23,6 +23,10 @@ typedef _BuildSolutionType = void Function(
     Pointer<Utf16>, Pointer<Utf16>, bool);
 typedef _GetLastBuildInfoNativeType = Bool Function();
 typedef _GetLastBuildInfoType = bool Function();
+typedef _RunNativeType = Void Function(Pointer<Utf16>, Pointer<Utf16>, Bool);
+typedef _RunType = void Function(Pointer<Utf16>, Pointer<Utf16>, bool);
+typedef _StopNativeType = Void Function();
+typedef _StopType = void Function();
 
 final class VisualStudio {
   static const String _dllName =
@@ -44,6 +48,10 @@ final class VisualStudio {
   static final _GetLastBuildInfoType _getLastBuildInfo = _vsiDll.lookupFunction<
       _GetLastBuildInfoNativeType,
       _GetLastBuildInfoType>('get_last_build_info');
+  static final _RunType _run =
+      _vsiDll.lookupFunction<_RunNativeType, _RunType>('run');
+  static final _StopType _stop =
+      _vsiDll.lookupFunction<_StopNativeType, _StopType>('stop');
 
   static ValueNotifier<bool> isDebugging = ValueNotifier<bool>(false);
 
@@ -116,6 +124,31 @@ final class VisualStudio {
 
   static bool getLastBuildInfo() {
     return _getLastBuildInfo();
+  }
+
+  static Future<void> run(
+      Project project, BuildConfig config, bool debug) async {
+    final String solutionName =
+        project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
+    final String configName = capitalize(config.toString().split('.').last);
+
+    isDebugging.value = true;
+
+    await _runInIsolate((String solutionPath, String configName, bool debug) {
+      final Pointer<Utf16> solutionNamePtr = solutionPath.toNativeUtf16();
+      final Pointer<Utf16> configNamePointer = configName.toNativeUtf16();
+
+      _run(solutionNamePtr, configNamePointer, debug);
+
+      calloc.free(solutionNamePtr);
+      calloc.free(configNamePointer);
+    }, [solutionName, configName, debug]);
+  }
+
+  static Future<void> stop() async {
+    await _runInIsolate(() => _stop(), []);
+
+    isDebugging.value = false;
   }
 
   static Future<T> _runInIsolate<T>(Function task, List<dynamic> args) async {
