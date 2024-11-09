@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'package:editor/common/relay_command.dart';
 import 'package:editor/components/components.dart';
 import 'package:editor/components/game_entity.dart';
+import 'package:editor/utilities/binary.dart';
 import 'package:editor/utilities/undo_redo.dart';
 import 'package:flutter/material.dart';
 import 'package:xml/xml.dart' as xml;
@@ -36,6 +38,11 @@ class Script extends Component {
   @override
   MSComponent<Script> getMultiselectComponent(MSGameEntity msEntity) =>
       MSScript(msEntity);
+
+  @override
+  void writeToBinary(BytesBuilder builder) {
+    builder.add(stringToBytes(name));
+  }
 }
 
 enum ScriptProperty { name }

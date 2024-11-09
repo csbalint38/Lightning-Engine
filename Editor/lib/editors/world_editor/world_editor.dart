@@ -61,6 +61,17 @@ class _WorldEditorState extends State<WorldEditor> {
             LogicalKeyboardKey.shiftLeft,
             LogicalKeyboardKey.keyB,
           ): const BuildIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.controlLeft,
+            LogicalKeyboardKey.f5,
+          ): const StartWithoutDebuggingIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.f5,
+          ): const StartWithDebuggingIntent(),
+          LogicalKeySet(
+            LogicalKeyboardKey.shiftLeft,
+            LogicalKeyboardKey.f5,
+          ): const StopDebuggingIntent()
         },
         child: Actions(
           actions: <Type, Action<Intent>>{
@@ -75,6 +86,16 @@ class _WorldEditorState extends State<WorldEditor> {
             ),
             BuildIntent: CallbackAction<BuildIntent>(
               onInvoke: (intent) => _build(),
+            ),
+            StartWithDebuggingIntent: CallbackAction<StartWithDebuggingIntent>(
+              onInvoke: (intent) => _start_with_debugging(),
+            ),
+            StartWithoutDebuggingIntent:
+                CallbackAction<StartWithoutDebuggingIntent>(
+              onInvoke: (intent) => _start_without_debugging(),
+            ),
+            StopDebuggingIntent: CallbackAction<StopDebuggingIntent>(
+              onInvoke: (intent) => _stop_debugging(),
             ),
           },
           child: Focus(
@@ -174,6 +195,18 @@ class _WorldEditorState extends State<WorldEditor> {
   void _build() {
     _controller.buildCommand.execute(null);
   }
+
+  void _start_with_debugging() {
+    _controller.debugStartCommand.execute(null);
+  }
+
+  void _start_without_debugging() {
+    _controller.debugStartWithoutDebuggingCommand.execute(null);
+  }
+
+  void _stop_debugging() {
+    _controller.debugStopCommand.execute(null);
+  }
 }
 
 class UndoIntent extends Intent {
@@ -190,4 +223,16 @@ class SaveIntent extends Intent {
 
 class BuildIntent extends Intent {
   const BuildIntent();
+}
+
+class StartWithDebuggingIntent extends Intent {
+  const StartWithDebuggingIntent();
+}
+
+class StartWithoutDebuggingIntent extends Intent {
+  const StartWithoutDebuggingIntent();
+}
+
+class StopDebuggingIntent extends Intent {
+  const StopDebuggingIntent();
 }

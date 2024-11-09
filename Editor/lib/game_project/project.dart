@@ -1,11 +1,16 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:editor/common/constants.dart';
 import 'package:editor/common/relay_command.dart';
+import 'package:editor/components/component_factory.dart';
+import 'package:editor/components/components.dart';
+import 'package:editor/components/game_entity.dart';
 import 'package:editor/components/script.dart';
 import 'package:editor/dll_wrappers/engine_api.dart';
 import 'package:editor/dll_wrappers/visual_studio.dart';
 import 'package:editor/game_project/scene.dart';
 import 'package:editor/common/list_notifier.dart';
+import 'package:editor/utilities/binary.dart';
 import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/logger.dart';
 import 'package:editor/utilities/undo_redo.dart';
@@ -134,12 +139,50 @@ final class Project {
     );
   }
 
+  void _saveAsBinary() {
+    final String configName =
+        capitalize(buildConfig.value.name.split('.').last);
+    final File bin = File(p.join(path, name, 'x64', configName, 'game.bin'));
+
+    BytesBuilder builder = BytesBuilder();
+
+    // Number of entities
+    builder.add(intToBytes(activeScene.entities.value.length));
+
+    for (final GameEntity entity in activeScene.entities.value) {
+      // Placeholder to entity type
+      builder.add(intToBytes(0));
+      // Number of components
+      builder.add(intToBytes(entity.components.value.length));
+
+      for (final Component component in entity.components.value) {
+        // Component type
+        builder.add(intToBytes(component.toEnumType().index));
+        // Component binary data
+        component.writeToBinary(builder);
+      }
+    }
+
+    bin.writeAsBytesSync(builder.toBytes(), mode: FileMode.write);
+  }
+
   void unload() {
     _unloadGameCodeDll();
     VisualStudio.closeVisualStudio();
     UndoRedo().resset();
     Project.instance = null;
   }
+
+  Future<void> runGame({bool debug = false}) async {
+    await (VisualStudio.buildSolution(this, buildConfig.value, true));
+
+    if (VisualStudio.getLastBuildInfo()) {
+      _saveAsBinary();
+      await VisualStudio.run(this, buildConfig.value, debug);
+    }
+  }
+
+  Future<void> stopGame() async => await VisualStudio.stop();
 
   Future<void> buildGameCodeDll({bool showWindow = true}) async {
     final BuildConfig buildConfigValue = buildConfig.value == BuildConfig.debug

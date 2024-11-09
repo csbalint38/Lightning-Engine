@@ -23,6 +23,9 @@ class WorldEditorController {
   late RelayCommand renameMultipleCommand;
   late RelayCommand enableMultipleCommand;
   late RelayCommand buildCommand;
+  late RelayCommand debugStartCommand;
+  late RelayCommand debugStartWithoutDebuggingCommand;
+  late RelayCommand debugStopCommand;
 
   final ValueNotifier<bool> canSave = ValueNotifier(false);
   final List<int> selectedEntityIndices = <int>[];
@@ -223,12 +226,33 @@ class WorldEditorController {
 
   void _createCommands() {
     undoCommand = RelayCommand(
-        (x) => undoRedo.undo(), (x) => undoRedo.undoList.value.isNotEmpty);
+      (x) => undoRedo.undo(),
+      (x) => undoRedo.undoList.value.isNotEmpty,
+    );
     redoCommand = RelayCommand(
-        (x) => undoRedo.redo(), (x) => undoRedo.redoList.value.isNotEmpty);
-    saveCommand = RelayCommand((x) => save(), (x) => canSave.value);
-    buildCommand = RelayCommand((x) async => await project.buildGameCodeDll(),
-        (x) => !VisualStudio.isDebugging.value);
+      (x) => undoRedo.redo(),
+      (x) => undoRedo.redoList.value.isNotEmpty,
+    );
+    saveCommand = RelayCommand(
+      (x) => save(),
+      (x) => canSave.value,
+    );
+    buildCommand = RelayCommand(
+      (x) async => await project.buildGameCodeDll(),
+      (x) => !VisualStudio.isDebugging.value,
+    );
+    debugStartCommand = RelayCommand(
+      (x) async => await project.runGame(debug: true),
+      (x) => !VisualStudio.isDebugging.value && VisualStudio.getLastBuildInfo(),
+    );
+    debugStartWithoutDebuggingCommand = RelayCommand(
+      (x) async => await project.runGame(debug: false),
+      (x) => !VisualStudio.isDebugging.value && VisualStudio.getLastBuildInfo(),
+    );
+    debugStopCommand = RelayCommand(
+      (x) async => await project.stopGame(),
+      (x) => VisualStudio.isDebugging.value,
+    );
 
     renameMultipleCommand = RelayCommand<String>(
       (x) {
