@@ -251,7 +251,7 @@ class WorldEditorController {
     );
     debugStopCommand = RelayCommand(
       (x) async => await project.stopGame(),
-      (x) => VisualStudio.isDebugging.value,
+      (x) => VisualStudio.isDebugging.value && !VisualStudio.isBuildeing,
     );
 
     renameMultipleCommand = RelayCommand<String>(

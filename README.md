@@ -7,25 +7,29 @@
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 105 | 14,350 |
-| Dart | 45 |  5,320 |
+| C++ | 103 | 14,380 |
+| Dart | 46 |  5,539 |
 | HLSL | 13 |  1,378 |
 | Python | 8 | 244 |
-| Markdown | 4 | 152 |
+| Markdown | 4 | 153 |
 | YAML | 2 | 131 |
 ... +3 others (less tha 100 lines)
 
 ## Requirements
 
 ### Minimum
-**CPU:** Intel Pentium 110 MHz / AMD K5 75-133 MHz  **Storage:**: 8 GB available space
-**RAM:** 512 MB                                     **OS:** Windows 7 64 bit
-**GPU:** Integrated with 400 MB memory              **DirectX:** DirectX 12
+**CPU:** Intel Pentium 110 MHz / AMD K5 75-133 MHz\
+**Storage:** 8 GB available space\
+**RAM:** 512 MB**OS:** Windows 7 64 bit\
+**GPU:** Integrated with 400 MB memory\
+**DirectX:** DirectX 12
 
 ### Recommended
-**CPU:** Intel Pentium II 220 MHz / AMD K6 166-300 MHz  **Storage:** 16GB SSD
-**RAM:** 1 GB                                           **OS:** Windows 10 Home
-**GPU:** NVidia GeForce GT 420                          **DirectX:** DirectX 12
+**CPU:** Intel Pentium II 220 MHz / AMD K6 166-300 MHz\
+**Storage:** 16GB SSD\
+**RAM:** 1 GB**OS:** Windows 10 Home\
+**GPU:** NVidia GeForce GT 420\
+**DirectX:** DirectX 12
 
 ## Bug Types
 

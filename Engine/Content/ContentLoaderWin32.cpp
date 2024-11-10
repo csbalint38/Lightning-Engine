@@ -5,9 +5,11 @@
 #include "Graphics/Renderer.h"
 
 #if !defined(SHIPPING) && defined(_WIN64)
+
 #include <fstream>
 #include <filesystem>
 #include <Windows.h>
+#include <sstream>
 
 namespace lightning::content {
 	namespace {
@@ -16,6 +18,34 @@ namespace lightning::content {
 			SCRIPT,
 			count
 		};
+
+		void ShowTransformInfo(const transform::InitInfo* transform_info) {
+			if (transform_info) {
+				std::ostringstream oss;
+				oss << "Position: ("
+					<< transform_info->position[0] << ", "
+					<< transform_info->position[1] << ", "
+					<< transform_info->position[2] << ")\n";
+
+				oss << "Rotation: ("
+					<< transform_info->rotation[0] << ", "
+					<< transform_info->rotation[1] << ", "
+					<< transform_info->rotation[2] << ", "
+					<< transform_info->rotation[3] << ")\n";
+
+				oss << "Scale: ("
+					<< transform_info->scale[0] << ", "
+					<< transform_info->scale[1] << ", "
+					<< transform_info->scale[2] << ")\n";
+
+				// Convert to a string for the MessageBox
+				std::string info = oss.str();
+				MessageBoxA(NULL, info.c_str(), "Transform Info", MB_OK | MB_ICONINFORMATION);
+			}
+			else {
+				MessageBoxA(NULL, "Transform info is null!", "Error", MB_OK | MB_ICONERROR);
+			}
+		}
 
 		util::vector<game_entity::Entity> entities;
 		transform::InitInfo transform_info{};
@@ -96,6 +126,7 @@ namespace lightning::content {
 		const u8* at{ game_data.get() };
 		constexpr u32 su32{ sizeof(u32) };
 		const u32 num_entities{ *at };
+		
 		at += su32;
 		if (!num_entities) return false;
 		for (u32 entity_index{ 0 }; entity_index < num_entities; ++entity_index) {

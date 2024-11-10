@@ -54,6 +54,7 @@ final class VisualStudio {
       _vsiDll.lookupFunction<_StopNativeType, _StopType>('stop');
 
   static ValueNotifier<bool> isDebugging = ValueNotifier<bool>(false);
+  static bool isBuildeing = false;
 
   static Future<void> openVisualStudio(String solutionPath) async {
     await _runInIsolate((String solutionPath) {
@@ -106,6 +107,7 @@ final class VisualStudio {
         project.solution.replaceAll('/', '\\').replaceAll(r'\', r'\\');
     final String configName = capitalize(config.toString().split('.').last);
 
+    isBuildeing = true;
     isDebugging.value = true;
 
     await _runInIsolate(
@@ -120,6 +122,7 @@ final class VisualStudio {
     }, [solutionName, configName, showWindow]);
 
     isDebugging.value = false;
+    isBuildeing = false;
   }
 
   static bool getLastBuildInfo() {
