@@ -152,14 +152,6 @@ ThemeData lightTheme = ThemeData(
     style: ButtonStyle(
       iconSize: const WidgetStatePropertyAll(16),
       padding: const WidgetStatePropertyAll(EdgeInsets.all(3)),
-      iconColor: WidgetStateProperty.resolveWith<Color>(
-        (Set<WidgetState> states) {
-          if (states.contains(WidgetState.disabled)) {
-            return Colors.black38;
-          }
-          return Colors.blueGrey;
-        },
-      ),
       backgroundColor: WidgetStateProperty.resolveWith<Color>(
         (Set<WidgetState> states) {
           if (states.contains(WidgetState.hovered) &&

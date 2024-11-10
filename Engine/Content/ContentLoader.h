@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonHeaders.h"
 
-#if !defined(SHIPPING) &&defined(_WIN64)
+#if !defined(SHIPPING) && defined(_WIN64)
 namespace lightning::content {
 	bool load_game();
 	void unload_game();

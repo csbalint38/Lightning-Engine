@@ -1,10 +1,11 @@
 # v0.3.0-beta - 2025.x.x
 
 # Editor
+ - Run the standalone game
  - Assign scripts to game entities
  - Script component
  - Build game code
- - Load game code DLL into editor
+ - Load game code DLL into Editor
 
 # v0.2.1-alpha - 2024.10.29
 

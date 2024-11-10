@@ -147,22 +147,45 @@ class _IconsRowState extends State<IconsRow> {
           ),
         ),
         Tooltip(
-          message: "Stop Debugging\nCtrl + F5",
-          child: IconButton(
-            icon: const Icon(Icons.stop, color: Colors.red),
-            onPressed: () {},
+          message: "Start Debugging\nF5",
+          child: ValueListenableBuilder(
+            valueListenable: VisualStudio.isDebugging,
+            builder: (context, value, child) => IconButton(
+              icon: const Icon(Icons.play_arrow_sharp),
+              color: Colors.green,
+              onPressed: _controller.debugStartCommand.canExecute(null)
+                  ? () => _controller.debugStartCommand.execute(null)
+                  : null,
+            ),
           ),
         ),
         Tooltip(
-          message: "Start Debugging",
-          child: IconButton(
-            icon: const Icon(
-              Icons.play_arrow_sharp,
-              color: Colors.green,
+          message: "Start Without Debugging\nCtrl + F5",
+          child: ValueListenableBuilder(
+            valueListenable: VisualStudio.isDebugging,
+            builder: (context, value, child) => IconButton(
+              icon: Icon(Icons.play_arrow_outlined),
+              onPressed:
+                  _controller.debugStartWithoutDebuggingCommand.canExecute(null)
+                      ? () => _controller.debugStartWithoutDebuggingCommand
+                          .execute(null)
+                      : null,
             ),
-            onPressed: () {},
           ),
-        )
+        ),
+        Tooltip(
+          message: "Stop Debugging\nShift + F5",
+          child: ValueListenableBuilder(
+            valueListenable: VisualStudio.isDebugging,
+            builder: (context, value, child) => IconButton(
+              icon: const Icon(Icons.stop),
+              color: Colors.red,
+              onPressed: _controller.debugStopCommand.canExecute(null)
+                  ? () => _controller.debugStopCommand.execute(null)
+                  : null,
+            ),
+          ),
+        ),
       ],
     );
   }

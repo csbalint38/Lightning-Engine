@@ -3,13 +3,13 @@ import 'dart:typed_data';
 
 Uint8List intToBytes(int value) {
   ByteData intData = ByteData(4);
-  intData.setInt32(0, value, Endian.little);
+  intData.setUint32(0, value, Endian.little);
 
   return intData.buffer.asUint8List();
 }
 
 Uint8List doubleToBytes(double value) {
-  ByteData doubleData = ByteData(8);
+  ByteData doubleData = ByteData(4);
   doubleData.setFloat32(0, value, Endian.little);
 
   return doubleData.buffer.asUint8List();
