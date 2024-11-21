@@ -8,12 +8,12 @@
 | language | files | lines |
 | :--- | ---: | ---: |
 | C++ | 106 | 14,474 |
-| Dart | 48 |  5,688 |
+| Dart | 48 |  5,865 |
 | HLSL | 13 |  1,378 |
 | Python | 8 | 246 |
-| Markdown | 4 | 167 |
+| Markdown | 4 | 168 |
 | YAML | 2 | 132 |
-... +3 others (less than 100 lines)
+... +2 others (less than 100 lines)
 
 ## Requirements
 

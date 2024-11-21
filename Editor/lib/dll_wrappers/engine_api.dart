@@ -51,7 +51,7 @@ final class GameEntityDescriptor extends Struct {
   external ScriptComponentDescriptor script;
 }
 
-class EngineAPI {
+final class EngineAPI {
   static const String _dllName =
       "x64/DebugEditor/EngineDll.dll"; // TODO: replace with proper path
   static final String _dllPath = Config().read<String>(ConfigProps.enginePath)!;
