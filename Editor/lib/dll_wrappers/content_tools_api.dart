@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'dart:typed_data';
 import 'package:editor/content/geometry.dart' as geometry;
 import 'package:editor/utilities/capitalize.dart';
 import 'package:editor/utilities/logger.dart';
@@ -90,7 +91,7 @@ final class ContentToolsAPI {
       final int dataSize = sceneData.ref.dataSize;
       final List<int> dataBuffer = dataPointer.asTypedList(dataSize);
       
-      geometry.fromRawData(dataBuffer);
+      geometry.fromRawData(Uint8List.fromList(dataBuffer));
 
       free(sceneData.ref.data);
 
