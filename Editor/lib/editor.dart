@@ -1,5 +1,6 @@
 import 'package:editor/editors/world_editor/world_editor.dart';
 import 'package:editor/game_project/project.dart';
+import 'package:editor/utilities/render_window_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -13,13 +14,13 @@ class Editor extends StatefulWidget {
 
 class _EditorState extends State<Editor> with WindowListener {
   late final Project project;
-  late final Future<void> _resizeFuture;
+  late final Future<void> _initFuture;
 
   @override
   void initState() {
     super.initState();
     project = widget.project;
-    _resizeFuture = _resizeWindow();
+    _initFuture = _initializeEditor();
     windowManager.addListener(this);
   }
 
@@ -35,8 +36,10 @@ class _EditorState extends State<Editor> with WindowListener {
     super.onWindowClose();
   }
 
-  Future<void> _resizeWindow() async {
-    await Future.delayed(const Duration(seconds: 2));
+  Future<void> _initializeEditor() async {
+    await RenderWindowManager.createWindow();
+    await RenderWindowManager.ensureCreated();
+
     await windowManager.setMaximizable(true);
     await windowManager.setMaximumSize(const Size(1920, 1080));
     await windowManager.setSize(const Size(1080, 720));
@@ -46,7 +49,7 @@ class _EditorState extends State<Editor> with WindowListener {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _resizeFuture,
+      future: _initFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           return Scaffold(

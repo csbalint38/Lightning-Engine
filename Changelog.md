@@ -2,6 +2,7 @@
 
 # Editor
  - Run the standalone game
+ - Renderer Window inside the editor
  - Assign scripts to game entities
  - Script component
  - Build game code
