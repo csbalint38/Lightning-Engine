@@ -3,6 +3,7 @@ import 'package:editor/editors/world_editor/console.dart';
 import 'package:editor/editors/world_editor/controllers/world_editor_controller.dart';
 import 'package:editor/editors/world_editor/history.dart';
 import 'package:editor/editors/world_editor/icons.dart';
+import 'package:editor/editors/world_editor/render_window.dart';
 import 'package:editor/editors/world_editor/scens.dart';
 import 'package:editor/game_project/project.dart';
 import 'package:editor/themes/themes.dart';
@@ -88,14 +89,14 @@ class _WorldEditorState extends State<WorldEditor> {
               onInvoke: (intent) => _build(),
             ),
             StartWithDebuggingIntent: CallbackAction<StartWithDebuggingIntent>(
-              onInvoke: (intent) => _start_with_debugging(),
+              onInvoke: (intent) => _startWithDebugging(),
             ),
             StartWithoutDebuggingIntent:
                 CallbackAction<StartWithoutDebuggingIntent>(
-              onInvoke: (intent) => _start_without_debugging(),
+              onInvoke: (intent) => _startWithoutDebugging(),
             ),
             StopDebuggingIntent: CallbackAction<StopDebuggingIntent>(
-              onInvoke: (intent) => _stop_debugging(),
+              onInvoke: (intent) => _stopDebugging(),
             ),
           },
           child: Focus(
@@ -121,7 +122,7 @@ class _WorldEditorState extends State<WorldEditor> {
                               [
                                 DockingItem(
                                   name: "Render Window",
-                                  widget: const Text("A"),
+                                  widget: RenderWindow(),
                                 ),
                                 DockingRow(
                                   size: 240,
@@ -196,15 +197,15 @@ class _WorldEditorState extends State<WorldEditor> {
     _controller.buildCommand.execute(null);
   }
 
-  void _start_with_debugging() {
+  void _startWithDebugging() {
     _controller.debugStartCommand.execute(null);
   }
 
-  void _start_without_debugging() {
+  void _startWithoutDebugging() {
     _controller.debugStartWithoutDebuggingCommand.execute(null);
   }
 
-  void _stop_debugging() {
+  void _stopDebugging() {
     _controller.debugStopCommand.execute(null);
   }
 }

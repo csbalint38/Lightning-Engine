@@ -176,7 +176,7 @@ ThemeData lightTheme = ThemeData(
     ),
     side: const BorderSide(color: Colors.blueGrey),
     checkColor: const WidgetStatePropertyAll(Colors.white),
-    overlayColor: WidgetStatePropertyAll(Colors.black.withOpacity(0)),
+    overlayColor: WidgetStatePropertyAll(Colors.black.withAlpha(0)),
   ),
 );
 

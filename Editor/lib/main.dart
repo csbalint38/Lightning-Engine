@@ -2,11 +2,13 @@ import 'package:editor/game_project/project_browser_dialog.dart';
 import 'package:editor/themes/theme_manager.dart';
 import 'package:editor/themes/themes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_view/flutter_native_view.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
+  await FlutterNativeView.ensureInitialized();
 
   WindowOptions windowOptions = const WindowOptions(
     size: Size(800, 600),

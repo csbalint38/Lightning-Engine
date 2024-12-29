@@ -19,9 +19,6 @@ namespace {
 		return std::filesystem::current_path();
 	}
 }
-#ifdef USE_WITH_EDITOR
-int it = 1;
-#endif
 
 #ifndef USE_WITH_EDITOR
 
