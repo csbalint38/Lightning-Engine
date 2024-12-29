@@ -18,7 +18,6 @@ namespace lightning::platform {
 		};
 
 		util::free_list<WindowInfo> windows;
-		
 
 		WindowInfo& get_from_id(window_id id) {
 			assert(windows[id].hwnd);
@@ -32,13 +31,12 @@ namespace lightning::platform {
 
 		bool resized{ false };
 		LRESULT CALLBACK internal_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-
 			switch (msg) {
 				case WM_NCCREATE: {
 					DEBUG_OP(SetLastError(0));
 					const window_id id{ windows.add() };
 					windows[id].hwnd = hwnd;
-					SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)id);
+					SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)id);
 					assert(GetLastError() == 0);
 				}
 				break;
@@ -65,8 +63,8 @@ namespace lightning::platform {
 				return 0;
 			}
 
-			LONG_PTR long_ptr{ GetWindowLongPtrW(hwnd, 0) };
-			return long_ptr ? ((window_proc)long_ptr)(hwnd, msg, wparam, lparam) : DefWindowProcW(hwnd, msg, wparam, lparam);
+			LONG_PTR long_ptr{ GetWindowLongPtr(hwnd, 0) };
+			return long_ptr ? ((window_proc)long_ptr)(hwnd, msg, wparam, lparam) : DefWindowProc(hwnd, msg, wparam, lparam);
 		}
 
 		void resize_window(const WindowInfo& info, const RECT& area) {
@@ -156,13 +154,13 @@ namespace lightning::platform {
 		wc.lpszClassName = L"LightningWindow";
 		wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
-		RegisterClassExW(&wc);
+		RegisterClassEx(&wc);
 
 		WindowInfo info{};
 		info.client_area.right = (init_info && init_info->width) ? info.client_area.left + init_info->width : info.client_area.right;
 		info.client_area.bottom = (init_info && init_info->height) ? info.client_area.top + init_info->height : info.client_area.bottom;
-		RECT rect{ info.client_area };
 		info.style |= parent ? WS_CHILD : WS_OVERLAPPEDWINDOW;
+		RECT rect{ info.client_area };
 		
 		AdjustWindowRect(&rect, info.style, FALSE);
 
@@ -172,7 +170,7 @@ namespace lightning::platform {
 		const s32 width{ rect.right - rect.left };
 		const s32 height{ rect.bottom - rect.top };
 
-		info.hwnd = CreateWindowExW(0, wc.lpszClassName, caption, info.style, left, top, width, height, parent, NULL, NULL, NULL);
+		info.hwnd = CreateWindowEx(0, wc.lpszClassName, caption, info.style, left, top, width, height, parent, NULL, NULL, NULL);
 
 		if (info.hwnd) {
 
