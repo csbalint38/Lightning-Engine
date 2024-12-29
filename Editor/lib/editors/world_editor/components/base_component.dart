@@ -17,7 +17,7 @@ class BaseComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Theme(
       data: ThemeData(
-        splashColor: Theme.of(context).primaryColor.withOpacity(0.2),
+        splashColor: Theme.of(context).primaryColor.withAlpha(50),
         hoverColor: Colors.transparent,
         dividerColor: Theme.of(context).primaryColor,
       ),
