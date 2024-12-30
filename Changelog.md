@@ -1,5 +1,8 @@
 # v0.3.0-beta - 2025.x.x
 
+# Extras
+ - Added SamplingVisualization to visualize cubemap sampling function
+
 # Editor
  - Run the standalone game
  - Renderer Window inside the editor
@@ -7,6 +10,9 @@
  - Script component
  - Build game code
  - Load game code DLL into Editor
+
+# Engine
+ - Remove deprecated Python EngineAPI
 
 # v0.2.1-alpha - 2024.10.29
 

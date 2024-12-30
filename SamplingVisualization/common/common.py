@@ -1,0 +1,1 @@
+SAMPLE_TYPES = ["discrete", "uniform", "importance_sampling"]
