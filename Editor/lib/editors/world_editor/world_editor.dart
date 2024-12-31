@@ -123,6 +123,8 @@ class _WorldEditorState extends State<WorldEditor> {
                                 DockingItem(
                                   name: "Render Window",
                                   widget: RenderWindow(),
+                                  keepAlive: true,
+                                  maximizable: false,
                                 ),
                                 DockingRow(
                                   size: 240,
