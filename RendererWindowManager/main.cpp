@@ -3,10 +3,19 @@
 #include <assert.h>
 #include <string>
 
+HWND renderer_window{ nullptr };
+
 static LRESULT CALLBACK win_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
 	case WM_DESTROY:
 		PostQuitMessage(0);
+		break;
+	case WM_SIZE:
+		if (renderer_window) {
+			RECT rect;
+			GetClientRect(hWnd, &rect);
+			SetWindowPos(renderer_window, nullptr, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_SHOWWINDOW);
+		}
 		break;
 	}
 
@@ -25,8 +34,8 @@ int main(int argc, char* argv[]) {
 	wc.lpszClassName = class_name.c_str();
 	RegisterClass(&wc);
 
-	constexpr unsigned int default_width{ 800 };
-	constexpr unsigned int default_height{ 600 };
+	constexpr unsigned int default_width{ 1280 };
+	constexpr unsigned int default_height{ 720 };
 
 	HWND host_window{ CreateWindow(wc.lpszClassName, L"Renderer Window", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, default_width, default_height, nullptr, nullptr, wc.hInstance, nullptr) };
 
@@ -36,7 +45,7 @@ int main(int argc, char* argv[]) {
 
 	assert(surface_id != -1);
 
-	HWND renderer_window{ get_window_handle(surface_id) };
+	renderer_window = get_window_handle(surface_id);
 	SetWindowPos(renderer_window, nullptr, 0, 0, default_width, default_height, SWP_NOZORDER | SWP_SHOWWINDOW);
 
 	MSG msg = { 0 };
