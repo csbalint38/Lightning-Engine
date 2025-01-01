@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
-enum ConfigProps { enginePath }
+enum ConfigProps { enginePath, contentToolsPath }
 
 class Config {
   final File dataFile = File(p.join(Platform.environment["LOCALAPPDATA"]!,
@@ -23,6 +23,10 @@ class Config {
         return data.containsKey('engine_path')
             ? data['engine_path'] as T
             : null;
+      case ConfigProps.contentToolsPath:
+        return data.containsKey('content_tools_path')
+            ? data['content_tools_path'] as T
+            : null;
     }
   }
 
@@ -30,6 +34,9 @@ class Config {
     switch (prop) {
       case ConfigProps.enginePath:
         data['engine_path'] = value;
+        _writeToFile();
+      case ConfigProps.contentToolsPath:
+        data['content_tools_path'] = value;
         _writeToFile();
     }
   }
