@@ -14,3 +14,4 @@
 EDITOR_IMPORT unsigned int __cdecl create_renderer_surface(HWND parent, int widt, int height);
 EDITOR_IMPORT void __cdecl remove_renderer_surface(unsigned int surface_id);
 EDITOR_IMPORT HWND __cdecl get_window_handle(unsigned int surface_id);
+EDITOR_IMPORT void __cdecl resize_renderer_surface(unsigned int surface_id);

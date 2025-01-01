@@ -4,6 +4,7 @@
 #include <string>
 
 HWND renderer_window{ nullptr };
+int surface_id{ -1 };
 
 static LRESULT CALLBACK win_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
@@ -11,10 +12,11 @@ static LRESULT CALLBACK win_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		PostQuitMessage(0);
 		break;
 	case WM_SIZE:
-		if (renderer_window) {
+		if (renderer_window && surface_id != -1) {
 			RECT rect;
 			GetClientRect(hWnd, &rect);
 			SetWindowPos(renderer_window, nullptr, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_SHOWWINDOW);
+			resize_renderer_surface(surface_id);
 		}
 		break;
 	}
@@ -37,11 +39,11 @@ int main(int argc, char* argv[]) {
 	constexpr unsigned int default_width{ 1280 };
 	constexpr unsigned int default_height{ 720 };
 
-	HWND host_window{ CreateWindow(wc.lpszClassName, L"Renderer Window", WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, default_width, default_height, nullptr, nullptr, wc.hInstance, nullptr) };
+	HWND host_window{ CreateWindow(wc.lpszClassName, L"Renderer Window", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, default_width, default_height, nullptr, nullptr, wc.hInstance, nullptr) };
 
 	assert(host_window);
 
-	unsigned int surface_id{ create_renderer_surface(host_window, default_width, default_height) };
+	surface_id = create_renderer_surface(host_window, default_width, default_height);
 
 	assert(surface_id != -1);
 
