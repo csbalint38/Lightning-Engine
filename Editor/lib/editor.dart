@@ -37,8 +37,10 @@ class _EditorState extends State<Editor> with WindowListener {
   }
 
   Future<void> _initializeEditor() async {
-    await RenderWindowManager.createWindow();
-    await RenderWindowManager.ensureCreated();
+    for (int i = 0; i < 3; i++) {
+      await RenderWindowManager.createWindow();
+      await RenderWindowManager.ensureCreated();
+    }
 
     await windowManager.setMaximizable(true);
     await windowManager.setMaximumSize(const Size(1920, 1080));

@@ -4,6 +4,7 @@
  - Added SamplingVisualization to visualize cubemap sampling function
 
 # Editor
+ - Multiple Renderer Window support
  - Renderer Window resize handling
  - Renderer Window inside the editor
  - Run the standalone game

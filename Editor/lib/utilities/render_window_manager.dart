@@ -13,6 +13,9 @@ class RenderWindowManager {
 
   static String get lastWindowTitle => "$title${nextId - 1}";
 
+  static List<String> get windowTitles =>
+      List.generate(nextId, (index) => "$title$index");
+
   static Future<void> createWindow() async {
     await Process.start(
       executable,

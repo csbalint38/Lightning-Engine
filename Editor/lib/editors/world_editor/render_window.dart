@@ -13,14 +13,22 @@ class RenderWindow extends StatefulWidget {
 }
 
 class _RenderWindowState extends State<RenderWindow> {
-  final controller = NativeViewController(
-    handle: FindWindow(TEXT(RenderWindowManager.lastWindowTitle), nullptr),
-    hitTestBehavior: HitTestBehavior.translucent,
+  final controllers = List.generate(
+    4,
+    (index) => NativeViewController(
+      handle: FindWindow(
+        TEXT(RenderWindowManager.windowTitles[index]),
+        nullptr,
+      ),
+      hitTestBehavior: HitTestBehavior.translucent,
+    ),
   );
 
   @override
   void dispose() {
-    controller.dispose();
+    for (var element in controllers) {
+      element.dispose();
+    }
     super.dispose();
   }
 
@@ -28,10 +36,40 @@ class _RenderWindowState extends State<RenderWindow> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return NativeView(
-          controller: controller,
-          width: constraints.maxWidth,
-          height: constraints.maxHeight,
+        final gridWidth = constraints.maxWidth / 2;
+        final gridHeight = constraints.maxHeight / 2;
+
+        return Column(
+          children: [
+            Row(
+              children: [
+                NativeView(
+                  controller: controllers[0],
+                  width: gridWidth,
+                  height: gridHeight,
+                ),
+                NativeView(
+                  controller: controllers[1],
+                  width: gridWidth,
+                  height: gridHeight,
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                NativeView(
+                  controller: controllers[2],
+                  width: gridWidth,
+                  height: gridHeight,
+                ),
+                NativeView(
+                  controller: controllers[3],
+                  width: gridWidth,
+                  height: gridHeight,
+                ),
+              ],
+            ),
+          ],
         );
       },
     );
