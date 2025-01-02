@@ -26,7 +26,7 @@ float radical_inverse_vdc(uint bits)
     return float(bits) * 2.3283064365386963e-10; // / 0x100000000
 }
 
-float Hammersley(uint i, uint n)
+float2 Hammersley(uint i, uint n)
 {
     return float2(float(i) / float(n), radical_inverse_vdc(i));
 }
@@ -82,7 +82,7 @@ float3x3 get_tangent_frame(float3 normal)
 
 float3 sample_hemisphere_discrete(float3 normal)
 {
-    float n = normal;
+    float3 n = normal;
     float3 irradiance = 0;
     float3x3 tangent_frame = get_tangent_frame(n);
     
@@ -127,7 +127,7 @@ float3 sample_hemisphere_random(float3 normal)
         float sin_phi = sin(phi);
         float cos_phi = cos(phi);
         
-        float transform = float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
+        float3 transform = float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
         float3 sample_dir = mul(transform, tangent_frame);
         
         irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb;
@@ -201,9 +201,9 @@ void prefilter_diffuse_env_map_cs(uint3 dispatch_thread_id : SV_DispatchThreadID
     float2 uv = (float2(dispatch_thread_id.xy) + SAMPLE_OFFSET) / size;
     float2 pos = 2.f * uv - 1.f;
     float3 sample_direction = get_sample_direction_cubemap(face, pos.x, pos.y);
-    // float3 irradiance = sample_hemisphere_brute(sample_direction);
+    float3 irradiance = sample_hemisphere_brute(sample_direction);
     // float3 irradiance = sample_hemisphere_random(sample_direction);
-    float3 irradiance = sample_hemisphere_discrete(sample_direction);
+    // float3 irradiance = sample_hemisphere_discrete(sample_direction);
     
     output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, face)] = float4(irradiance, 1.f);
 

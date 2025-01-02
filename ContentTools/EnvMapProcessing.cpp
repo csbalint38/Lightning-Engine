@@ -156,17 +156,6 @@ namespace lightning::tools {
 			return device->CreateShaderResourceView(cubemaps, &desc, cubemap_srv);
 		}
 
-		HRESULT create_texture_2d_uav(ID3D11Device* device, DXGI_FORMAT format, u32 array_size, u32 first_array_slice, u32 mip_slice, ID3D11Resource* texture, ID3D11UnorderedAccessView** texture_uav) {
-			D3D11_UNORDERED_ACCESS_VIEW_DESC desc{};
-			desc.Format = format;
-			desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-			desc.Texture2DArray.ArraySize = array_size;
-			desc.Texture2DArray.FirstArraySlice = first_array_slice;
-			desc.Texture2DArray.MipSlice = mip_slice;
-
-			return device->CreateUnorderedAccessView(texture, &desc, texture_uav);
-		}
-
 		HRESULT download_texture_2d(ID3D11DeviceContext* ctx, u32 width, u32 height, u32 array_size, u32 mip_levels, DXGI_FORMAT format, bool is_cubemap, ID3D11Texture2D* gpu_resource, ID3D11Texture2D* cpu_resource, ScratchImage& result) {
 			ctx->CopyResource(cpu_resource, gpu_resource);
 
@@ -411,7 +400,7 @@ namespace lightning::tools {
 	}
 
 	HRESULT prefilter_diffuse(ID3D11Device* device, const ScratchImage& cubemaps, u32 sample_count, ScratchImage& prefiltered_diffuse) {
-		const TexMeatadata& meta_data{ cubemaps.GetMetadata() };
+		const TexMetadata& meta_data{ cubemaps.GetMetadata() };
 		const u32 array_size{ (u32)meta_data.arraySize };
 		const u32 cubemap_count{ array_size / 6 };
 
@@ -428,7 +417,7 @@ namespace lightning::tools {
 		ComPtr<ID3D11Texture2D> cubemaps_out{};
 		ComPtr<ID3D11Texture2D> cubemaps_cpu{};
 		{
-			D3D11_TEXTURE_2D_DESC desc{};
+			D3D11_TEXTURE2D_DESC desc{};
 			desc.Width = (u32)meta_data.width;
 			desc.Height = (u32)meta_data.height;
 			desc.MipLevels = (u32)meta_data.mipLevels;
@@ -442,7 +431,7 @@ namespace lightning::tools {
 
 			{
 				const u32 image_count{ (u32)cubemaps.GetImageCount() };
-				const Image* images{ cubemaps.GetImage() };
+				const Image* images{ cubemaps.GetImages() };
 				util::vector<D3D11_SUBRESOURCE_DATA> input_data(image_count);
 
 				for (u32 i{ 0 }; i < image_count; ++i) {
@@ -457,7 +446,7 @@ namespace lightning::tools {
 				}
 			}
 
-			desc.Width = desc.height = prefiltered_diffuse_cubemap_size;
+			desc.Width = desc.Height = prefiltered_diffuse_cubemap_size;
 			desc.MipLevels = 1;
 			desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
 			desc.MiscFlags = 0;

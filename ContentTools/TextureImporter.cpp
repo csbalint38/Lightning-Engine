@@ -737,7 +737,7 @@ namespace lightning::tools {
 
 		if (data->info.import_error) return;
 
-		if (settings.compress && !(scratch.GetMetadata().IsCubemap() && settings.prefilter_cubemapt)) {
+		if (settings.compress && !(scratch.GetMetadata().IsCubemap() && settings.prefilter_cubemap)) {
 			ScratchImage bc_scratch{};
 			if (data->info.import_error) return;
 
