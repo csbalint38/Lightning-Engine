@@ -10,10 +10,26 @@ cbuffer Constants : register(b0)
 };
 
 Texture2D<float4> env_map : register(t0);
+TextureCube<float4> cube_map_in : register(t0);
 
 RWTexture2DArray<float4> output : register(u0);
 
 SamplerState linear_sampler : register(s0);
+
+float radical_inverse_vdc(uint bits)
+{
+    bits = (bits << 16u) | (bits >> 16u);
+    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+    return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+}
+
+float2 Hammersley(uint i, uint n)
+{
+    return float2(float(i) / float(n), radical_inverse_vdc(i));
+}
 
 float3 get_sample_direction_equirectangular(uint face, float x, float y)
 {
@@ -30,6 +46,21 @@ float3 get_sample_direction_equirectangular(uint face, float x, float y)
     return normalize(direction[face]);
 }
 
+float3 get_sample_direction_cubemap(uint face, float x, float y)
+{
+    float3 direction[6] =
+    {
+        { 1.f, -y, -x }, // x+ left
+        { -1.f, -y, x }, // x- right
+        { x, 1.f, y }, // y+ bottom
+        { x, -1.f, -y }, // y- top
+        { x, -y, 1.f }, // z+ front
+        { -x, -y, -1.f }, // z- back
+    };
+    
+    return normalize(direction[face]);
+}
+
 float2 direction_to_equirectangular_uv(float3 dir)
 {
     float phi = atan2(dir.y, dir.x);
@@ -38,6 +69,106 @@ float2 direction_to_equirectangular_uv(float3 dir)
     float v = theta * (1.f / PI);
     
     return float2(u, v);
+}
+
+float3x3 get_tangent_frame(float3 normal)
+{
+    float3 up = abs(normal.z) < .999f ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 tangent_x = normalize(cross(up, normal));
+    float3 tangent_y = cross(normal, tangent_x);
+    
+    return float3x3(tangent_x, tangent_y, normal);
+}
+
+float3 sample_hemisphere_discrete(float3 normal)
+{
+    float3 n = normal;
+    float3 irradiance = 0;
+    float3x3 tangent_frame = get_tangent_frame(n);
+    
+    float delta = .02f;
+    uint sample_count = 0;
+    
+    for (float phi = 0; phi < 2 * PI; phi += delta)
+    {
+        float sin_phi = sin(phi);
+        float cos_phi = cos(phi);
+        
+        for (float theta = 0; theta < .5 * PI; theta += delta)
+        {
+            float sin_theta = sin(theta);
+            float cos_theta = cos(theta);
+            float3 transform = float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
+            float3 sample_dir = mul(transform, tangent_frame);
+        
+            irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb * cos_theta * sin_theta;
+            
+            ++sample_count;
+        }
+    }
+
+    irradiance = PI * irradiance * (1.f / float(sample_count));
+    
+    return irradiance;
+}
+
+float3 sample_hemisphere_random(float3 normal)
+{
+    float3 irradiance = 0.f;
+    float3x3 tangent_frame = get_tangent_frame(normal);
+    uint sample_count = g_sample_count_or_mirror;
+    
+    for (uint i = 0; i < sample_count; ++i)
+    {
+        float2 x_i = Hammersley(i, sample_count);
+        float phi = 2.f * PI * x_i.x;
+        float sin_theta = sqrt(x_i.y);
+        float cos_theta = sqrt(1.f - x_i.y);
+        float sin_phi = sin(phi);
+        float cos_phi = cos(phi);
+        
+        float3 transform = float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
+        float3 sample_dir = mul(transform, tangent_frame);
+        
+        irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb;
+    }
+
+    irradiance *= 1.f / sample_count;
+    
+    return irradiance;
+}
+
+float3 sample_hemisphere_brute(float3 normal)
+{
+    float3 irradiance = 0.f;
+    float sample_count = 0.f;
+    float inv_dim = 1.f / g_cube_map_in_size;
+    
+    for (uint face = 0; face < 6; ++face)
+    {
+        for (uint y = 0; y < g_cube_map_in_size; ++y)
+        {
+            for (uint x = 0; x < g_cube_map_in_size; ++x)
+            {
+                float2 uv = (float2(x, y) + SAMPLE_OFFSET) * inv_dim;
+                float2 pos = 2.f * uv - 1.f;
+                
+                float3 sample_dir = get_sample_direction_cubemap(face, pos.x, pos.y);
+                float cos_theta = dot(sample_dir, normal);
+                
+                if (cos_theta > 0.f)
+                {
+                    float tmp = 1.f + pos.x * pos.x + pos.y * pos.y;
+                    float weight = 4.f * cos_theta / (sqrt(tmp) * tmp);
+                    irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb * weight;
+                    sample_count += weight;
+                }
+            }
+        }
+    }
+    irradiance *= 1.f / sample_count;
+    
+    return irradiance;
 }
 
 [numthreads(16, 16, 1)]
@@ -57,4 +188,23 @@ void equirectangular_to_cube_map_cs(uint3 dispatch_thread_id : SV_DispatchThread
     float4 env_sample = env_map.SampleLevel(linear_sampler, dir, 0);
 
     output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, face)] = env_sample;
+}
+
+[numthreads(16, 16, 1)]
+void prefilter_diffuse_env_map_cs(uint3 dispatch_thread_id : SV_DispatchThreadID, uint3 group_id : SV_GroupID)
+{
+    uint face = group_id.z;
+    uint size = g_cube_map_out_size;
+    
+    if (dispatch_thread_id.x >= size || dispatch_thread_id.y >= size || face >= 6) return;
+
+    float2 uv = (float2(dispatch_thread_id.xy) + SAMPLE_OFFSET) / size;
+    float2 pos = 2.f * uv - 1.f;
+    float3 sample_direction = get_sample_direction_cubemap(face, pos.x, pos.y);
+    float3 irradiance = sample_hemisphere_brute(sample_direction);
+    // float3 irradiance = sample_hemisphere_random(sample_direction);
+    // float3 irradiance = sample_hemisphere_discrete(sample_direction);
+    
+    output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, face)] = float4(irradiance, 1.f);
+
 }

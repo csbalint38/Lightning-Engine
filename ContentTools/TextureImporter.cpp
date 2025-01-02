@@ -10,10 +10,17 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 
 	bool is_normal_map(const Image* const image);
+	HRESULT prefilter_diffuse(ID3D11Device* device, const ScratchImage& cubemaps, u32 sample_count, ScratchImage& prefiltered_diffuse);
 	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 
 	namespace {
+		struct IBLFilter {
+			enum Type : u32 {
+				DIFFUSE = 0,
+				SPECULAR,
+			};
+		};
 
 		struct ImportError {
 			enum ErrorCode {
@@ -571,6 +578,69 @@ namespace lightning::tools {
 
 			return scratch;
 		}
+
+		void prefilter_ibl(TextureData* const data, IBLFilter::Type filter_type) {
+			assert(data->import_settings.prefilter_cubemap);
+
+			TextureInfo& info{ data->info };
+			const DXGI_FORMAT format{ (DXGI_FORMAT)info.format };
+
+			assert(!IsCompressed(format));
+
+			util::vector<Image> images = subresource_data_to_images(data);
+
+			assert(!images.empty() && !IsCompressed(images[0].format));
+			assert(info.flags & content::TextureFlags::IS_CUBE_MAP);
+			assert(info.width == info.height);
+
+			const u32 cubemap_count{ info.array_size / 6 };
+
+			assert(info.mip_levels == (u8)(math::log2(info.width) + 1));
+
+			HRESULT hr{ S_OK };
+
+			ScratchImage cubemaps{};
+
+			hr = cubemaps.InitializeCube(format, info.width, info.height, cubemap_count, info.mip_levels);
+
+			if (FAILED(hr)) {
+				info.import_error = ImportError::UNKNOWN;
+				return;
+			}
+
+			for (u32 img_idx{ 0 }; img_idx < cubemaps.GetImageCount(); ++img_idx) {
+				const Image& image{ cubemaps.GetImages()[img_idx] };
+
+				assert(image.slicePitch == images[img_idx].slicePitch);
+
+				memcpy(image.pixels, images[img_idx].pixels, image.slicePitch);
+			}
+
+			constexpr u32 sample_count{ 1024 };
+
+			run_on_gpu([&](ID3D11Device* device) {
+				hr = filter_type == IBLFilter::DIFFUSE ? prefilter_diffuse(device, cubemaps, sample_count, cubemaps) : S_OK; // prefilter_specular(device, cubemaps, sample_count, cubemaps);
+			});
+
+			if (FAILED(hr)) {
+				info.import_error = ImportError::UNKNOWN;
+				return;
+			}
+
+			if (data->import_settings.compress) {
+				ScratchImage bc_scratch{ compress_image(data, cubemaps) };
+				if (data->info.import_error) return;
+
+				assert(bc_scratch.GetImages());
+
+				copy_icon(bc_scratch.GetImages()[0], data);
+
+				cubemaps = std::move(bc_scratch);
+			}
+
+			copy_subresources(cubemaps, data);
+			texture_info_from_metadata(cubemaps.GetMetadata(), data->info);
+		}
 	}
 
 	void shutdown_texture_tools() {
@@ -585,6 +655,14 @@ namespace lightning::tools {
 			FreeLibrary(d3d11_module);
 			d3d11_module = nullptr;
 		}
+	}
+
+	EDITOR_INTERFACE void prefilter_diffuse_ibl(TextureData* const data) {
+		prefilter_ibl(data, IBLFilter::DIFFUSE);
+	}
+
+	EDITOR_INTERFACE void prefilter_specular_ibl(TextureData* const data) {
+		prefilter_ibl(data, IBLFilter::SPECULAR);
 	}
 
 	EDITOR_INTERFACE void decompress(TextureData* const data) {
@@ -659,9 +737,8 @@ namespace lightning::tools {
 
 		if (data->info.import_error) return;
 
-		if (settings.compress) {
+		if (settings.compress && !(scratch.GetMetadata().IsCubemap() && settings.prefilter_cubemap)) {
 			ScratchImage bc_scratch{};
-
 			if (data->info.import_error) return;
 
 			assert(bc_scratch.GetImages());

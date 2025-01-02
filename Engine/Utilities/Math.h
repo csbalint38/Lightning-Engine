@@ -89,4 +89,14 @@ namespace lightning::math {
 
 		return crc;
  	}
+
+	[[nodiscard]] inline u8 log2(u64 value) {
+		unsigned long mssb;
+		unsigned long lssb;
+
+		if (_BitScanReverse64(&mssb, value) > 0 && _BitScanForward64(&lssb, value) > 0) {
+			return u8(mssb + (mssb == lssb ? 0 : 1));
+		}
+		return 0;
+	}
 }
