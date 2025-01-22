@@ -1,5 +1,7 @@
 # v0.3.0-beta - 2025.x.x
 
+# Lightning+
+
 # Extras
  - Added SamplingVisualization to visualize cubemap sampling function
 

@@ -31,6 +31,8 @@
 **GPU:** NVidia GeForce GT 420\
 **DirectX:** DirectX 12
 
+## Lightning+
+
 ## Bug Types
 
 ### 1 - Critical
