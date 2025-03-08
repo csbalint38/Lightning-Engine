@@ -19,14 +19,14 @@ namespace Editor.GameProject
             if (_isOpenProject)
             {
                 _isOpenProject = false;
-                BtnToggleOpenNew.Content = "New Project";
-                BrdContent.Child = new NewProject();
+                BtnToggleOpenNew.Content = "Back";
+                BrdContent.Child = new NewProjectView();
             }
             else
             {
                 _isOpenProject = true;
-                BtnToggleOpenNew.Content = "Back";
-                BrdContent.Child = new OpenProject();
+                BtnToggleOpenNew.Content = "New Project";
+                BrdContent.Child = new OpenProjectView();
             }
         }
     }

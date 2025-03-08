@@ -3,11 +3,11 @@
 namespace Editor.GameProject
 {
     /// <summary>
-    /// Interaction logic for NewProject.xaml
+    /// Interaction logic for NewProjectView.xaml
     /// </summary>
-    public partial class NewProject : UserControl
+    public partial class NewProjectView : UserControl
     {
-        public NewProject()
+        public NewProjectView()
         {
             InitializeComponent();
         }

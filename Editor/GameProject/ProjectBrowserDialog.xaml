@@ -22,7 +22,7 @@
                     Click="BtnToggleOpenNew_Click"/>
         </StackPanel>
         <Border x:Name="BrdContent" Grid.Row="1">
-            <local:OpenProject/>
+            <local:OpenProjectView/>
         </Border>
     </Grid>
 </Window>
