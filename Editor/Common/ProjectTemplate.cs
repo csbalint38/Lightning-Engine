@@ -12,7 +12,7 @@ namespace Editor.Common
         public required string ProjectFile { get; set; }
 
         [DataMember]
-        public required List<string> Folders { get; set; }
+        public List<string> Folders { get; set; }
 
         public required byte[] Icon { get; set; }
 

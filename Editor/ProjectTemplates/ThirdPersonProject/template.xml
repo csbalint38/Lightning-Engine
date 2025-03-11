@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
-<ProjectTemplate xmlns="http://schemas.datacontract.org/2004/07/Lightning.Editor">
-	<Folders xmlns:a="http://schemas.datacontract.org/2003/10/Serialization/Arrays">
+<ProjectTemplate xmlns="http://schemas.datacontract.org/2004/07/Lightning.Editor" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Folders xmlns:a="http://schemas.microsoft.com/2003/10/Serialization/Arrays">
 		<a:string>.Lightning</a:string>
-		<a:string>Asssets</a:string>
+		<a:string>Assets</a:string>
 		<a:string>Code</a:string>
 	</Folders>
 	<ProjectFile>project.lightning</ProjectFile>
