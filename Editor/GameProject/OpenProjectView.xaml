@@ -8,24 +8,50 @@
              Width="860"
              Height="480"
              d:DesignHeight="480" d:DesignWidth="860">
-    <Grid>
-        <StackPanel Background="AliceBlue">
-            <StackPanel Orientation="Horizontal"
+    <UserControl.DataContext>
+        <local:OpenProject/>
+    </UserControl.DataContext>
+    <StackPanel Background="AliceBlue">
+        <StackPanel Orientation="Horizontal"
                 HorizontalAlignment="Center">
-                <ListBox Width="500" Height="300"/>
-                <Border Width="350"
-                        Height="300"
-                        Margin="10, 0, 0, 0"
-                        Background="Green"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        Margin="0, 30, 0, 0">
-                <Button Content="Open"
-                        Width="100"
-                        Height="30"
-                        IsDefault="True"/>
-            </StackPanel>
+            <ListBox x:Name="LbProjects"
+                     Width="500"
+                     Height="300"
+                     ItemsSource="{Binding Projects}"
+                     SelectedIndex="0">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <EventSetter Event="MouseDoubleClick"
+                                     Handler="ListBoxItem_MouseDoubleClick"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{Binding Icon}"
+                                   Margin="0,0,5,0"/>
+                            <TextBlock Text="{Binding ProjectName}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Border Width="350"
+                    Height="300"
+                    Margin="10, 0, 0, 0">
+                <Border.Background>
+                    <ImageBrush ImageSource="{Binding Path=SelectedItem.Screenshot, ElementName=LbProjects}"/>
+                </Border.Background>
+            </Border>
         </StackPanel>
-    </Grid>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Margin="0, 30, 0, 0">
+            <Button x:Name="BtnOpen" 
+                    Content="Open"
+                    Width="100"
+                    Height="30"
+                    IsDefault="True"
+                    Click="BtnOpen_Click"/>
+        </StackPanel>
+    </StackPanel>
 </UserControl>
