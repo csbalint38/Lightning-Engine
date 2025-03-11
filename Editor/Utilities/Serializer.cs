@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Xml;
 
 namespace Editor.Utilities
 {
@@ -13,7 +14,15 @@ namespace Editor.Utilities
                 using var fs = new FileStream(path, FileMode.Create);
                 var serializer = new DataContractSerializer(typeof(T));
 
-                serializer.WriteObject(fs, instance);
+                var settings = new XmlWriterSettings
+                {
+                    Indent = true,
+                    IndentChars = "    ",
+                    NewLineOnAttributes = false,
+                };
+
+                using var writer = XmlWriter.Create(fs, settings);
+                serializer.WriteObject(writer, instance);
 
             }
             catch (Exception ex)

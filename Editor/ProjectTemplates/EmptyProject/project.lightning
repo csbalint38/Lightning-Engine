@@ -1,12 +1,11 @@
-<?xml version="1.0" ?>
-<Project>
-	<Name>{{0}}</Name>
-	<Path>{{1}}</Path>
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns:i="http://www.w3.org/2001/XMLSchema-instance" z:Id="i1" xmlns:z="http://schemas.microsoft.com/2003/10/Serialization/" xmlns="http://schemas.datacontract.org/2004/07/Editor.GameProject">
+	<Name>{0}</Name>
+	<Path>{1}</Path>
 	<Scenes>
-		<Scene>
+		<Scene z:Id="i2">
 			<Name>Default Scene</Name>
-			<IsActive>true</IsActive>
-			<Entities/>
+			<Project z:Ref="i1" />
 		</Scene>
 	</Scenes>
 </Project>

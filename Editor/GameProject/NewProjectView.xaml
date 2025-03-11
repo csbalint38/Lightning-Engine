@@ -45,7 +45,8 @@
                 <TextBlock Text="Project Name:"
                            Width="80"/>
                 <TextBox Width="300"
-                         Text="{Binding ProjectName}"/>
+                         Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}"
+/>
             </StackPanel>
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Center"
@@ -53,7 +54,7 @@
                 <TextBlock Text="Location:"
                            Width="80"/>
                 <TextBox Width="250"
-                         Text="{Binding ProjectPath}"/>
+                         Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}"/>
                 <Button Content="Browse"
                         Width="50"/>
             </StackPanel>
@@ -61,10 +62,17 @@
                         HorizontalAlignment="Center"
                         Margin="0, 30, 0, 0">
                 <Button Content="Create"
+                        x:Name="BtnCreate"
                         Width="100"
                         Height="30"
-                        IsDefault="True"/>
+                        IsDefault="True"
+                        IsEnabled="{Binding IsValid}"
+                        Click="BtnCreate_Click"/>
             </StackPanel>
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="Red"
+                       HorizontalAlignment="Center"
+                       Margin="0, 0, 0, 0"/>
         </StackPanel>
     </Grid>
 </UserControl>
