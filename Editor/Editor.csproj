@@ -10,4 +10,8 @@
     <Platforms>x64</Platforms>
     <BaseOutputPath>..\</BaseOutputPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Utilities\UndoRedo.cs" />
+  </ItemGroup>
 </Project>
