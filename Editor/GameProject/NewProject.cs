@@ -83,9 +83,18 @@ namespace Editor.GameProject
                 foreach (var templateFile in templateFiles) {
                     var template = Serializer.FromFile<ProjectTemplate>(templateFile);
 
-                    template.IconFilePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(templateFile)!, "icon.png"));
-                    template.ScreenshotFilePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(templateFile)!, "screenshot.png"));
-                    template.ProjectFilePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(templateFile)!, template.ProjectFile));
+                    template.IconFilePath = Path.GetFullPath(
+                        Path.Combine(Path.GetDirectoryName(templateFile)!, "icon.png")
+                    );
+
+                    template.ScreenshotFilePath = Path.GetFullPath(
+                        Path.Combine(Path.GetDirectoryName(templateFile)!, "screenshot.png")
+                    );
+
+                    template.ProjectFilePath = Path.GetFullPath(
+                        Path.Combine(Path.GetDirectoryName(templateFile)!, template.ProjectFile)
+                    );
+
                     template.Icon = File.ReadAllBytes(template.IconFilePath);
                     template.Screenshot = File.ReadAllBytes(template.ScreenshotFilePath);
 
@@ -124,9 +133,11 @@ namespace Editor.GameProject
                 File.Copy(template.IconFilePath, Path.GetFullPath(Path.Combine(dirInfo.FullName, "icon.png")));
                 File.Copy(template.ScreenshotFilePath, Path.GetFullPath(Path.Combine(dirInfo.FullName, "screenshot.png")));
 
-                var project = new Project(ProjectName, path);
+                var projectFile = File.ReadAllText(template.ProjectFilePath);
+                projectFile = string.Format(projectFile, ProjectName, ProjectPath);
 
-                Serializer.ToFile(project, path + $"{ProjectName}" + Project.Extension);
+                var projectPath = Path.GetFullPath(Path.Combine(path, $"{ProjectName}{Project.Extension}"));
+                File.WriteAllText(projectPath, projectFile);
 
                 return path;
             }

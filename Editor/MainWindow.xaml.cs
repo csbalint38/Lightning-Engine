@@ -1,4 +1,5 @@
 ﻿using Editor.GameProject;
+using System.ComponentModel;
 using System.Windows;
 
 namespace Editor;
@@ -13,6 +14,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         Loaded += OnMainWindowLoaded;
+        Closing += OnMainWindowClosing;
     }
 
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
@@ -21,8 +23,22 @@ public partial class MainWindow : Window
         OpenProjectBrowserDialog();
     }
 
-    private static void OpenProjectBrowserDialog() {
+    private void OnMainWindowClosing(object sender, CancelEventArgs e)
+    {
+        Closing -= OnMainWindowClosing;
+        Project.Current?.Unload();
+    }
+
+    private void OpenProjectBrowserDialog() {
         var projectBrowser = new ProjectBrowserDialog();
-        if(projectBrowser.ShowDialog() == false) Application.Current.Shutdown();
+        if (projectBrowser.ShowDialog() == false || projectBrowser.DataContext is null)
+        {
+            Application.Current.Shutdown();
+        }
+        else
+        {
+            Project.Current?.Unload();
+            DataContext = projectBrowser.DataContext;
+        }
     }
 }
