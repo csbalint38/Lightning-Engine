@@ -115,7 +115,7 @@ float3 prefilter_env_map(float roughness, float3 n)
 
     float3 prefiltered_color = 0;
     float total_weight = 0;
-    float num_samples = g_sample_count_or_mirror;
+    uint num_samples = g_sample_count_or_mirror;
     float resolution = g_cube_map_in_size;
     float inv_sa_texel = (6.f * resolution * resolution) / (1.f / 4.f * PI);
     float mip_level = 0;
@@ -134,7 +134,7 @@ float3 prefilter_env_map(float roughness, float3 n)
             float n_o_h = max(dot(n, h), 0.f);
             float n_o_v = max(dot(n, v), 0.f);
             float d = d_ggx(n_o_h, a4);
-            float pdf = d * n_o_h / (4 * n_o_v + 0,0001f);
+            float pdf = d * n_o_h / (4 * n_o_v + 0.0001f);
             float sa_sample = 1.f / (float(num_samples) * pdf + 0.0001f);
 
             mip_level = roughness == 0.f ? 0.f : .5f * log2(sa_sample * inv_sa_texel);

@@ -441,11 +441,14 @@ namespace lightning::tools {
 					const Image& image{ images[0] };
 					
 					if (math::is_equal((f32)image.width / (f32)image.height, 2.f)) {
-						if (!run_on_gpu([&](ID3D11Device* device) {hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch); })) {
-							hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
+						if (!run_on_gpu([&](ID3D11Device* device) {
+							hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
+
 							return SUCCEEDED(hr);
+							})) {
+								hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
+							}
 						}
-					}
 					else if (array_size % 6 || image.width != image.height) {
 						data->info.import_error = ImportError::NEED_SIX_IMAGES;
 						return {};
@@ -540,9 +543,13 @@ namespace lightning::tools {
 			HRESULT hr{ S_OK };
 			ScratchImage bc_scratch;
 
-			if (!(can_use_gpu(output_format) && run_on_gpu([&](ID3D11Device* device) { hr = Compress(device, scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch); }))) {
-				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
-			}
+			if (!(can_use_gpu(output_format) && run_on_gpu([&](ID3D11Device* device) {
+				hr = Compress(device, scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_DEFAULT, 1.f, bc_scratch);
+
+				return SUCCEEDED(hr);
+				}))) {
+					hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
+				}
 
 			if (FAILED(hr)) {
 				data->info.import_error = ImportError::COMPRESS;
@@ -625,7 +632,7 @@ namespace lightning::tools {
 
 			run_on_gpu([&](ID3D11Device* device) {
 				hr = filter_type == IBLFilter::DIFFUSE ? prefilter_diffuse(device, cubemaps, sample_count, cubemaps) : prefilter_specular(device, cubemaps, sample_count, cubemaps);
-				return SECCEEDED(hr);
+				return SUCCEEDED(hr);
 			});
 
 			if (FAILED(hr)) {
