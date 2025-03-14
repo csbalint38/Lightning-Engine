@@ -10,6 +10,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 
 	bool is_normal_map(const Image* const image);
+	HRESULT prefilter_specular(ID3D11Device* device, const ScratchImage& cubemaps, u32 sample_count, ScratchImage& prefiltered_specular);
 	HRESULT prefilter_diffuse(ID3D11Device* device, const ScratchImage& cubemaps, u32 sample_count, ScratchImage& prefiltered_diffuse);
 	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
 	HRESULT equirectangular_to_cubemap(const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
@@ -178,11 +179,12 @@ namespace lightning::tools {
 		template<typename T> bool run_on_gpu(T func) {
 			if (!try_create_device()) return false;
 			bool wait{ true };
+			bool result{ false };
 
 			while (wait) {
 				for (u32 i{ 0 }; i < d3d11_devices.size(); ++i) {
 					if (d3d11_devices[i].hw_compression_mutex.try_lock()) {
-						func(d3d11_devices[i].device.Get());
+						result = func(d3d11_devices[i].device.Get());
 						d3d11_devices[i].hw_compression_mutex.unlock();
 						wait = false;
 						break;
@@ -192,7 +194,7 @@ namespace lightning::tools {
 				if (wait) std::this_thread::sleep_for(std::chrono::milliseconds(200));
 			}
 
-			return true;
+			return result;
 		}
 
 		constexpr void set_or_clear_flags(u32& flags, u32 flag, bool set) {
@@ -441,6 +443,7 @@ namespace lightning::tools {
 					if (math::is_equal((f32)image.width / (f32)image.height, 2.f)) {
 						if (!run_on_gpu([&](ID3D11Device* device) {hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch); })) {
 							hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
+							return SUCCEEDED(hr);
 						}
 					}
 					else if (array_size % 6 || image.width != image.height) {
@@ -464,8 +467,10 @@ namespace lightning::tools {
 				scratch = std::move(working_scratch);
 			}
 
-			if (settings.mip_levels != 1 || settings.prefilter_cubemap) {
-				scratch = generate_mipmaps(scratch, data->info, settings.prefilter_cubemap ? 0 : settings.mip_levels, settings.dimension == TextureDimension::TEXTURE_3D);
+			const bool generate_full_mipchain{ settings.prefilter_cubemap && settings.dimension == TextureDimension::TEXTURE_CUBE };
+
+			if(settings.mip_levels != 1 || generate_full_mipchain) {
+				scratch = generate_mipmaps(scratch, data->info, generate_full_mipchain ? 0 : settings.mip_levels, settings.dimension == TextureDimension::TEXTURE_3D);
 			}
 
 			return scratch;
@@ -619,7 +624,8 @@ namespace lightning::tools {
 			constexpr u32 sample_count{ 1024 };
 
 			run_on_gpu([&](ID3D11Device* device) {
-				hr = filter_type == IBLFilter::DIFFUSE ? prefilter_diffuse(device, cubemaps, sample_count, cubemaps) : S_OK; // prefilter_specular(device, cubemaps, sample_count, cubemaps);
+				hr = filter_type == IBLFilter::DIFFUSE ? prefilter_diffuse(device, cubemaps, sample_count, cubemaps) : prefilter_specular(device, cubemaps, sample_count, cubemaps);
+				return SECCEEDED(hr);
 			});
 
 			if (FAILED(hr)) {

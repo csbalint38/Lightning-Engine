@@ -31,6 +31,13 @@ float2 Hammersley(uint i, uint n)
     return float2(float(i) / float(n), radical_inverse_vdc(i));
 }
 
+float pow4(float x)
+{
+    float xx = x * x;
+
+    return xx * xx;
+}
+
 float3 get_sample_direction_equirectangular(uint face, float x, float y)
 {
     float3 direction[6] =
@@ -71,6 +78,13 @@ float2 direction_to_equirectangular_uv(float3 dir)
     return float2(u, v);
 }
 
+float d_ggx(float n_o_h, float a)
+{
+    float d = (n_o_h * a - n_o_h) * n_o_h + 1.f;
+
+    return a / (PI * d * d);
+}
+
 float3x3 get_tangent_frame(float3 normal)
 {
     float3 up = abs(normal.z) < .999f ? float3(0, 0, 1) : float3(1, 0, 0);
@@ -78,6 +92,60 @@ float3x3 get_tangent_frame(float3 normal)
     float3 tangent_y = cross(normal, tangent_x);
     
     return float3x3(tangent_x, tangent_y, normal);
+}
+
+float3 importance_sample_ggx(float2 e, float a)
+{
+    float phi = 2.f * PI * e.x;
+    float cos_theta = sqrt((1.f - e.y) / (1.f + (a - 1.f) * e.y));
+    float sin_theta = sqrt(1.f - cos_theta * cos_theta);
+
+    float3 h;
+    h.x = sin_theta * cos(phi);
+    h.y = sin_theta * sin(phi);
+    h.z = cos_theta;
+
+    return h;
+}
+
+float3 prefilter_env_map(float roughness, float3 n)
+{
+    float a4 = pow4(roughness);
+    float3 v = n;
+
+    float3 prefiltered_color = 0;
+    float total_weight = 0;
+    float num_samples = g_sample_count_or_mirror;
+    float resolution = g_cube_map_in_size;
+    float inv_sa_texel = (6.f * resolution * resolution) / (1.f / 4.f * PI);
+    float mip_level = 0;
+    float3x3 tangent_frame = get_tangent_frame(n);
+
+    for (uint i = 0; i < num_samples; i++)
+    {
+        float2 x_i = Hammersley(i, num_samples);
+        float3 h = mul(importance_sample_ggx(x_i, a4), tangent_frame);
+        float3 l = 2 * dot(v, h) * h - v;
+        float n_o_l = saturate(dot(n, l));
+
+        if(n_o_l > 0)
+        {
+            #if 1
+            float n_o_h = max(dot(n, h), 0.f);
+            float n_o_v = max(dot(n, v), 0.f);
+            float d = d_ggx(n_o_h, a4);
+            float pdf = d * n_o_h / (4 * n_o_v + 0,0001f);
+            float sa_sample = 1.f / (float(num_samples) * pdf + 0.0001f);
+
+            mip_level = roughness == 0.f ? 0.f : .5f * log2(sa_sample * inv_sa_texel);
+            #endif
+
+            prefiltered_color += cube_map_in.SampleLevel(linear_sampler, l, mip_level).rgb * n_o_l;
+            total_weight += n_o_l;
+        }
+    }
+
+    return prefiltered_color / total_weight;
 }
 
 float3 sample_hemisphere_discrete(float3 normal)
@@ -107,7 +175,7 @@ float3 sample_hemisphere_discrete(float3 normal)
         }
     }
 
-    irradiance = PI * irradiance * (1.f / float(sample_count));
+    irradiance *= PI / float(sample_count);
     
     return irradiance;
 }
@@ -206,5 +274,20 @@ void prefilter_diffuse_env_map_cs(uint3 dispatch_thread_id : SV_DispatchThreadID
     // float3 irradiance = sample_hemisphere_discrete(sample_direction);
     
     output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, face)] = float4(irradiance, 1.f);
+}
 
+[numthreads(16, 16, 1)]
+void prefilter_specular_env_map_cs(uint3 dispatch_thread_id : SV_DispatchThreadID, uint3 group_id : SV_GroupID)
+{
+    uint face = group_id.z;
+    uint size = g_cube_map_out_size;
+
+    if(dispatch_thread_id.x >= size || dispatch_thread_id.y >= size || face >= 6) return;
+
+    float2 uv = (float2(dispatch_thread_id.xy) + SAMPLE_OFFSET) / size;
+    float2 pos = 2.f * uv - 1.f;
+    float3 sample_direction = get_sample_direction_cubemap(face, pos.x, pos.y);
+    float3 irradiance = prefilter_env_map(g_roughness, sample_direction);
+
+    output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, face)] = float4(irradiance, 1.f);
 }
