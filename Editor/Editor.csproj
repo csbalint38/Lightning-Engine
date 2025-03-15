@@ -10,8 +10,7 @@
     <Platforms>x64</Platforms>
     <BaseOutputPath>..\</BaseOutputPath>
   </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="Utilities\UndoRedo.cs" />
+    <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.2.1" />
   </ItemGroup>
 </Project>

@@ -21,7 +21,7 @@
                 Focusable="False"
                 HorizontalAlignment="Left"
                 Margin="20,0,0,0"
-                Click="BtnAddScene_Click"/>
+                Command="{Binding AddScene}"/>
         <ScrollViewer Grid.Row="1"
                        HorizontalScrollBarVisibility="Disabled"
                        VerticalScrollBarVisibility="Auto">
@@ -35,7 +35,14 @@
                     <DataTemplate>
                         <Expander IsExpanded="{Binding IsActive, Mode=OneWay}">
                             <Expander.Header>
-                                <TextBlock Text="{Binding Name}"/>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}"/>
+                                    <Button Content="Remove"
+                                            Command="{Binding DataContext.RemoveScene, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Margin="20,0"
+                                            Focusable="False"/>
+                                </StackPanel>
                             </Expander.Header>
                             <Border Background="LightGray"
                                     Height="200"

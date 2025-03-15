@@ -12,12 +12,5 @@ namespace Editor.Editors
         {
             InitializeComponent();
         }
-
-        private void BtnAddScene_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            var vm = DataContext as Project;
-
-            vm.AddScene("NewScene" + vm.Scenes.Count);  
-        }
     }
 }

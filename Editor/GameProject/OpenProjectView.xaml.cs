@@ -30,7 +30,11 @@ namespace Editor.GameProject
             bool dialogResult = false;
             var win = Window.GetWindow(this);
 
-            if(project is not null) dialogResult = true;
+            if(project is not null)
+            {
+                dialogResult = true;
+                win.DataContext = project;
+            }
 
             win.DialogResult = dialogResult;
             win.Close();

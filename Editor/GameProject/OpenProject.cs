@@ -1,5 +1,4 @@
-﻿using Editor.Common;
-using Editor.Utilities;
+﻿using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
