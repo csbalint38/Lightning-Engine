@@ -1,1 +1,1 @@
-SAMPLE_TYPES = ["discrete", "uniform", "importance_sampling"]
+SAMPLE_TYPES = ["discrete", "uniform", "importance_sampling", "importance_sampling_specular"]

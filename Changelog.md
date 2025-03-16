@@ -4,6 +4,7 @@
 
 # Extras
  - Added SamplingVisualization to visualize cubemap sampling function
+ - Added visualization of importance sampling for specular
 
 # Editor
  - Load Mesh data into the Editor
@@ -18,7 +19,8 @@
  - Load game code DLL into Editor
 
 # Engine
- - IBL optimalization - cubemap diffuse prefilterin
+ - IBL specular prefiltering
+ - IBL optimalization - cubemap diffuse prefiltering
  - Remove deprecated Python EngineAPI
 
 # v0.2.1-alpha - 2024.10.29

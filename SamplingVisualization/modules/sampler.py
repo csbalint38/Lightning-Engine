@@ -17,7 +17,7 @@ class Sampler:
         
         self.sample_iter = 0
 
-    def sample(self, sample_type: str):
+    def sample(self, sample_type: str, roughness: int = 0):
         if sample_type == SAMPLE_TYPES[0]:
             if(self.sample_iter == self.theta_values.size): return
             sin_theta = np.sin(self.theta_values[self.sample_iter])
@@ -29,6 +29,9 @@ class Sampler:
         elif sample_type == SAMPLE_TYPES[2]:
             if(self.sample_iter == 126): return
             self._importance_sampling()
+        elif sample_type == SAMPLE_TYPES[3]:
+            if(self.sample_iter == 126): return
+            self._importance_sampling_specular(roughness)
                 
         self.sample_iter += 1
         
@@ -68,7 +71,7 @@ class Sampler:
             self.z_points.append(z)
 
             self.count += 1
-    
+
     def _importance_sampling(self):
         sample_count = self.phi_values.size * self.theta_values.size
 
@@ -77,6 +80,29 @@ class Sampler:
             phi = 2 * self.PI * x_i[0]
             sin_theta = np.sqrt(x_i[1])
             cos_theta = np.sqrt(1 - x_i[1])
+            sin_phi = np.sin(phi)
+            cos_phi = np.cos(phi)
+            
+            x = sin_theta * cos_phi
+            y = sin_theta * sin_phi
+            z = cos_theta
+            
+            self.x_points.append(x)
+            self.y_points.append(y)
+            self.z_points.append(z)
+
+            self.count += 1
+    
+    def _importance_sampling_specular(self, roughness):
+        sample_count = self.phi_values.size * self.theta_values.size
+
+        a = roughness**4;
+        for i in range(sample_count):
+
+            x_i = self._Hammersley(i, sample_count)
+            phi = 2 * self.PI * x_i[0]
+            cos_theta = np.sqrt((1 - x_i[1]) / (1 + (a - 1) * x_i[1]))
+            sin_theta = np.sqrt(1 - cos_theta * cos_theta)
             sin_phi = np.sin(phi)
             cos_phi = np.cos(phi)
             
