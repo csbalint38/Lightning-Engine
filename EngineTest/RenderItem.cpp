@@ -34,7 +34,7 @@ namespace {
 
 	struct TextureUsage {
 		enum Usage : u32 {
-			AMBIENT_OCCLUSIN = 0,
+			AMBIENT_OCCLUSION = 0,
 			BASE_COLOR,
 			EMISSIVE,
 			METAL_ROUGH,
@@ -46,12 +46,18 @@ namespace {
 
 	id::id_type texture_ids[TextureUsage::count];
 
+	id::id_type ibl_brdf_lut_id{ id::invalid_id };
+	id::id_type ibl_diffuse_id{ id::invalid_id };
+	id::id_type ibl_specular_id{ id::invalid_id };
+
 	id::id_type vs_id{ id::invalid_id };
 	id::id_type ps_id{ id::invalid_id };
 	id::id_type textured_ps_id{ id::invalid_id };
 	id::id_type default_material_id{ id::invalid_id };
 	id::id_type fembot_material_id{ id::invalid_id };
 	id::id_type pbr_material_ids[12];
+
+	graphics::Light ibl_light{};
 
 	[[nodiscard]] id::id_type load_asset(const char* path, content::AssetType::Type type) {
 		std::unique_ptr<u8[]> buffer;
@@ -163,6 +169,17 @@ namespace {
 		fembot_material_id = content::create_resource(&info, content::AssetType::MATERIAL);
 	}
 
+	void create_ibl_light() {
+		graphics::LightInitInfo info{};
+		info.entity_id = 0;
+		info.type = graphics::Light::AMBIENT;
+		info.ambient_params.brdf_lut_texture_id = ibl_brdf_lut_id;
+		info.ambient_params.diffuse_texture_id = ibl_diffuse_id;
+		info.ambient_params.specular_texture_id = ibl_specular_id;
+
+		ibl_light = graphics::create_light(info);
+	}
+
 	void remove_model(id::id_type model_id) {
 		if (id::is_valid(model_id)) {
 			content::destroy_resource(model_id, content::AssetType::MESH);
@@ -174,11 +191,15 @@ void create_render_items() {
 	memset(&texture_ids[0], 0xff, sizeof(id::id_type) * _countof(texture_ids));
 
 	std::thread threads[]{
-		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSIN] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ambient_occlusion.img"); }},
+		std::thread{ [] { texture_ids[TextureUsage::AMBIENT_OCCLUSION] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ambient_occlusion.img"); }},
 		std::thread{ [] { texture_ids[TextureUsage::BASE_COLOR] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/base_color.img"); }},
 		std::thread{ [] { texture_ids[TextureUsage::EMISSIVE] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/emissive.img"); }},
 		std::thread{ [] { texture_ids[TextureUsage::METAL_ROUGH] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/metal_rough.img"); }},
 		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.img"); }},
+
+		std::thread{ [] { ibl_brdf_lut_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/brdf_lut.texture"); }},
+		std::thread{ [] { ibl_diffuse_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/diffuse3.texture"); }},
+		std::thread{ [] { ibl_specular_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/specular3.texture"); }},
 
 		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
@@ -191,6 +212,8 @@ void create_render_items() {
 	for (auto& t : threads) {
 		t.join();
 	}
+
+	create_ibl_light();
 
 	create_material();
 	id::id_type materials[]{ default_material_id };
@@ -221,8 +244,8 @@ void create_render_items() {
 		id::id_type id{ pbr_material_ids[i] };
 		id::id_type sphere_materials[]{ id };
 		geometry_info.material_ids = &sphere_materials[0];
-		const f32 x{ -6.f + i % 6 };
-		const f32 y{ (i < 6) ? 7.f : 5.5f };
+		const f32 x{ -6.f + 2*(i % 6) };
+		const f32 y{ (i < 6) ? 8.f : 4.5f };
 		const f32 z = x;
 		sphere_entity_ids[i] = create_one_game_entity({ x, y, z }, {}, &geometry_info, nullptr).get_id();
 	}
@@ -244,6 +267,7 @@ void destroy_render_items() {
 	remove_model(fembot_model_id);
 	remove_model(sphere_model_id);
 
+	if (ibl_light.is_valid()) graphics::remove_light(ibl_light.get_id(), 0);
 	if (id::is_valid(default_material_id)) content::destroy_resource(default_material_id, content::AssetType::MATERIAL);
 	if (id::is_valid(fembot_material_id)) content::destroy_resource(fembot_material_id, content::AssetType::MATERIAL);
 
@@ -259,6 +283,9 @@ void destroy_render_items() {
 		}
 	}
 
+	if (id::is_valid(ibl_brdf_lut_id)) content::destroy_resource(ibl_brdf_lut_id, content::AssetType::TEXTURE);
+	if (id::is_valid(ibl_diffuse_id)) content::destroy_resource(ibl_diffuse_id, content::AssetType::TEXTURE);
+	if (id::is_valid(ibl_specular_id)) content::destroy_resource(ibl_specular_id, content::AssetType::TEXTURE);
 	if (id::is_valid(vs_id)) content::remove_shader_group(vs_id);
 	if (id::is_valid(ps_id)) content::remove_shader_group(ps_id);
 	if (id::is_valid(textured_ps_id)) content::remove_shader_group(textured_ps_id);

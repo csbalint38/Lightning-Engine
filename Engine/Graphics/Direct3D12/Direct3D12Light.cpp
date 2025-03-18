@@ -3,6 +3,7 @@
 #include "Shaders/ShaderTypes.h"
 #include "EngineAPI/GameEntity.h"
 #include "Components/Transform.h"
+#include "Direct3D12Content.h"
 
 namespace lightning::graphics::direct3d12::light {
 	namespace {
@@ -63,6 +64,26 @@ namespace lightning::graphics::direct3d12::light {
 					return graphics::Light{ id, info.light_set_key };
 				}
 
+				else if (info.type == graphics::Light::AMBIENT) {
+					static_assert(sizeof(graphics::AmbientParams) / sizeof(id::id_type) == 3);
+
+					u32 indices[3]{};
+					content::texture::get_descriptor_indicies(&info.ambient_params.diffuse_texture_id, 3, &indices[0]);
+
+					assert(!id::is_valid(_ambient_light_id) && _ambient_light.diffuse_srv_index == u32_invalid_id);
+
+					_ambient_light.intensity = info.intensity;
+					_ambient_light.diffuse_srv_index = indices[0];
+					_ambient_light.specular_srv_index = indices[1];
+					_ambient_light.brdf_lut_srv_index = indices[2];
+
+					LightOwner owner{ game_entity::entity_id{ info.entity_id }, u32_invalid_id, info.type, info.is_enabled };
+
+					_ambient_light_id = light_id{ _owners.add(owner) };
+
+					return graphics::Light{ _ambient_light_id, info.light_set_key };
+				}
+
 				else {
 					u32 index{ u32_invalid_id };
 
@@ -109,6 +130,12 @@ namespace lightning::graphics::direct3d12::light {
 				if (owner.type == graphics::Light::DIRECTIONAL) {
 					_non_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
 				}
+				else if (owner.type == graphics::Light::AMBIENT) {
+					assert(id == _ambient_light_id);
+
+					_ambient_light = { -1, u32_invalid_id, u32_invalid_id, u32_invalid_id };
+					_ambient_light_id = light_id{ id::invalid_id };
+				}
 				else {
 					assert(_owners[_cullable_owners[owner.data_index]].data_index == owner.data_index);
 					_cullable_owners[owner.data_index] = light_id{ id::invalid_id };
@@ -147,7 +174,7 @@ namespace lightning::graphics::direct3d12::light {
 			constexpr void enable(light_id id, bool is_enabled) {
 				_owners[id].is_enabled = is_enabled;
 
-				if (_owners[id].type == graphics::Light::DIRECTIONAL) {
+				if (_owners[id].type == graphics::Light::DIRECTIONAL || _owners[id].type == graphics::Light::AMBIENT) {
 					return;
 				}
 
@@ -185,6 +212,9 @@ namespace lightning::graphics::direct3d12::light {
 				if (owner.type == graphics::Light::DIRECTIONAL) {
 					assert(index < _non_cullable_lights.size());
 					_non_cullable_lights[index].intensity = intensity;
+				}
+				else if (owner.type == graphics::Light::AMBIENT) {
+					_ambient_light.intensity = intensity;
 				}
 				else {
 					assert(_owners[_cullable_owners[index]].data_index == index);
@@ -233,19 +263,13 @@ namespace lightning::graphics::direct3d12::light {
 				assert(index < _cullable_lights.size());
 				_cullable_lights[index].range = range;
 				_culling_info[index].range = range;
-				#if USE_BOUNDING_SPHERES
 				_culling_info[index].cos_penumbra = -1.f;
-				#endif
 				_bounding_spheres[index].radius = range;
 				make_dirty(index);
 
 				if (owner.type == graphics::Light::SPOT) {
 					calculate_cone_bounding_sphere(_cullable_lights[index], _bounding_spheres[index]);
-					#if USE_BOUNDING_SPHERES
 					_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
-					#else
-					_culling_info[index].cone_radius = calculate_cone_radius(range, _cullable_lights[index].cos_penumbra);
-					#endif		
 				}
 			}
 
@@ -276,11 +300,7 @@ namespace lightning::graphics::direct3d12::light {
 				_cullable_lights[index].cos_penumbra = DirectX::XMScalarACos(penumbra * .5f);
 				calculate_cone_bounding_sphere(_cullable_lights[index], _bounding_spheres[index]);
 
-				#if USE_BOUNDING_SPHERES
 				_culling_info[index].cos_penumbra = _cullable_lights[index].cos_penumbra;
-				#else
-				_culling_info[index].cone_radius = calculate_cone_radius(range(id), _cullable_lights[index].cos_penumbra);
-				#endif
 
 				make_dirty(index);
 			}
@@ -364,6 +384,16 @@ namespace lightning::graphics::direct3d12::light {
 				return count;
 			}
 
+			CONSTEXPR hlsl::AmbientLightParameters ambient_light() {
+				if (id::is_valid(_ambient_light_id) && _owners[_ambient_light_id].is_enabled) {
+					assert(_owners[_ambient_light_id].type == graphics::Light::AMBIENT);
+
+					return _ambient_light;
+				}
+
+				return { -1, u32_invalid_id, u32_invalid_id, u32_invalid_id };
+			}
+
 			CONSTEXPR void non_cullable_lights(hlsl::DirectionalLightParameters* const lights, [[maybe_unused]] u32 buffer_size)const {
 				assert(buffer_size >= math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(non_cullable_light_count() * sizeof(hlsl::DirectionalLightParameters)));
 
@@ -385,12 +415,6 @@ namespace lightning::graphics::direct3d12::light {
 			constexpr bool has_lights() const { return _owners.size() > 0; }
 
 		private:
-			f32 calculate_cone_radius(f32 range, f32 cos_penumbra) {
-				const f32 sin_penumbra{ sqrt(1.f - cos_penumbra * cos_penumbra) };
-			
-				return sin_penumbra * range;
-			}
-
 			void calculate_cone_bounding_sphere(const hlsl::LightParameters& params, hlsl::Sphere& sphere) {
 				using namespace DirectX;
 
@@ -432,10 +456,6 @@ namespace lightning::graphics::direct3d12::light {
 				assert(info.type != Light::DIRECTIONAL && index < _cullable_lights.size());
 
 				hlsl::LightParameters& params{ _cullable_lights[index] };
-				#if !USE_BOUNDING_SPHERES
-				params.type = info.type;
-				assert(params.type < Light::count);
-				#endif
 				params.color = info.color;
 				params.intensity = info.intensity;
 
@@ -461,19 +481,10 @@ namespace lightning::graphics::direct3d12::light {
 				hlsl::LightCullingLightInfo& culling_info{ _culling_info[index] };
 				culling_info.range = _bounding_spheres[index].radius = params.range;
 
-				#if USE_BOUNDING_SPHERES
 				culling_info.cos_penumbra = -1.f;
-				#else
-				culling_info.type = params.type;
-				#endif
 
 				if (info.type == Light::SPOT) {
-
-					#if USE_BOUNDING_SPHERES
 					culling_info.cos_penumbra = params.cos_penumbra;
-					#else
-					culling_info.cone_radius = calculate_cone_radius(params.range, params.cos_penumbra);
-					#endif	
 				}
 
 			}
@@ -551,6 +562,9 @@ namespace lightning::graphics::direct3d12::light {
 			util::vector<u8> _transform_flags_cache;
 			u32 _enabled_cullable_light_count{0};
 			u8 _something_is_dirty{ 0 };
+
+			hlsl::AmbientLightParameters _ambient_light{ -1.f, u32_invalid_id, u32_invalid_id, u32_invalid_id };
+			light_id _ambient_light_id{ id::invalid_id };
 
 			friend class D3D12LightBuffer;
 		};
@@ -880,6 +894,11 @@ namespace lightning::graphics::direct3d12::light {
 	D3D12_GPU_VIRTUAL_ADDRESS culling_info_buffer(u32 frame_index) {
 		const D3D12LightBuffer& light_buffer{ light_buffers[frame_index] };
 		return light_buffer.culling_info();
+	}
+
+	hlsl::AmbientLightParameters ambient_light(u64 light_set_key) {
+		assert(light_sets.count(light_set_key));
+		return light_sets[light_set_key].ambient_light();
 	}
 
 	u32 non_cullable_light_count(u64 light_set_key) {

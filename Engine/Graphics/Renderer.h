@@ -62,6 +62,12 @@ namespace lightning::graphics {
 		f32 penumbra;
 	};
 
+	struct AmbientParams {
+		id::id_type diffuse_texture_id;
+		id::id_type specular_texture_id;
+		id::id_type brdf_lut_texture_id;
+	};
+
 	struct LightInitInfo {
 		u64 light_set_key{ 0 };
 		id::id_type entity_id{ id::invalid_id };
@@ -72,6 +78,7 @@ namespace lightning::graphics {
 			DirectionalLightParams directional_params;
 			PointLightParams point_params;
 			SpotLightParams spot_params;
+			AmbientParams ambient_params;
 		};
 		bool is_enabled{ true };
 	};

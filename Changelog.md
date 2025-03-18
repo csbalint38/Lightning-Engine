@@ -19,6 +19,8 @@
  - Load game code DLL into Editor
 
 # Engine
+ - Image based ambient lighting
+ - Removed deprecated lighting system, that was not using bounding spheres 
  - IBL specular prefiltering
  - IBL optimalization - cubemap diffuse prefiltering
  - Remove deprecated Python EngineAPI

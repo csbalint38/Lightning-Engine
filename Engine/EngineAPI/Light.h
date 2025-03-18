@@ -10,6 +10,7 @@ namespace lightning::graphics {
 			DIRECTIONAL,
 			POINT,
 			SPOT,
+			AMBIENT,
 
 			count
 		};

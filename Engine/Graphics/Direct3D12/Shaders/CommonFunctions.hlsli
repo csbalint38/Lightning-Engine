@@ -33,35 +33,6 @@ bool cone_inside_plane(Cone cone, Plane plane)
     return point_inside_plane(cone.tip, plane) && point_inside_plane(Q, plane);
 }
 
-#if !USE_BOUNDING_SPHERES
-bool sphere_inside_frustum(Sphere sphere, Frustum frustum, float near_z, float far_z)
-{
-    return !((sphere.center.z - sphere.radius > near_z || sphere.center.z + sphere.radius < far_z) || sphere_inside_plane(sphere, frustum.planes[0]) || sphere_inside_plane(sphere, frustum.planes[1]) || sphere_inside_plane(sphere, frustum.planes[2]) || sphere_inside_plane(sphere, frustum.planes[3]));
-}
-
-bool cone_inside_frustum(Cone cone, Frustum frustum, float near_z, float far_z)
-{
-
-    Plane near_plane = { float3(0, 0, -1), -near_z };
-    Plane far_plane = { float3(0, 0, 1), far_z };
-
-    if (cone_inside_plane(cone, near_plane) || cone_inside_plane(cone, far_plane))
-    {
-        return false;
-    }
-
-    for (int i = 0; i < 4; i++)
-    {
-        if (cone_inside_plane(cone, frustum.planes[i]))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-#endif
-
 float4 unproject_uv(float2 uv, float depth, float4x4 inverse)
 {
     float4 clip = float4(float2(uv.x, 1.f - uv.y) * 2.f - 1.f, depth, 1.f);

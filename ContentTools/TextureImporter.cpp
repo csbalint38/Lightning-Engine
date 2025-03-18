@@ -10,6 +10,7 @@ using namespace Microsoft::WRL;
 namespace lightning::tools {
 
 	bool is_normal_map(const Image* const image);
+	HRESULT brdf_integration_lut(ID3D11Device* device, u32 sample_count, ScratchImage& brdf_lut);
 	HRESULT prefilter_specular(ID3D11Device* device, const ScratchImage& cubemaps, u32 sample_count, ScratchImage& prefiltered_specular);
 	HRESULT prefilter_diffuse(ID3D11Device* device, const ScratchImage& cubemaps, u32 sample_count, ScratchImage& prefiltered_diffuse);
 	HRESULT equirectangular_to_cubemap(ID3D11Device* device, const Image* env_maps, u32 env_map_count, u32 cubemap_size, bool use_prefilter_size, bool mirror_cubemap, ScratchImage& cubemaps);
@@ -141,9 +142,9 @@ namespace lightning::tools {
 			if (!d3d11_create_device) return;
 
 			u32 create_device_flags{ 0 };
-			#ifdef _DEBUG
+#ifdef _DEBUG
 			create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
-			#endif
+#endif
 
 			util::vector<ComPtr<IDXGIAdapter>> adapters{ get_adapters_by_performance() };
 			util::vector<ComPtr<ID3D11Device>> devices(adapters.size(), nullptr);
@@ -439,16 +440,16 @@ namespace lightning::tools {
 				}
 				else if (settings.dimension == TextureDimension::TEXTURE_CUBE) {
 					const Image& image{ images[0] };
-					
+
 					if (math::is_equal((f32)image.width / (f32)image.height, 2.f)) {
 						if (!run_on_gpu([&](ID3D11Device* device) {
 							hr = equirectangular_to_cubemap(device, images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
 
 							return SUCCEEDED(hr);
 							})) {
-								hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
-							}
+							hr = equirectangular_to_cubemap(images.data(), array_size, settings.cubemap_size, settings.prefilter_cubemap, settings.mirror_cubemap, working_scratch);
 						}
+					}
 					else if (array_size % 6 || image.width != image.height) {
 						data->info.import_error = ImportError::NEED_SIX_IMAGES;
 						return {};
@@ -472,7 +473,7 @@ namespace lightning::tools {
 
 			const bool generate_full_mipchain{ settings.prefilter_cubemap && settings.dimension == TextureDimension::TEXTURE_CUBE };
 
-			if(settings.mip_levels != 1 || generate_full_mipchain) {
+			if (settings.mip_levels != 1 || generate_full_mipchain) {
 				scratch = generate_mipmaps(scratch, data->info, generate_full_mipchain ? 0 : settings.mip_levels, settings.dimension == TextureDimension::TEXTURE_3D);
 			}
 
@@ -548,8 +549,8 @@ namespace lightning::tools {
 
 				return SUCCEEDED(hr);
 				}))) {
-					hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
-				}
+				hr = Compress(scratch.GetImages(), scratch.GetImageCount(), scratch.GetMetadata(), output_format, TEX_COMPRESS_PARALLEL, data->import_settings.alpha_threshold, bc_scratch);
+			}
 
 			if (FAILED(hr)) {
 				data->info.import_error = ImportError::COMPRESS;
@@ -630,13 +631,13 @@ namespace lightning::tools {
 
 			constexpr u32 sample_count{ 1024 };
 
-			run_on_gpu([&](ID3D11Device* device) {
+			if (run_on_gpu([&](ID3D11Device* device) {
 				hr = filter_type == IBLFilter::DIFFUSE ? prefilter_diffuse(device, cubemaps, sample_count, cubemaps) : prefilter_specular(device, cubemaps, sample_count, cubemaps);
-				return SUCCEEDED(hr);
-			});
 
-			if (FAILED(hr)) {
+				return SUCCEEDED(hr);
+			})) {
 				info.import_error = ImportError::UNKNOWN;
+
 				return;
 			}
 
@@ -676,6 +677,27 @@ namespace lightning::tools {
 
 	EDITOR_INTERFACE void prefilter_specular_ibl(TextureData* const data) {
 		prefilter_ibl(data, IBLFilter::SPECULAR);
+	}
+
+	EDITOR_INTERFACE void compute_brdf_integration_lut(TextureData* const data) {
+		assert(data);
+
+		constexpr u32 sample_count{ 1024 };
+		HRESULT hr{ S_OK };
+		ScratchImage brdf_lut{};
+
+		if (!run_on_gpu([&](ID3D11Device* device) {
+			hr = brdf_integration_lut(device, sample_count, brdf_lut);
+
+			return SUCCEEDED(hr);
+			})) {
+			data->info.import_error = ImportError::UNKNOWN;
+
+			return;
+		}
+
+		copy_subresources(brdf_lut, data);
+		texture_info_from_metadata(brdf_lut.GetMetadata(), data->info);
 	}
 
 	EDITOR_INTERFACE void decompress(TextureData* const data) {

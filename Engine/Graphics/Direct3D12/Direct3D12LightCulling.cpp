@@ -140,14 +140,14 @@ namespace lightning::graphics::direct3d12::delight {
 
 			{
 				hlsl::LightCullingDispatchParameters& params{ culler.grid_frustums_dispatch_params };
-				params.num_threds = tile_count;
+				params.num_threads = tile_count;
 				params.num_thread_groups.x = (u32)math::align_size_up<tile_size>(tile_count.x) / tile_size;
 				params.num_thread_groups.y = (u32)math::align_size_up<tile_size>(tile_count.y) / tile_size;
 			}
 			{
 				hlsl::LightCullingDispatchParameters& params{ culler.light_culling_dispatch_params };
-				params.num_threds.x = tile_count.x * tile_size;
-				params.num_threds.y = tile_count.y * tile_size;
+				params.num_threads.x = tile_count.x * tile_size;
+				params.num_threads.y = tile_count.y * tile_size;
 				params.num_thread_groups = tile_count;
 			}
 

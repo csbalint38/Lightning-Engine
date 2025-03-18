@@ -492,7 +492,7 @@ namespace lightning::graphics::direct3d12::content {
 			info.resource = resource;
 
 			if (flags & lightning::content::TextureFlags::IS_CUBE_MAP) {
-				assert(array_size % 6);
+				assert(array_size % 6 == 0);
 				srv_desc.Format = format;
 				srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 

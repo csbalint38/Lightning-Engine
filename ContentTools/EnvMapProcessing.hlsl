@@ -38,6 +38,13 @@ float pow4(float x)
     return xx * xx;
 }
 
+float pow5(float x)
+{
+    float xx = x * x;
+    
+    return xx * xx * x;
+}
+
 float3 get_sample_direction_equirectangular(uint face, float x, float y)
 {
     float3 direction[6] =
@@ -78,6 +85,14 @@ float2 direction_to_equirectangular_uv(float3 dir)
     return float2(u, v);
 }
 
+float v_Smith_ggx_correlated(float n_o_v, float n_o_l, float a)
+{
+    float ggxl = n_o_v * sqrt((-n_o_l * a + n_o_l) * n_o_l + a);
+    float ggxv = n_o_l * sqrt((-n_o_v * a + n_o_v) * n_o_v + a);
+    
+    return .5f * rcp(ggxv + ggxl);
+}
+
 float d_ggx(float n_o_h, float a)
 {
     float d = (n_o_h * a - n_o_h) * n_o_h + 1.f;
@@ -94,6 +109,7 @@ float3x3 get_tangent_frame(float3 normal)
     return float3x3(tangent_x, tangent_y, normal);
 }
 
+
 float3 importance_sample_ggx(float2 e, float a)
 {
     float phi = 2.f * PI * e.x;
@@ -108,6 +124,41 @@ float3 importance_sample_ggx(float2 e, float a)
     return h;
 }
 
+float2 integrate_brdf(float n_o_v, float roughness)
+{
+    float a4 = pow4(roughness);
+    float3 v;
+    
+    v.x = sqrt(1.f - n_o_v * n_o_v);
+    v.y = 0.f;
+    v.z = n_o_v;
+    
+    float a = 0.f;
+    float b = 0.f;
+    uint num_samples = g_sample_count_or_mirror;
+    
+    for (uint i = 0; i < num_samples; i++)
+    {
+        float2 x_i = Hammersley(i, num_samples);
+        float3 h = importance_sample_ggx(x_i, a4);
+        float3 l = reflect(-v, h);
+        float n_o_l = saturate(l.z);
+        float n_o_h = saturate(h.z);
+        float v_o_h = saturate(dot(v, h));
+        
+        if (n_o_l > 0.f)
+        {
+            float g = v_Smith_ggx_correlated(n_o_v, n_o_l, a4);
+            float g_v_is = 4 * n_o_l * g * v_o_h / n_o_h;
+            float f_c = pow5(1.f - v_o_h);
+            
+            a += (1.f - f_c) * g_v_is;
+            b += f_c * g_v_is;
+        }
+    }
+    return float2(a, b) / num_samples;
+}
+
 float3 prefilter_env_map(float roughness, float3 n)
 {
     float a4 = pow4(roughness);
@@ -117,7 +168,7 @@ float3 prefilter_env_map(float roughness, float3 n)
     float total_weight = 0;
     uint num_samples = g_sample_count_or_mirror;
     float resolution = g_cube_map_in_size;
-    float inv_sa_texel = (6.f * resolution * resolution) / (1.f / 4.f * PI);
+    float inv_omega_p = (6.f * resolution * resolution) * PI * .25f;
     float mip_level = 0;
     float3x3 tangent_frame = get_tangent_frame(n);
 
@@ -130,15 +181,12 @@ float3 prefilter_env_map(float roughness, float3 n)
 
         if(n_o_l > 0)
         {
-            #if 1
-            float n_o_h = max(dot(n, h), 0.f);
-            float n_o_v = max(dot(n, v), 0.f);
-            float d = d_ggx(n_o_h, a4);
-            float pdf = d * n_o_h / (4 * n_o_v + 0.0001f);
-            float sa_sample = 1.f / (float(num_samples) * pdf + 0.0001f);
+            float n_o_h = saturate(dot(n, h));
+            float h_o_v = saturate(dot(h, v));
+            float pdf = d_ggx(n_o_h, a4) * .25f;
+            float omega_s = 1.f / (float(num_samples) * pdf + 0.0001f);
 
-            mip_level = roughness == 0.f ? 0.f : .5f * log2(sa_sample * inv_sa_texel);
-            #endif
+            mip_level = roughness == 0.f ? 0.f : .5f * log2(omega_s * inv_omega_p);
 
             prefiltered_color += cube_map_in.SampleLevel(linear_sampler, l, mip_level).rgb * n_o_l;
             total_weight += n_o_l;
@@ -274,6 +322,19 @@ void prefilter_diffuse_env_map_cs(uint3 dispatch_thread_id : SV_DispatchThreadID
     // float3 irradiance = sample_hemisphere_discrete(sample_direction);
     
     output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, face)] = float4(irradiance, 1.f);
+}
+
+[numthreads(16, 16, 1)]
+void compute_brdf_integration_lut_cs(uint3 dispatch_thread_id : SV_DispatchThreadID)
+{
+    uint size = g_cube_map_out_size;
+    
+    if (dispatch_thread_id.x >= size || dispatch_thread_id.y >= size) return;
+    
+    float2 uv = float2(dispatch_thread_id.xy) / (size - 1);
+    float2 result = integrate_brdf(uv.x, uv.y);
+    
+    output[uint3(dispatch_thread_id.x, dispatch_thread_id.y, 0)] = float4(result, 1.f, 1.f);
 }
 
 [numthreads(16, 16, 1)]

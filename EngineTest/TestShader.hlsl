@@ -27,6 +27,7 @@ struct Surface
     float a2;                   // perceptual_roughness^4
     float3 specular_color;
     float n_o_v;
+    float specular_strength;
 };
 
 #define ELEMENTS_TYPE_POSITION_ONLY 0x00
@@ -135,7 +136,22 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 
 float4 sample(uint index, SamplerState s, float2 uv)
 {
-    return Texture2D( ResourceDescriptorHeap[index]).Sample(s, uv);
+    return Texture2D(ResourceDescriptorHeap[index]).Sample(s, uv);
+}
+
+float4 Sample(uint index, SamplerState s, float2 uv, float mip)
+{
+    return Texture2D(ResourceDescriptorHeap[index]).SampleLevel(s, uv, mip);
+}
+
+float4 SampleCube(uint index, SamplerState s, float3 n)
+{
+    return TextureCube(ResourceDescriptorHeap[index]).Sample(s, n);
+}
+
+float4 SampleCube(uint index, SamplerState s, float3 n, float mip)
+{
+    return TextureCube(ResourceDescriptorHeap[index]).SampleLevel(s, n, mip);
 }
 
 float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 specular_color, float shininess)
@@ -180,14 +196,10 @@ float3 calculate_lighting(Surface s, float3 l, float3 light_color)
     #if USE_PHONG
     const float3 n = s.normal;
     const float n_o_l = saturate(dot(n, l));
-    color = PhongBRDF(n, l, s.v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
+    return PhongBRDF(n, l, s.v, s.base_color, 1.f, (1 - s.perceptual_roughness) * 100.f) * (n_o_l / PI) * light_color;
     #else
-    color = Cook_Torrence_BRDF(s, l) * light_color;
+    return Cook_Torrence_BRDF(s, l) * light_color * PI;
     #endif
-    
-    color *= PI;
-
-    return color;
 }
 
 float3 point_light(Surface s, float3 world_position, LightParameters light)
@@ -250,6 +262,36 @@ float3 spotlight(Surface s, float3 world_position, LightParameters light)
     #endif
 }
 
+float3 get_specular_dominant_dir(float3 n, float3 r, float roughness)
+{
+    float smoothness = saturate(1 - roughness);
+    float lerpFactor = smoothness * (sqrt(smoothness) + roughness);
+    
+    return lerp(n, r, lerpFactor);
+}
+
+float3 evaluate_IBL(Surface s)
+{
+    const float n_o_v = saturate(s.n_o_v);
+    const float3 f90 = max((1.f - s.perceptual_roughness), s.specular_color);
+    const float3 f = f_Schlick(n_o_v, s.specular_color, f90);
+    const float roughness = s.perceptual_roughness * s.perceptual_roughness;
+    AmbientLightParameters ibl = global_data.ambient_light;
+    float3 diff_n = s.normal;
+    float3 diffuse = SampleCube(ibl.diffuse_srv_index, linear_sampler, diff_n).rgb * s.diffuse_color * (1.f - f);
+    float3 spec_n = get_specular_dominant_dir(s.normal, reflect(-s.v, s.normal), roughness);
+    float3 specular_ibl = SampleCube(ibl.specular_srv_index, linear_sampler, spec_n, s.perceptual_roughness * 5.f).rgb;
+    float2 brdf_lut = Sample(ibl.brdf_lut_srv_index, linear_sampler, float2(n_o_v, s.perceptual_roughness), 0).rg;
+    float3 specular = specular_ibl * (s.specular_strength * s.specular_color * brdf_lut.x + f90 * brdf_lut.y);
+    
+    #if 0
+    float3 energyCompensation = 1.f + s.specular_color * (rcp(brdf_lut.x) - 1.f);
+    specular *= energyCompensation;
+    #endif
+    
+    return (diffuse + specular) * ibl.intensity;
+}
+
 Surface get_surface(VertexOut ps_in, float3 v)
 {   
     Surface s;
@@ -257,7 +299,7 @@ Surface get_surface(VertexOut ps_in, float3 v)
     s.base_color = per_object_buffer.base_color.rgb;
     s.metallic = per_object_buffer.metallic;
     s.normal = normalize(ps_in.world_normal);
-    s.perceptual_roughness = max(per_object_buffer.roughness, .045f);
+    s.perceptual_roughness = per_object_buffer.roughness;
     s.emissive_color = per_object_buffer.emissive;
     s.emissive_intensity = per_object_buffer.emissive_intensity;
     s.ambient_occlusion = per_object_buffer.ambient_occlusion;
@@ -269,7 +311,7 @@ Surface get_surface(VertexOut ps_in, float3 v)
     s.emissive_color = sample(srv_indicies[2], linear_sampler, uv).rgb;
     float2 metal_rough = sample(srv_indicies[3], linear_sampler, uv).rg;
     s.metallic = metal_rough.r;
-    s.perceptual_roughness = max(metal_rough.g, .045f);
+    s.perceptual_roughness = metal_rough.g;
     s.emissive_intensity = 1.f;
     float3 n = sample(srv_indicies[4], linear_sampler, uv).rgb;
     n = n * 2.f - 1.f;
@@ -284,11 +326,13 @@ Surface get_surface(VertexOut ps_in, float3 v)
     #endif
     
     s.v = v;
+    s.perceptual_roughness = max(s.perceptual_roughness, .045f);
     const float roughness = s.perceptual_roughness * s.perceptual_roughness;
     s.a2 = roughness * roughness;
     s.n_o_v = dot(v, s.normal);
     s.diffuse_color = s.base_color * (1.f - s.metallic);
     s.specular_color = lerp(.04f, s.base_color, s.metallic);
+    s.specular_strength = lerp(1 - min(s.perceptual_roughness, .95f), 1.f, s.metallic);
     
     return s;
 }
@@ -307,19 +351,12 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     
     float3 color = 0;
     
+    #ifdef LIGHTS_ENABLED
     uint i = 0;
     for (i = 0; i < global_data.num_directional_lights; ++i)
     {
         DirectionalLightParameters light = directional_lights[i];
-        
         float3 light_direction = light.direction;
-        
-        /*
-        if (abs(light_direction.z - 1.f) < .001f)
-        {
-            light_direction = global_data.camera_direction;
-        }
-        */
         
         color += calculate_lighting(s, -light_direction, light.color * light.intensity);
     }
@@ -328,7 +365,6 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     uint light_start_index = light_grid[grid_index].x;
     const uint light_count = light_grid[grid_index].y;
     
-    #if USE_BOUNDING_SPHERES
     const uint num_point_lights = light_start_index + (light_count >> 16);
     const uint num_spotlights = num_point_lights + (light_count & 0xffff);
     
@@ -343,21 +379,11 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         LightParameters light = cullable_lights[light_index];
         color += spotlight(s, ps_in.world_position, light);
     }
+    
     #else
-    for (i = 0; i < light_count; ++i)
+    if (global_data.ambient_light.intensity > 0)
     {
-        const uint light_index = light_index_list[light_start_index + i];
-        LightParameters light = cullable_lights[light_index];
-        
-        if (light.type == LIGHT_TYPE_POINT_LIGHT)
-        {
-            color += point_light(s, ps_in.world_position, light);
-        }
-        else if (light.type == LIGHT_TYPE_SPOTLIGHT)
-        {
-            color += spotlight(s, ps_in.world_position, light);
-        }
-
+        color += evaluate_IBL(s);
     }
     #endif
     
@@ -370,7 +396,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     
     #endif
     
-    PixelOut ps_out;
+        PixelOut ps_out;
     ps_out.color = float4(color * s.ambient_occlusion + s.emissive_color * s.emissive_intensity, 1.f);
 
     return ps_out;

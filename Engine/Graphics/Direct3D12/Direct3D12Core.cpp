@@ -226,6 +226,7 @@ namespace lightning::graphics::direct3d12::core {
 			data.view_height = surface.viewport().Height;
 			data.num_directional_lights = light::non_cullable_light_count(info.light_set_key);
 			data.delta_time = delta_time;
+			data.ambient_light = light::ambient_light(info.light_set_key);
 
 			hlsl::GlobalShaderData* const shader_data{ cbuffer.allocate<hlsl::GlobalShaderData>() };
 			memcpy(shader_data, &data, sizeof(hlsl::GlobalShaderData));

@@ -223,9 +223,8 @@
 
 		init_test_workers(buffer_test_worker);
 
-		create_render_items();
-
 		generate_lights();
+		create_render_items();
 
 		render_item_id_cache.resize(4 + 12);
 		geometry::get_render_item_ids(render_item_id_cache.data(), (u32)render_item_id_cache.size());
@@ -267,8 +266,8 @@
 
 	void test_shutdown() {
 		input::unbind(std::hash<std::string>()("move"));
-		remove_lights();
 		destroy_render_items();
+		remove_lights();
 		joint_test_workers();
 
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
