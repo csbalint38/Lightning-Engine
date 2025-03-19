@@ -19,6 +19,7 @@
  - Load game code DLL into Editor
 
 # Engine
+ - Support for HDRI images as skybox texture
  - Image based ambient lighting
  - Removed deprecated lighting system, that was not using bounding spheres 
  - IBL specular prefiltering

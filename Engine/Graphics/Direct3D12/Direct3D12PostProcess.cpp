@@ -30,11 +30,23 @@ namespace lightning::graphics::direct3d12::fx {
 			using idx = FXRootParamIndicies;
 			d3dx::D3D12RootParameter parameters[idx::count]{};
 			parameters[idx::GLOBAL_SHADER_DATA].as_cbv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
-			parameters[idx::ROOT_CONSTANTS].as_constants(1, D3D12_SHADER_VISIBILITY_PIXEL, 1);
+			parameters[idx::ROOT_CONSTANTS].as_constants(2, D3D12_SHADER_VISIBILITY_PIXEL, 1);
 			parameters[idx::FRUSTUMS].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
 			parameters[idx::LIGHT_GRID_OPAQUE].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 1);
 
-			d3dx::D3D12RootSignatureDesc root_signature{ &parameters[0], _countof(parameters) };
+			const D3D12_STATIC_SAMPLER_DESC samplers[] = {
+				d3dx::static_sampler(d3dx::sampler_state.static_point, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL),
+				d3dx::static_sampler(d3dx::sampler_state.static_linear, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL),
+			};
+
+			d3dx::D3D12RootSignatureDesc root_signature{
+				&parameters[0],
+				_countof(parameters),
+				d3dx::D3D12RootSignatureDesc::default_flags,
+				& samplers[0],
+				_countof(samplers)
+			};
+
 			root_signature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 			fx_root_sig = root_signature.create();
 			assert(fx_root_sig);
@@ -81,6 +93,7 @@ namespace lightning::graphics::direct3d12::fx {
 		using idx = FXRootParamIndicies;
 		cmd_list->SetGraphicsRootConstantBufferView(idx::GLOBAL_SHADER_DATA, info.global_shader_data);
 		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::main_buffer().srv().index, 0);
+		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::depth_buffer().srv().index, 1);
 		cmd_list->SetGraphicsRootShaderResourceView(idx::FRUSTUMS, delight::frustums(light_culling_id, frame_index));
 		cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_GRID_OPAQUE, delight::light_grid_opaque(light_culling_id, frame_index));
 

@@ -198,8 +198,8 @@ void create_render_items() {
 		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.img"); }},
 
 		std::thread{ [] { ibl_brdf_lut_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/brdf_lut.texture"); }},
-		std::thread{ [] { ibl_diffuse_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/diffuse3.texture"); }},
-		std::thread{ [] { ibl_specular_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/specular3.texture"); }},
+		std::thread{ [] { ibl_diffuse_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/diffuse5.texture"); }},
+		std::thread{ [] { ibl_specular_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/specular5.texture"); }},
 
 		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},

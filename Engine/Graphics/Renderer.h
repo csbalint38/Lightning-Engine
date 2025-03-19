@@ -145,7 +145,7 @@ namespace lightning::graphics {
 			field_of_view = .25f;
 			aspect_ratio = 16.f / 10.f;
 			near_z = 0.01f;
-			far_z = 1000.f;
+			far_z = 100.f;
 		}
 	};
 

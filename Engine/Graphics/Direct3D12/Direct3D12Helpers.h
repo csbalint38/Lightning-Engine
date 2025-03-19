@@ -227,9 +227,9 @@ namespace lightning::graphics::direct3d12::d3dx {
 	constexpr struct {
 		const D3D12_STATIC_SAMPLER_DESC static_point {
 			D3D12_FILTER_MIN_MAG_MIP_POINT,			// Filter
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address U
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address V
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address W
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address U
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address V
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address W
 			0.f,									// Mip LOD bias
 			1,										// Max anisotropy
 			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
@@ -243,9 +243,9 @@ namespace lightning::graphics::direct3d12::d3dx {
 
 		const D3D12_STATIC_SAMPLER_DESC static_linear {
 			D3D12_FILTER_MIN_MAG_MIP_LINEAR,		// Filter
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address U
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address V
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address W
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address U
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address V
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address W
 			0.f,									// Mip LOD bias
 			1,										// Max anisotropy
 			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
@@ -259,9 +259,9 @@ namespace lightning::graphics::direct3d12::d3dx {
 
 		const D3D12_STATIC_SAMPLER_DESC static_anisotropic {
 			D3D12_FILTER_ANISOTROPIC,				// Filter
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address U
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address V
-			D3D12_TEXTURE_ADDRESS_MODE_WRAP,		// Address W
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address U
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address V
+			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address W
 			0.f,									// Mip LOD bias
 			1,										// Max anisotropy
 			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function

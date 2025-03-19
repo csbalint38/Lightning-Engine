@@ -186,7 +186,14 @@ float3 Cook_Torrence_BRDF(Surface s, float3 l)
     float3 diffuse_brdf = diffuse_Lambert() * s.diffuse_color * rho;
     #endif
     
-    return (diffuse_brdf + specular_brdf) * n_o_l;
+    #define USE_DOUBLE_BOUNCING 
+    #ifdef USE_DOUBLE_BOUNCING
+    float2 brdf_lut = Sample(global_data.ambient_light.brdf_lut_srv_index, linear_sampler, float2(n_o_v, s.perceptual_roughness), 0).rg;
+    float3 energyCompensation = 1.f + s.specular_color * (rcp(brdf_lut.x) - 1.f);
+    specular_brdf *= energyCompensation;
+    #endif
+    
+    return (diffuse_brdf + s.specular_strength * specular_brdf) * n_o_l;
 }
 
 float3 calculate_lighting(Surface s, float3 l, float3 light_color)
@@ -284,7 +291,7 @@ float3 evaluate_IBL(Surface s)
     float2 brdf_lut = Sample(ibl.brdf_lut_srv_index, linear_sampler, float2(n_o_v, s.perceptual_roughness), 0).rg;
     float3 specular = specular_ibl * (s.specular_strength * s.specular_color * brdf_lut.x + f90 * brdf_lut.y);
     
-    #if 0
+    #ifdef USE_DOUBLE_BOUNCING
     float3 energyCompensation = 1.f + s.specular_color * (rcp(brdf_lut.x) - 1.f);
     specular *= energyCompensation;
     #endif
@@ -351,16 +358,15 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     
     float3 color = 0;
     
-    #ifdef LIGHTS_ENABLED
     uint i = 0;
-    for (i = 0; i < global_data.num_directional_lights; ++i)
-    {
-        DirectionalLightParameters light = directional_lights[i];
-        float3 light_direction = light.direction;
-        
-        color += calculate_lighting(s, -light_direction, light.color * light.intensity);
-    }
-    
+    //for (i = 0; i < global_data.num_directional_lights; ++i)
+    //{
+    //    DirectionalLightParameters light = directional_lights[i];
+    //    float3 light_direction = light.direction;
+    //    
+    //    color += calculate_lighting(s, -light_direction, light.color * light.intensity);
+    //}
+    //
     const uint grid_index = get_grid_index(ps_in.homogeneous_position.xy, global_data.view_width);
     uint light_start_index = light_grid[grid_index].x;
     const uint light_count = light_grid[grid_index].y;
@@ -380,12 +386,10 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
         color += spotlight(s, ps_in.world_position, light);
     }
     
-    #else
     if (global_data.ambient_light.intensity > 0)
     {
         color += evaluate_IBL(s);
     }
-    #endif
     
     #if TEXTURED_MTL
     float v_o_n = s.n_o_v * 1.3f;

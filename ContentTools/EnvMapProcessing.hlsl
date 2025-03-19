@@ -246,7 +246,7 @@ float3 sample_hemisphere_random(float3 normal)
         float3 transform = float3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta);
         float3 sample_dir = mul(transform, tangent_frame);
         
-        irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb;
+        irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb * cos_theta;
     }
 
     irradiance *= 1.f / sample_count;
@@ -276,7 +276,7 @@ float3 sample_hemisphere_brute(float3 normal)
                 {
                     float tmp = 1.f + pos.x * pos.x + pos.y * pos.y;
                     float weight = 4.f * cos_theta / (sqrt(tmp) * tmp);
-                    irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb * weight;
+                    irradiance += cube_map_in.SampleLevel(linear_sampler, sample_dir, 0).rgb * weight * cos_theta;
                     sample_count += weight;
                 }
             }

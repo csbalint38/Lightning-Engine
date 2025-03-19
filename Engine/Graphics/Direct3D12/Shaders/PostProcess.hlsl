@@ -3,6 +3,7 @@
 struct ShaderConstants
 {
     uint gpass_main_buffer_index;
+    uint gpass_depth_buffer_index;
 };
 
 #define TILE_SIZE 32
@@ -11,6 +12,8 @@ ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<ShaderConstants> shader_params : register(b1, space0);
 StructuredBuffer<Frustum> frustums : register(t0, space0);
 StructuredBuffer<uint2> light_grid_opaque : register(t1, space0);
+SamplerState point_sampler : register(s0, space0);
+SamplerState linear_sampler : register(s1, space0);
 
 uint get_grid_index(float2 pos_xy, float view_width)
 {
@@ -105,8 +108,25 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     #elif 0 // LIGHT GRID OPAQUE
     return heatmap(light_grid_opaque, position.xy, .75f);
     
-    #elif 1 // SCENE
+    #elif 0 // SCENE
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
     return float4(gpass_main[position.xy].xyz, 1.f);
+    
+    #elif 1 // SCENE - USING_SKYBOX
+    Texture2D gpass_depth = ResourceDescriptorHeap[shader_params.gpass_depth_buffer_index];
+    float depth = gpass_depth[position.xy].r;
+    
+    if (depth > 0.f)
+    {
+        Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
+        
+        return float4(gpass_main[position.xy].xyz, 1.f);
+    }
+    else
+    {
+        float3 direction = unproject_uv(uv, depth, global_data.inv_view_projection).xyz;
+        
+        return TextureCube( ResourceDescriptorHeap[global_data.ambient_light.specular_srv_index]).SampleLevel(linear_sampler, direction, .1f) * global_data.ambient_light.intensity;
+    }
     #endif
 }
