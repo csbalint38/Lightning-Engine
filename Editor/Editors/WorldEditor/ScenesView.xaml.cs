@@ -1,4 +1,5 @@
-﻿using Editor.GameProject;
+﻿using Editor.Components;
+using Editor.GameProject;
 using System.Windows.Controls;
 
 namespace Editor.Editors
@@ -11,6 +12,17 @@ namespace Editor.Editors
         public ScenesView()
         {
             InitializeComponent();
+        }
+
+        private void BtnAddEntity_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            var vm = btn.DataContext as Scene;
+
+            vm.AddEntityCommand.Execute(new Entity(vm)
+            {
+                Name = "Empty Game Entity"
+            });
         }
     }
 }

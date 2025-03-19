@@ -1,4 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using Editor.GameProject;
+using System.Collections.Specialized;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Editor.Editors
 {
@@ -10,6 +13,14 @@ namespace Editor.Editors
         public WorldEditorView()
         {
             InitializeComponent();
+            Loaded += WorldEditorView_OnLoaded;
+        }
+
+        private void WorldEditorView_OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Loaded -= WorldEditorView_OnLoaded;
+            Focus();
+            ((INotifyCollectionChanged)Project.UndoRedo.UndoList).CollectionChanged += (s, e) => Focus();
         }
     }
 }
