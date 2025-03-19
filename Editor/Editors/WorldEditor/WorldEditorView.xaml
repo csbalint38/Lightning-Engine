@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:common="clr-namespace:Editor.Common"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Focusable="True"
              mc:Ignorable="d"
@@ -57,13 +58,19 @@
                           Height="5"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Top"/>
+                <TabControl Grid.Row="1">
+                    <TabItem Header="History">
+                        <local:UndoRedoView DataContext="{Binding UndoRedo}"/>
+                    </TabItem>
+                    <TabItem Header="Console">
+                        <common:LoggerView/>
+                    </TabItem>
+                </TabControl>
             </Grid>
-            <local:UndoRedoView Grid.Row="1"
-                                DataContext="{Binding UndoRedo}"/>
             <GridSplitter Grid.Column="1"
-                      Width="5"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Stretch"/>
+                          Width="5"
+                          HorizontalAlignment="Left"
+                           VerticalAlignment="Stretch"/>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition/>

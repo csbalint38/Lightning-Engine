@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Editor.Common.Enums;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
@@ -28,6 +29,9 @@ namespace Editor.Utilities
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+                Logger.Log(LogLevel.ERROR, $"Failed to save file: {path}");
+
+                throw;
             }
         }
 
@@ -44,8 +48,9 @@ namespace Editor.Utilities
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+                Logger.Log(LogLevel.ERROR, $"Failed to load file: {path}");
 
-                return default!;
+                throw;
             }
         }
     }

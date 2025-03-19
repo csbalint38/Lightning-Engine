@@ -4,16 +4,54 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <StackPanel>
-        <TextBlock Text="{Binding Name}"/>
-        <ItemsControl ItemsSource="{Binding Components}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-        </ItemsControl>
-    </StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer.Style>
+            <Style TargetType="ScrollViewer">
+                <Style.Triggers>
+                    <Trigger Property="DataContext"
+                             Value="{x:Null}">
+                        <Setter Property="Visibility"
+                                Value="Collapsed"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ScrollViewer.Style>
+        <StackPanel>
+            <Border Height="32">
+                <ToggleButton x:Name="TgbAddComponent"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Left">
+                    <ToggleButton.Content>
+                        <DockPanel>
+                            <TextBlock Text="Add Component"/>
+                            <materialDesign:PackIcon Kind="MenuDown"
+                                                 Width="24"
+                                                 Height="24"
+                                                 Margin="5,0,5,0"/>
+                        </DockPanel>
+                    </ToggleButton.Content>
+                </ToggleButton>
+            </Border>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0"
+                     Text="{Binding Name}"
+                     Tag="{Binding RenameCommand}"/>
+                <StackPanel Grid.Column="1"
+                        Orientation="Horizontal">
+                    <TextBlock Text="Enabled" />
+                    <CheckBox IsChecked="{Binding IsEnabled, Mode=OneWay}"
+                              Command="{Binding EnableCommand}"
+                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

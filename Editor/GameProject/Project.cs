@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -55,7 +56,10 @@ namespace Editor.GameProject
             return Serializer.FromFile<Project>(file);
         }
 
-        public static void Save(Project project) => Serializer.ToFile(project, project.FullPath);
+        public static void Save(Project project) {
+            Serializer.ToFile(project, project.FullPath);
+            Logger.Log(LogLevel.INFO, $"Project saved to {project.FullPath}");
+        }
 
         public Project(string name, string path)
         {
@@ -67,7 +71,7 @@ namespace Editor.GameProject
 
         public void Unload()
         {
-
+            UndoRedo.Reset();
         }
 
         [OnDeserialized]

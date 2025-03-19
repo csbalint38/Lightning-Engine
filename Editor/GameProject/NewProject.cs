@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -104,6 +105,9 @@ namespace Editor.GameProject
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+                Logger.Log(LogLevel.ERROR, "Failed to load project templates");
+
+                throw;
             }
 
             Validate();
@@ -144,7 +148,9 @@ namespace Editor.GameProject
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                return string.Empty;
+                Logger.Log(LogLevel.ERROR, $"Failed to create project: {path}");
+
+                throw;
             }
         }
 

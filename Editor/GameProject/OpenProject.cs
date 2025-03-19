@@ -1,4 +1,5 @@
-﻿using Editor.Utilities;
+﻿using Editor.Common.Enums;
+using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -27,6 +28,9 @@ namespace Editor.GameProject
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+                Logger.Log(LogLevel.ERROR, "Failed to initialize OpenProject");
+
+                throw;
             }
         }
 

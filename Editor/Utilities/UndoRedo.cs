@@ -4,6 +4,7 @@ namespace Editor.Utilities
 {
     public class UndoRedo
     {
+        private bool _registerAction = true;
         private readonly ObservableCollection<IUndoRedo> _redoList = [];
         private readonly ObservableCollection<IUndoRedo> _undoList = [];
 
@@ -18,8 +19,11 @@ namespace Editor.Utilities
 
         public void Add(IUndoRedo cmd)
         {
-            _undoList.Add(cmd);
-            _redoList.Clear();
+            if (_registerAction)
+            {
+                _undoList.Add(cmd);
+                _redoList.Clear();
+            }
         }
 
         public void Undo()
@@ -28,7 +32,9 @@ namespace Editor.Utilities
             {
                 var cmd = _undoList.Last();
                 _undoList.RemoveAt(_undoList.Count - 1);
+                _registerAction = false;
                 cmd.Undo();
+                _registerAction = true;
                 _redoList.Insert(0, cmd);
             }
         }
@@ -39,7 +45,9 @@ namespace Editor.Utilities
             {
                 var cmd = _redoList.First();
                 _redoList.RemoveAt(0);
+                _registerAction = false;
                 cmd.Redo();
+                _registerAction = true;
                 _undoList.Add(cmd);
             }
         }

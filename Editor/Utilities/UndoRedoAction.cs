@@ -11,6 +11,14 @@ namespace Editor.Utilities
 
         public UndoRedoAction(string name) => Name = name;
 
+        public UndoRedoAction(string prop, object instance, object oldValue, object newValue, string name) :
+            this(
+                name,
+                () => instance.GetType().GetProperty(prop).SetValue(instance, oldValue),
+                () => instance.GetType().GetProperty(prop).SetValue(instance, newValue)
+            )
+        { }
+
         public UndoRedoAction(string name, Action undo, Action redo) : this(name)
         {
             Debug.Assert(undo is not null && redo is not null);

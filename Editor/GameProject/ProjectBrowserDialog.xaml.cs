@@ -12,6 +12,18 @@ namespace Editor.GameProject
         public ProjectBrowserDialog()
         {
             InitializeComponent();
+            Loaded += OnProjectBrowserDialogOpened;
+        }
+
+        private void OnProjectBrowserDialogOpened(object sender, RoutedEventArgs e)
+        {
+            Loaded -= OnProjectBrowserDialogOpened;
+
+            if(!OpenProject.Projects.Any())
+            {
+                BtnToggleOpenNew_Click(BtnToggleOpenNew, new RoutedEventArgs());
+                BtnToggleOpenNew.IsEnabled = false;
+            }
         }
 
         private void BtnToggleOpenNew_Click(object sender, RoutedEventArgs e)
