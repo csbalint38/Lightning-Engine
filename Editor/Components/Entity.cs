@@ -4,9 +4,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 
+
+
 namespace Editor.Components
 {
     [DataContract]
+    [KnownType(typeof(Transform))]
     public class Entity : ViewModelBase
     {
         private string _name;

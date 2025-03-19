@@ -24,5 +24,11 @@ namespace Editor.Editors
                 Name = "Empty Game Entity"
             });
         }
+
+        private void LbEntities_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var entity = (sender as ListBox).SelectedItems[0];
+            ComponentsView.Instance.DataContext = entity;
+        }
     }
 }

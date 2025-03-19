@@ -49,9 +49,11 @@
                                             Click="BtnAddEntity_Click"/>
                                 </StackPanel>
                             </Expander.Header>
-                            <ListBox ItemsSource="{Binding Entities}"
+                            <ListBox Name ="LbEntities"
+                                     ItemsSource="{Binding Entities}"
                                      IsEnabled="{Binding IsActive}"
-                                     SelectionMode="Extended">
+                                     SelectionMode="Extended"
+                                     SelectionChanged="LbEntities_SelectionChanged">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
