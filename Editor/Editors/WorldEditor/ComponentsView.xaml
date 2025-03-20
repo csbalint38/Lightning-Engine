@@ -41,15 +41,17 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0"
-                     Text="{Binding Name}"
-                     Tag="{Binding RenameCommand}"/>
+                <TextBox Name="TbName"
+                         Grid.Column="0"
+                         Text="{Binding Name}"
+                         GotKeyboardFocus="TbName_GotKeyboardFocus"
+                         LostKeyboardFocus="TbName_LostKeyboardFocus"/>
                 <StackPanel Grid.Column="1"
                         Orientation="Horizontal">
                     <TextBlock Text="Enabled" />
-                    <CheckBox IsChecked="{Binding IsEnabled, Mode=OneWay}"
-                              Command="{Binding EnableCommand}"
-                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                    <CheckBox x:Name="ChBIsEnabled" 
+                              IsChecked="{Binding IsEnabled, Mode=OneWay}"
+                              Click="ChBIsEnabled_Click"/>
                 </StackPanel>
             </Grid>
         </StackPanel>

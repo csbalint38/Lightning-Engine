@@ -4,24 +4,85 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Common"
+             xmlns:enums="clr-namespace:Editor.Common.Enums"
              xmlns:utils="clr-namespace:Editor.Utilities"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-        <ItemsControl ItemsSource="{Binding Source={x:Static utils:Logger.FilteredMessages}}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding TimeStamp}"/>
-                        <TextBlock Text="{Binding Message}"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </Grid>
+    <DockPanel>
+        <Border Height="32" DockPanel.Dock="Top">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+                <Button x:Name="BtnClear"
+                        Content="Clear"
+                        Click="BtnClear_Click"
+                        ToolTip="ClearMessages"/>
+                <ToggleButton x:Name="TbtnInfo"
+                              Content="Info"
+                              IsChecked="True"
+                              Click="FilterMessage_Click"
+                              ToolTip="Toggle information messages"/>
+                <ToggleButton x:Name="TbtnWarning"
+                              Content="Warning"
+                              IsChecked="True"
+                              Click="FilterMessage_Click"
+                              ToolTip="Toggle warning messages"/>
+                <ToggleButton x:Name="TbtnError"
+                              Content="Error"
+                              IsChecked="True"
+                              Click="FilterMessage_Click"
+                              ToolTip="Toggle error messages"/>
+            </StackPanel>
+        </Border>
+        <ScrollViewer x:Name="SvLogMessages"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Source={x:Static utils:Logger.FilteredMessages}}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel ToolTip="{Binding MetaData}">
+                            <DockPanel.Style>
+                                <Style TargetType="DockPanel">
+                                    <Setter Property="Background"
+                                            Value="Transparent"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver"
+                                                 Value="True">
+                                            <Setter Property="Background"
+                                                    Value="LightGray"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DockPanel.Style>
+                            <TextBlock Text="{Binding Time, StringFormat=hh:mm:ss}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground"
+                                                Value="Blue"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding LogLevel}"
+                                                         Value="{x:Static enums:LogLevel.WARNING}">
+                                                <Setter Property="Foreground" Value="Orange"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding LogLevel}"
+                                                         Value="{x:Static enums:LogLevel.ERROR}">
+                                                <Setter Property="Foreground" Value="Red"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock Text="{Binding Message}"
+                                       TextWrapping="Wrap"/>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
 </UserControl>

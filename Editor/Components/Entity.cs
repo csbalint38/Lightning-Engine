@@ -10,7 +10,7 @@ namespace Editor.Components
 {
     [DataContract]
     [KnownType(typeof(Transform))]
-    public class Entity : ViewModelBase
+    class Entity : ViewModelBase
     {
         private string _name;
         private bool _isEnabled = true;
@@ -48,8 +48,6 @@ namespace Editor.Components
 
         public Scene ParentScene { get; private set; }
         public ReadOnlyObservableCollection<Component> Components { get; private set; }
-        public ICommand RenameCommand { get; private set; }
-        public ICommand EnableCommand { get; private set; }
 
         [OnDeserialized]
         void OnDeserialized(StreamingContext context)
@@ -59,27 +57,6 @@ namespace Editor.Components
                 Components = new ReadOnlyObservableCollection<Component>(_components);
                 OnPropertyChanged(nameof(Components));
             }
-
-            RenameCommand = new RelayCommand<string>(
-                x =>
-                {
-                    var oldName = _name;
-                    Name = x;
-
-                    Project.UndoRedo.Add(new UndoRedoAction(nameof(Name), this, oldName, x, $"Rename '{oldName}' to '{x}'"));
-                },
-                x => x != _name
-            );
-
-            EnableCommand = new RelayCommand<bool>(
-                x =>
-                {
-                    var oldValue = _isEnabled;
-                    IsEnabled = x;
-
-                    Project.UndoRedo.Add(new UndoRedoAction(nameof(IsEnabled), this, oldValue, x, x ? $"Enable {Name}" : $"Disable {Name}"));
-                }
-            );
         }
 
         public Entity(Scene scene)

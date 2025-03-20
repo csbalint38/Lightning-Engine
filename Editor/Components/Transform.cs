@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Editor.Components
 {
     [DataContract]
-    public class Transform : Component
+    internal class Transform : Component
     {
         private Vector3 _position;
         private Vector3 _rotation;

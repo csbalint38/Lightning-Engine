@@ -11,7 +11,7 @@ using System.Windows.Input;
 namespace Editor.GameProject
 {
     [DataContract]
-    public class Project : ViewModelBase
+    internal class Project : ViewModelBase
     {
         [DataMember(Name = "Scenes")]
         private ObservableCollection<Scene> _scenes = [];

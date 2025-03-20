@@ -30,28 +30,37 @@ namespace Editor.Editors
         {
             ComponentsView.Instance.DataContext = null;
             var listBox = sender as ListBox;
-
-            if(e.AddedItems.Count > 0)
-            {
-                ComponentsView.Instance.DataContext = listBox.SelectedItems[0];
-            }
-
             var newSelection = listBox.SelectedItems.Cast<Entity>().ToList();
-            var previousSelection = newSelection.Except(e.AddedItems.Cast<Entity>()).Concat(e.RemovedItems.Cast<Entity>()).ToList();
+            var previousSelection = newSelection
+                .Except(e.AddedItems.Cast<Entity>())
+                .Concat(e.RemovedItems.Cast<Entity>())
+                .ToList();
 
             Project.UndoRedo.Add(new UndoRedoAction(
                 "Selection changed",
                 () =>
                 {
                     listBox.UnselectAll();
-                    previousSelection.ForEach(x => (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true);
+                    previousSelection.ForEach(x =>
+                        (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true
+                    );
                 },
                 () =>
                 {
                     listBox.UnselectAll();  
-                    newSelection.ForEach(x => (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true);
+                    newSelection.ForEach(x =>
+                        (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true
+                    );
                 }
             ));
+
+            MSEntity msEntity = null;
+
+            if(newSelection.Any())
+            {
+                msEntity = new MSEntity(newSelection);
+            }
+            ComponentsView.Instance.DataContext = msEntity;
         }
     }
 }

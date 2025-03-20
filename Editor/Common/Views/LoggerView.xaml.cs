@@ -1,4 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using Editor.Common.Enums;
+using Editor.Utilities;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Editor.Common
 {
@@ -10,6 +13,19 @@ namespace Editor.Common
         public LoggerView()
         {
             InitializeComponent();
+        }
+
+        private void BtnClear_Click(object sender, RoutedEventArgs e) => Logger.Clear();
+
+        private void FilterMessage_Click(object sender, RoutedEventArgs e)
+        {
+            var filter = 0x0;
+
+            if (TbtnInfo.IsChecked == true) filter |= (int)LogLevel.INFO;
+            if (TbtnWarning.IsChecked == true) filter |= (int)LogLevel.WARNING;
+            if (TbtnError.IsChecked == true) filter |= (int)LogLevel.ERROR;
+
+            Logger.SetMessageFilter(filter);
         }
     }
 }
