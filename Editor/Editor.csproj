@@ -6,10 +6,24 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+	<XamlDebuggingInformation>True</XamlDebuggingInformation>
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
-    <BaseOutputPath>..\</BaseOutputPath>
+    <Configurations>DebugEditor;ReleaseEditor</Configurations>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
+	<OutputPath>..\x64\DebugEditor\</OutputPath>
+	<PlatformTarget>x64</PlatformTarget>
+	<DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">
+	<PlatformTarget>x64</PlatformTarget>
+	<OutputPath>..\x64\ReleaseEditor\</OutputPath>
+	<Optimize>True</Optimize>
+  </PropertyGroup>
+	
   <ItemGroup>
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.2.1" />
   </ItemGroup>

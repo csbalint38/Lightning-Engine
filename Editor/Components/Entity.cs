@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.DLLs;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
@@ -12,11 +13,48 @@ namespace Editor.Components
     [KnownType(typeof(Transform))]
     class Entity : ViewModelBase
     {
+        private int _entityId = Id.InvalidId;
+        private bool _isActive;
         private string _name;
         private bool _isEnabled = true;
 
         [DataMember(Name = nameof(Components))]
         private readonly ObservableCollection<Component> _components = [];
+
+        public int EntityId
+        {
+            get => _entityId;
+            set
+            {
+                if (_entityId != value)
+                {
+                    _entityId = value;
+                    OnPropertyChanged(nameof(EntityId));
+                }
+            }
+        }
+
+        public bool IsActive
+        {
+            get => _isActive;
+            set
+            {
+                if (_isActive != value)
+                {
+                    _isActive = value;
+
+                    if(_isActive)
+                    {
+                        EntityId = EngineAPI.CreateGameEntity(this);
+
+                        Debug.Assert(Id.IsValid(EntityId));
+                    }
+                    else EngineAPI.RemoveGameEntity(this);
+
+                    OnPropertyChanged(nameof(IsActive));
+                }
+            }
+        }
 
         [DataMember]
         public string Name
@@ -68,5 +106,8 @@ namespace Editor.Components
 
             OnDeserialized(default);
         }
+
+        public Component GetComponent(Type type) => Components.FirstOrDefault(c => c.GetType() == type);
+        public T GetComponent<T>() where T : Component => (T)GetComponent(typeof(T));
     }
 }

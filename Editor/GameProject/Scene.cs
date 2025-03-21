@@ -53,40 +53,6 @@ namespace Editor.GameProject
         public ICommand AddEntityCommand { get; private set; }
         public ICommand RemoveEntityCommand { get; private set; }
 
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext context)
-        {
-            if(_entities is not null)
-            {
-                Entities = new ReadOnlyObservableCollection<Entity>(_entities);
-                OnPropertyChanged(nameof(Entities));
-            }
-
-            AddEntityCommand = new RelayCommand<Entity>(x =>
-            {
-                AddEntity(x);
-                var index = _entities.Count - 1;
-
-                Project.UndoRedo.Add(new UndoRedoAction(
-                    $"Added {x.Name} to {Name}",
-                    () => RemoveEntity(x),
-                    () => _entities.Insert(index, x)
-                ));
-            });
-
-            RemoveEntityCommand = new RelayCommand<Entity>(x =>
-            {
-                var index = _entities.IndexOf(x);
-                RemoveEntity(x);
-
-                Project.UndoRedo.Add(new UndoRedoAction(
-                    $"Removed {x.Name}",
-                    () => _entities.Insert(index, x),
-                    () => RemoveEntity(x)
-                ));
-            });
-        }
-
         public Scene(Project project, string name)
         {
             Debug.Assert(project != null);
@@ -97,15 +63,59 @@ namespace Editor.GameProject
             OnDeserialized(new StreamingContext());
         }
 
-        private void AddEntity(Entity entity)
+        [OnDeserialized]
+        private void OnDeserialized(StreamingContext context)
+        {
+            if(_entities is not null)
+            {
+                Entities = new ReadOnlyObservableCollection<Entity>(_entities);
+                OnPropertyChanged(nameof(Entities));
+            }
+            
+            foreach (var entity in _entities) entity.IsActive = IsActive;
+
+            AddEntityCommand = new RelayCommand<Entity>(x =>
+            {
+                AddEntity(x);
+                var index = _entities.Count - 1;
+
+                Project.UndoRedo.Add(new UndoRedoAction(
+                    $"Added {x.Name} to {Name}",
+                    () => RemoveEntity(x),
+                    () => AddEntity(x, index)
+                ));
+            });
+
+            RemoveEntityCommand = new RelayCommand<Entity>(x =>
+            {
+                var index = _entities.IndexOf(x);
+                RemoveEntity(x);
+
+                Project.UndoRedo.Add(new UndoRedoAction(
+                    $"Removed {x.Name}",
+                    () => AddEntity(x, index),
+                    () => RemoveEntity(x)
+                ));
+            });
+        }
+
+        private void AddEntity(Entity entity,  int index = -1)
         {
             Debug.Assert(!_entities.Contains(entity));
+
+            entity.IsActive = IsActive;
+
+            if(index == -1) _entities.Add(entity);
+            else _entities.Insert(index, entity);
+
             _entities.Add(entity);
         }
 
         private void RemoveEntity(Entity entity)
         {
             Debug.Assert(_entities.Contains(entity));
+
+            entity.IsActive = false;
             _entities.Remove(entity);
         }
     }
