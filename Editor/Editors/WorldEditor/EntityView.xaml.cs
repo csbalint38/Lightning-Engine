@@ -8,16 +8,16 @@ using System.Windows.Input;
 namespace Editor.Editors
 {
     /// <summary>
-    /// Interaction logic for ComponentsView.xaml
+    /// Interaction logic for EntityView.xaml
     /// </summary>
-    public partial class ComponentsView : UserControl
+    public partial class EntityView : UserControl
     {
-        public static ComponentsView Instance { get; private set; }
+        public static EntityView Instance { get; private set; }
 
         private Action _undoAction;
         private string _propertyName;
 
-        public ComponentsView()
+        public EntityView()
         {
             InitializeComponent();
             DataContext = null;
@@ -55,8 +55,11 @@ namespace Editor.Editors
             });
         }
 
-        private void TbName_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) =>
+        private void TbName_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            _propertyName = string.Empty;
             _undoAction = GetRenameAction();
+        }
 
         private void TbName_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {

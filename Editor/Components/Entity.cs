@@ -43,13 +43,17 @@ namespace Editor.Components
                 {
                     _isActive = value;
 
-                    if(_isActive)
+                    if (_isActive)
                     {
                         EntityId = EngineAPI.CreateGameEntity(this);
 
                         Debug.Assert(Id.IsValid(EntityId));
                     }
-                    else EngineAPI.RemoveGameEntity(this);
+                    else if (Id.IsValid(EntityId))
+                    {
+                        EngineAPI.RemoveGameEntity(this);
+                        EntityId = Id.InvalidId;
+                    }
 
                     OnPropertyChanged(nameof(IsActive));
                 }

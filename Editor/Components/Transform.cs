@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Editor.Components
 {
     [DataContract]
-    internal class Transform : Component
+    internal class Transform(Entity parent) : Component(parent)
     {
         private Vector3 _position;
         private Vector3 _rotation;
@@ -52,8 +52,6 @@ namespace Editor.Components
             }
         }
 
-        public Transform(Entity parent) : base(parent)
-        {
-        }
+        public override IMSComponent GetMultiselectComponents(MSEntityBase entity) => new MSTransform(entity);
     }
 }

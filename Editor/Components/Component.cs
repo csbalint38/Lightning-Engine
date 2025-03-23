@@ -9,10 +9,13 @@ namespace Editor.Components
     {
         [DataMember]
         public Entity ParentEntity { get; private set; }
+
         public Component(Entity parent)
         {
             Debug.Assert(parent != null);
             ParentEntity = parent;
         }
+
+        public abstract IMSComponent GetMultiselectComponents(MSEntityBase entity);
     }
 }

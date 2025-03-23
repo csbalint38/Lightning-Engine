@@ -107,8 +107,6 @@ namespace Editor.GameProject
 
             if(index == -1) _entities.Add(entity);
             else _entities.Insert(index, entity);
-
-            _entities.Add(entity);
         }
 
         private void RemoveEntity(Entity entity)

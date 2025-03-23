@@ -20,7 +20,6 @@ namespace Editor.Editors
         {
             Loaded -= WorldEditorView_OnLoaded;
             Focus();
-            ((INotifyCollectionChanged)Project.UndoRedo.UndoList).CollectionChanged += (s, e) => Focus();
         }
     }
 }

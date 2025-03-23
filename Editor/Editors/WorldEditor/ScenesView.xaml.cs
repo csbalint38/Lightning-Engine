@@ -1,6 +1,7 @@
 ﻿using Editor.Components;
 using Editor.GameProject;
 using Editor.Utilities;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Editor.Editors
@@ -15,7 +16,7 @@ namespace Editor.Editors
             InitializeComponent();
         }
 
-        private void BtnAddEntity_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void BtnAddEntity_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
             var vm = btn.DataContext as Scene;
@@ -28,7 +29,7 @@ namespace Editor.Editors
 
         private void LbEntities_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ComponentsView.Instance.DataContext = null;
+            EntityView.Instance.DataContext = null;
             var listBox = sender as ListBox;
             var newSelection = listBox.SelectedItems.Cast<Entity>().ToList();
             var previousSelection = newSelection
@@ -60,7 +61,7 @@ namespace Editor.Editors
             {
                 msEntity = new MSEntity(newSelection);
             }
-            ComponentsView.Instance.DataContext = msEntity;
+            EntityView.Instance.DataContext = msEntity;
         }
     }
 }

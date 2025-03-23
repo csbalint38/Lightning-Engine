@@ -1,5 +1,4 @@
 ﻿using Editor.Common;
-using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -10,7 +9,7 @@ namespace Editor.Components
         private bool _enableUpdates = true;
         private bool? _isEnabled;
         private string? _name;
-        private readonly ObservableCollection<IMSComponent> _components = new();
+        private readonly ObservableCollection<IMSComponent> _components = [];
 
         public bool? IsEnabled
         {
@@ -60,49 +59,6 @@ namespace Editor.Components
             return true;
         }
 
-        public static float? GetMixedValue(List<Entity> entities, Func<Entity, float> getProperty)
-        {
-            var value = getProperty(entities.First());
-
-            foreach (var entity in entities.Skip(1))
-            {
-                if (!value.IsEqual(getProperty(entity))) return null;
-            }
-
-            return value;
-        }
-
-        public static bool? GetMixedValue(List<Entity> entities, Func<Entity, bool> getProperty)
-        {
-            var value = getProperty(entities.First());
-
-            foreach (var entity in entities.Skip(1))
-            {
-                if (value != getProperty(entity)) return null;
-            }
-
-            return value;
-        }
-
-        public static string? GetMixedValue(List<Entity> entities, Func<Entity, string> getProperty)
-        {
-            var value = getProperty(entities.First());
-
-            foreach (var entity in entities.Skip(1))
-            {
-                if (value != getProperty(entity)) return null;
-            }
-
-            return value;
-        }
-
-        public void Refresh()
-        {
-            _enableUpdates = false;
-            UpdateMSEntity();
-            _enableUpdates = true;
-        }
-
         public MSEntityBase(List<Entity> entities)
         {
             Debug.Assert(entities?.Count != 0);
@@ -111,8 +67,60 @@ namespace Editor.Components
 
             PropertyChanged += (s, e) =>
             {
-                if(_enableUpdates) UpdateEntities(e.PropertyName);
+                if (_enableUpdates) UpdateEntities(e.PropertyName);
             };
+        }
+
+        public static float? GetMixedValue<T>(List<T> objects, Func<T, float> getProperty)
+        {
+            var value = getProperty(objects.First());
+
+            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? (float?)null : value;
+        }
+
+        public static bool? GetMixedValue<T>(List<T> objects, Func<T, bool> getProperty)
+        {
+            var value = getProperty(objects.First());
+
+            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? (bool?)null : value;
+        }
+
+        public static string? GetMixedValue<T>(List<T> objects, Func<T, string> getProperty)
+        {
+            var value = getProperty(objects.First());
+
+            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? (string?)null : value;
+        }
+
+        public void Refresh()
+        {
+            _enableUpdates = false;
+            UpdateMSEntity();
+            MakeComponentList();
+            _enableUpdates = true;
+        }
+
+        public T GetMSComponent<T>() where T : IMSComponent => (T)Components.FirstOrDefault(c => c is T);
+
+        private void MakeComponentList()
+        {
+            _components.Clear();
+
+            var firstEntity = SelectedEntities.FirstOrDefault();
+
+            if (firstEntity is null) return;
+
+            foreach (var component in firstEntity.Components)
+            {
+                var type = component.GetType();
+
+                if (!SelectedEntities.Skip(1).Any(entity => entity.GetComponent(type) is null))
+                {
+                    Debug.Assert(Components.FirstOrDefault(x => x.GetType() == type) is null);
+
+                    _components.Add(component.GetMultiselectComponents(this));
+                }
+            }
         }
     }
 }

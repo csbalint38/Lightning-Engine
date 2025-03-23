@@ -81,7 +81,7 @@
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Top"/>
                 <local:ScenesView/>
-                <local:ComponentsView Grid.Row="1"/>
+                <local:EntityView Grid.Row="1"/>
             </Grid>
         </Grid>
     </Grid>
