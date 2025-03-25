@@ -98,6 +98,7 @@ namespace Editor.GameProject
 
                     template.Icon = File.ReadAllBytes(template.IconFilePath);
                     template.Screenshot = File.ReadAllBytes(template.ScreenshotFilePath);
+                    template.TemplatePath = Path.GetDirectoryName(templateFile);
 
                     _templates.Add(template);
                 }
@@ -143,6 +144,8 @@ namespace Editor.GameProject
                 var projectPath = Path.GetFullPath(Path.Combine(path, $"{ProjectName}{Project.Extension}"));
                 File.WriteAllText(projectPath, projectFile);
 
+                CreateMSVCSolution(template, path);
+
                 return path;
             }
             catch (Exception ex)
@@ -152,6 +155,33 @@ namespace Editor.GameProject
 
                 throw;
             }
+        }
+
+        private void CreateMSVCSolution(ProjectTemplate template, string projectPath)
+        {
+            Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "SolutionTemplate.txt")));
+            Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "ProjectTemplate.txt")));
+
+            var engineApiPath = Path.Combine(Constants.EnginePath, @"Engine\EngineAPI\");
+
+            Debug.Assert(Directory.Exists(engineApiPath));
+
+            var _0 = ProjectName;
+            var _1 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+            var _2 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
+
+            var solution = File.ReadAllText(Path.Combine(template.TemplatePath, "SolutionTemplate.txt"));
+            solution = string.Format(solution, _0, _1, _2);
+
+            File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $"{_0}.sln")), solution);
+
+            _2 = engineApiPath;
+            var _3 = Constants.EnginePath;
+
+            var project = File.ReadAllText(Path.Combine(template.TemplatePath, "ProjectTemplate.txt"));
+            project = string.Format(project, _0, _1, _2, _3);
+
+            File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $@"Code\{_0}.vcxproj")), project);
         }
 
         private bool Validate()

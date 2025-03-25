@@ -20,7 +20,13 @@ public partial class MainWindow : Window
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnMainWindowLoaded;
+        GetEnginePath();
         OpenProjectBrowserDialog();
+    }
+
+    private void GetEnginePath()
+    {
+        var a = AppDomain.CurrentDomain.BaseDirectory;
     }
 
     private void OnMainWindowClosing(object sender, CancelEventArgs e)

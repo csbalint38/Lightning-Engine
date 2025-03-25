@@ -42,7 +42,7 @@ namespace {
 
 	struct EntityDescriptor {
 		TransformComponentDescriptor transform;
-		//ScriptComponentDescriptor script;
+		ScriptComponentDescriptor script;
 	};
 
 	game_entity::Entity entity_from_id(id::id_type id) {
@@ -54,10 +54,10 @@ EDITOR_INTERFACE id::id_type create_game_entity(EntityDescriptor* entity) {
 	assert(entity);
 	EntityDescriptor& desc{ *entity };
 	transform::InitInfo transform_info{ desc.transform.to_init_info() };
-	//script::InitInfo script_info{ desc.script.to_init_info() };
+	script::InitInfo script_info{ desc.script.to_init_info() };
 	game_entity::EntityInfo entity_info{
 		&transform_info,
-		//&script_info,
+		&script_info,
 	};
 
 	return game_entity::create(entity_info).get_id();

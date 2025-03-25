@@ -12,7 +12,7 @@ namespace Editor.Common
         public required string ProjectFile { get; set; }
 
         [DataMember]
-        public List<string> Folders { get; set; }
+        public List<string> Folders { get; set; } = [];
 
         public required byte[] Icon { get; set; }
 
@@ -23,5 +23,6 @@ namespace Editor.Common
         public required string ScreenshotFilePath { get; set; }
 
         public required string ProjectFilePath { get; set; }
+        public required string TemplatePath { get; set; }
     }
 }
