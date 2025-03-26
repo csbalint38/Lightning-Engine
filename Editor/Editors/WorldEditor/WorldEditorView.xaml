@@ -38,9 +38,18 @@
             <Button Command="{Binding RedoCommand}">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="Redo"
-                                 Width="24"
-                                 Height="24"
-                                 Margin="5,0,5,0"/>
+                                             Width="24"
+                                             Height="24"
+                                             Margin="5,0,5,0"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="BtnNewScript"
+                    Click="BtnNewScript_Click">
+                <StackPanel>
+                    <materialDesign:PackIcon Kind="FileDocument"
+                                             Width="24"
+                                             Height="24"
+                                             Margin="5,0,5,0"/>
                 </StackPanel>
             </Button>
         </StackPanel>

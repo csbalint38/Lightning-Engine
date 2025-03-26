@@ -84,21 +84,23 @@ namespace Editor.GameProject
                 foreach (var templateFile in templateFiles) {
                     var template = Serializer.FromFile<ProjectTemplate>(templateFile);
 
+                    template.TemplatePath = Path.GetDirectoryName(templateFile);
+
                     template.IconFilePath = Path.GetFullPath(
-                        Path.Combine(Path.GetDirectoryName(templateFile)!, "icon.png")
+                        Path.Combine(template.TemplatePath, "icon.png")
                     );
 
                     template.ScreenshotFilePath = Path.GetFullPath(
-                        Path.Combine(Path.GetDirectoryName(templateFile)!, "screenshot.png")
+                        Path.Combine(template.TemplatePath, "screenshot.png")
                     );
 
+
                     template.ProjectFilePath = Path.GetFullPath(
-                        Path.Combine(Path.GetDirectoryName(templateFile)!, template.ProjectFile)
+                        Path.Combine(template.TemplatePath, template.ProjectFile)
                     );
 
                     template.Icon = File.ReadAllBytes(template.IconFilePath);
                     template.Screenshot = File.ReadAllBytes(template.ScreenshotFilePath);
-                    template.TemplatePath = Path.GetDirectoryName(templateFile);
 
                     _templates.Add(template);
                 }
@@ -139,7 +141,7 @@ namespace Editor.GameProject
                 File.Copy(template.ScreenshotFilePath, Path.GetFullPath(Path.Combine(dirInfo.FullName, "screenshot.png")));
 
                 var projectFile = File.ReadAllText(template.ProjectFilePath);
-                projectFile = string.Format(projectFile, ProjectName, ProjectPath);
+                projectFile = string.Format(projectFile, ProjectName, path);
 
                 var projectPath = Path.GetFullPath(Path.Combine(path, $"{ProjectName}{Project.Extension}"));
                 File.WriteAllText(projectPath, projectFile);

@@ -1,5 +1,6 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
+using Editor.GameCode;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -27,7 +28,8 @@ namespace Editor.GameProject
 
         [DataMember]
         public string Path { get; private set; }
-        public string FullPath => $@"{Path}{Name}\{Name}{Extension}";
+        public string FullPath => $@"{Path}{Name}{Extension}";
+        public string Solution => $@"{Path}{Name}.sln";
 
         public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
         public ICommand AddSceneCommand { get; private set; }
@@ -71,6 +73,7 @@ namespace Editor.GameProject
 
         public void Unload()
         {
+            VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
         }
 

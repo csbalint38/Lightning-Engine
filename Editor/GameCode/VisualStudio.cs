@@ -1,6 +1,7 @@
 ﻿using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -99,6 +100,50 @@ namespace Editor.GameCode
                 _vsInstance.ExecuteCommand("File.SaveAll");
                 _vsInstance.Solution.Close(true);
             }
+        }
+
+        public static bool AddFilesToSolution(string solution, string projectName, string[] files)
+        {
+            OpenVisualStudio(solution);
+
+            try
+            {
+                if (_vsInstance is not null)
+                {
+                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
+                    else _vsInstance.ExecuteCommand("File.SaveAll");
+
+                    foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
+                    {
+                        if (project.UniqueName.Contains(projectName))
+                        {
+                            foreach (var file in files)
+                            {
+                                project.ProjectItems.AddFromFile(file);
+                            }
+                        }
+                    }
+
+                    var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
+
+                    if (!string.IsNullOrEmpty(cpp))
+                    {
+                        _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
+                    }
+
+                    _vsInstance.MainWindow.Activate();
+                    _vsInstance.MainWindow.Visible = true;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                Debug.WriteLine("Failed to add files to Visual Studio Solution");
+
+                return false;
+            }
+
+            return true;
         }
     }
 }

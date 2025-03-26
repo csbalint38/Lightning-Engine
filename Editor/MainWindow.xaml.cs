@@ -29,11 +29,6 @@ public partial class MainWindow : Window
         OpenProjectBrowserDialog();
     }
 
-    private void GetEnginePath()
-    {
-        var a = AppDomain.CurrentDomain.BaseDirectory;
-    }
-
     private void OnMainWindowClosing(object sender, CancelEventArgs e)
     {
         Closing -= OnMainWindowClosing;

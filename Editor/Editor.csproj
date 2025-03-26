@@ -32,7 +32,7 @@
       <Guid>80cc9f66-e7d8-4ddd-85b6-d9e6cd0e93e2</Guid>
       <Lcid>0</Lcid>
       <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
     <COMReference Include="EnvDTE80">
       <WrapperTool>tlbimp</WrapperTool>
@@ -48,5 +48,14 @@
   <ItemGroup>
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.2.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <None Update="GameCode\Templates\cpp.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="GameCode\Templates\h.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

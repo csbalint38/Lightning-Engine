@@ -1,5 +1,4 @@
-﻿using Editor.GameProject;
-using System.Collections.Specialized;
+﻿using Editor.GameCode;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -21,5 +20,7 @@ namespace Editor.Editors
             Loaded -= WorldEditorView_OnLoaded;
             Focus();
         }
+
+        private void BtnNewScript_Click(object sender, RoutedEventArgs e) => new NewScriptDialog().ShowDialog();
     }
 }
