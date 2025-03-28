@@ -162,7 +162,7 @@ namespace Editor.GameProject
 
         private void UnloadGameCodeDll()
         {
-            if (EngineAPI.UloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
+            if (EngineAPI.UnloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
         }
 
         private void SetCommands()

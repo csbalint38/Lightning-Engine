@@ -15,10 +15,17 @@ namespace Editor.DLLs
         private static extern void RemoveGameEntity(int id);
 
         [DllImport(_engineDll, EntryPoint = "load_game_code_dll", CharSet = CharSet.Ansi)]
-        private static extern int LoadGameCodeDLL(string path);
+        public static extern int LoadGameCodeDll(string path);
 
         [DllImport(_engineDll, EntryPoint = "unload_game_code_dll")]
-        private static extern int UnloadGameCodeDLL();
+        public static extern int UnloadGameCodeDll();
+
+        [DllImport(_engineDll, EntryPoint = "get_script_names")]
+        [return: MarshalAs(UnmanagedType.SafeArray)]
+        public static extern string[] GetScriptNames();
+
+        [DllImport(_engineDll, EntryPoint = "get_script_creator")]
+        public static extern IntPtr GetScriptCreator(string name);
 
         public static int CreateGameEntity(Entity entity)
         {
@@ -35,7 +42,5 @@ namespace Editor.DLLs
         }
 
         public static void RemoveGameEntity(Entity entity) => RemoveGameEntity(entity.EntityId);
-        public static int LoadGameCodeDll(string path) => LoadGameCodeDLL(path);
-        public static int UloadGameCodeDll() => UloadGameCodeDll();
     }
 }

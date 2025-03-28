@@ -6,5 +6,6 @@ namespace Editor.DLLs.Descriptors
     internal class GameEntityDescriptor
     {
         public TransformComponentDescriptor Transform = new();
+        public ScriptComponentDescriptor Script = new();
     }
 }
