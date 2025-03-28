@@ -1,5 +1,8 @@
-﻿using Editor.Components;
+﻿using Editor.Common.Enums;
+using Editor.Components;
 using Editor.DLLs.Descriptors;
+using Editor.GameProject;
+using Editor.Utilities;
 using System.Runtime.InteropServices;
 
 namespace Editor.DLLs
@@ -36,6 +39,18 @@ namespace Editor.DLLs
                 desc.Transform.Position = c.Position;
                 desc.Transform.Rotation = c.Rotation;
                 desc.Transform.Scale = c.Scale;
+            }
+            {
+                var c = entity.GetComponent<Script>();
+                
+                if (c is not null && Project.Current is not null) desc.Script.ScriptCreator = GetScriptCreator(c.Name);
+                else
+                {
+                    Logger.LogAsync(
+                        LogLevel.ERROR,
+                        $"Unable to find script with name {c.Name}. GameEntity will be created without script component!"
+                    );
+                }
             }
 
             return CreateGameEntity(desc);
