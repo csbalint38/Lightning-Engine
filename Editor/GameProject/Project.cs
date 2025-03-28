@@ -1,5 +1,6 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
+using Editor.Components;
 using Editor.DLLs;
 using Editor.GameCode;
 using Editor.Utilities;
@@ -67,7 +68,7 @@ namespace Editor.GameProject
                 if (_buildConfig != value)
                 {
                     _buildConfig = value;
-                    OnPropertyChanged(nameof(BuildConfig));
+                    OnPropertyChanged(nameof(BuildConfiguration));
                 }
             }
         }
@@ -109,6 +110,7 @@ namespace Editor.GameProject
 
         public void Unload()
         {
+            UnloadGameCodeDll();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
         }
@@ -123,6 +125,8 @@ namespace Editor.GameProject
             }
             
             ActiveScene = Scenes.FirstOrDefault(x => x.IsActive);
+
+            Debug.Assert(ActiveScene is not null);
 
             await BuildGameCodeDllAsync(false);
 
@@ -169,6 +173,7 @@ namespace Editor.GameProject
             if (File.Exists(dll) && EngineAPI.LoadGameCodeDll(dll) != 0)
             {
                 AvailableScripts = EngineAPI.GetScriptNames();
+                ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = true);
                 Logger.LogAsync(LogLevel.INFO, "Game code DLL loaded successfully");
             }
             else
@@ -179,6 +184,8 @@ namespace Editor.GameProject
 
         private void UnloadGameCodeDll()
         {
+            ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = false);
+
             if (EngineAPI.UnloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
             AvailableScripts = [];
         }
