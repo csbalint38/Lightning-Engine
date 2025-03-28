@@ -1,7 +1,9 @@
 ﻿using Editor.Common.Enums;
+using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -11,6 +13,9 @@ namespace Editor.GameCode
     {
         private static readonly string _progId = "VisualStudio.DTE.17.0";
         private static EnvDTE80.DTE2 _vsInstance = null;
+
+        public static bool BuildSucceeded { get; private set; }
+        public static bool BuildFinished { get; private set; }
 
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(uint reserved, out IRunningObjectTable rot);
@@ -83,7 +88,7 @@ namespace Editor.GameCode
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, ex.Message);
+                Logger.LogAsync(LogLevel.ERROR, ex.Message);
             }
             finally
             {
@@ -144,6 +149,93 @@ namespace Editor.GameCode
             }
 
             return true;
+        }
+
+        public static void BuildSolution(Project project, string buildConfig, bool showWindow = true)
+        {
+            if (IsDebugging())
+            {
+                Logger.LogAsync(LogLevel.ERROR, "Visual Studio is currently running another process.");
+                return;
+            }
+
+            OpenVisualStudio(project.Solution);
+            BuildFinished = BuildSucceeded = false;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                try
+                {
+                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
+
+                    _vsInstance.MainWindow.Visible = showWindow;
+                    _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
+                    _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
+
+                    try
+                    {
+                        foreach (var pdb in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{buildConfig}", "*.pdb")))
+                        {
+                            File.Delete(pdb);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                    }
+
+                    _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(buildConfig).Activate();
+                    _vsInstance.ExecuteCommand("Build.BuildSolution");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    Debug.WriteLine($"Attempt {i}: failed to build {project.Name}");
+                    Thread.Sleep(1000);
+                }
+            }
+        }
+
+        public static bool IsDebugging()
+        {
+            bool result = false;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                try
+                {
+                    result = _vsInstance is not null &&
+                             (_vsInstance.Debugger.CurrentProgram is null ||
+                             _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Write(ex.Message);
+                    if (!result) Thread.Sleep(1000);
+                }
+            }
+
+            return result;
+        }
+
+        private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig) =>
+            Logger.LogAsync(LogLevel.INFO, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
+
+        private static void OnBuildSolutionDone(
+            string project,
+            string projectConfig,
+            string platform,
+            string solutionConfig,
+            bool success
+        )
+        {
+            if (BuildFinished) return;
+
+            if (success) Logger.LogAsync(LogLevel.INFO, $"Building {projectConfig} configuration succeeded");
+            else Logger.LogAsync(LogLevel.ERROR, $"Building {projectConfig} configuration failed");
+
+            BuildFinished = true;
+            BuildSucceeded = success;
         }
     }
 }

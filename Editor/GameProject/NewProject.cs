@@ -108,7 +108,7 @@ namespace Editor.GameProject
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, "Failed to load project templates");
+                Logger.LogAsync(LogLevel.ERROR, "Failed to load project templates");
 
                 throw;
             }
@@ -153,7 +153,7 @@ namespace Editor.GameProject
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, $"Failed to create project: {path}");
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to create project: {path}");
 
                 throw;
             }

@@ -44,7 +44,7 @@
             <StackPanel VerticalAlignment="Bottom">
                 <Button Content="Create" 
                         IsDefault="True"
-                        Click="Button_Click"/>
+                        Click="Button_ClickAsync"/>
                 <Button Content="Cancel"
                         IsCancel="True"/>
             </StackPanel>

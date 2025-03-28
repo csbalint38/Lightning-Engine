@@ -22,5 +22,10 @@ namespace Editor.Editors
         }
 
         private void BtnNewScript_Click(object sender, RoutedEventArgs e) => new NewScriptDialog().ShowDialog();
+
+        private void BtnBuild_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace Editor.GameProject
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, "Failed to initialize OpenProject");
+                Logger.LogAsync(LogLevel.ERROR, "Failed to initialize OpenProject");
 
                 throw;
             }

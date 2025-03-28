@@ -6,13 +6,19 @@ namespace Editor.DLLs
 {
     static class EngineAPI
     {
-        private const string _dllName = "EngineDLL.dll";
+        private const string _engineDll = "EngineDLL.dll";
 
-        [DllImport(_dllName, EntryPoint = "create_game_entity")]
+        [DllImport(_engineDll, EntryPoint = "create_game_entity")]
         private static extern int CreateGameEntity(GameEntityDescriptor desc);
 
-        [DllImport(_dllName, EntryPoint = "remove_game_entity")]
+        [DllImport(_engineDll, EntryPoint = "remove_game_entity")]
         private static extern void RemoveGameEntity(int id);
+
+        [DllImport(_engineDll, EntryPoint = "load_game_code_dll", CharSet = CharSet.Ansi)]
+        private static extern int LoadGameCodeDLL(string path);
+
+        [DllImport(_engineDll, EntryPoint = "unload_game_code_dll")]
+        private static extern int UnloadGameCodeDLL();
 
         public static int CreateGameEntity(Entity entity)
         {
@@ -29,5 +35,7 @@ namespace Editor.DLLs
         }
 
         public static void RemoveGameEntity(Entity entity) => RemoveGameEntity(entity.EntityId);
+        public static int LoadGameCodeDll(string path) => LoadGameCodeDLL(path);
+        public static int UloadGameCodeDll() => UloadGameCodeDll();
     }
 }

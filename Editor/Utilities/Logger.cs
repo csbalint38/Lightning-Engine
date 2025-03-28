@@ -15,7 +15,7 @@ namespace Editor.Utilities
         public static ReadOnlyObservableCollection<LogMessage> Messages { get; } = new(_messages);
         public static CollectionViewSource FilteredMessages { get; } = new() { Source = Messages };
 
-        public static async void Log(
+        public static async void LogAsync(
             LogLevel level,
             string message,
             [CallerFilePath] string file = "",
@@ -26,7 +26,7 @@ namespace Editor.Utilities
             _messages.Add(new LogMessage(level, message, file, caller, line));
         }));
 
-        public static async void Clear() => await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+        public static async void ClearAsync() => await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
         {
             _messages.Clear();
         }));

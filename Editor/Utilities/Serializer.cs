@@ -29,7 +29,7 @@ namespace Editor.Utilities
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, $"Failed to save file: {path}");
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to save file: {path}");
 
                 throw;
             }
@@ -48,7 +48,7 @@ namespace Editor.Utilities
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, $"Failed to load file: {path}");
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to load file: {path}");
 
                 throw;
             }

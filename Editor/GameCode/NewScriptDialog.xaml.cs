@@ -33,7 +33,7 @@ namespace Editor.GameCode
 
         private void TbPath_TextChanged(object sender, TextChangedEventArgs e) => Validate();
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_ClickAsync(object sender, RoutedEventArgs e)
         {
             if (!Validate()) return;
 
@@ -51,7 +51,7 @@ namespace Editor.GameCode
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.Log(LogLevel.ERROR, $"Failed to create script {TbScriptName.Text}");
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to create script {TbScriptName.Text}");
             }
             finally
             {

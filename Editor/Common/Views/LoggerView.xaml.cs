@@ -15,7 +15,7 @@ namespace Editor.Common
             InitializeComponent();
         }
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e) => Logger.Clear();
+        private void BtnClear_Click(object sender, RoutedEventArgs e) => Logger.ClearAsync();
 
         private void FilterMessage_Click(object sender, RoutedEventArgs e)
         {
