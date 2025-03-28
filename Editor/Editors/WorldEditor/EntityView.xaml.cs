@@ -1,8 +1,10 @@
-﻿using Editor.Components;
+﻿using Editor.Common.Enums;
+using Editor.Components;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 namespace Editor.Editors
@@ -95,6 +97,54 @@ namespace Editor.Editors
                 undoAction,
                 redoAction
             ));
+        }
+
+        private void MIScriptComponent_Click(object sender, RoutedEventArgs e) =>
+            AddComponent(ComponentType.SCRIPT, (sender as MenuItem).Header.ToString());
+
+        private void TgbAddComponent_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var menu = FindResource("addComponentMenu") as ContextMenu;
+            var btn = sender as ToggleButton;
+
+            btn.IsChecked = true;
+            menu.Placement = PlacementMode.Bottom;
+            menu.PlacementTarget = btn;
+            menu.MinWidth = btn.ActualWidth;
+            menu.IsOpen = true;
+        }
+
+        private void AddComponent(ComponentType type, object data)
+        {
+            var creationFunction = ComponentFactory.GetCreationFunction(type);
+            var changedEntities = new List<(Entity entity, Component component)>();
+            var vm = DataContext as MSEntity;
+
+            foreach (var entity in vm.SelectedEntities)
+            {
+                var component = creationFunction(entity, data);
+
+                if (entity.AddComponent(component)) changedEntities.Add((entity, component));
+            }
+
+            if (changedEntities.Count != 0)
+            {
+                vm.Refresh();
+
+                Project.UndoRedo.Add(new UndoRedoAction(
+                    $"Add {type} component to {changedEntities.Count} entities",
+                    () =>
+                    {
+                        changedEntities.ForEach(x => x.entity.RemoveComponent(x.component));
+                        (DataContext as MSEntity).Refresh();
+                    },
+                    () =>
+                    {
+                        changedEntities.ForEach(x => x.entity.AddComponent(x.component));
+                        (DataContext as MSEntity).Refresh();
+                    }
+                ));
+            }
         }
     }
 }

@@ -22,6 +22,7 @@ namespace Editor.GameProject
 
         private Scene _activeScene;
         private int _buildConfig;
+        private string[] _availableScripts;
 
         public static readonly string Extension = ".lightning";
         public static Project Current => Application.Current.MainWindow.DataContext as Project; // This should be nullable
@@ -67,6 +68,19 @@ namespace Editor.GameProject
                 {
                     _buildConfig = value;
                     OnPropertyChanged(nameof(BuildConfig));
+                }
+            }
+        }
+
+        public string[] AvailableScripts
+        {
+            get => _availableScripts;
+            set
+            {
+                if (_availableScripts != value)
+                {
+                    _availableScripts = value;
+                    OnPropertyChanged(nameof(AvailableScripts));
                 }
             }
         }
@@ -150,8 +164,11 @@ namespace Editor.GameProject
             var configName = GetConfigurationName(DllBuildConfig);
             var dll = $@"{Path}x64\{configName}\{Name}.dll";
 
+            AvailableScripts = [];
+
             if (File.Exists(dll) && EngineAPI.LoadGameCodeDll(dll) != 0)
             {
+                AvailableScripts = EngineAPI.GetScriptNames();
                 Logger.LogAsync(LogLevel.INFO, "Game code DLL loaded successfully");
             }
             else
@@ -163,6 +180,7 @@ namespace Editor.GameProject
         private void UnloadGameCodeDll()
         {
             if (EngineAPI.UnloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
+            AvailableScripts = [];
         }
 
         private void SetCommands()

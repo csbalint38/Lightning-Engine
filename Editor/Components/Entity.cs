@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.DLLs;
 using Editor.GameProject;
 using Editor.Utilities;
@@ -11,6 +12,7 @@ namespace Editor.Components
 {
     [DataContract]
     [KnownType(typeof(Transform))]
+    [KnownType(typeof(Script))]
     class Entity : ViewModelBase
     {
         private int _entityId = Id.InvalidId;
@@ -113,5 +115,36 @@ namespace Editor.Components
 
         public Component GetComponent(Type type) => Components.FirstOrDefault(c => c.GetType() == type);
         public T GetComponent<T>() where T : Component => (T)GetComponent(typeof(T));
+
+        public bool AddComponent(Component component)
+        {
+            Debug.Assert(component is not null);
+
+            if (!Components.Any(x => x.GetType() == component.GetType()))
+            {
+                IsActive = false;
+                _components.Add(component);
+                IsActive = true;
+
+                return true;
+            }
+            Logger.LogAsync(LogLevel.WARNING, $"Entity {Name} already has a {component.GetType().Name} component");
+
+            return false;
+        }
+
+        public void RemoveComponent(Component component)
+        {
+            Debug.Assert(component is not null);
+
+            if (component is Transform) return;
+
+            if (_components.Contains(component))
+            {
+                IsActive = false;
+                _components.Remove(component);
+                IsActive = true;
+            }
+        }
     }
 }
