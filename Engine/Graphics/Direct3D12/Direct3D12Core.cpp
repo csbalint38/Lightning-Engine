@@ -10,6 +10,9 @@
 #include "Direct3D12Camera.h"
 #include "Shaders/ShaderTypes.h"
 
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 615; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
+
 using namespace Microsoft::WRL;
 
 namespace lightning::graphics::direct3d12::core {

@@ -120,13 +120,15 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     {
         Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
         
-        return float4(gpass_main[position.xy].xyz, 1.f);
+        return gpass_main[position.xy];
     }
     else
     {
-        float3 direction = unproject_uv(uv, depth, global_data.inv_view_projection).xyz;
+        float4 clip = float4(2.f * uv.x - 1.f, -2.f * uv.y + 1.f, 0, 1.f);
+        float3 view = mul(global_data.inverse_projection, clip).xyz;
+        float3 direction = mul(view, (float3x3)global_data.view);
         
-        return TextureCube( ResourceDescriptorHeap[global_data.ambient_light.specular_srv_index]).SampleLevel(linear_sampler, direction, .1f) * global_data.ambient_light.intensity;
+        return TextureCube(ResourceDescriptorHeap[global_data.ambient_light.specular_srv_index]).SampleLevel(linear_sampler, direction, .1f) * global_data.ambient_light.intensity;
     }
     #endif
 }

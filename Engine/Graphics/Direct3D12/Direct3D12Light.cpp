@@ -622,6 +622,7 @@ namespace lightning::graphics::direct3d12::light {
 							if (set._dirty_bits[i] & index_mask) {
 								assert(i * sizeof(hlsl::LightParameters) < needed_light_buffer_size);
 								assert(i * sizeof(hlsl::LightCullingLightInfo) < needed_culling_buffer_size);
+								assert(i * sizeof(hlsl::Sphere) < needed_spheres_buffer_size);
 								u8* const light_dst{ _buffers[LightBuffer::CULLABLE_LIGHT].cpu_address + (i * sizeof(hlsl::LightParameters)) };
 								u8* const culling_dst{ _buffers[LightBuffer::CULLING_INFO].cpu_address + (i * sizeof(hlsl::LightCullingLightInfo)) };
 								u8* const bounding_dst{ _buffers[LightBuffer::BOUNDING_SPHERES].cpu_address + (i * sizeof(hlsl::Sphere)) };

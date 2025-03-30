@@ -188,7 +188,7 @@ namespace lightning::graphics {
 			MESH,
 
 			count
-		};
+		};;
 	};
 
 	struct MaterialType {

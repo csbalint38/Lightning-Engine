@@ -232,7 +232,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address W
 			0.f,									// Mip LOD bias
 			1,										// Max anisotropy
-			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
+			D3D12_COMPARISON_FUNC_NONE,				// Comparison function
 			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
 			0.f,									// Min LOD
 			D3D12_FLOAT32_MAX,						// Max LOD
@@ -248,7 +248,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address W
 			0.f,									// Mip LOD bias
 			1,										// Max anisotropy
-			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
+			D3D12_COMPARISON_FUNC_NONE,				// Comparison function
 			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
 			0.f,									// Min LOD
 			D3D12_FLOAT32_MAX,						// Max LOD
@@ -263,8 +263,8 @@ namespace lightning::graphics::direct3d12::d3dx {
 			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address V
 			D3D12_TEXTURE_ADDRESS_MODE_CLAMP,		// Address W
 			0.f,									// Mip LOD bias
-			1,										// Max anisotropy
-			D3D12_COMPARISON_FUNC_ALWAYS,			// Comparison function
+			16,										// Max anisotropy
+			D3D12_COMPARISON_FUNC_NONE,				// Comparison function
 			D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK,	// Border color
 			0.f,									// Min LOD
 			D3D12_FLOAT32_MAX,						// Max LOD
@@ -398,8 +398,8 @@ namespace lightning::graphics::direct3d12::d3dx {
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
 			D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS |
-			D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
-			D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
+			D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED
+			// | D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
 		};
 
 		constexpr explicit D3D12RootSignatureDesc(const D3D12RootParameter* parameters, u32 parameter_count, D3D12_ROOT_SIGNATURE_FLAGS flags = default_flags, const D3D12_STATIC_SAMPLER_DESC* static_sampler = nullptr, u32 sampler_count = 0) : D3D12_ROOT_SIGNATURE_DESC1{ parameter_count, parameters, sampler_count, static_sampler, flags } {}

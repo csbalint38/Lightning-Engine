@@ -126,7 +126,7 @@ float3 importance_sample_ggx(float2 e, float a)
 
 float2 integrate_brdf(float n_o_v, float roughness)
 {
-    float a4 = pow4(roughness);
+    float a4 = max(pow4(roughness), .00001f);
     float3 v;
     
     v.x = sqrt(1.f - n_o_v * n_o_v);

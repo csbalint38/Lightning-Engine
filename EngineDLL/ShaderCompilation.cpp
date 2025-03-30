@@ -1,24 +1,55 @@
 #include "ShaderCompilation.h"
-#include "Graphics/Direct3D12/Direct3D12Core.h"
-#include "Graphics/Direct3D12/Direct3D12Shaders.h"
+
+#include <wrl.h>
+#include <dxcapi.h>
+#include <d3d12shader.h>
+
+#include "Graphics/Renderer.h"
 #include "Content/ContentToEngine.h"
 #include "Utilities/IOStream.h"
 
-#include <dxcapi.h>
-#include <filesystem>
-#include <d3d12shader.h>
 #include <fstream>
-
-#pragma comment(lib, "../packages/DirectXShaderCompiler/lib/x64/dxcompiler.lib")
+#include <filesystem>
 
 using namespace lightning;
-using namespace lightning::graphics::direct3d12::shaders;
 using namespace Microsoft::WRL;
 
-namespace {
+#ifdef _DEBUG
+#ifndef DXCall
+#define DXCall(x)							\
+if(FAILED(x)) {								\
+	char line_number[32];					\
+	sprintf_s(line_number, "%u", __LINE__);	\
+	OutputDebugStringA("Error in: ");		\
+	OutputDebugStringA(__FILE__);			\
+	OutputDebugStringA("\nline: ");			\
+	OutputDebugStringA(line_number);		\
+	OutputDebugStringA("\n");				\
+	OutputDebugStringA(#x);					\
+	OutputDebugStringA("\n");				\
+	__debugbreak();							\
+}
+#endif
+#else
+#ifndef DXCall
+#fedine DXCall(x) x
+#endif
+#endif
 
+namespace {
 	constexpr const char* shaders_source_path{ "../../Engine/Graphics/Direct3D12/Shaders/" };
-	
+
+	struct EngineShader {
+		enum Id : u32 {
+			FULLSCREEN_TRIANGLE_VS = 0,
+			POST_PROCESS_PS,
+			GRID_FRUSTUMS_CS,
+			LIGHT_CULLING_CS,
+
+			count
+		};
+	};
+
 	struct EngineShaderInfo {
 		EngineShader::Id id;
 		ShaderFileInfo info;
@@ -28,19 +59,19 @@ namespace {
 	constexpr EngineShaderInfo engine_shader_files[]{
 		{
 			EngineShader::FULLSCREEN_TRIANGLE_VS,
-			{ "FullscreenTriangle.hlsl", "fullscreen_triangle_vs", ShaderType::VERTEX },
+			{ "FullscreenTriangle.hlsl", "fullscreen_triangle_vs", graphics::ShaderType::VERTEX },
 		},
 		{
 			EngineShader::POST_PROCESS_PS,
-			{ "PostProcess.hlsl", "post_process_ps", ShaderType::PIXEL },
+			{ "PostProcess.hlsl", "post_process_ps", graphics::ShaderType::PIXEL },
 		},
 		{
 			EngineShader::GRID_FRUSTUMS_CS,
-			{ "GridFrustums.hlsl", "compute_grid_frustum_cs", ShaderType::COMPUTE },
+			{ "GridFrustums.hlsl", "compute_grid_frustum_cs", graphics::ShaderType::COMPUTE },
 		},
 		{
 			EngineShader::LIGHT_CULLING_CS,
-			{ "CullLights.hlsl", "cull_lights_cs", ShaderType::COMPUTE },
+			{ "CullLights.hlsl", "cull_lights_cs", graphics::ShaderType::COMPUTE },
 		}
 	};
 
@@ -53,7 +84,8 @@ namespace {
 
 	struct DxcCompiledShader {
 		ComPtr<IDxcBlob> byte_code;
-		ComPtr<IDxcBlobUtf8> disassembly;
+		ComPtr<IDxcBlobUtf8> errors;
+		ComPtr<IDxcBlobUtf8> assembly;
 		DxcShaderHash hash;
 	};
 
@@ -72,7 +104,32 @@ namespace {
 
 		DISABLE_COPY_AND_MOVE(ShaderCompiler);
 
-		DxcCompiledShader compile(ShaderFileInfo info, std::filesystem::path full_path, lightning::util::vector<std::wstring>& extra_args) {
+		DxcCompiledShader compile(u8* data, u32 data_size, graphics::ShaderType::Type type, const char* function, util::vector<std::wstring>& extra_args) {
+			assert(_compiler && _utils && _include_handler);
+			assert(data && data_size && function);
+			assert(type < graphics::ShaderType::count);
+
+			HRESULT hr{ S_OK };
+
+			ComPtr<IDxcBlobEncoding> source_blob{ nullptr };
+			DXCall(hr = _utils->CreateBlob(data, data_size, 0, &source_blob));
+
+			if (FAILED(hr)) return {};
+
+			assert(source_blob && source_blob->GetBufferSize());
+
+			ShaderFileInfo info{};
+			info.function = function;
+			info.type = type;
+
+			OutputDebugStringA("Compiling");
+			OutputDebugStringA(function);
+			OutputDebugStringA("\n");
+
+			return compile(source_blob.Get(), get_args(info, extra_args));
+		}
+
+		DxcCompiledShader compile(ShaderFileInfo info, std::filesystem::path full_path, util::vector<std::wstring>& extra_args) {
 			assert(_compiler && _utils && _include_handler);
 			HRESULT hr{ S_OK };
 
@@ -90,7 +147,7 @@ namespace {
 			return compile(source_blob.Get(), get_args(info, extra_args));
 		}
 
-		DxcCompiledShader compile(IDxcBlobEncoding* source_blob, lightning::util::vector<std::wstring> compiler_args) {
+		DxcCompiledShader compile(IDxcBlobEncoding* source_blob, util::vector<std::wstring> compiler_args) {
 			DxcBuffer buffer{};
 			buffer.Encoding = DXC_CP_ACP;
 			buffer.Ptr = source_blob->GetBufferPointer();
@@ -150,7 +207,7 @@ namespace {
 			ComPtr<IDxcBlobUtf8> disassembly{ nullptr };
 			DXCall(hr = disasm_results->GetOutput(DXC_OUT_DISASSEMBLY, IID_PPV_ARGS(&disassembly), nullptr));
 
-			DxcCompiledShader result{shader.Detach(), disassembly.Detach() };
+			DxcCompiledShader result{shader.Detach(), errors.Detach(), disassembly.Detach() };
 			memcpy(&result.hash.HashDigest[0], &hash_buffer->HashDigest[0], _countof(hash_buffer->HashDigest));
 
 			return result;
@@ -158,7 +215,7 @@ namespace {
 
 	private:
 		constexpr static const char* _profile_strings[]{ "vs_6_6", "hs_6_6", "ds_6_6", "gs_6_6", "ps_6_6", "cs_6_6", "as_6_6", "ms_6_6" };
-		static_assert(_countof(_profile_strings) == ShaderType::count);
+		static_assert(_countof(_profile_strings) == graphics::ShaderType::count);
 
 		ComPtr<IDxcCompiler3> _compiler{ nullptr };
 		ComPtr<IDxcUtils> _utils{ nullptr };
@@ -166,7 +223,7 @@ namespace {
 
 		util::vector<std::wstring> get_args(const ShaderFileInfo& info, util::vector<std::wstring>& extra_args) {
 			util::vector<std::wstring> args{};
-			args.emplace_back(to_wstring(info.file_name));
+			if (info.file_name) args.emplace_back(to_wstring(info.file_name));
 			args.emplace_back(L"-E");
 			args.emplace_back(to_wstring(info.function));
 			args.emplace_back(L"-T");
@@ -219,39 +276,58 @@ namespace {
 		}
 
 		for (const auto& shader : shaders) {
-			const D3D12_SHADER_BYTECODE byte_code{ shader.byte_code->GetBufferPointer(), shader.byte_code->GetBufferSize()};
-			file.write((char*)&byte_code.BytecodeLength, sizeof(byte_code.BytecodeLength));
+			void* const byte_code{ shader.byte_code->GetBufferPointer() };
+			const u64 byte_code_length{ shader.byte_code->GetBufferSize() };
+			file.write((char*)&byte_code_length, sizeof(byte_code_length));
 			file.write((char*)&shader.hash.HashDigest[0], _countof(shader.hash.HashDigest));
-			file.write((char*)byte_code.pShaderBytecode, byte_code.BytecodeLength);
+			file.write((char*)byte_code, byte_code_length);
 		}
 
 		file.close();
 
 		return true;
 	}
+
+	std::unique_ptr<u8[]> pack_compiled_shader(DxcCompiledShader compiled_shader, bool include_errors_and_disassembly) {
+		if (compiled_shader.byte_code && compiled_shader.byte_code->GetBufferPointer() && compiled_shader.byte_code->GetBufferSize()) {
+			static_assert(content::CompiledShader::hash_length == _countof(DxcShaderHash::HashDigest));
+			const u64 extra_size{ include_errors_and_disassembly ? sizeof(u64) + sizeof(u64) + compiled_shader.errors->GetStringLength() + compiled_shader.assembly->GetStringLength() : 0 };
+			const u64 buffer_size{ sizeof(u64) + content::CompiledShader::hash_length + compiled_shader.byte_code->GetBufferSize() + extra_size };
+			std::unique_ptr<u8[]> buffer{ std::make_unique<u8[]>(buffer_size) };
+			util::BlobStreamWriter blob{ buffer.get(), buffer_size };
+			blob.write(compiled_shader.byte_code->GetBufferSize());
+			blob.write(compiled_shader.hash.HashDigest, content::CompiledShader::hash_length);
+			blob.write((u8*)compiled_shader.byte_code->GetBufferPointer(), compiled_shader.byte_code->GetBufferSize());
+
+			if (include_errors_and_disassembly) {
+				blob.write(compiled_shader.errors->GetStringLength());
+				blob.write(compiled_shader.assembly->GetStringLength());
+				blob.write(compiled_shader.errors->GetStringPointer(), compiled_shader.errors->GetStringLength());
+				blob.write(compiled_shader.assembly->GetStringPointer(), compiled_shader.assembly->GetStringLength());
+			}
+
+			assert(blob.offset() == buffer_size);
+
+			return buffer;
+		}
+
+		return {};
+	}
 }
 
-std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, const char* file_path, util::vector<std::wstring>& extra_args) {
+std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, u8* code, u32 code_size, util::vector<std::wstring>& extra_args, bool include_errors_and_disassembly) {
+	assert(!info.file_name && info.function && code && code_size);
+
+	return pack_compiled_shader(ShaderCompiler{}.compile(code, code_size, info.type, info.function, extra_args), include_errors_and_disassembly);
+}
+
+std::unique_ptr<u8[]> compile_shader(ShaderFileInfo info, const char* file_path, util::vector<std::wstring>& extra_args, bool include_errors_and_disassembly) {
 	std::filesystem::path full_path{ file_path };
 	full_path += info.file_name;
-	if (!(std::filesystem::exists(full_path))) return{};
-	
-	ShaderCompiler compiler{};
-	DxcCompiledShader compiled_shader{ compiler.compile(info, full_path, extra_args) };
 
-	if (compiled_shader.byte_code && compiled_shader.byte_code->GetBufferPointer() && compiled_shader.byte_code->GetBufferSize()) {
-		static_assert(content::CompiledShader::hash_length == _countof(DxcShaderHash::HashDigest));
-		const u64 buffer_size{ sizeof(u64) + content::CompiledShader::hash_length + compiled_shader.byte_code->GetBufferSize() };
-		std::unique_ptr<u8[]> buffer{ std::make_unique<u8[]>(buffer_size) };
-		util::BlobStreamWriter blob{ buffer.get(), buffer_size };
-		blob.write(compiled_shader.byte_code->GetBufferSize());
-		blob.write(compiled_shader.hash.HashDigest, content::CompiledShader::hash_length);
-		blob.write((u8*)compiled_shader.byte_code->GetBufferPointer(), compiled_shader.byte_code->GetBufferSize());
+	if (!std::filesystem::exists(full_path)) return {};
 
-		assert(blob.offset() == buffer_size);
-		return buffer;
-	}
-	return {};
+	return pack_compiled_shader(ShaderCompiler{}.compile(info, full_path, extra_args), include_errors_and_disassembly);
 }
 
 bool compile_shaders() {
