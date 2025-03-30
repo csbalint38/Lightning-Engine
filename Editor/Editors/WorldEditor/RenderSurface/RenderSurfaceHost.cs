@@ -55,10 +55,7 @@ namespace Editor.Editors.WorldEditor.RenderSurface
         {
             e.RepeatEvent = Mouse.LeftButton == MouseButtonState.Pressed;
 
-            if (!e.RepeatEvent)
-            {
-                Logger.LogAsync(LogLevel.INFO, "Resized");
-            }
+            if (!e.RepeatEvent) EngineAPI.ResizeRenderSurface(SurfaceId);
         }
     }
 }

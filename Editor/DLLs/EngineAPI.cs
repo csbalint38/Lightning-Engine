@@ -39,6 +39,9 @@ namespace Editor.DLLs
         [DllImport(_engineDll, EntryPoint = "get_window_handle")]
         public static extern IntPtr GetWindowHandle(int surfaceId);
 
+        [DllImport(_engineDll, EntryPoint = "resize_renderer_surface")]
+        public static extern void ResizeRenderSurface(int SurfaceId);
+
         public static int CreateGameEntity(Entity entity)
         {
             GameEntityDescriptor desc = new();
