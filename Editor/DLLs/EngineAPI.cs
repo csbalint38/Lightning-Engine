@@ -59,7 +59,8 @@ namespace Editor.DLLs
                 }
             }
 
-            return CreateGameEntity(desc);
+            var id =  CreateGameEntity(desc);
+            return id;
         }
 
         public static void RemoveGameEntity(Entity entity) => RemoveGameEntity(entity.EntityId);

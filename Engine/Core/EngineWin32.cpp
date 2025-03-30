@@ -37,10 +37,12 @@ namespace {
 bool engine_initialize() {
 	if (!content::load_game()) return false;
 	
+	/*
 	platform::WindowInitInfo info{&win_proc, nullptr, L"Lightning Game"};
 	game_window.window = platform::create_window(&info);
 
 	if (!game_window.window.is_valid()) return false;
+	*/
 
 	return true;
 }
@@ -51,7 +53,9 @@ void engine_update() {
 }
 
 void engine_shutdown() {
+	/*
 	platform::remove_window(game_window.window.get_id());
+	*/
 	content::unload_game();
 }
 #endif

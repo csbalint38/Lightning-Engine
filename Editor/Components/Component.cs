@@ -1,5 +1,6 @@
 ﻿using Editor.Common;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace Editor.Components
@@ -17,5 +18,6 @@ namespace Editor.Components
         }
 
         public abstract IMSComponent GetMultiselectComponents(MSEntityBase entity);
+        public abstract void WriteToBinaty(BinaryWriter bw);
     }
 }

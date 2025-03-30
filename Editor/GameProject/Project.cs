@@ -45,6 +45,9 @@ namespace Editor.GameProject
         public ICommand RedoCommand { get; private set; }
         public ICommand SaveCommand { get; private set; }
         public ICommand BuildCommand { get; private set; }
+        public ICommand DebugStartCommand { get; private set; }
+        public ICommand DebugStartWithoutDebuggingCommand { get; private set; }
+        public ICommand DebugStopCommand { get; private set; }
 
         public Scene ActiveScene
         {
@@ -190,6 +193,44 @@ namespace Editor.GameProject
             AvailableScripts = [];
         }
 
+        private async Task RunGameAsync(bool debug)
+        {
+            var config = GetConfigurationName(StandaloneBuildConfig);
+
+            await Task.Run(() => VisualStudio.BuildSolution(this, config, debug));
+
+            if (VisualStudio.BuildSucceeded)
+            {
+                SaveToBinary();
+                await Task.Run(() => VisualStudio.Run(this, config, debug));
+            }
+        }
+
+        private async Task StopGameAsync() => await Task.Run(() => VisualStudio.Stop());
+
+        private void SaveToBinary()
+        {
+            var config = GetConfigurationName(StandaloneBuildConfig);
+            var bin = $@"{Path}x64\{config}\game.bin";
+
+            using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
+            {
+                bw.Write(ActiveScene.Entities.Count);
+
+                foreach(var entity in ActiveScene.Entities)
+                {
+                    bw.Write(0);
+                    bw.Write(entity.Components.Count);
+
+                    foreach(var component in entity.Components)
+                    {
+                        bw.Write((int)component.ToEnumType());
+                        component.WriteToBinaty(bw);
+                    }
+                }
+            }
+        }
+
         private void SetCommands()
         {
             AddSceneCommand = new RelayCommand<object>(x =>
@@ -226,12 +267,27 @@ namespace Editor.GameProject
                 x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
             );
 
+            DebugStartCommand = new RelayCommand<object>(
+                async x => await RunGameAsync(true),
+                x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
+            );
+
+            DebugStartWithoutDebuggingCommand = new RelayCommand<object>(
+                async x => await RunGameAsync(false),
+                x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
+            );
+
+            DebugStopCommand = new RelayCommand<object>(async x => await StopGameAsync(), x => VisualStudio.IsDebugging());
+
             OnPropertyChanged(nameof(AddSceneCommand));
             OnPropertyChanged(nameof(RemoveSceneCommand));
             OnPropertyChanged(nameof(UndoCommand));
             OnPropertyChanged(nameof(RedoCommand));
             OnPropertyChanged(nameof(SaveCommand));
             OnPropertyChanged(nameof(BuildCommand));
+            OnPropertyChanged(nameof(DebugStartCommand));
+            OnPropertyChanged(nameof(DebugStartWithoutDebuggingCommand));
+            OnPropertyChanged(nameof(DebugStopCommand));
         }
     }
 }

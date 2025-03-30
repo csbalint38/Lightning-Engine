@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using System.IO;
+using System.Runtime.Serialization;
+using System.Text;
 
 namespace Editor.Components
 {
@@ -26,5 +28,13 @@ namespace Editor.Components
         }
 
         public override IMSComponent GetMultiselectComponents(MSEntityBase entity) => new MSScript(entity);
+
+        public override void WriteToBinaty(BinaryWriter bw)
+        {
+            var name = Encoding.UTF8.GetBytes(Name);
+
+            bw.Write(name.Length);
+            bw.Write(name);
+        }
     }
 }

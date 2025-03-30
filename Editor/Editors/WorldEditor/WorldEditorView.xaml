@@ -32,6 +32,17 @@
                     CommandParameter="{StaticResource True}"
                     Key="B"
                     Modifiers="Ctrl+Shift"/>
+        <KeyBinding Command="{Binding DebugStartCommand}"
+                    CommandParameter="{StaticResource True}"
+                    Key="F5" />
+        <KeyBinding Command="{Binding DebugStartWithoutDebuggingCommand}"
+                    CommandParameter="{StaticResource True}"
+                    Key="F5"
+                    Modifiers="Ctrl"/>
+        <KeyBinding Command="{Binding DebugStopCommand}"
+                    CommandParameter="{StaticResource True}"
+                    Key="F5"
+                    Modifiers="Shift"/>
     </UserControl.InputBindings>
     <Grid>
         <Grid.RowDefinitions>

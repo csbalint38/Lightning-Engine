@@ -221,6 +221,19 @@ namespace Editor.GameCode
             return result;
         }
 
+        public static void Run(Project project, string configName, bool debug)
+        {
+            if (_vsInstance is not null && !IsDebugging() && BuildFinished && BuildSucceeded)
+            {
+                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+            }
+        }
+
+        public static void Stop()
+        {
+            if (_vsInstance is not null && IsDebugging()) _vsInstance.ExecuteCommand("Debug.StopDebugging"); 
+        }
+
         private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig) =>
             Logger.LogAsync(LogLevel.INFO, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
 
