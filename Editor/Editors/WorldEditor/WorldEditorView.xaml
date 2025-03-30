@@ -108,6 +108,7 @@
                           Height="5"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Top"/>
+                <local:RenderSurfaceView Grid.Row="0"/>
                 <TabControl Grid.Row="1">
                     <TabItem Header="History">
                         <local:UndoRedoView DataContext="{Binding UndoRedo}"/>
