@@ -104,6 +104,7 @@ namespace Editor.GameCode
             {
                 _vsInstance.ExecuteCommand("File.SaveAll");
                 _vsInstance.Solution.Close(true);
+                _vsInstance.Quit();
             }
         }
 
@@ -162,7 +163,7 @@ namespace Editor.GameCode
             OpenVisualStudio(project.Solution);
             BuildFinished = BuildSucceeded = false;
 
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 3 && !BuildFinished; ++i)
             {
                 try
                 {
@@ -174,7 +175,7 @@ namespace Editor.GameCode
 
                     try
                     {
-                        foreach (var pdb in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{buildConfig}", "*.pdb")))
+                        foreach (var pdb in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{buildConfig}"), "*.pdb"))
                         {
                             File.Delete(pdb);
                         }
@@ -199,23 +200,38 @@ namespace Editor.GameCode
         public static bool IsDebugging()
         {
             bool result = false;
+            bool shouldTryAgain = true;
 
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 3 && shouldTryAgain; ++i)
             {
                 try
                 {
                     result = _vsInstance is not null &&
-                             (_vsInstance.Debugger.CurrentProgram is null ||
+                             (_vsInstance.Debugger.CurrentProgram is not null ||
                              _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
+                    shouldTryAgain = false;
                 }
                 catch (Exception ex)
                 {
                     Debug.Write(ex.Message);
-                    if (!result) Thread.Sleep(1000);
+                    Thread.Sleep(1000);
                 }
             }
 
             return result;
+        }
+
+        public static void Run(Project project, string configName, bool debug)
+        {
+            if (_vsInstance is not null && !IsDebugging() && BuildFinished && BuildSucceeded)
+            {
+                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+            }
+        }
+
+        public static void Stop()
+        {
+            if (_vsInstance is not null && IsDebugging()) _vsInstance.ExecuteCommand("Debug.StopDebugging"); 
         }
 
         private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig) =>

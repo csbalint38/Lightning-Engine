@@ -20,5 +20,13 @@ namespace Editor.Components
 
             return _functions[(int)componentType];
         }
+
+        public static ComponentType ToEnumType(this Component c) =>
+            c switch
+            {
+                Transform _ => ComponentType.TRANSFORM,
+                Script _ => ComponentType.SCRIPT,
+                _ => throw new ArgumentException("Unknown component type")
+            };
     }
 }

@@ -30,6 +30,18 @@ namespace Editor.DLLs
         [DllImport(_engineDll, EntryPoint = "get_script_creator")]
         public static extern IntPtr GetScriptCreator(string name);
 
+        [DllImport(_engineDll, EntryPoint = "create_renderer_surface")]
+        public static extern int CreateRendererSurface(IntPtr host, int width, int height);
+
+        [DllImport(_engineDll, EntryPoint = "remove_renderer_surface")]
+        public static extern void RemoveRendererSurface(int surfaceId);
+
+        [DllImport(_engineDll, EntryPoint = "get_window_handle")]
+        public static extern IntPtr GetWindowHandle(int surfaceId);
+
+        [DllImport(_engineDll, EntryPoint = "resize_renderer_surface")]
+        public static extern void ResizeRenderSurface(int SurfaceId);
+
         public static int CreateGameEntity(Entity entity)
         {
             GameEntityDescriptor desc = new();
@@ -43,17 +55,24 @@ namespace Editor.DLLs
             {
                 var c = entity.GetComponent<Script>();
                 
-                if (c is not null && Project.Current is not null) desc.Script.ScriptCreator = GetScriptCreator(c.Name);
-                else
+                if (c is not null && Project.Current is not null)
                 {
-                    Logger.LogAsync(
-                        LogLevel.ERROR,
-                        $"Unable to find script with name {c.Name}. GameEntity will be created without script component!"
-                    );
+                    if (Project.Current.AvailableScripts.Contains(c.Name))
+                    {
+                        desc.Script.ScriptCreator = GetScriptCreator(c.Name);
+                    }
+                    else
+                    {
+                        Logger.LogAsync(
+                            LogLevel.ERROR,
+                            $"Unable to find script with name {c.Name}. GameEntity will be created without script component!"
+                        );
+                    }
                 }
             }
 
-            return CreateGameEntity(desc);
+            var id =  CreateGameEntity(desc);
+            return id;
         }
 
         public static void RemoveGameEntity(Entity entity) => RemoveGameEntity(entity.EntityId);

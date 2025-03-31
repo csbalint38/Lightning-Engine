@@ -5,11 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
              xmlns:vm="clr-namespace:Editor.Components"
+             xmlns:util="clr-namespace:Editor.Utilities"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:MSEntity, IsDesignTimeCreatable=True}"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
+        <util:NullableBoolToBool x:Key="nullableBoolToBool"/>
         <DataTemplate DataType="{x:Type vm:MSTransform}">
             <local:TransformView/>
         </DataTemplate>
@@ -63,14 +65,15 @@
                 </Style.Triggers>
             </Style>
         </ScrollViewer.Style>
-        <StackPanel>
+        <StackPanel VerticalAlignment="Top">
             <Border Height="32">
                 <ToggleButton x:Name="TgbAddComponent"
                               VerticalAlignment="Center"
                               HorizontalAlignment="Left"
                               ClickMode="Press"
                               Focusable="False"
-                              PreviewMouseLeftButtonDown="TgbAddComponent_PreviewMouseLeftButtonDown">
+                              PreviewMouseLeftButtonDown="TgbAddComponent_PreviewMouseLeftButtonDown"
+                              IsEnabled="{Binding IsEnabled, Converter={StaticResource nullableBoolToBool}}">
                     <ToggleButton.Content>
                         <DockPanel>
                             <TextBlock Text="Add Component"/>
@@ -91,6 +94,7 @@
                 <TextBox Name="TbName"
                          Grid.Column="0"
                          Text="{Binding Name}"
+                         IsEnabled="{Binding IsEnabled, Converter={StaticResource nullableBoolToBool}}"
                          GotKeyboardFocus="TbName_GotKeyboardFocus"
                          LostKeyboardFocus="TbName_LostKeyboardFocus"/>
                 <StackPanel Grid.Column="1"
@@ -101,7 +105,9 @@
                               Click="ChBIsEnabled_Click"/>
                 </StackPanel>
             </Grid>
-            <ItemsControl ItemsSource="{Binding Components}">
+            <ItemsControl ItemsSource="{Binding Components}"
+                          SnapsToDevicePixels="True"
+                          IsEnabled="{Binding IsEnabled, Converter={StaticResource nullableBoolToBool}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel/>
