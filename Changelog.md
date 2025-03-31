@@ -1,12 +1,12 @@
 # v0.3.0-beta - 2025.x.x
 
-# Lightning+
+## Lightning+
 
-# Extras
+## Extras
  - Added SamplingVisualization to visualize cubemap sampling function
  - Added visualization of importance sampling for specular
 
-# Editor
+## Editor
  - Load Mesh data into the Editor
  - Multiple Renderer Window support
  - Renderer Window resize handling
@@ -18,7 +18,7 @@
  - Build game code
  - Load game code DLL into Editor
 
-# Engine
+## Engine
  - Shader compilation with DirectX ShaderCompiler
  - Support for HDRI images as skybox texture
  - Image based ambient lighting
