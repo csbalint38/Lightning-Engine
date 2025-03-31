@@ -11,7 +11,8 @@ namespace Editor.Utilities
 
             var parent = VisualTreeHelper.GetParent(depObject);
 
-            while (parent is not null) {
+            while (parent is not null)
+            {
                 if (parent is T type) return type;
 
                 parent = VisualTreeHelper.GetParent(parent);

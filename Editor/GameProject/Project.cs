@@ -96,7 +96,8 @@ namespace Editor.GameProject
             return Serializer.FromFile<Project>(file);
         }
 
-        public static void Save(Project project) {
+        public static void Save(Project project)
+        {
             Serializer.ToFile(project, project.FullPath);
             Logger.LogAsync(LogLevel.INFO, $"Project saved to {project.FullPath}");
         }
@@ -119,14 +120,14 @@ namespace Editor.GameProject
         }
 
         [OnDeserialized]
-        private async  void OnDeserializedAsync(StreamingContext context)
+        private async void OnDeserializedAsync(StreamingContext context)
         {
-            if(_scenes is not null)
+            if (_scenes is not null)
             {
                 Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
                 OnPropertyChanged(nameof(Scenes));
             }
-            
+
             ActiveScene = Scenes.FirstOrDefault(x => x.IsActive);
 
             Debug.Assert(ActiveScene is not null);
@@ -217,12 +218,12 @@ namespace Editor.GameProject
             {
                 bw.Write(ActiveScene.Entities.Count);
 
-                foreach(var entity in ActiveScene.Entities)
+                foreach (var entity in ActiveScene.Entities)
                 {
                     bw.Write(0);
                     bw.Write(entity.Components.Count);
 
-                    foreach(var component in entity.Components)
+                    foreach (var component in entity.Components)
                     {
                         bw.Write((int)component.ToEnumType());
                         component.WriteToBinaty(bw);

@@ -31,7 +31,7 @@ namespace Editor.Editors
 
         private void VbPosition_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            if(_propertyChanged && _undoAction is not null) VbPosition_PreviewMouseLeftButtonUp(sender, null);
+            if (_propertyChanged && _undoAction is not null) VbPosition_PreviewMouseLeftButtonUp(sender, null);
         }
 
         private void VbPosition_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -40,7 +40,7 @@ namespace Editor.Editors
             _undoAction = GetPositionAction();
         }
 
-        private void VbPosition_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => 
+        private void VbPosition_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) =>
             RecordActions(GetPositionAction(), "Position changed");
 
         private void VbRotation_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)

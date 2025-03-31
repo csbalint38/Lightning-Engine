@@ -12,7 +12,7 @@ namespace Editor.Utilities
 
         public event EventHandler<DelayEventTimerArgs> Triggered;
 
-        public DelayEventTimer(TimeSpan delay,  DispatcherPriority priority = DispatcherPriority.Normal)
+        public DelayEventTimer(TimeSpan delay, DispatcherPriority priority = DispatcherPriority.Normal)
         {
             _delay = delay;
             _timer = new DispatcherTimer(priority)

@@ -14,7 +14,7 @@ namespace Editor.Utilities
 
             for (int i = 0; i <= n; ++i)
             {
-                sb.Append(Path.GetRandomFileName().Replace(".",""));
+                sb.Append(Path.GetRandomFileName().Replace(".", ""));
             }
 
             return sb.ToString(0, length);

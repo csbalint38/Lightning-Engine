@@ -54,7 +54,7 @@ namespace Editor.DLLs
             }
             {
                 var c = entity.GetComponent<Script>();
-                
+
                 if (c is not null && Project.Current is not null)
                 {
                     if (Project.Current.AvailableScripts.Contains(c.Name))
@@ -71,7 +71,7 @@ namespace Editor.DLLs
                 }
             }
 
-            var id =  CreateGameEntity(desc);
+            var id = CreateGameEntity(desc);
             return id;
         }
 

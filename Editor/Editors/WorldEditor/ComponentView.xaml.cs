@@ -13,7 +13,7 @@ namespace Editor.Editors
     {
         public static readonly DependencyProperty HeaderProperty =
             DependencyProperty.Register(nameof(Header), typeof(string), typeof(ComponentView));
-        
+
         public static readonly DependencyProperty ComponentContentProperty =
             DependencyProperty.Register(nameof(ComponentContent), typeof(FrameworkElement), typeof(ComponentView));
 

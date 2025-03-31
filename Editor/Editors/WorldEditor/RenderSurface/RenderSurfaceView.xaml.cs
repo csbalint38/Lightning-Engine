@@ -69,7 +69,7 @@ namespace Editor.Editors
 
         private IntPtr HostMsgFilter(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            switch((Win32Msg)msg)
+            switch ((Win32Msg)msg)
             {
                 case Win32Msg.WM_SIZING: throw new Exception();
                 case Win32Msg.WM_ENTERSIZEMOVE: throw new Exception();

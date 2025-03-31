@@ -28,7 +28,7 @@ namespace Editor.Utilities
 
         public void Undo()
         {
-            if(_undoList.Any())
+            if (_undoList.Any())
             {
                 var cmd = _undoList.Last();
                 _undoList.RemoveAt(_undoList.Count - 1);

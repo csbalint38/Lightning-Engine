@@ -3,7 +3,6 @@ using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
-using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -52,17 +51,17 @@ namespace Editor.GameCode
 
                     IMoniker[] currentMoniker = new IMoniker[1];
 
-                    while(monikerTable.Next(1, currentMoniker, IntPtr.Zero) == 0)
+                    while (monikerTable.Next(1, currentMoniker, IntPtr.Zero) == 0)
                     {
                         string displayName = string.Empty;
 
                         currentMoniker[0]?.GetDisplayName(bindCtx, null, out displayName);
 
-                        if(displayName.Contains(_progId))
+                        if (displayName.Contains(_progId))
                         {
                             hResult = rot.GetObject(currentMoniker[0], out object obj);
 
-                            if(hResult < 0 || obj is null)
+                            if (hResult < 0 || obj is null)
                             {
                                 throw new COMException($"GetObject() returned HRESULT {hResult:X8}");
                             }
@@ -76,7 +75,7 @@ namespace Editor.GameCode
                                 break;
                             }
                         }
-                    } 
+                    }
 
                     if (_vsInstance is null)
                     {
@@ -92,7 +91,7 @@ namespace Editor.GameCode
             }
             finally
             {
-                if(monikerTable is not null) Marshal.ReleaseComObject(monikerTable);
+                if (monikerTable is not null) Marshal.ReleaseComObject(monikerTable);
                 if (rot is not null) Marshal.ReleaseComObject(rot);
                 if (bindCtx is not null) Marshal.ReleaseComObject(bindCtx);
             }
@@ -231,7 +230,7 @@ namespace Editor.GameCode
 
         public static void Stop()
         {
-            if (_vsInstance is not null && IsDebugging()) _vsInstance.ExecuteCommand("Debug.StopDebugging"); 
+            if (_vsInstance is not null && IsDebugging()) _vsInstance.ExecuteCommand("Debug.StopDebugging");
         }
 
         private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig) =>

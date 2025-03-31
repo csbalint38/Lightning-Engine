@@ -13,15 +13,15 @@ namespace Editor.Dictionaries
 
             if (exp is null) return;
 
-            if(e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
             {
-                if(textBox.Tag is ICommand command && command.CanExecute(textBox.Text)) command.Execute(textBox.Text);
+                if (textBox.Tag is ICommand command && command.CanExecute(textBox.Text)) command.Execute(textBox.Text);
                 else exp.UpdateSource();
 
                 Keyboard.ClearFocus();
                 e.Handled = true;
             }
-            else if(e.Key == Key.Escape)
+            else if (e.Key == Key.Escape)
             {
                 exp.UpdateTarget();
                 Keyboard.ClearFocus();
