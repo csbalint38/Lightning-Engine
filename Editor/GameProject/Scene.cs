@@ -49,7 +49,7 @@ namespace Editor.GameProject
         }
 
         public ReadOnlyObservableCollection<Entity> Entities { get; private set; }
-         
+
         public ICommand AddEntityCommand { get; private set; }
         public ICommand RemoveEntityCommand { get; private set; }
 
@@ -66,12 +66,12 @@ namespace Editor.GameProject
         [OnDeserialized]
         private void OnDeserialized(StreamingContext context)
         {
-            if(_entities is not null)
+            if (_entities is not null)
             {
                 Entities = new ReadOnlyObservableCollection<Entity>(_entities);
                 OnPropertyChanged(nameof(Entities));
             }
-            
+
             foreach (var entity in _entities) entity.IsActive = IsActive;
 
             AddEntityCommand = new RelayCommand<Entity>(x =>
@@ -99,13 +99,13 @@ namespace Editor.GameProject
             });
         }
 
-        private void AddEntity(Entity entity,  int index = -1)
+        private void AddEntity(Entity entity, int index = -1)
         {
             Debug.Assert(!_entities.Contains(entity));
 
             entity.IsActive = IsActive;
 
-            if(index == -1) _entities.Add(entity);
+            if (index == -1) _entities.Add(entity);
             else _entities.Insert(index, entity);
         }
 

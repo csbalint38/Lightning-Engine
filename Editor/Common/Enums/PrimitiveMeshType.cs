@@ -1,6 +1,6 @@
 ﻿namespace Editor.Common.Enums
 {
-    public enum PrimitiveMehsType
+    public enum PrimitiveMeshType
     {
     }
 }

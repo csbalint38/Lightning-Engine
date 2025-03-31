@@ -29,7 +29,7 @@ namespace Editor.Components
 
         public override IMSComponent GetMultiselectComponents(MSEntityBase entity) => new MSScript(entity);
 
-        public override void WriteToBinaty(BinaryWriter bw)
+        public override void WriteToBinary(BinaryWriter bw)
         {
             var name = Encoding.UTF8.GetBytes(Name);
 

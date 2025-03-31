@@ -19,7 +19,7 @@ namespace Editor.GameProject
         {
             Loaded -= OnProjectBrowserDialogOpened;
 
-            if(!OpenProject.Projects.Any())
+            if (!OpenProject.Projects.Any())
             {
                 BtnToggleOpenNew_Click(BtnToggleOpenNew, new RoutedEventArgs());
                 BtnToggleOpenNew.IsEnabled = false;

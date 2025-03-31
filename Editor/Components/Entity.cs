@@ -6,7 +6,6 @@ using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using System.Windows.Input;
 
 namespace Editor.Components
 {
@@ -96,7 +95,7 @@ namespace Editor.Components
         [OnDeserialized]
         void OnDeserialized(StreamingContext context)
         {
-            if(_components is not null)
+            if (_components is not null)
             {
                 Components = new ReadOnlyObservableCollection<Component>(_components);
                 OnPropertyChanged(nameof(Components));

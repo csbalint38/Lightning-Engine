@@ -20,7 +20,7 @@ namespace Editor.GameProject
         {
             try
             {
-                if(!Directory.Exists(_appdataPath)) Directory.CreateDirectory(_appdataPath);
+                if (!Directory.Exists(_appdataPath)) Directory.CreateDirectory(_appdataPath);
                 _projectDataPath = $@"{_appdataPath}ProjectData.xml";
                 Projects = new ReadOnlyObservableCollection<ProjectData>(_projects);
                 ReadProjectData();

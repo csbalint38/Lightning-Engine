@@ -62,7 +62,7 @@ namespace Editor.GameProject
             get => _errorMessage;
             set
             {
-                if(_errorMessage != value)
+                if (_errorMessage != value)
                 {
                     _errorMessage = value;
                     OnPropertyChanged(nameof(ErrorMessage));
@@ -81,7 +81,8 @@ namespace Editor.GameProject
                 var templateFiles = Directory.GetFiles(_templatePath, "template.xml", SearchOption.AllDirectories);
                 Debug.Assert(templateFiles.Length != 0);
 
-                foreach (var templateFile in templateFiles) {
+                foreach (var templateFile in templateFiles)
+                {
                     var template = Serializer.FromFile<ProjectTemplate>(templateFile);
 
                     template.TemplatePath = Path.GetDirectoryName(templateFile);
@@ -120,14 +121,14 @@ namespace Editor.GameProject
         {
             Validate();
 
-            if(!IsValid) return string.Empty;
-            if(!Path.EndsInDirectorySeparator(ProjectPath)) ProjectPath += @"\";
+            if (!IsValid) return string.Empty;
+            if (!Path.EndsInDirectorySeparator(ProjectPath)) ProjectPath += @"\";
 
             var path = $@"{ProjectPath}{ProjectName}\";
 
             try
             {
-                if(!Directory.Exists(path)) Directory.CreateDirectory(path);
+                if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
                 foreach (var folder in template.Folders)
                 {

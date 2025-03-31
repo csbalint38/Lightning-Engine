@@ -36,7 +36,7 @@ namespace Editor.Utilities
             }
             else
             {
-                if(!Path.EndsInDirectorySeparator(path)) path += @"\";
+                if (!Path.EndsInDirectorySeparator(path)) path += @"\";
 
                 EnginePath = path;
                 DialogResult = true;

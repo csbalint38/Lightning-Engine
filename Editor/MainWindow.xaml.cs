@@ -1,7 +1,6 @@
 ﻿using Editor.GameProject;
 using Editor.Utilities;
 using System.ComponentModel;
-using System.Configuration;
 using System.IO;
 using System.Windows;
 
@@ -35,7 +34,8 @@ public partial class MainWindow : Window
         Project.Current?.Unload();
     }
 
-    private void OpenProjectBrowserDialog() {
+    private void OpenProjectBrowserDialog()
+    {
         var projectBrowser = new ProjectBrowserDialog();
         if (projectBrowser.ShowDialog() == false || projectBrowser.DataContext is null)
         {

@@ -48,7 +48,7 @@ namespace Editor.Editors
                 },
                 () =>
                 {
-                    listBox.UnselectAll();  
+                    listBox.UnselectAll();
                     newSelection.ForEach(x =>
                         (listBox.ItemContainerGenerator.ContainerFromItem(x) as ListBoxItem).IsSelected = true
                     );
@@ -57,7 +57,7 @@ namespace Editor.Editors
 
             MSEntity msEntity = null;
 
-            if(newSelection.Any())
+            if (newSelection.Any())
             {
                 msEntity = new MSEntity(newSelection);
             }

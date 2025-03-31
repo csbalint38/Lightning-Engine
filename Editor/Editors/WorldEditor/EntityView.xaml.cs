@@ -65,7 +65,7 @@ namespace Editor.Editors
 
         private void TbName_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            if(_propertyName == nameof(MSEntity.Name) && _undoAction is not null)
+            if (_propertyName == nameof(MSEntity.Name) && _undoAction is not null)
             {
                 var redoAction = GetRenameAction();
 
@@ -92,7 +92,7 @@ namespace Editor.Editors
 
             Project.UndoRedo.Add(new UndoRedoAction(
                 vm.IsEnabled == true
-                    ?  $"Enable {vm.SelectedEntities.Count} game entities"
+                    ? $"Enable {vm.SelectedEntities.Count} game entities"
                     : $"Disable {vm.SelectedEntities.Count} game entities",
                 undoAction,
                 redoAction

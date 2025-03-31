@@ -27,7 +27,7 @@ namespace Editor.Content
 
             Debug.Assert(numLodGroups > 0);
 
-            for(int i = 0; i < numLodGroups; ++i)
+            for (int i = 0; i < numLodGroups; ++i)
             {
                 s = reader.ReadInt32();
                 string lodGroupName;
