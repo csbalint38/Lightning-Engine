@@ -2,6 +2,7 @@
 using Editor.Content;
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
+using Editor.Editors.GeometryEditor;
 using Editor.Utilities;
 using System.Windows;
 using System.Windows.Controls;
@@ -58,7 +59,11 @@ namespace Editor.Components
                     break;
             }
 
-            ContentToolsAPI.CreatePrimitiveMesh(new Geometry(), info);
+            var geometry = new Geometry();
+
+            ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
+
+            (DataContext as GeometryEditor).SetAsset(geometry);
         }
 
         private float Value(TextBox tb, float min)
