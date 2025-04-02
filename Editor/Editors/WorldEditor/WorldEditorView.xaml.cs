@@ -1,4 +1,5 @@
-﻿using Editor.GameCode;
+﻿using Editor.Components;
+using Editor.GameCode;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -23,9 +24,10 @@ namespace Editor.Editors
 
         private void BtnNewScript_Click(object sender, RoutedEventArgs e) => new NewScriptDialog().ShowDialog();
 
-        private void BtnBuild_Click(object sender, RoutedEventArgs e)
+        private void BtnPrimitiveMesh_Click(object sender, RoutedEventArgs e)
         {
-
+            var dialog = new PrimitiveMeshDialog();
+            dialog.Show();
         }
     }
 }
