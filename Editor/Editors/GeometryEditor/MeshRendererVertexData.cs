@@ -7,8 +7,8 @@ namespace Editor.Editors.GeometryEditor
     // This is a temporary class.
     class MeshRendererVertexData : ViewModelBase 
     {
-        private Brush _specular = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMateriaSpecularColor));
-        private Brush _diffuse = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMateriaDiffuseColor));
+        private Brush _specular = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialSpecularColor));
+        private Brush _diffuse = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialDiffuseColor));
 
         public Point3DCollection Positions { get; } = [];
         public Vector3DCollection Normals { get; } = [];
