@@ -55,7 +55,7 @@ namespace Editor.Components
 
         public override IMSComponent GetMultiselectComponents(MSEntityBase entity) => new MSTransform(entity);
 
-        public override void WriteToBinaty(BinaryWriter bw)
+        public override void WriteToBinary(BinaryWriter bw)
         {
             bw.Write(_position.X);
             bw.Write(_position.Y);

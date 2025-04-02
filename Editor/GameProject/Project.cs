@@ -226,7 +226,7 @@ namespace Editor.GameProject
                     foreach (var component in entity.Components)
                     {
                         bw.Write((int)component.ToEnumType());
-                        component.WriteToBinaty(bw);
+                        component.WriteToBinary(bw);
                     }
                 }
             }
