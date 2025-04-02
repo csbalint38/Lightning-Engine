@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Changed the Editor from Flutter to WPF
  - Load Mesh data into the Editor
  - Multiple Renderer Window support
  - Renderer Window resize handling

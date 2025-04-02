@@ -7,13 +7,14 @@
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 106 | 15,395 |
-| Dart | 48 |  5,981 |
+| C++ | 100 | 14,923 |
+| C# | 74 |  3,876 |
 | HLSL | 13 |  1,536 |
+| XAML | 17 | 932 |
 | Python | 8 | 277 |
 | Markdown | 4 | 177 |
-| YAML | 2 | 132 |
-... +2 others (less than 100 lines)
+| XML | 5 | 102 |
+... +1 others (less than 100 lines)
 
 ## Requirements
 
