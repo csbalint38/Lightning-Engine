@@ -50,6 +50,52 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	return 0;
 }
 
+#elif __linux__
+#include <X11/Xlib.h>
+
+int main(int argc, char* argv[]) {
+	XInitThreads();
+
+	EngineTest test{};
+
+	Display* display { XOpenDisplay(NULL) };
+
+	if(display == NULL) return 1;
+
+	Atom wm_delete_window = XInternAtom(display, "WM_DELETE_WINDOW", false);
+	Atom quit_msg = XInternAtom(display, "QUIT_MSG", false);
+
+	if(test.initialize(display)) {
+		XEvent xev;
+		bool is_running{ true };
+
+		while(is_running) {
+			if(XPending(display) > 0) {
+				XNextEvent(display, &xev);
+
+				switch(xev.type) {
+					case KeyPress:
+						break;
+					case ClientMessage:
+						if((Atom)xev.xclient.data.l[0] == wm_delete_window) {
+							XPutBackEvent(display, &xev);
+						}
+						if((Atom)xev.xclient.data.l[0] == quit_msg) {
+							is_running = false;
+						}
+						break;
+				}
+			}
+			test.run(display);
+		}
+
+		test.shutdown();
+		XCloseDisplay(display);
+
+		return 0;
+	}
+}
+
 #else
 int main() {
 	#if _DEBUG

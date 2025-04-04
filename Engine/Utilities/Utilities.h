@@ -42,3 +42,9 @@ namespace lightning::util {
 }
 
 #include "FreeList.h"
+
+#ifndef _WIN64
+template <typename T, size_t N> size_t constexpr _countof(T(&arr)[N]) {
+    return std::extent<T[N]>::value;
+}
+#endif
