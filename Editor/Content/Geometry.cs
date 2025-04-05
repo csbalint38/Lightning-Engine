@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Editor.Content
 {
-    internal class Geometry : Asset
+    public class Geometry : Asset
     {
         private readonly List<LODGroup> _lodGroups = [];
 

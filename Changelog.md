@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Create Plane
  - Create primitive mesh dialog window
  - Changed the Editor from Flutter to WPF
  - Load Mesh data into the Editor

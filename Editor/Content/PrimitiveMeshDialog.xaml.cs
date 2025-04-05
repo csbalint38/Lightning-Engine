@@ -1,13 +1,12 @@
 ﻿using Editor.Common.Enums;
-using Editor.Content;
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
-using Editor.Editors.GeometryEditor;
+using Editor.Editors;
 using Editor.Utilities;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Editor.Components
+namespace Editor.Content
 {
     /// <summary>
     /// Interaction logic for PrimitiveMeshDialog.xaml
@@ -28,11 +27,7 @@ namespace Editor.Components
         {
             if (!IsInitialized) return;
 
-            var primitiveType = (PrimitiveMeshType)new EnumValueConverter().ConvertBack(
-                CbPrimitiveType.SelectedItem,
-                typeof(PrimitiveMeshType)
-            );
-
+            var primitiveType = (PrimitiveMeshType)CbPrimitiveType.SelectedItem;
             var info = new PrimitiveInitInfo() { Type = primitiveType };
 
             switch (primitiveType)
@@ -42,7 +37,7 @@ namespace Editor.Components
                         info.SegmentX = (int)SldPlaneX.Value;
                         info.SegmentZ = (int)SldPlaneZ.Value;
                         info.Size.X = Value(TbWidthPlane, .001f);
-                        info.Size.Y = Value(TbLengthPlane, .001f);
+                        info.Size.Z = Value(TbLengthPlane, .001f);
                         break; 
                     }
                 case PrimitiveMeshType.CUBE:

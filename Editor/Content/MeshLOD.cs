@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 
 namespace Editor.Content
 {
-    internal class MeshLOD : ViewModelBase
+    public class MeshLOD : ViewModelBase
     {
         private string _name;
         private float _lodThreshold;

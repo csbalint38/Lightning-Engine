@@ -8,12 +8,12 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace Editor.Editors.GeometryEditor
+namespace Editor.Editors
 {
     // This is also temporary.
-    class MeshRenderer : ViewModelBase
+    public class MeshRenderer : ViewModelBase
     {
-        private Vector3 _cameraDirection = new(0, 0, -10);
+        private Vector3D _cameraDirection = new(0, 0, -10);
         private Point3D _cameraPosition = new(0, 0, 10);
         private Point3D _cameraTarget = new(0, 0, 0);
         private Color _keyLight = (Color)ColorConverter.ConvertFromString("#FFAEAEAE");
@@ -23,7 +23,7 @@ namespace Editor.Editors.GeometryEditor
 
         public ObservableCollection<MeshRendererVertexData> Meshes { get; } = [];
 
-        public Vector3 CameraDirection
+        public Vector3D CameraDirection
         {
             get => _cameraDirection;
             set
@@ -44,6 +44,7 @@ namespace Editor.Editors.GeometryEditor
                 if (_cameraPosition != value)
                 {
                     _cameraPosition = value;
+                    CameraDirection = new Vector3D(-value.X, -value.Y, -value.Z);
                     OnPropertyChanged(nameof(OffsetCameraPosition));
                     OnPropertyChanged(nameof(CameraPosition));
                 }

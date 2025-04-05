@@ -2,7 +2,7 @@
 
 namespace Editor.Content
 {
-    internal class Mesh : ViewModelBase
+    public class Mesh : ViewModelBase
     {
         private int _vertexSize;
         private int _vertexCount;

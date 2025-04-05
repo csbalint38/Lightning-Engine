@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Editor.Content
 {
-    abstract internal class Asset : ViewModelBase
+    abstract public class Asset : ViewModelBase
     {
         public AssetType Type { get; private set; }
 

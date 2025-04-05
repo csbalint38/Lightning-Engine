@@ -2,9 +2,9 @@
 using Editor.Content;
 using System.Diagnostics;
 
-namespace Editor.Editors.GeometryEditor
+namespace Editor.Editors
 {
-    class GeometryEditor : ViewModelBase, IAssetEditor
+    public class GeometryEditor : ViewModelBase, IAssetEditor
     {
         private Geometry _geometry;
         private MeshRenderer _meshRenderer;

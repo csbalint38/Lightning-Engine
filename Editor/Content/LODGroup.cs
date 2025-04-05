@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 
 namespace Editor.Content
 {
-    internal class LODGroup : ViewModelBase
+    public class LODGroup : ViewModelBase
     {
         private string _name;
 

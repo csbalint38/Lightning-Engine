@@ -9,9 +9,9 @@ namespace Editor.DLLs
 {
     static class ContentToolsAPI
     {
-        private const string _contentToolsDll = "CondentTools.dll";
+        private const string _contentToolsDll = "ContentTools.dll";
 
-        [DllImport(_contentToolsDll, EntryPoint = "create_primitive_mesh")]
+        [DllImport(_contentToolsDll)]
         private static extern void CreatePrimitiveMesh([In, Out] SceneData data, PrimitiveInitInfo info);
 
         public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info)

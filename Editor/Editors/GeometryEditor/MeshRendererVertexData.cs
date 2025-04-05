@@ -2,10 +2,10 @@
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace Editor.Editors.GeometryEditor
+namespace Editor.Editors
 {
     // This is a temporary class.
-    class MeshRendererVertexData : ViewModelBase 
+    public class MeshRendererVertexData : ViewModelBase 
     {
         private Brush _specular = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialSpecularColor));
         private Brush _diffuse = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialDiffuseColor));
@@ -28,7 +28,7 @@ namespace Editor.Editors.GeometryEditor
             }
         }
 
-        private Brush Diffuse
+        public Brush Diffuse
         {
             get => _diffuse;
             set

@@ -135,7 +135,7 @@ namespace lightning::tools {
 
 		void recalculate_normals(Mesh& m) {
 			const u32 num_indicies{ (u32)m.raw_indicies.size() };
-			m.normals.reserve(num_indicies);
+			m.normals.resize(num_indicies);
 
 			for (u32 i{ 0 }; i < num_indicies; ++i) {
 				const u32 i0{ m.raw_indicies[i] };
@@ -211,8 +211,8 @@ namespace lightning::tools {
 			util::vector<u32> old_indicies(m.indicies.size());
 			old_indicies.swap(m.indicies);
 
-			const u32 num_verticies{ (u32)old_verticies.size() };
 			const u32 num_indicies{ (u32)old_indicies.size() };
+			const u32 num_verticies{ (u32)old_verticies.size() };
 
 			assert(num_verticies && num_indicies);
 
@@ -220,7 +220,7 @@ namespace lightning::tools {
 			for (u32 i{ 0 }; i < num_indicies; ++i) {
 				idx_ref[old_indicies[i]].emplace_back(i);
 			}
-			for (u32 i{ 0 }; i < num_indicies; ++i) {
+			for (u32 i{ 0 }; i < num_verticies; ++i) {
 				util::vector<u32>& refs{ idx_ref[i] };
 				u32 num_refs{ (u32)refs.size() };
 				for (u32 j{ 0 }; j < num_refs; ++j) {
