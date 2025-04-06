@@ -83,7 +83,7 @@ namespace Editor.Editors
 
             if (_capturedLeft && !_capturedRight)
             {
-                //MoveCamera(d.X, d.Y, 0);
+                MoveCamera(d.X, d.Y, 0);
             }
             else if (!_capturedLeft && _capturedRight)
             {
@@ -93,6 +93,8 @@ namespace Editor.Editors
 
                 vm.CameraTraget = new Point3D(vm.CameraTraget.X, vm.CameraTraget.Y + yOffset, vm.CameraTraget.Z);
             }
+
+            _clickedPosition = pos;
         }
 
         private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -102,19 +104,40 @@ namespace Editor.Editors
             if (!_capturedRight) Mouse.Capture(null);
         }
 
-        private void Grid_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-
-        }
+        private void Grid_MouseWheel(object sender, MouseWheelEventArgs e) => MoveCamera(0, 0, Math.Sign(e.Delta));
 
         private void Grid_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-
+            _clickedPosition = e.GetPosition(this);
+            _capturedRight = true;
+            Mouse.Capture(sender as UIElement);
         }
 
         private void Grid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
+            _capturedRight = false;
+           
+            if(!_capturedLeft) Mouse.Capture(null);
+        }
 
+        private void MoveCamera(double dx, double dy, int dz)
+        {
+            var vm = DataContext as MeshRenderer;
+            var v = new Vector3D(vm.CameraPosition.X, vm.CameraPosition.Y, vm.CameraPosition.Z);
+            var r = v.Length;
+            var theta = Math.Acos(v.Y / r);
+            var phi = Math.Atan2(-v.Z, v.X);
+
+            theta -= dy * 0.01;
+            phi -= dx * 0.01;
+            r *= 1.0 - 0.1 * dz;
+
+            theta = Math.Clamp(theta, 0.0001, Math.PI - 0.0001);
+            v.X = r * Math.Sin(theta) * Math.Cos(phi);
+            v.Z = -r * Math.Sin(theta) * Math.Sin(phi);
+            v.Y = r * Math.Cos(theta);
+
+            vm.CameraPosition = new Point3D(v.X, v.Y, v.Z);
         }
     }
 }

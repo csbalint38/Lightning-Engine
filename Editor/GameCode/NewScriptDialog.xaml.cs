@@ -114,14 +114,14 @@ namespace Editor.GameCode
             var h = Path.GetFullPath(Path.Combine(path, $"{name}.h"));
             var cppPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                "GameCode",
-                "Templates",
+                "Resources",
+                "CodeTemplates",
                 "cpp.txt"
             );
             var hPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                "GameCode",
-                "Templates",
+                "Resources",
+                "CodeTemplates",
                 "h.txt"
             );
             var cppTemplate = File.ReadAllText(cppPath);

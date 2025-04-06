@@ -42,6 +42,12 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <CheckBox x:Name="CBTexture"
+                          Content="Show texture"
+                          VerticalAlignment="Center"
+                          Margin="5,0"
+                          IsChecked="True"
+                          Click="CBTexture_Click"/>
             </StackPanel>
         </Border>
         <Grid>

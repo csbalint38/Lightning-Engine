@@ -25,6 +25,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\CodeTemplates\cpp.txt" />
+    <None Remove="Resources\CodeTemplates\h.txt" />
+    <None Remove="Resources\PlaneTexture.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <COMReference Include="EnvDTE">
       <WrapperTool>tlbimp</WrapperTool>
       <VersionMinor>0</VersionMinor>
@@ -51,11 +57,14 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <None Update="GameCode\Templates\cpp.txt">
+    <Resource Include="Resources\CodeTemplates\cpp.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="GameCode\Templates\h.txt">
+    </Resource>
+    <Resource Include="Resources\CodeTemplates\h.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Resource>
+    <Resource Include="Resources\PlaneTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 </Project>

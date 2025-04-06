@@ -3,8 +3,11 @@ using Editor.DLLs;
 using Editor.DLLs.Descriptors;
 using Editor.Editors;
 using Editor.Utilities;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Editor.Content
 {
@@ -13,10 +16,46 @@ namespace Editor.Content
     /// </summary>
     public partial class PrimitiveMeshDialog : Window
     {
+        private static readonly List<ImageBrush> _textures = [];
+
+        static PrimitiveMeshDialog()
+        {
+            LoadTextures();
+        }
+
         public PrimitiveMeshDialog()
         {
             InitializeComponent();
             Loaded += (s, e) => UpdatePrimitive();
+        }
+
+        private static void LoadTextures()
+        {
+            var uris = new List<Uri>
+            {
+                new("pack://application:,,,/Resources/PlaneTexture.png"),
+            };
+
+            _textures.Clear();
+
+            foreach(var uri in uris)
+            {
+                var resource = Application.GetResourceStream(uri);
+                using var reader = new BinaryReader(resource.Stream);
+                var data = reader.ReadBytes((int)resource.Stream.Length);
+                var imageSource = (BitmapSource)new ImageSourceConverter().ConvertFrom(data);
+
+                imageSource.Freeze();
+
+                var brush = new ImageBrush(imageSource)
+                {
+                    Transform = new ScaleTransform(1, -1, 0.5, 0.5),
+                    ViewportUnits = BrushMappingMode.Absolute
+                };
+
+                brush.Freeze();
+                _textures.Add(brush);
+            }
         }
 
         private void CbPrimitiveType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdatePrimitive();
@@ -41,17 +80,17 @@ namespace Editor.Content
                         break; 
                     }
                 case PrimitiveMeshType.CUBE:
-                    break;
+                    return;
                 case PrimitiveMeshType.UV_SPHERE:
-                    break;
+                    return;
                 case PrimitiveMeshType.ICO_SPHERE:
-                    break;
+                    return;
                 case PrimitiveMeshType.CYLINDER:
-                    break;
+                    return;
                 case PrimitiveMeshType.CAPSULE:
-                    break;
+                    return;
                 default:
-                    break;
+                    return;
             }
 
             var geometry = new Geometry();
@@ -59,6 +98,7 @@ namespace Editor.Content
             ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
 
             (DataContext as GeometryEditor).SetAsset(geometry);
+            CBTexture_Click(CBTexture, null);
         }
 
         private float Value(TextBox tb, float min)
@@ -66,6 +106,17 @@ namespace Editor.Content
             float.TryParse(tb.Text, out var result);
 
             return Math.Max(result, min);
+        }
+
+        private void CBTexture_Click(object sender, RoutedEventArgs e)
+        {
+            Brush brush = Brushes.White;
+
+            if ((sender as CheckBox).IsChecked == true) brush = _textures[(int)CbPrimitiveType.SelectedItem];
+
+            var vm = DataContext as GeometryEditor;
+
+            foreach(var mesh in vm.MeshRenderer.Meshes) mesh.Diffuse = brush;
         }
     }
 }
