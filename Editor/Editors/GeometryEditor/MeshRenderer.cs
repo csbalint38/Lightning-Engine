@@ -3,7 +3,6 @@ using Editor.Content;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Numerics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -117,7 +116,7 @@ namespace Editor.Editors
             }
         }
 
-        public MeshRenderer(MeshLOD lod, MeshRenderer old) 
+        public MeshRenderer(MeshLOD lod, MeshRenderer old)
         {
             Debug.Assert(lod?.Meshes.Any() == true);
 
@@ -131,13 +130,13 @@ namespace Editor.Editors
             Vector3D avgNormal = new();
             var intervals = 2.0f / ((1 << 16) - 1);
 
-            foreach(var mesh in lod.Meshes)
+            foreach (var mesh in lod.Meshes)
             {
                 var vertexData = new MeshRendererVertexData();
 
                 using (var reader = new BinaryReader(new MemoryStream(mesh.Verticies)))
                 {
-                    for(int i = 0; i< mesh.VertexCount; ++i)
+                    for (int i = 0; i < mesh.VertexCount; ++i)
                     {
                         var posX = reader.ReadSingle();
                         var posY = reader.ReadSingle();
@@ -149,7 +148,7 @@ namespace Editor.Editors
                         minX = Math.Min(minX, posX);
                         minY = Math.Min(minY, posY);
                         minZ = Math.Min(minZ, posZ);
-                        
+
                         maxX = Math.Max(maxX, posX);
                         maxY = Math.Max(maxY, posY);
                         maxZ = Math.Max(maxZ, posZ);
@@ -174,9 +173,9 @@ namespace Editor.Editors
 
                 using (var reader = new BinaryReader(new MemoryStream(mesh.Indicies)))
                 {
-                    if(mesh.IndexSize == sizeof(short))
+                    if (mesh.IndexSize == sizeof(short))
                     {
-                        for (int i=0; i< mesh.IndexCount; ++i) vertexData.Indices.Add(reader.ReadUInt16());
+                        for (int i = 0; i < mesh.IndexCount; ++i) vertexData.Indices.Add(reader.ReadUInt16());
                     }
                     else
                     {
@@ -191,7 +190,7 @@ namespace Editor.Editors
                 Meshes.Add(vertexData);
             }
 
-            if(old is not null)
+            if (old is not null)
             {
                 CameraTraget = old.CameraTraget;
                 CameraPosition = old.CameraPosition;
@@ -203,7 +202,7 @@ namespace Editor.Editors
                 var depth = maxZ - minZ;
                 var radius = new Vector3D(height, width, depth).Length + 1.2;
 
-                if(avgNormal.Length > 0.8)
+                if (avgNormal.Length > 0.8)
                 {
                     avgNormal.Normalize();
                     avgNormal *= radius;

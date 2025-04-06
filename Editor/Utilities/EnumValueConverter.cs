@@ -8,12 +8,12 @@ namespace Editor.Utilities
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if(value is Enum enumValue)
+            if (value is Enum enumValue)
             {
                 string[] words = enumValue.ToString().Split('_');
                 StringBuilder result = new();
 
-                foreach(var word in words)
+                foreach (var word in words)
                 {
                     if (word.Length > 0) result.Append(char.ToUpper(word[0]) + word.Substring(1).ToLower());
                 }
@@ -26,7 +26,7 @@ namespace Editor.Utilities
 
         public object ConvertBack(object value, Type targetType, object _ = null!, CultureInfo __ = null!)
         {
-            if(value is string strVal && targetType.IsEnum)
+            if (value is string strVal && targetType.IsEnum)
             {
                 string enumString = strVal.Replace(" ", "_").ToUpper();
 

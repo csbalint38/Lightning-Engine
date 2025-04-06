@@ -16,7 +16,7 @@ namespace Editor.Editors
             get => _geometry;
             set
             {
-                if(_geometry != value)
+                if (_geometry != value)
                 {
                     _geometry = value;
                     OnPropertyChanged(nameof(Geometry));

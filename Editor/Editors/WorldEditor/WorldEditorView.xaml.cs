@@ -1,5 +1,4 @@
-﻿using Editor.Components;
-using Editor.Content;
+﻿using Editor.Content;
 using Editor.GameCode;
 using System.Windows;
 using System.Windows.Controls;

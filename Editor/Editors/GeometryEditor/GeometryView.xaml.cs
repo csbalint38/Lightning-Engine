@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -22,17 +21,18 @@ namespace Editor.Editors
             DataContextChanged += (s, e) => SetGeometry();
         }
 
-        private void SetGeometry(int index = -1) {
+        private void SetGeometry(int index = -1)
+        {
             if (DataContext is not MeshRenderer vm) return;
 
-            if(vm.Meshes.Any() && VpViewport.Children.Count == 2) VpViewport.Children.RemoveAt(1);
+            if (vm.Meshes.Any() && VpViewport.Children.Count == 2) VpViewport.Children.RemoveAt(1);
 
             var meshIndex = 0;
             var modelGroup = new Model3DGroup();
 
-            foreach(var mesh in vm.Meshes)
+            foreach (var mesh in vm.Meshes)
             {
-                if(index != -1 && meshIndex != index)
+                if (index != -1 && meshIndex != index)
                 {
                     ++meshIndex;
                     continue;
@@ -116,8 +116,8 @@ namespace Editor.Editors
         private void Grid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             _capturedRight = false;
-           
-            if(!_capturedLeft) Mouse.Capture(null);
+
+            if (!_capturedLeft) Mouse.Capture(null);
         }
 
         private void MoveCamera(double dx, double dy, int dz)

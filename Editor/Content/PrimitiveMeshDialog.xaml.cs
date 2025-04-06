@@ -2,7 +2,6 @@
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
 using Editor.Editors;
-using Editor.Utilities;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,11 +33,13 @@ namespace Editor.Content
             var uris = new List<Uri>
             {
                 new("pack://application:,,,/Resources/PlaneTexture.png"),
+                new("pack://application:,,,/Resources/PlaneTexture.png"),
+                new("pack://application:,,,/Resources/PlaneTexture.png"),
             };
 
             _textures.Clear();
 
-            foreach(var uri in uris)
+            foreach (var uri in uris)
             {
                 var resource = Application.GetResourceStream(uri);
                 using var reader = new BinaryReader(resource.Stream);
@@ -77,12 +78,19 @@ namespace Editor.Content
                         info.SegmentZ = (int)SldPlaneZ.Value;
                         info.Size.X = Value(TbWidthPlane, .001f);
                         info.Size.Z = Value(TbLengthPlane, .001f);
-                        break; 
                     }
+                    break;
                 case PrimitiveMeshType.CUBE:
                     return;
                 case PrimitiveMeshType.UV_SPHERE:
-                    return;
+                    {
+                        info.SegmentX = (int)SldUvSphereX.Value;
+                        info.SegmentY = (int)SldUvSphereY.Value;
+                        info.Size.X = Value(TbXUvSphere, 0.001f);
+                        info.Size.Y = Value(TbYUvSphere, 0.001f);
+                        info.Size.Z = Value(TbZUvSphere, 0.001f);
+                    }
+                    break;
                 case PrimitiveMeshType.ICO_SPHERE:
                     return;
                 case PrimitiveMeshType.CYLINDER:
@@ -116,7 +124,7 @@ namespace Editor.Content
 
             var vm = DataContext as GeometryEditor;
 
-            foreach(var mesh in vm.MeshRenderer.Meshes) mesh.Diffuse = brush;
+            foreach (var mesh in vm.MeshRenderer.Meshes) mesh.Diffuse = brush;
         }
     }
 }

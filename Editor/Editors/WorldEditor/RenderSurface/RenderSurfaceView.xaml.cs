@@ -1,7 +1,5 @@
 ﻿using Editor.Common.Enums;
 using Editor.Editors.WorldEditor.RenderSurface;
-using Editor.Utilities;
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;

@@ -30,7 +30,7 @@
                 DockPanel.Dock="Top"
                 VerticalAlignment="Top">
             <StackPanel Orientation="Horizontal">
-                <ComboBox SelectedIndex="0"
+                <ComboBox SelectedIndex="2"
                           Width="100"
                           VerticalAlignment="Center"
                           x:Name="CbPrimitiveType"
@@ -135,6 +135,110 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox Text="1"
                                          x:Name="TbLengthPlane"
+                                         Width="30"
+                                         TextChanged="TextBox_TextChanged"
+                                         DockPanel.Dock="Right"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <Label Content="Size"
+                           VerticalAlignment="Top"
+                           HorizontalAlignment="Left"
+                           Margin="20,-3,0,0"
+                           Padding="5,0"/>
+                </Grid>
+                <Button Content="Create"/>
+            </StackPanel>
+            <StackPanel>
+                <StackPanel.Style>
+                    <Style TargetType="{x:Type StackPanel}">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedItem, ElementName=CbPrimitiveType}"
+                                         Value="{x:Static common:PrimitiveMeshType.UV_SPHERE}">
+                                <Setter Property="Visibility"
+                                        Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <Grid Margin="0,5">
+                    <Border>
+                        <StackPanel Margin="5,15,5,15">
+                            <DockPanel>
+                                <TextBlock Text="Longitude"
+                                           Width="40"
+                                           DockPanel.Dock="Left"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Path=Value, ElementName=SldUvSphereX}"
+                                         Width="30"
+                                         DockPanel.Dock="Right"/>
+                                <Slider Minimum="3"
+                                        Maximum="64"
+                                        HorizontalAlignment="Stretch"
+                                        Interval="1"
+                                        IsSnapToTickEnabled="True"
+                                        TickPlacement="BottomRight"
+                                        x:Name="SldUvSphereX"
+                                        ValueChanged="Slider_ValueChanged"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Latitude"
+                                           Width="40"
+                                           DockPanel.Dock="Left"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding Path=Value, ElementName=SldUvSphereY}"
+                                         Width="30"
+                                         DockPanel.Dock="Right"/>
+                                <Slider Minimum="2"
+                                        Maximum="64"
+                                        HorizontalAlignment="Stretch"
+                                        Interval="1"
+                                        IsSnapToTickEnabled="True"
+                                        TickPlacement="BottomRight"
+                                        x:Name="SldUvSphereY"
+                                        ValueChanged="Slider_ValueChanged"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                    <Label Content="Segents"
+                           VerticalAlignment="Top"
+                           HorizontalAlignment="Left"
+                           Margin="20,-3,0,0"
+                           Padding="5,0"/>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Border>
+                        <StackPanel Margin="5,15,5,15">
+                            <DockPanel>
+                                <TextBlock Text="X"
+                                           Width="40"
+                                           DockPanel.Dock="Left"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Text="1"
+                                         x:Name="TbXUvSphere"
+                                         Width="30"
+                                         TextChanged="TextBox_TextChanged"
+                                         DockPanel.Dock="Right"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Y"
+                                           Width="40"
+                                           DockPanel.Dock="Left"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Text="1"
+                                         x:Name="TbYUvSphere"
+                                         Width="30"
+                                         TextChanged="TextBox_TextChanged"
+                                         DockPanel.Dock="Right"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Z"
+                                           Width="40"
+                                           DockPanel.Dock="Left"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Text="1"
+                                         x:Name="TbZUvSphere"
                                          Width="30"
                                          TextChanged="TextBox_TextChanged"
                                          DockPanel.Dock="Right"/>
