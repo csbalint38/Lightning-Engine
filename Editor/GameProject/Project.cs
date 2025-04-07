@@ -36,7 +36,7 @@ namespace Editor.GameProject
         public string Path { get; private set; }
         public string FullPath => $@"{Path}{Name}{Extension}";
         public string Solution => $@"{Path}{Name}.sln";
-        public string ContentPath => $@"{Path}Content\";
+        public string ContentPath => $@"{Path}Assets\";
         public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
         public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
         public BuildConfig DllBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;

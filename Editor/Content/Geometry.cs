@@ -1,8 +1,12 @@
 ﻿using Editor.Common.Enums;
+using Editor.Editors;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Editor.Content
 {
@@ -96,8 +100,20 @@ namespace Editor.Content
 
                         Hash = ContentHelper.ComputeHash([.. hashes]);
                         data = (writer.BaseStream as MemoryStream).ToArray();
-                        // Icon = GenerateIcon(lodGroup.LODs[0]);
+                        Icon = GenerateIcon(lodGroup.LODs[0]);
                     }
+
+                    Debug.Assert(data?.Length > 0);
+
+                    using (var writer = new BinaryWriter(File.Open(meshFileName, FileMode.Create, FileAccess.Write)))
+                    {
+                        WriteAssetFileHeader(writer);
+                        ImportSettings.ToBinary(writer);
+                        writer.Write(data.Length);
+                        writer.Write(data);
+                    }
+
+                    savedFiles.Add(meshFileName);
                 }
             }
             catch(Exception ex)
@@ -191,6 +207,28 @@ namespace Editor.Content
 
             var buffer = (writer.BaseStream as MemoryStream).ToArray();
             hash = ContentHelper.ComputeHash(buffer, (int)meshDataBegin, (int)meshDataSize);
+        }
+
+        private byte[] GenerateIcon(MeshLOD lod)
+        {
+            var width = 90 * 4; // width * sampling
+
+            BitmapSource bmp = null;
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                bmp = GeometryView.RenderToBitmap(new MeshRenderer(lod, null), width, width);
+                bmp = new TransformedBitmap(bmp, new ScaleTransform(0.25, 0.25, 0.25, 0.25));
+            });
+
+            using var memStream = new MemoryStream();
+            memStream.SetLength(0);
+
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bmp));
+            encoder.Save(memStream);
+
+            return memStream.ToArray();
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Editor.Utilities
 {
     public static class ContentHelper
     {
-        public static object SanitizeFileName(string name)
+        public static string SanitizeFileName(string name)
         {
             var path = new StringBuilder(name.Substring(0, name.LastIndexOf(Path.DirectorySeparatorChar) + 1));
             var file = new StringBuilder(name[(name.LastIndexOf(Path.DirectorySeparatorChar) + 1)..]);
@@ -21,9 +21,8 @@ namespace Editor.Utilities
         {
             if(data.Length > 0)
             {
-                using var sha256 = SHA256.Create();
 
-                return sha256.ComputeHash(data, offset, count > 0 ? count : data.Length);
+                return SHA256.HashData(data.AsSpan(offset, count > 0 ? count : data.Length));
             }
 
             return null;

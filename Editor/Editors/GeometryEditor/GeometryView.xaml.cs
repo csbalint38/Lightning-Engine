@@ -2,6 +2,8 @@
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 
 namespace Editor.Editors
@@ -11,6 +13,10 @@ namespace Editor.Editors
     /// </summary>
     public partial class GeometryView : UserControl
     {
+        private static readonly GeometryView _instance = new() {
+            Background = Brushes.LightGray,
+        };
+
         private Point _clickedPosition;
         private bool _capturedLeft = false;
         private bool _capturedRight = false;
@@ -138,6 +144,22 @@ namespace Editor.Editors
             v.Y = r * Math.Cos(theta);
 
             vm.CameraPosition = new Point3D(v.X, v.Y, v.Z);
+        }
+
+        internal static BitmapSource RenderToBitmap(MeshRenderer mesh, int width, int height)
+        {
+            var bmp = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Default);
+
+            _instance.DataContext = mesh;
+            _instance.Width = width;
+            _instance.Height = height;
+            _instance.Measure(new Size(width, height));
+            _instance.Arrange(new Rect(0, 0, width, height));
+            _instance.UpdateLayout();
+
+            bmp.Render(_instance);
+
+            return bmp;
         }
     }
 }

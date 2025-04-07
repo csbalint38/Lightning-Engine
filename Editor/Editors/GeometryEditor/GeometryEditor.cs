@@ -9,7 +9,7 @@ namespace Editor.Editors
         private Geometry _geometry;
         private MeshRenderer _meshRenderer;
 
-        public Asset Asset => throw new NotImplementedException();
+        public Asset Asset => Geometry;
 
         public Geometry Geometry
         {

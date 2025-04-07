@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using System.IO;
 
 namespace Editor.Content
 {
@@ -97,6 +98,16 @@ namespace Editor.Content
             ReverseHandedness = false;
             ImportEmbeddedTextures = true;
             ImportAnimations = true;
+        }
+
+        public void ToBinary(BinaryWriter writer)
+        {
+            writer.Write(CalculateNormals);
+            writer.Write(CalculateTangents);
+            writer.Write(SmoothingAngle);
+            writer.Write(ReverseHandedness);
+            writer.Write(ImportEmbeddedTextures);
+            writer.Write(ImportAnimations);
         }
     }
 }
