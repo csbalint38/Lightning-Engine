@@ -1,7 +1,9 @@
 ﻿using Editor.Content;
 using Editor.GameCode;
+using Editor.GameProject;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Editor.Editors
 {
@@ -29,5 +31,22 @@ namespace Editor.Editors
             var dialog = new PrimitiveMeshDialog();
             dialog.Show();
         }
+
+        private void MINewProject_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            ProjectBrowserDialog.GoToNewProjectTab = true;
+            Project.Current?.Unload();
+            Application.Current.MainWindow.DataContext = null;
+            Application.Current.MainWindow.Close();
+        }
+
+        private void MIOpenProject_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            Project.Current?.Unload();
+            Application.Current.MainWindow.DataContext = null;
+            Application.Current.MainWindow.Close();
+        }
+
+        private void MIExit_Executed(object sender, ExecutedRoutedEventArgs e) => Application.Current.MainWindow.Close();
     }
 }

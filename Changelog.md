@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Dynamic switch between projects
  - Saving Geometry assets
  - Smoothing angle support
  - Create UV Sphere 

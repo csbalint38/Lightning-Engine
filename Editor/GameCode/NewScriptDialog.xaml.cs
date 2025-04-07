@@ -3,6 +3,7 @@ using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -66,12 +67,13 @@ namespace Editor.GameCode
             var name = TbScriptName.Text.Trim();
             var path = TbPath.Text.Trim();
             string errorMessage = string.Empty;
+            var nameRegex = new Regex(@"^[A-Za-z_][A-Za-z0-9_]*$");
 
             if (string.IsNullOrEmpty(name))
             {
                 errorMessage = "Script name cannot be empty.";
             }
-            else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1 || name.Any(x => char.IsWhiteSpace(x)))
+            else if (!nameRegex.IsMatch(name))
             {
                 errorMessage = "Script name contains invalid characters.";
             }
@@ -148,8 +150,11 @@ namespace Editor.GameCode
 
         private static string GetNamespaceFromProjectName()
         {
-            var projectName = Project.Current.Name;
-            projectName = projectName.ToLower().Replace(" ", "_");
+            var projectName = Project.Current.Name.Trim();
+
+            if (string.IsNullOrEmpty(projectName)) return string.Empty;
+
+            projectName = Regex.Replace(projectName, @"[^A-Za-z0-9_]", "").ToLower();
 
             return projectName;
         }

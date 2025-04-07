@@ -16,17 +16,15 @@ namespace Editor.GameProject
     [DataContract]
     internal class Project : ViewModelBase
     {
-        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
-
-        [DataMember(Name = "Scenes")]
-        private ObservableCollection<Scene> _scenes = [];
+        [DataMember(Name = nameof(Scenes))]
+        private readonly ObservableCollection<Scene> _scenes = [];
 
         private Scene _activeScene;
         private int _buildConfig;
         private string[] _availableScripts;
 
         public static readonly string Extension = ".lng";
-        public static Project Current => Application.Current.MainWindow.DataContext as Project; // This should be nullable
+        public static Project Current => Application.Current.MainWindow?.DataContext as Project;
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
 
         [DataMember]
@@ -39,7 +37,7 @@ namespace Editor.GameProject
         public string ContentPath => $@"{Path}Assets\";
         public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
         public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
-        public BuildConfig DllBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
+        public BuildConfig DLLBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
         public ICommand AddSceneCommand { get; private set; }
         public ICommand RemoveSceneCommand { get; private set; }
         public ICommand UndoCommand { get; private set; }
@@ -80,7 +78,7 @@ namespace Editor.GameProject
         public string[] AvailableScripts
         {
             get => _availableScripts;
-            set
+            private set
             {
                 if (_availableScripts != value)
                 {
@@ -97,25 +95,19 @@ namespace Editor.GameProject
             return Serializer.FromFile<Project>(file);
         }
 
-        public static void Save(Project project)
-        {
-            Serializer.ToFile(project, project.FullPath);
-            Logger.LogAsync(LogLevel.INFO, $"Project saved to {project.FullPath}");
-        }
-
         public Project(string name, string path)
         {
             Name = name;
             Path = path;
 
+            Debug.Assert(File.Exists((Path + Name + Extension).ToLower()));
+
             OnDeserializedAsync(new StreamingContext());
         }
 
-        private static string GetConfigurationName(BuildConfig config) => _buildConfigurationNames[(int)config];
-
         public void Unload()
         {
-            UnloadGameCodeDll();
+            UnloadGameCodeDLL();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
         }
@@ -129,13 +121,19 @@ namespace Editor.GameProject
                 OnPropertyChanged(nameof(Scenes));
             }
 
-            ActiveScene = Scenes.FirstOrDefault(x => x.IsActive);
+            ActiveScene = _scenes.FirstOrDefault(x => x.IsActive);
 
             Debug.Assert(ActiveScene is not null);
 
-            await BuildGameCodeDllAsync(false);
+            await BuildGameCodeDLLAsync(false);
 
             SetCommands();
+        }
+
+        private static void Save(Project project)
+        {
+            Serializer.ToFile(project, project.FullPath);
+            Logger.LogAsync(LogLevel.INFO, $"Project saved to {project.FullPath}");
         }
 
         private void AddScene(string sceneName)
@@ -152,12 +150,12 @@ namespace Editor.GameProject
             _scenes.Remove(scene);
         }
 
-        private async Task BuildGameCodeDllAsync(bool showWindow = true)
+        private async Task BuildGameCodeDLLAsync(bool showWindow = true)
         {
             try
             {
-                UnloadGameCodeDll();
-                await Task.Run(() => VisualStudio.BuildSolution(this, GetConfigurationName(DllBuildConfig), showWindow));
+                UnloadGameCodeDLL();
+                await Task.Run(() => VisualStudio.BuildSolution(this, DLLBuildConfig, showWindow));
 
                 if (VisualStudio.BuildSucceeded) LoadGameCodeDll();
             }
@@ -170,7 +168,7 @@ namespace Editor.GameProject
 
         private void LoadGameCodeDll()
         {
-            var configName = GetConfigurationName(DllBuildConfig);
+            var configName = VisualStudio.GetConfigurationName(DLLBuildConfig);
             var dll = $@"{Path}x64\{configName}\{Name}.dll";
 
             AvailableScripts = [];
@@ -187,7 +185,7 @@ namespace Editor.GameProject
             }
         }
 
-        private void UnloadGameCodeDll()
+        private void UnloadGameCodeDLL()
         {
             ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = false);
 
@@ -197,7 +195,7 @@ namespace Editor.GameProject
 
         private async Task RunGameAsync(bool debug)
         {
-            var config = GetConfigurationName(StandaloneBuildConfig);
+            var config = StandaloneBuildConfig;
 
             await Task.Run(() => VisualStudio.BuildSolution(this, config, debug));
 
@@ -212,7 +210,7 @@ namespace Editor.GameProject
 
         private void SaveToBinary()
         {
-            var config = GetConfigurationName(StandaloneBuildConfig);
+            var config = VisualStudio.GetConfigurationName(StandaloneBuildConfig);
             var bin = $@"{Path}x64\{config}\game.bin";
 
             using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
@@ -265,7 +263,7 @@ namespace Editor.GameProject
             RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
             SaveCommand = new RelayCommand<object>(x => Save(this));
             BuildCommand = new RelayCommand<bool>(
-                async x => await BuildGameCodeDllAsync(x),
+                async x => await BuildGameCodeDLLAsync(x),
                 x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
             );
 

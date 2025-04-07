@@ -30,6 +30,15 @@ public partial class MainWindow : Window
 
     private void OnMainWindowClosing(object sender, CancelEventArgs e)
     {
+        if (DataContext is null)
+        {
+            e.Cancel = true;
+            Application.Current.MainWindow.Hide();
+            OpenProjectBrowserDialog();
+
+            if(DataContext is not null) Application.Current.MainWindow.Show();
+        }
+
         Closing -= OnMainWindowClosing;
         Project.Current?.Unload();
     }
