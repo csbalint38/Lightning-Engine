@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using Editor.Content;
+using System.Runtime.InteropServices;
 
 namespace Editor.DLLs.Descriptors
 {
@@ -11,5 +12,19 @@ namespace Editor.DLLs.Descriptors
         public byte ReverseHandedness = 0;
         public byte ImportEmbededTextures = 1;
         public byte ImportAnimations = 1;
+
+        public void FromContentSettings(Geometry geometry)
+        {
+            var settings = geometry.ImportSettings;
+
+            SmoothingAngle = settings.SmoothingAngle;
+            CalculateNormals = ToByte(settings.CalculateNormals);
+            CalculateTangents = ToByte(settings.CalculateTangents);
+            ReverseHandedness = ToByte(settings.ReverseHandedness);
+            ImportEmbededTextures = ToByte(settings.ImportEmbeddedTextures);
+            ImportAnimations = ToByte(settings.ImportAnimations);
+        }
+
+        private byte ToByte(bool value) => value ? (byte)1 : (byte)0;
     }
 }

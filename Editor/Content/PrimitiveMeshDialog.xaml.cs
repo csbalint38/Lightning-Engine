@@ -34,7 +34,7 @@ namespace Editor.Content
             {
                 new("pack://application:,,,/Resources/PlaneTexture.png"),
                 new("pack://application:,,,/Resources/PlaneTexture.png"),
-                new("pack://application:,,,/Resources/PlaneTexture.png"),
+                new("pack://application:,,,/Resources/SphereUvChecker.png"),
             };
 
             _textures.Clear();
@@ -69,6 +69,7 @@ namespace Editor.Content
 
             var primitiveType = (PrimitiveMeshType)CbPrimitiveType.SelectedItem;
             var info = new PrimitiveInitInfo() { Type = primitiveType };
+            var smoothingAngle = 0;
 
             switch (primitiveType)
             {
@@ -89,6 +90,7 @@ namespace Editor.Content
                         info.Size.X = Value(TbXUvSphere, 0.001f);
                         info.Size.Y = Value(TbYUvSphere, 0.001f);
                         info.Size.Z = Value(TbZUvSphere, 0.001f);
+                        smoothingAngle = (int)SldSmoothingAngle.Value;
                     }
                     break;
                 case PrimitiveMeshType.ICO_SPHERE:
@@ -102,6 +104,7 @@ namespace Editor.Content
             }
 
             var geometry = new Geometry();
+            geometry.ImportSettings.SmoothingAngle = smoothingAngle;
 
             ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
 

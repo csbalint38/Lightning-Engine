@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Smoothing angle support
  - Create UV Sphere 
  - Show textures in Primitive mesh view
  - Create Plane

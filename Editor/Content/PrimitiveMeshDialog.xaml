@@ -175,6 +175,7 @@
                                          DockPanel.Dock="Right"/>
                                 <Slider Minimum="3"
                                         Maximum="64"
+                                        Value="32"
                                         HorizontalAlignment="Stretch"
                                         Interval="1"
                                         IsSnapToTickEnabled="True"
@@ -192,6 +193,7 @@
                                          DockPanel.Dock="Right"/>
                                 <Slider Minimum="2"
                                         Maximum="64"
+                                        Value="16"
                                         HorizontalAlignment="Stretch"
                                         Interval="1"
                                         IsSnapToTickEnabled="True"
@@ -243,6 +245,7 @@
                                          TextChanged="TextBox_TextChanged"
                                          DockPanel.Dock="Right"/>
                             </DockPanel>
+                            
                         </StackPanel>
                     </Border>
                     <Label Content="Size"
@@ -251,19 +254,56 @@
                            Margin="20,-3,0,0"
                            Padding="5,0"/>
                 </Grid>
+                <Grid Margin="0,5">
+                    <Border>
+                        <DockPanel>
+                            <TextBlock Text="Angle"
+                                       Width="40"
+                                       DockPanel.Dock="Left"
+                                       VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding Path=Value, ElementName=SldSmoothingAngle}"
+                                     Width="30"
+                                     DockPanel.Dock="Right"/>
+                            <Slider Minimum="0"
+                                    Maximum="180"
+                                    HorizontalAlignment="Stretch"
+                                    Interval="1"
+                                    IsSnapToTickEnabled="True"
+                                    x:Name="SldSmoothingAngle"
+                                    ValueChanged="Slider_ValueChanged"/>
+                        </DockPanel>
+                    </Border>
+                    <Label Content="Smoothing angle"
+                           VerticalAlignment="Top"
+                           HorizontalAlignment="Left"
+                           Margin="20,-15,0,0"
+                           Padding="5,0"/>
+                </Grid>
                 <Button Content="Create"/>
             </StackPanel>
             <ed:GeometryView DataContext="{Binding MeshRenderer}"
-                             Grid.Column="1" />
+                             Grid.Column="1"/>
             <StackPanel Grid.Column="1"
                         Margin="5"
-                        Orientation="Horizontal"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Left"
                         IsHitTestVisible="False">
-                <TextBlock Text="{Binding MeshRenderer.CameraPosition.X, StringFormat=F5}"/>
-                <TextBlock Text="{Binding MeshRenderer.CameraPosition.Y, StringFormat=F5}" Margin="10,0"/>
-                <TextBlock Text="{Binding MeshRenderer.CameraPosition.Z, StringFormat=F5}"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding MeshRenderer.CameraPosition.X, StringFormat=F5}"
+                           Foreground="Red"/>
+                    <TextBlock Text="{Binding MeshRenderer.CameraPosition.Y, StringFormat=F5}"
+                           Margin="10,0"
+                           Foreground="Green"/>
+                    <TextBlock Text="{Binding MeshRenderer.CameraPosition.Z, StringFormat=F5}"
+                           Foreground="Blue"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding MeshRenderer.Meshes[0].Positions.Count}"
+                           Foreground="Orange"/>
+                    <TextBlock Text="{Binding MeshRenderer.Meshes[0].Indices.Count}"
+                           Margin="10,0"
+                           Foreground="Orange"/>
+                </StackPanel>
             </StackPanel>
         </Grid>
     </DockPanel>

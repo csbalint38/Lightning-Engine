@@ -7,7 +7,7 @@
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:MeshRenderer}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="Crimson"
+    <Grid Background="Transparent"
           MouseLeftButtonDown="Grid_MouseLeftButtonDown"
           MouseMove="Grid_MouseMove"
           MouseLeftButtonUp="Grid_MouseLeftButtonUp"

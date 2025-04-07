@@ -28,6 +28,7 @@
     <None Remove="Resources\CodeTemplates\cpp.txt" />
     <None Remove="Resources\CodeTemplates\h.txt" />
     <None Remove="Resources\PlaneTexture.png" />
+    <None Remove="Resources\SphereUvChecker.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -64,6 +65,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\PlaneTexture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\SphereUvChecker.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

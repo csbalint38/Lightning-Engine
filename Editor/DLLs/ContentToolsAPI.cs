@@ -22,6 +22,7 @@ namespace Editor.DLLs
 
             try
             {
+                sceneData.ImportSettings.FromContentSettings(geometry);
                 CreatePrimitiveMesh(sceneData, info);
 
                 Debug.Assert(sceneData.Data != IntPtr.Zero && sceneData.DataSize > 0);

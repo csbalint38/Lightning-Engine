@@ -10,6 +10,8 @@ namespace Editor.Content
     {
         private readonly List<LODGroup> _lodGroups = [];
 
+        public GeometryImportSettings ImportSettings { get; } = new GeometryImportSettings();
+
         public Geometry() : base(AssetType.MESH) { }
 
         public void FromRawData(byte[] data)
