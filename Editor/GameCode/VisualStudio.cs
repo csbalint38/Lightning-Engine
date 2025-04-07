@@ -12,6 +12,7 @@ namespace Editor.GameCode
     {
         private static readonly string _progId = "VisualStudio.DTE.17.0";
         private static EnvDTE80.DTE2 _vsInstance = null;
+        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
 
         public static bool BuildSucceeded { get; private set; }
         public static bool BuildFinished { get; private set; }
@@ -103,8 +104,10 @@ namespace Editor.GameCode
             {
                 _vsInstance.ExecuteCommand("File.SaveAll");
                 _vsInstance.Solution.Close(true);
-                _vsInstance.Quit();
             }
+
+            _vsInstance?.Quit();
+            _vsInstance = null;
         }
 
         public static bool AddFilesToSolution(string solution, string projectName, string[] files)
@@ -233,6 +236,8 @@ namespace Editor.GameCode
             if (_vsInstance is not null && IsDebugging()) _vsInstance.ExecuteCommand("Debug.StopDebugging");
         }
 
+        public static string GetConfigurationName(BuildConfig config) => _buildConfigurationNames[(int)config];
+
         private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig) =>
             Logger.LogAsync(LogLevel.INFO, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
 
@@ -251,6 +256,11 @@ namespace Editor.GameCode
 
             BuildFinished = true;
             BuildSucceeded = success;
+        }
+
+        private static void CallOnSTAThread(Action action)
+        {
+
         }
     }
 }

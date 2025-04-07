@@ -16,8 +16,6 @@ namespace Editor.GameProject
     [DataContract]
     internal class Project : ViewModelBase
     {
-        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
-
         [DataMember(Name = "Scenes")]
         private ObservableCollection<Scene> _scenes = [];
 
@@ -110,8 +108,6 @@ namespace Editor.GameProject
 
             OnDeserializedAsync(new StreamingContext());
         }
-
-        private static string GetConfigurationName(BuildConfig config) => _buildConfigurationNames[(int)config];
 
         public void Unload()
         {
