@@ -17,6 +17,17 @@
         <sys:Boolean x:Key="True">True</sys:Boolean>
         <sys:Boolean x:Key="False">False</sys:Boolean>
     </UserControl.Resources>
+    <UserControl.CommandBindings>
+        <CommandBinding x:Name="MINewProject"
+                        Command="ApplicationCommands.New"
+                        Executed="MINewProject_Executed"/>
+        <CommandBinding x:Name="MIOpenProject"
+                        Command="ApplicationCommands.Open"
+                        Executed="MIOpenProject_Executed"/>
+        <CommandBinding x:Name="MIExit"
+                        Command="ApplicationCommands.Close"
+                        Executed="MIExit_Executed"/>
+    </UserControl.CommandBindings>
     <UserControl.InputBindings>
         <KeyBinding Command="{Binding UndoCommand}"
                     Key="Z"
@@ -48,10 +59,28 @@
     </UserControl.InputBindings>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <Menu>
+            <MenuItem Header="File">
+                <MenuItem Header="New Project"
+                          Command="ApplicationCommands.New"/>
+                <MenuItem Header="Open Project"
+                          Command="ApplicationCommands.Open"/>
+                <Separator/>
+                <MenuItem Header="SaveProject"
+                          Command="{Binding SaveCommand}"/>
+                <Separator/>
+                <MenuItem Header="Exit"
+                          Command="ApplicationCommands.Close"/>
+            </MenuItem>
+            <MenuItem Header="View"/>
+            <MenuItem Header="Window"/>
+        </Menu>
+        <StackPanel Orientation="Horizontal"
+                    Grid.Row="1">
             <Button Command="{Binding UndoCommand}">
                 <StackPanel>
                     <materialDesign:PackIcon Kind="Undo"
@@ -100,7 +129,7 @@
                     Click="BtnPrimitiveMesh_Click"
                     Margin="10, 0"/>
         </StackPanel>
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="Auto" />

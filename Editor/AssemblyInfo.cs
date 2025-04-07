@@ -9,4 +9,4 @@ using System.Windows;
                                                 // app, or any theme specific resource dictionaries)
 )]
 
-// ALSO BLUE: 26.1 26.3
+// ALSO BLUE: 26.1 26.3 36

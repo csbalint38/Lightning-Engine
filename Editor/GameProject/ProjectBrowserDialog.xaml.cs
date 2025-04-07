@@ -7,6 +7,8 @@ namespace Editor.GameProject
     /// </summary>
     public partial class ProjectBrowserDialog : Window
     {
+        public static bool GoToNewProjectTab { get; set; }
+
         private bool _isOpenProject = true;
 
         public ProjectBrowserDialog()
@@ -19,11 +21,14 @@ namespace Editor.GameProject
         {
             Loaded -= OnProjectBrowserDialogOpened;
 
-            if (!OpenProject.Projects.Any())
+            if (!OpenProject.Projects.Any() || GoToNewProjectTab)
             {
+                if (!GoToNewProjectTab) BtnToggleOpenNew.IsEnabled = false;
+                
                 BtnToggleOpenNew_Click(BtnToggleOpenNew, new RoutedEventArgs());
-                BtnToggleOpenNew.IsEnabled = false;
             }
+
+            GoToNewProjectTab = false;
         }
 
         private void BtnToggleOpenNew_Click(object sender, RoutedEventArgs e)
