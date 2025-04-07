@@ -2,6 +2,9 @@
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
 using Editor.Editors;
+using Editor.GameProject;
+using Microsoft.Win32;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -128,6 +131,26 @@ namespace Editor.Content
             var vm = DataContext as GeometryEditor;
 
             foreach (var mesh in vm.MeshRenderer.Meshes) mesh.Diffuse = brush;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog()
+            {
+                InitialDirectory = Project.Current.ContentPath,
+                Filter = "Asset file (*.lngasset)|*.lngasset",
+            };
+
+            if(dialog.ShowDialog() == true)
+            {
+                Debug.Assert(!string.IsNullOrEmpty(dialog.FileName));
+
+                var asset = (DataContext as IAssetEditor).Asset;
+
+                Debug.Assert(asset is not null);
+
+                asset.Save(dialog.FileName);
+            }
         }
     }
 }

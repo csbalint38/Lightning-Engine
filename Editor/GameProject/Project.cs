@@ -25,7 +25,7 @@ namespace Editor.GameProject
         private int _buildConfig;
         private string[] _availableScripts;
 
-        public static readonly string Extension = ".lightning";
+        public static readonly string Extension = ".lng";
         public static Project Current => Application.Current.MainWindow.DataContext as Project; // This should be nullable
         public static UndoRedo UndoRedo { get; } = new UndoRedo();
 
@@ -36,6 +36,7 @@ namespace Editor.GameProject
         public string Path { get; private set; }
         public string FullPath => $@"{Path}{Name}{Extension}";
         public string Solution => $@"{Path}{Name}.sln";
+        public string ContentPath => $@"{Path}Content\";
         public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
         public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
         public BuildConfig DllBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;

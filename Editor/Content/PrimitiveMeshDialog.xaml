@@ -147,7 +147,7 @@
                            Margin="20,-3,0,0"
                            Padding="5,0"/>
                 </Grid>
-                <Button Content="Create"/>
+                <Button Content="Create" Click="Button_Click"/>
             </StackPanel>
             <StackPanel>
                 <StackPanel.Style>
@@ -245,7 +245,6 @@
                                          TextChanged="TextBox_TextChanged"
                                          DockPanel.Dock="Right"/>
                             </DockPanel>
-                            
                         </StackPanel>
                     </Border>
                     <Label Content="Size"
@@ -279,7 +278,7 @@
                            Margin="20,-15,0,0"
                            Padding="5,0"/>
                 </Grid>
-                <Button Content="Create"/>
+                <Button Content="Create" Click="Button_Click"/>
             </StackPanel>
             <ed:GeometryView DataContext="{Binding MeshRenderer}"
                              Grid.Column="1"/>

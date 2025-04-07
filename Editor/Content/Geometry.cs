@@ -60,6 +60,55 @@ namespace Editor.Content
             return _lodGroups.Any() ? _lodGroups[lodGroup] : null;
         }
 
+        public override IEnumerable<string> Save(string file)
+        {
+            Debug.Assert(_lodGroups.Any());
+            
+            var savedFiles = new List<string>();
+
+            if(!_lodGroups.Any()) return savedFiles;
+
+            var path = Path.GetDirectoryName(file) + Path.DirectorySeparatorChar;
+            var fileName = Path.GetFileNameWithoutExtension(file);
+
+            try
+            {
+                foreach(var lodGroup in _lodGroups)
+                {
+                    Debug.Assert(lodGroup.LODs.Any());
+
+                    var meshFileName = ContentHelper.SanitizeFileName(path + fileName + "_" + lodGroup.LODs[0].Name + AssetFileExtension);
+                    Guid = Guid.NewGuid();
+                    byte[] data = null;
+
+                    using(var writer = new BinaryWriter(new MemoryStream()))
+                    {
+                        writer.Write(lodGroup.Name);
+                        writer.Write(lodGroup.LODs.Count);
+
+                        var hashes = new List<byte>();
+
+                        foreach(var lod in lodGroup.LODs)
+                        {
+                            LODToBinary(lod, writer, out var hash);
+                            hashes.AddRange(hash);
+                        }
+
+                        Hash = ContentHelper.ComputeHash([.. hashes]);
+                        data = (writer.BaseStream as MemoryStream).ToArray();
+                        // Icon = GenerateIcon(lodGroup.LODs[0]);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to save Geometry to {file}");
+            }
+
+            return savedFiles;
+        }
+
         private static List<MeshLOD> ReadMeshLODs(int numMeshes, BinaryReader reader)
         {
             var lodIds = new List<int>();
@@ -116,6 +165,32 @@ namespace Editor.Content
             }
 
             lod.Meshes.Add(mesh);
+        }
+
+        private void LODToBinary(MeshLOD lod, BinaryWriter writer, out byte[] hash)
+        {
+            writer.Write(lod.Name);
+            writer.Write(lod.LODThreshold);
+            writer.Write(lod.Meshes.Count);
+
+            var meshDataBegin = writer.BaseStream.Position;
+
+            foreach (var mesh in lod.Meshes)
+            {
+                writer.Write(mesh.VertexSize);
+                writer.Write(mesh.VertexCount);
+                writer.Write(mesh.IndexSize);
+                writer.Write(mesh.IndexCount);
+                writer.Write(mesh.Verticies);
+                writer.Write(mesh.Indicies);
+            }
+
+            var meshDataSize = writer.BaseStream.Position - meshDataBegin;
+
+            Debug.Assert(meshDataSize > 0);
+
+            var buffer = (writer.BaseStream as MemoryStream).ToArray();
+            hash = ContentHelper.ComputeHash(buffer, (int)meshDataBegin, (int)meshDataSize);
         }
     }
 }
