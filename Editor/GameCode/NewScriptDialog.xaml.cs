@@ -139,17 +139,14 @@ namespace Editor.GameCode
 
             string[] files = [cpp, h];
 
-            for (int i = 0; i < 3; ++i)
-            {
-                if (!VisualStudio.AddFilesToSolution(solution, projectName, files)) Thread.Sleep(1000);
-                else break;
-            }
+            VisualStudio.AddFilesToSolution(solution, projectName, files);
         }
 
         private static string GetNamespaceFromProjectName()
         {
-            var projectName = Project.Current.Name;
-            projectName = projectName.ToLower().Replace(" ", "_");
+            var projectName = Project.Current.Name.Trim().ToLower();
+
+            if (string.IsNullOrEmpty(projectName)) return string.Empty;
 
             return projectName;
         }

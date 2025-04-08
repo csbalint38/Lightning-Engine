@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -26,6 +27,20 @@ namespace Editor.Utilities
             }
 
             return null;
+        }
+
+        public static bool IsDirectory(string path)
+        {
+            try
+            {
+                return File.GetAttributes(path).HasFlag(FileAttributes.Directory);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+            return false;
         }
     }
 }

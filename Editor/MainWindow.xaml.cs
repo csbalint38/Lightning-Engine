@@ -1,6 +1,8 @@
-﻿using Editor.GameProject;
+﻿using Editor.Content;
+using Editor.GameProject;
 using Editor.Utilities;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 
@@ -53,7 +55,13 @@ public partial class MainWindow : Window
         else
         {
             Project.Current?.Unload();
-            DataContext = projectBrowser.DataContext;
+
+            var project = projectBrowser.DataContext as Project;
+
+            Debug.Assert(project is not null);
+
+            AssetRegistry.Reset(project.ContentPath);
+            DataContext = project;
         }
     }
 
