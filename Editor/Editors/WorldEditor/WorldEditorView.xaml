@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
              xmlns:common="clr-namespace:Editor.Common"
+             xmlns:content="clr-namespace:Editor.Content"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:gameproject="clr-namespace:Editor.GameProject"
@@ -175,14 +176,22 @@
                                              Grid.Row="1"
                                              Margin="0,5,0,0"/>
                 </Grid>
-                <TabControl Grid.Row="1">
-                    <TabItem Header="History">
-                        <local:UndoRedoView DataContext="{Binding UndoRedo}"/>
-                    </TabItem>
-                    <TabItem Header="Console">
-                        <common:LoggerView/>
-                    </TabItem>
-                </TabControl>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <content:ContentBrowserView/>
+                    <GridSplitter Grid.Column="1"/>
+                    <TabControl Grid.Column="1">
+                        <TabItem Header="History">
+                            <local:UndoRedoView DataContext="{Binding UndoRedo}"/>
+                        </TabItem>
+                        <TabItem Header="Console">
+                            <common:LoggerView/>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
             </Grid>
             <GridSplitter Grid.Column="1"
                           Width="5"

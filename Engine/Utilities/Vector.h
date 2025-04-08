@@ -193,8 +193,15 @@ namespace lightning::util {
 
 			[[nodiscard]] constexpr T* begin() { return std::addressof(_data[0]); }
 			[[nodiscard]] constexpr const T* begin() const { return std::addressof(_data[0]); }
-			[[nodiscard]] constexpr T* end() { return std::addressof(_data[_size]); }
-			[[nodiscard]] constexpr const T* end() const { return std::addressof(_data[_size]); }
+
+			[[nodiscard]] constexpr T* end() {
+				assert(!(data == nullptr && _size > 0));
+				return std::addressof(_data[_size]);
+			}
+			[[nodiscard]] constexpr const T* end() const {
+				assert(!(data == nullptr && _size > 0));
+				return std::addressof(_data[_size]);
+			}
 
 			~vector() {
 				destroy();
