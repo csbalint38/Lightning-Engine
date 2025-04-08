@@ -12,7 +12,7 @@ namespace Editor.Components
     [DataContract]
     [KnownType(typeof(Transform))]
     [KnownType(typeof(Script))]
-    class Entity : ViewModelBase
+    public class Entity : ViewModelBase
     {
         private int _entityId = Id.InvalidId;
         private bool _isActive;
