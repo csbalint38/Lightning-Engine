@@ -4,6 +4,7 @@ using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Editor.GameProject
 {
@@ -165,7 +166,7 @@ namespace Editor.GameProject
             Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "SolutionTemplate.txt")));
             Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "ProjectTemplate.txt")));
 
-            var engineApiPath = Path.Combine(Constants.EnginePath, @"Engine\EngineAPI\");
+            var engineApiPath = @"$(LIGHTNING_ENGINE)Engine\EngineAPI\";
 
             Debug.Assert(Directory.Exists(engineApiPath));
 
@@ -196,9 +197,11 @@ namespace Editor.GameProject
             path += $@"{ProjectName}\";
             IsValid = false;
 
+            var nameRegex = new Regex(@"[^A-Za-z0-9_]");
+
             if (string.IsNullOrWhiteSpace(ProjectName.Trim()))
                 ErrorMessage = "Project name cannot be empty.";
-            else if (ProjectName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+            else if (nameRegex.IsMatch(ProjectName))
                 ErrorMessage = "Project name contains invalid characters.";
             else if (string.IsNullOrWhiteSpace(ProjectPath.Trim()))
                 ErrorMessage = "Project path cannot be empty.";
