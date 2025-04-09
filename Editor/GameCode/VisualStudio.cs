@@ -15,7 +15,6 @@ namespace Editor.GameCode
         private static readonly ManualResetEventSlim _resetEvent = new(false);
         private static readonly object _lock = new();
         private static EnvDTE80.DTE2 _vsInstance = null;
-        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
 
         public static bool BuildSucceeded { get; private set; }
         public static bool BuildFinished { get; private set; }
@@ -356,11 +355,6 @@ namespace Editor.GameCode
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             thread.Join();
-        }
-
-        private static void CallOnSTAThread(Action action)
-        {
-
         }
     }
 }
