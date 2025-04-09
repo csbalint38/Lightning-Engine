@@ -27,6 +27,8 @@
   <ItemGroup>
     <None Remove="Resources\CodeTemplates\cpp.txt" />
     <None Remove="Resources\CodeTemplates\h.txt" />
+    <None Remove="Resources\FolderBig.png" />
+    <None Remove="Resources\FolderSmall.png" />
     <None Remove="Resources\PlaneTexture.png" />
     <None Remove="Resources\SphereUvChecker.png" />
   </ItemGroup>
@@ -64,6 +66,8 @@
     <Content Include="Resources\CodeTemplates\h.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Resources\FolderBig.png" />
+    <Resource Include="Resources\FolderSmall.png" />
     <Resource Include="Resources\PlaneTexture.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>

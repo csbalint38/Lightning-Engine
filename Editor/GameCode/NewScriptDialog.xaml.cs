@@ -146,11 +146,9 @@ namespace Editor.GameCode
 
         private static string GetNamespaceFromProjectName()
         {
-            var projectName = Project.Current.Name.Trim();
+            var projectName = Project.Current.Name.Trim().ToLower();
 
             if (string.IsNullOrEmpty(projectName)) return string.Empty;
-
-            projectName = Regex.Replace(projectName, @"[^A-Za-z0-9_]", "").ToLower();
 
             return projectName;
         }

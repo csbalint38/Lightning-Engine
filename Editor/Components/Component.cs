@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 namespace Editor.Components
 {
     [DataContract]
-    abstract class Component : ViewModelBase
+    abstract public class Component : ViewModelBase
     {
         [DataMember]
         public Entity ParentEntity { get; private set; }
