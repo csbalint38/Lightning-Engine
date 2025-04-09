@@ -9,7 +9,7 @@ namespace Editor.Content
     {
         private string _fullPath;
 
-        public const string AssetFileExtension = ".lasset";
+        public const string AssetFileExtension = ".lngasset";
         public AssetType Type { get; private set; }
         public byte[] Icon { get; protected set; }
         public string SourcePath { get; protected set; }

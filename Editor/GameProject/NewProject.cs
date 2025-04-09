@@ -180,7 +180,7 @@ namespace Editor.GameProject
             File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $"{_0}.sln")), solution);
 
             _2 = engineApiPath;
-            var _3 = Constants.EnginePath;
+            var _3 = "$(LIGHTNING_ENGINE)";
 
             var project = File.ReadAllText(Path.Combine(template.TemplatePath, "ProjectTemplate.txt"));
             project = string.Format(project, _0, _1, _2, _3);

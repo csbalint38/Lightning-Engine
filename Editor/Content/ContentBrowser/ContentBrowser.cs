@@ -1,11 +1,11 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.GameProject;
 using Editor.Utilities;
 using Editor.Utilities.Descriptors;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography.Xml;
 using System.Windows;
 
 namespace Editor.Content.ContentBrowser
@@ -120,6 +120,61 @@ namespace Editor.Content.ContentBrowser
 
             return folderContent;
         }
+
+        private static void SaveInfoCache(string file)
+        {
+            lock(_lock)
+            {
+                using var writer = new BinaryWriter(File.Open(file, FileMode.Create, FileAccess.Write));
+
+                writer.Write(_contentInfoCache.Keys.Count);
+
+                foreach (var key in _contentInfoCache.Keys) 
+                {
+                    var info = _contentInfoCache[key];
+
+                    writer.Write(key);
+                    writer.Write(info.DateModified.ToBinary());
+                    writer.Write(info.Icon.Length);
+                    writer.Write(info.Icon);
+                }
+            }
+        }
+
+        private static void LoadInfoCache(string file)
+        {
+            if (!File.Exists(file)) return;
+
+            try
+            {
+                lock(_lock)
+                {
+                    using var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read));
+                    var numEntries = reader.ReadInt32();
+
+                    _contentInfoCache.Clear();
+
+                    for(int i = 0; i < numEntries; ++i)
+                    {
+                        var assetFile = reader.ReadString();
+                        var date = DateTime.FromBinary(reader.ReadInt64());
+                        var iconSize = reader.ReadInt32();
+                        var icon = reader.ReadBytes(iconSize);
+
+                        if(File.Exists(assetFile))
+                        {
+                            _contentInfoCache[assetFile] = new ContentInfo(assetFile, icon, null, date);
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Logger.LogAsync(LogLevel.WARNING, "Failed to read Content Browser cache file.");
+                _contentInfoCache.Clear();
+            }
+        } 
 
         private async void OnContentModified(object sender, FileSystemEventArgs e)
         {
