@@ -1,4 +1,5 @@
 ﻿using Editor.Content;
+using Editor.Content.ContentBrowser;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.ComponentModel;
@@ -60,7 +61,7 @@ public partial class MainWindow : Window
 
             Debug.Assert(project is not null);
 
-            AssetRegistry.Reset(project.ContentPath);
+            ContentWatcher.Reset(project.ContentPath, project.Path);
             DataContext = project;
         }
     }

@@ -25,7 +25,7 @@ namespace Editor.Content.ContentBrowser
             DateModified = lastModified ?? info.LastWriteTime;
             Size = IsDirectory ? (long?)null : info.Length;
             Icon = icon;
-            IconSmall = IconSmall ?? icon;
+            IconSmall = smallIcon ?? icon;
             FullPath = fullPath;
         }
     }

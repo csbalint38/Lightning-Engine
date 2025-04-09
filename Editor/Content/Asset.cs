@@ -40,6 +40,7 @@ namespace Editor.Content
             {
                 using var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read));
                 var info = GetAssetInfo(reader);
+                info.FullPath = file;
 
                 return info;
             }

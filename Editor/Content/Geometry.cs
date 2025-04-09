@@ -81,7 +81,7 @@ namespace Editor.Content
                 {
                     Debug.Assert(lodGroup.LODs.Any());
 
-                    var meshFileName = ContentHelper.SanitizeFileName(path + fileName + "_" + lodGroup.LODs[0].Name + AssetFileExtension);
+                    var meshFileName = ContentHelper.SanitizeFileName(path + fileName + AssetFileExtension);
                     Guid = Guid.NewGuid();
                     byte[] data = null;
 

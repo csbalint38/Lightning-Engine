@@ -168,7 +168,7 @@ namespace Editor.GameProject
 
             var engineApiPath = @"$(LIGHTNING_ENGINE)Engine\EngineAPI\";
 
-            Debug.Assert(Directory.Exists(engineApiPath));
+            //Debug.Assert(Directory.Exists(engineApiPath));
 
             var _0 = ProjectName;
             var _1 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
