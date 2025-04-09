@@ -1,5 +1,8 @@
 ﻿using Editor.Common.Enums;
+using Editor.Content.ContentBrowser;
+using Editor.DLLs;
 using Editor.Editors;
+using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
@@ -13,6 +16,7 @@ namespace Editor.Content
     public class Geometry : Asset
     {
         private readonly List<LODGroup> _lodGroups = [];
+        private readonly object _lock = new();
 
         public GeometryImportSettings ImportSettings { get; } = new GeometryImportSettings();
 
@@ -125,6 +129,30 @@ namespace Editor.Content
             return savedFiles;
         }
 
+        public override void Import(string file)
+        {
+            Debug.Assert(File.Exists(file));
+            Debug.Assert(!string.IsNullOrEmpty(FullPath));
+
+            var ext = Path.GetExtension(file).ToLower();
+
+            SourcePath = file;
+
+            try
+            {
+                if (ext == ".fbx") ImportFbx(file);
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+
+                var msg = $"Failed to read {file} for import";
+
+                Debug.WriteLine(msg);
+                Logger.LogAsync(LogLevel.ERROR, msg);
+            }
+        }
+
         private static List<MeshLOD> ReadMeshLODs(int numMeshes, BinaryReader reader)
         {
             var lodIds = new List<int>();
@@ -211,24 +239,43 @@ namespace Editor.Content
 
         private byte[] GenerateIcon(MeshLOD lod)
         {
-            var width = 90 * 4; // width * sampling
+            var width = ContentInfo.IconWidth * 4;
 
+            using var memStream = new MemoryStream();
             BitmapSource bmp = null;
 
             Application.Current.Dispatcher.Invoke(() =>
             {
                 bmp = GeometryView.RenderToBitmap(new MeshRenderer(lod, null), width, width);
                 bmp = new TransformedBitmap(bmp, new ScaleTransform(0.25, 0.25, 0.25, 0.25));
+
+                memStream.SetLength(0);
+
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bmp));
+                encoder.Save(memStream);
             });
 
-            using var memStream = new MemoryStream();
-            memStream.SetLength(0);
-
-            var encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bmp));
-            encoder.Save(memStream);
-
             return memStream.ToArray();
+        }
+
+        private void ImportFbx(string file)
+        {
+            Logger.LogAsync(LogLevel.INFO, $"Importing FBX file {file}");
+
+            var tempPath = Application.Current.Dispatcher.Invoke(() => Project.Current.TempFolder);
+
+            if (string.IsNullOrEmpty(tempPath)) return;
+
+            lock(_lock)
+            {
+                if(!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+            }
+
+            var tempFile = $"{tempPath}{RandomString.GetRandomString()}.fbx";
+
+            File.Copy(file, tempFile, true);
+            ContentToolsAPI.ImportFbx(tempFile, this);
         }
     }
 }

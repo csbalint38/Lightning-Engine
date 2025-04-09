@@ -1,6 +1,8 @@
 ﻿using Editor.GameProject;
+using Editor.Utilities;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -17,6 +19,8 @@ namespace Editor.Content
             InitializeComponent();
 
             Loaded += OnContentBrowserLoaded;
+
+            AllowDrop = true;
         }
 
         private void OnContentBrowserLoaded(object sender, RoutedEventArgs e)
@@ -51,6 +55,22 @@ namespace Editor.Content
             var vm = sender as ContentBrowser.ContentBrowser;
 
             if(e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder)) { }
+        }
+
+        private void LVFolders_Drop(object sender, DragEventArgs e)
+        {
+            var vm = DataContext as ContentBrowser.ContentBrowser;
+
+            if(vm.SelectedFolder is not null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+                if(files?.Length > 0 && Directory.Exists(vm.SelectedFolder))
+                {
+                    _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolder);
+                    e.Handled = true;
+                }
+            }
         }
     }
 }

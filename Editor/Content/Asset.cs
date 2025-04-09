@@ -97,6 +97,7 @@ namespace Editor.Content
         }
 
         public abstract IEnumerable<string> Save(string file);
+        public abstract void Import(string file);
 
         private static AssetInfo GetAssetInfo(BinaryReader reader)
         {

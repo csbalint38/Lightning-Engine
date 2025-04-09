@@ -6,7 +6,7 @@ namespace Editor.Content.ContentBrowser
 {
     public class ContentInfo
     {
-        public static int IconWidth = 90;
+        public static int IconWidth => 90;
         public byte[] Icon { get; }
         public byte[] IconSmall { get; }
         public string FullPath { get; }

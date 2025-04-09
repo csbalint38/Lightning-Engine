@@ -35,6 +35,7 @@ namespace Editor.GameProject
         public string FullPath => $@"{Path}{Name}{Extension}";
         public string Solution => $@"{Path}{Name}.sln";
         public string ContentPath => $@"{Path}Assets\";
+        public string TempFolder => $@"{Path}.Lightning\Temp\";
         public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
         public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
         public BuildConfig DLLBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
@@ -110,6 +111,7 @@ namespace Editor.GameProject
             UnloadGameCodeDLL();
             VisualStudio.CloseVisualStudio();
             UndoRedo.Reset();
+            DeleteTempFolder();
         }
 
         [OnDeserialized]
@@ -288,6 +290,11 @@ namespace Editor.GameProject
             OnPropertyChanged(nameof(DebugStartCommand));
             OnPropertyChanged(nameof(DebugStartWithoutDebuggingCommand));
             OnPropertyChanged(nameof(DebugStopCommand));
+        }
+
+        private void DeleteTempFolder()
+        {
+            if(Directory.Exists(TempFolder)) Directory.Delete(TempFolder, true);
         }
     }
 }
