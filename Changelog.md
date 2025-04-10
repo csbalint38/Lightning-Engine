@@ -7,6 +7,11 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Drag-and-drop importer
+ - Import FBX files
+ - Content browser
+ - Asset registry
+ - Dynamic switch between projects
  - Saving Geometry assets
  - Smoothing angle support
  - Create UV Sphere 

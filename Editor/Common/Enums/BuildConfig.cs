@@ -1,6 +1,6 @@
 ﻿namespace Editor.Common.Enums
 {
-    enum BuildConfig
+    public enum BuildConfig
     {
         DEBUG,
         DEBUG_EDITOR,

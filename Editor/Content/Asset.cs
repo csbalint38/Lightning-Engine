@@ -9,7 +9,7 @@ namespace Editor.Content
     {
         private string _fullPath;
 
-        public const string AssetFileExtension = ".lasset";
+        public const string AssetFileExtension = ".lngasset";
         public AssetType Type { get; private set; }
         public byte[] Icon { get; protected set; }
         public string SourcePath { get; protected set; }
@@ -40,6 +40,7 @@ namespace Editor.Content
             {
                 using var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read));
                 var info = GetAssetInfo(reader);
+                info.FullPath = file;
 
                 return info;
             }
@@ -96,6 +97,7 @@ namespace Editor.Content
         }
 
         public abstract IEnumerable<string> Save(string file);
+        public abstract void Import(string file);
 
         private static AssetInfo GetAssetInfo(BinaryReader reader)
         {

@@ -195,11 +195,11 @@ namespace lightning::util {
 			[[nodiscard]] constexpr const T* begin() const { return std::addressof(_data[0]); }
 
 			[[nodiscard]] constexpr T* end() {
-				assert(!(data == nullptr && _size > 0));
+				assert(!(_data == nullptr && _size > 0));
 				return std::addressof(_data[_size]);
 			}
 			[[nodiscard]] constexpr const T* end() const {
-				assert(!(data == nullptr && _size > 0));
+				assert(!(_data == nullptr && _size > 0));
 				return std::addressof(_data[_size]);
 			}
 

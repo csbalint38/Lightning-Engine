@@ -1,9 +1,9 @@
-﻿using Editor.Utilities;
-using Editor.Utilities.Descriptors;
+﻿using Editor.Content.ContentBrowser;
+using Editor.Content.ContentBrowser.Descriptors;
+using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 
 namespace Editor.Content
 {
@@ -13,25 +13,6 @@ namespace Editor.Content
         private static readonly ObservableCollection<AssetInfo> _assets = [];
         private static readonly DelayEventTimer _refreshTimer = new(TimeSpan.FromMilliseconds(250));
 
-        private static readonly FileSystemWatcher _contentWatcher = new FileSystemWatcher()
-        {
-            IncludeSubdirectories = true,
-            Filter = string.Empty,
-            NotifyFilter = NotifyFilters.CreationTime |
-                NotifyFilters.DirectoryName |
-                NotifyFilters.FileName |
-                NotifyFilters.LastWrite
-        };
-
-        static AssetRegistry()
-        {
-            _contentWatcher.Changed += OnContentModifiedAsync;
-            _contentWatcher.Created += OnContentModifiedAsync;
-            _contentWatcher.Deleted += OnContentModifiedAsync;
-            _contentWatcher.Renamed += OnContentModifiedAsync;
-            _refreshTimer.Triggered += Refresh;
-        }
-
         public static AssetInfo GetAssetInfo(string file) => _assetDict.ContainsKey(file) ? _assetDict[file] : null;
         public static AssetInfo GetAssetInfo(Guid guid) => _assets.FirstOrDefault(x => x.Guid == guid);
 
@@ -39,21 +20,16 @@ namespace Editor.Content
 
         public static void Reset(string contentFolder)
         {
-            Clear();
+            ContentWatcher.ContentModified -= OnContentModified;
+
+            _assetDict.Clear();
+            _assets.Clear();
 
             Debug.Assert(Directory.Exists(contentFolder));
 
             RegisterAllAssets(contentFolder);
 
-            _contentWatcher.Path = contentFolder;
-            _contentWatcher.EnableRaisingEvents = true;
-        }
-
-        public static void Clear()
-        {
-            _contentWatcher.EnableRaisingEvents = false;
-            _assetDict.Clear();
-            _assets.Clear();
+            ContentWatcher.ContentModified += OnContentModified;
         }
 
         private static void RegisterAllAssets(string path)
@@ -95,33 +71,18 @@ namespace Editor.Content
             }
         }
 
-        private static async void OnContentModifiedAsync(object sender, FileSystemEventArgs e)
+        private static void OnContentModified(object sender, ContentModifiedEventArgs e)
         {
-            if (Path.GetExtension(e.FullPath) != Asset.AssetFileExtension) return;
-
-            await Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            if (ContentHelper.IsDirectory(e.FullPath))
             {
-                _refreshTimer.Trigger(e);
-            }));
-        }
-
-        private static void Refresh(object sender, DelayEventTimerArgs e)
-        {
-            foreach(var item in e.Data)
-            {
-                if (item is not FileSystemEventArgs eventArgs) continue;
-
-                if (eventArgs.ChangeType == WatcherChangeTypes.Deleted) UnregisterAsset(eventArgs.FullPath);
-                else
-                {
-                    RegisterAsset(eventArgs.FullPath);
-
-                    if(eventArgs.ChangeType == WatcherChangeTypes.Renamed)
-                    {
-                        _assetDict.Keys.Where(key => !File.Exists(key)).ToList().ForEach(file => UnregisterAsset(file));
-                    }
-                }
+                RegisterAllAssets(e.FullPath);
             }
+            else if (File.Exists(e.FullPath))
+            {
+                RegisterAsset(e.FullPath);
+            }
+
+            _assets.Where(x => !File.Exists(x.FullPath)).ToList().ForEach(x => UnregisterAsset(x.FullPath));
         }
 
         private static void UnregisterAsset(string file)

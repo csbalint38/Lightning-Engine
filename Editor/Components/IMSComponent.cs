@@ -1,4 +1,4 @@
 ﻿namespace Editor.Components
 {
-    interface IMSComponent { }
+    public interface IMSComponent { }
 }

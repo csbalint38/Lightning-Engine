@@ -9,7 +9,7 @@ using System.Windows.Input;
 namespace Editor.GameProject
 {
     [DataContract]
-    internal class Scene : ViewModelBase
+    public class Scene : ViewModelBase
     {
         private string _name;
         private bool _isActive;

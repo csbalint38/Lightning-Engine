@@ -11,8 +11,10 @@ namespace Editor.GameCode
     static class VisualStudio
     {
         private static readonly string _progId = "VisualStudio.DTE.17.0";
-        private static EnvDTE80.DTE2 _vsInstance = null;
         private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
+        private static readonly ManualResetEventSlim _resetEvent = new(false);
+        private static readonly object _lock = new();
+        private static EnvDTE80.DTE2 _vsInstance = null;
 
         public static bool BuildSucceeded { get; private set; }
         public static bool BuildFinished { get; private set; }
@@ -23,7 +25,65 @@ namespace Editor.GameCode
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
+        public static string GetConfigurationName(BuildConfig config) => _buildConfigurationNames[(int)config];
+
         public static void OpenVisualStudio(string solutionPath)
+        {
+            lock (_lock)
+            {
+                OpenVisualStudioInternal(solutionPath);
+            }
+        }
+
+        public static void CloseVisualStudio()
+        {
+            lock (_lock)
+            {
+                CloseVisualStudioInternal();
+            }
+        }
+
+        public static bool AddFilesToSolution(string solution, string projectName, string[] files)
+        {
+            lock (_lock)
+            {
+                return AddFilesToSolutionInternal(solution, projectName, files);
+            }
+        }
+
+        public static bool IsDebugging()
+        {
+            lock (_lock)
+            {
+                return IsDebuggingInternal();
+            }
+        }
+
+        public static void BuildSolution(Project project, BuildConfig buildConfig, bool showWindow = true)
+        {
+            lock (_lock)
+            {
+                BuildSolutionInternal(project, buildConfig, showWindow);
+            }
+        }
+
+        public static void Run(Project project, BuildConfig buildConfig, bool debug)
+        {
+            lock (_lock)
+            {
+                RunInternal(project, buildConfig, debug);
+            }
+        }
+
+        public static void Stop()
+        {
+            lock (_lock)
+            {
+                StopInternal();
+            }
+        }
+
+        private static void OpenVisualStudioInternal(string solutionPath)
         {
             IRunningObjectTable rot = null;
             IEnumMoniker monikerTable = null;
@@ -68,7 +128,13 @@ namespace Editor.GameCode
                             }
 
                             EnvDTE80.DTE2 dte = obj as EnvDTE80.DTE2;
-                            var solutionName = dte.Solution.FullName;
+
+                            var solutionName = string.Empty;
+
+                            CallOnSTAThread(() =>
+                            {
+                                solutionName = dte.Solution.FullName;
+                            });
 
                             if (solutionName == solutionPath)
                             {
@@ -98,49 +164,55 @@ namespace Editor.GameCode
             }
         }
 
-        public static void CloseVisualStudio()
+        private static void CloseVisualStudioInternal()
         {
-            if (_vsInstance?.Solution.IsOpen == true)
+            CallOnSTAThread(() =>
             {
-                _vsInstance.ExecuteCommand("File.SaveAll");
-                _vsInstance.Solution.Close(true);
-            }
+                if (_vsInstance?.Solution.IsOpen == true)
+                {
+                    _vsInstance.ExecuteCommand("File.SaveAll");
+                    _vsInstance.Solution.Close(true);
+                }
 
-            _vsInstance?.Quit();
-            _vsInstance = null;
+                _vsInstance?.Quit();
+                _vsInstance = null;
+            });
         }
 
-        public static bool AddFilesToSolution(string solution, string projectName, string[] files)
+        private static bool AddFilesToSolutionInternal(string solution, string projectName, string[] files)
         {
-            OpenVisualStudio(solution);
+            OpenVisualStudioInternal(solution);
 
             try
             {
                 if (_vsInstance is not null)
                 {
-                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
-                    else _vsInstance.ExecuteCommand("File.SaveAll");
-
-                    foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
+                    CallOnSTAThread(() => 
                     {
-                        if (project.UniqueName.Contains(projectName))
+                        if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
+                        else _vsInstance.ExecuteCommand("File.SaveAll");
+
+                        foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
                         {
-                            foreach (var file in files)
+                            if (project.UniqueName.Contains(projectName))
                             {
-                                project.ProjectItems.AddFromFile(file);
+                                foreach (var file in files)
+                                {
+                                    project.ProjectItems.AddFromFile(file);
+                                }
                             }
                         }
-                    }
 
-                    var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
+                        var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
 
-                    if (!string.IsNullOrEmpty(cpp))
-                    {
-                        _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
-                    }
+                        if (!string.IsNullOrEmpty(cpp))
+                        {
+                            _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
+                        }
 
-                    _vsInstance.MainWindow.Activate();
-                    _vsInstance.MainWindow.Visible = true;
+                        _vsInstance.MainWindow.Activate();
+                        _vsInstance.MainWindow.Visible = true;
+                    });
                 }
             }
             catch (Exception e)
@@ -154,92 +226,91 @@ namespace Editor.GameCode
             return true;
         }
 
-        public static void BuildSolution(Project project, string buildConfig, bool showWindow = true)
+        private static void BuildSolutionInternal(Project project, BuildConfig buildConfig, bool showWindow = true)
         {
-            if (IsDebugging())
+            if (IsDebuggingInternal())
             {
                 Logger.LogAsync(LogLevel.ERROR, "Visual Studio is currently running another process.");
                 return;
             }
 
-            OpenVisualStudio(project.Solution);
+            OpenVisualStudioInternal(project.Solution);
             BuildFinished = BuildSucceeded = false;
 
-            for (int i = 0; i < 3 && !BuildFinished; ++i)
+            CallOnSTAThread(() => {
+
+                _vsInstance.MainWindow.Visible = showWindow;
+                
+                if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
+
+                _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
+                _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
+            });
+
+            var configName = GetConfigurationName(buildConfig);
+
+            try
             {
-                try
+                foreach (var pdb in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pdb"))
                 {
-                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
-
-                    _vsInstance.MainWindow.Visible = showWindow;
-                    _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
-                    _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
-
-                    try
-                    {
-                        foreach (var pdb in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{buildConfig}"), "*.pdb"))
-                        {
-                            File.Delete(pdb);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(ex.Message);
-                    }
-
-                    _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(buildConfig).Activate();
-                    _vsInstance.ExecuteCommand("Build.BuildSolution");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    Debug.WriteLine($"Attempt {i}: failed to build {project.Name}");
-                    Thread.Sleep(1000);
+                    File.Delete(pdb);
                 }
             }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+            CallOnSTAThread(() =>
+            {
+                _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
+                _vsInstance.ExecuteCommand("Build.BuildSolution");
+                _resetEvent.Wait();
+                _resetEvent.Reset();
+            });
         }
 
-        public static bool IsDebugging()
+        private static bool IsDebuggingInternal()
         {
             bool result = false;
-            bool shouldTryAgain = true;
 
-            for (int i = 0; i < 3 && shouldTryAgain; ++i)
+            CallOnSTAThread(() =>
             {
-                try
-                {
-                    result = _vsInstance is not null &&
-                             (_vsInstance.Debugger.CurrentProgram is not null ||
-                             _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode);
-                    shouldTryAgain = false;
-                }
-                catch (Exception ex)
-                {
-                    Debug.Write(ex.Message);
-                    Thread.Sleep(1000);
-                }
-            }
+
+                result = _vsInstance is not null &&
+                    (
+                        _vsInstance.Debugger.CurrentProgram is not null ||
+                        _vsInstance.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgRunMode
+                    );
+            });
 
             return result;
         }
 
-        public static void Run(Project project, string configName, bool debug)
+        private static void RunInternal(Project project, BuildConfig buildConfig, bool debug)
         {
-            if (_vsInstance is not null && !IsDebugging() && BuildFinished && BuildSucceeded)
+            CallOnSTAThread(() =>
             {
-                _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
-            }
+                if (_vsInstance is not null && !IsDebuggingInternal() && BuildSucceeded)
+                {
+                    _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
+                }
+            });
         }
 
-        public static void Stop()
+        private static void StopInternal()
         {
-            if (_vsInstance is not null && IsDebugging()) _vsInstance.ExecuteCommand("Debug.StopDebugging");
+            CallOnSTAThread(() => {
+                if (_vsInstance is not null && IsDebuggingInternal()) _vsInstance.ExecuteCommand("Debug.StopDebugging");
+            });
         }
 
-        public static string GetConfigurationName(BuildConfig config) => _buildConfigurationNames[(int)config];
+        private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig)
+        {
+            if (BuildFinished) return;
 
-        private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig) =>
             Logger.LogAsync(LogLevel.INFO, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
+        }
 
         private static void OnBuildSolutionDone(
             string project,
@@ -256,11 +327,35 @@ namespace Editor.GameCode
 
             BuildFinished = true;
             BuildSucceeded = success;
+
+            _resetEvent.Set();
         }
 
         private static void CallOnSTAThread(Action action)
         {
+            Debug.Assert(action is not null);
 
+            var thread = new Thread(() =>
+            {
+                OleMessageFilter.Register();
+
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogAsync(LogLevel.WARNING, ex.Message);
+                }
+                finally
+                {
+                    OleMessageFilter.Revoke();
+                }
+            });
+
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+            thread.Join();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace Editor.Components
 {
-    abstract class MSEntityBase : ViewModelBase
+    abstract public class MSEntityBase : ViewModelBase
     {
         private bool _enableUpdates = true;
         private bool? _isEnabled;
