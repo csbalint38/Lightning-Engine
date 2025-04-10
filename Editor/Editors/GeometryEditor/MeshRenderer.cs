@@ -132,7 +132,10 @@ namespace Editor.Editors
 
             foreach (var mesh in lod.Meshes)
             {
-                var vertexData = new MeshRendererVertexData();
+                var vertexData = new MeshRendererVertexData()
+                {
+                    Name = mesh.Name,
+                };
 
                 using (var reader = new BinaryReader(new MemoryStream(mesh.Verticies)))
                 {
@@ -194,6 +197,9 @@ namespace Editor.Editors
             {
                 CameraTraget = old.CameraTraget;
                 CameraPosition = old.CameraPosition;
+
+                foreach (var mesh in old.Meshes) mesh.IsHighlighted = false;
+                foreach (var mesh in Meshes) mesh.Diffuse = old.Meshes.First().Diffuse;
             }
             else
             {

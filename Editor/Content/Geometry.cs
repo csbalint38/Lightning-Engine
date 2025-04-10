@@ -86,10 +86,13 @@ namespace Editor.Content
                     Debug.Assert(lodGroup.LODs.Any());
 
                     var meshFileName = ContentHelper.SanitizeFileName(
-                        _lodGroups.Count > 1 ?
-                            path + fileName + "_" + lodGroup.LODs[0].Name + AssetFileExtension :
-                            path + fileName + AssetFileExtension
-                    );
+                        path + fileName + ((_lodGroups.Count > 1) ?
+                                '_' + ((lodGroup.LODs.Count > 1) ?
+                                lodGroup.Name :
+                            lodGroup.LODs[0].Name) :
+                            string.Empty))
+                        + AssetFileExtension;
+
                     Guid = TryGetAssetInfo(meshFileName) is AssetInfo info && info.Type == Type ? info.Guid : Guid.NewGuid();
                     byte[] data = null;
 
@@ -229,7 +232,11 @@ namespace Editor.Content
             }
             else meshName = $"mesh_{RandomString.GetRandomString()}";
 
-            var mesh = new Mesh();
+            var mesh = new Mesh()
+            {
+                Name = meshName
+            };
+
             var lodId = reader.ReadInt32();
 
             mesh.VertexSize = reader.ReadInt32();
@@ -272,6 +279,7 @@ namespace Editor.Content
 
             foreach (var mesh in lod.Meshes)
             {
+                writer.Write(mesh.Name);
                 writer.Write(mesh.VertexSize);
                 writer.Write(mesh.VertexCount);
                 writer.Write(mesh.IndexSize);
@@ -301,6 +309,7 @@ namespace Editor.Content
             {
                 var mesh = new Mesh()
                 {
+                    Name = reader.ReadString(),
                     VertexSize = reader.ReadInt32(),
                     VertexCount = reader.ReadInt32(),
                     IndexSize = reader.ReadInt32(),

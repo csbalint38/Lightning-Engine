@@ -9,6 +9,8 @@ namespace Editor.Editors
     {
         private Brush _specular = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialSpecularColor));
         private Brush _diffuse = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialDiffuseColor));
+        private bool _isHighlighted;
+        private bool _isIsolated;
 
         public Point3DCollection Positions { get; } = [];
         public Vector3DCollection Normals { get; } = [];
@@ -30,7 +32,7 @@ namespace Editor.Editors
 
         public Brush Diffuse
         {
-            get => _diffuse;
+            get => _isHighlighted ? Brushes.Orange : _diffuse;
             set
             {
                 if (_diffuse != value)
@@ -40,5 +42,34 @@ namespace Editor.Editors
                 }
             }
         }
+
+        public bool IsHighlighted
+        {
+            get => _isHighlighted;
+            set
+            {
+                if (_isHighlighted != value)
+                {
+                    _isHighlighted = value;
+                    OnPropertyChanged(nameof(IsHighlighted));
+                    OnPropertyChanged(nameof(Diffuse));
+                }
+            }
+        }
+
+        public bool IsIsolated
+        {
+            get => _isIsolated;
+            set
+            {
+                if (_isIsolated != value)
+                {
+                    _isIsolated = value;
+                    OnPropertyChanged(nameof(IsIsolated));
+                }
+            }
+        }
+
+        public string Name { get; set; }
     }
 }

@@ -60,6 +60,7 @@
                                   MaxWidth="400"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
+            <local:GeometryDetailsView Tag="{Binding ElementName=geometryView}"/>
             <GridSplitter HorizontalAlignment="Right"
                           Width="5"
                           VerticalAlignment="Stretch"/>
