@@ -8,6 +8,7 @@ namespace Editor.Content
         private int _vertexCount;
         private int _indexSize;
         private int _indexCount;
+        private string _name;
 
         public int VertexSize
         {
@@ -57,6 +58,19 @@ namespace Editor.Content
                 {
                     _indexCount = value;
                     OnPropertyChanged(nameof(IndexCount));
+                }
+            }
+        }
+
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    OnPropertyChanged(nameof(Name));
                 }
             }
         }
