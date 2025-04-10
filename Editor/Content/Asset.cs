@@ -32,6 +32,10 @@ namespace Editor.Content
             }
         }
 
+        public abstract IEnumerable<string> Save(string file);
+        public abstract void Import(string file);
+        public abstract void Load(string file);
+
         public static AssetInfo GetAssetInfo(string file)
         {
             Debug.Assert(File.Exists(file) && Path.GetExtension(file) == AssetFileExtension);
@@ -96,9 +100,6 @@ namespace Editor.Content
             Type = type;
         }
 
-        public abstract IEnumerable<string> Save(string file);
-        public abstract void Import(string file);
-
         private static AssetInfo GetAssetInfo(BinaryReader reader)
         {
             reader.BaseStream.Position = 0;
@@ -118,5 +119,10 @@ namespace Editor.Content
 
             return info;
         }
+
+        public static AssetInfo? TryGetAssetInfo(string file) => 
+            File.Exists(file) && Path.GetExtension(file) == AssetFileExtension
+                ? AssetRegistry.GetAssetInfo(file) ?? GetAssetInfo(file)
+                : null;
     }
 }

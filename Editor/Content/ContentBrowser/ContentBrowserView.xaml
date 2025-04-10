@@ -34,6 +34,12 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style TargetType="{x:Type ListViewItem}">
+            <EventSetter Event="MouseDoubleClick"
+                         Handler="LVFolders_MouseDoubleClick"/>
+            <EventSetter Event="KeyDown"
+                         Handler="LVFolders_KeyDown"/>
+        </Style>
         <GridView x:Key="gridView">
             <GridViewColumn>
                 <GridViewColumn.Header>

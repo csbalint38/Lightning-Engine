@@ -65,7 +65,7 @@ namespace Editor.Content
         {
             Debug.Assert(lodGroup >= 0 && lodGroup < _lodGroups.Count);
 
-            return _lodGroups.Any() ? _lodGroups[lodGroup] : null;
+            return (lodGroup < _lodGroups.Count) ? _lodGroups[lodGroup] : null;
         }
 
         public override IEnumerable<string> Save(string file)
@@ -85,8 +85,12 @@ namespace Editor.Content
                 {
                     Debug.Assert(lodGroup.LODs.Any());
 
-                    var meshFileName = ContentHelper.SanitizeFileName(path + fileName + AssetFileExtension);
-                    Guid = Guid.NewGuid();
+                    var meshFileName = ContentHelper.SanitizeFileName(
+                        _lodGroups.Count > 1 ?
+                            path + fileName + "_" + lodGroup.LODs[0].Name + AssetFileExtension :
+                            path + fileName + AssetFileExtension
+                    );
+                    Guid = TryGetAssetInfo(meshFileName) is AssetInfo info && info.Type == Type ? info.Guid : Guid.NewGuid();
                     byte[] data = null;
 
                     using(var writer = new BinaryWriter(new MemoryStream()))
@@ -117,6 +121,7 @@ namespace Editor.Content
                         writer.Write(data);
                     }
 
+                    Logger.LogAsync(LogLevel.INFO, $"Saved geometry to {meshFileName}");
                     savedFiles.Add(meshFileName);
                 }
             }
@@ -150,6 +155,52 @@ namespace Editor.Content
 
                 Debug.WriteLine(msg);
                 Logger.LogAsync(LogLevel.ERROR, msg);
+            }
+        }
+
+        public override void Load(string file)
+        {
+            Debug.Assert(File.Exists(file));
+            Debug.Assert(Path.GetExtension(file).ToLower() == AssetFileExtension);
+
+            try
+            {
+                byte[] data = null;
+
+                using (var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read)))
+                {
+                    ReadAssetFileHeader(reader);
+                    ImportSettings.FromBinary(reader);
+                    int dataLength = reader.ReadInt32();
+
+                    Debug.Assert(dataLength > 0);
+
+                    data = reader.ReadBytes(dataLength);
+                }
+
+                Debug.Assert(data.Length > 0);
+
+                using (var reader = new BinaryReader(new MemoryStream(data)))
+                {
+                    LODGroup lodGroup = new();
+                    lodGroup.Name = reader.ReadString();
+
+                    var lodCount = reader.ReadInt32();
+
+                    for(int i = 0; i < lodCount; ++i)
+                    {
+                        lodGroup.LODs.Add(BinaryToLOD(reader));
+                    }
+
+                    _lodGroups.Clear();
+                    _lodGroups.Add(lodGroup);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to load geometry asset from file: {file}");
             }
         }
 
@@ -235,6 +286,34 @@ namespace Editor.Content
 
             var buffer = (writer.BaseStream as MemoryStream).ToArray();
             hash = ContentHelper.ComputeHash(buffer, (int)meshDataBegin, (int)meshDataSize);
+        }
+
+        private MeshLOD BinaryToLOD(BinaryReader reader)
+        {
+            var lod = new MeshLOD();
+           
+            lod.Name = reader.ReadString();
+            lod.LODThreshold = reader.ReadSingle();
+
+            var meshCount = reader.ReadInt32();
+
+            for(int i = 0; i < meshCount; ++i)
+            {
+                var mesh = new Mesh()
+                {
+                    VertexSize = reader.ReadInt32(),
+                    VertexCount = reader.ReadInt32(),
+                    IndexSize = reader.ReadInt32(),
+                    IndexCount = reader.ReadInt32(),
+                };
+
+                mesh.Verticies = reader.ReadBytes(mesh.VertexSize * mesh.VertexCount);
+                mesh.Indicies = reader.ReadBytes(mesh.IndexSize * mesh.IndexCount);
+
+                lod.Meshes.Add(mesh);
+            }
+
+            return lod;
         }
 
         private byte[] GenerateIcon(MeshLOD lod)
