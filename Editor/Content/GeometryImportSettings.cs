@@ -109,5 +109,15 @@ namespace Editor.Content
             writer.Write(ImportEmbeddedTextures);
             writer.Write(ImportAnimations);
         }
+
+        public void FromBinary(BinaryReader reader)
+        {
+            CalculateNormals = reader.ReadBoolean();
+            CalculateTangents = reader.ReadBoolean();
+            SmoothingAngle = reader.ReadSingle();
+            ReverseHandedness = reader.ReadBoolean();
+            ImportEmbeddedTextures = reader.ReadBoolean();
+            ImportAnimations = reader.ReadBoolean();
+        }
     }
 }
