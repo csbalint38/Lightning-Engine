@@ -7,6 +7,8 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Highlight and isolate submeshes in FBX files
+ - View FBX files
  - Drag-and-drop importer
  - Import FBX files
  - Content browser
