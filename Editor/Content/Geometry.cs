@@ -138,31 +138,20 @@ namespace Editor.Content
             return savedFiles;
         }
 
-        public override void Import(string file)
+        public override bool Import(string file)
         {
             Debug.Assert(File.Exists(file));
             Debug.Assert(!string.IsNullOrEmpty(FullPath));
 
             var ext = Path.GetExtension(file).ToLower();
 
-            SourcePath = file;
+            if (ext == ".fbx") return ImportFbx(file);
 
-            try
-            {
-                if (ext == ".fbx") ImportFbx(file);
-            }
-            catch(Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-
-                var msg = $"Failed to read {file} for import";
-
-                Debug.WriteLine(msg);
-                Logger.LogAsync(LogLevel.ERROR, msg);
-            }
+            return false;
+            
         }
 
-        public override void Load(string file)
+        public override bool Load(string file)
         {
             Debug.Assert(File.Exists(file));
             Debug.Assert(Path.GetExtension(file).ToLower() == AssetFileExtension);
@@ -204,12 +193,16 @@ namespace Editor.Content
                 PackForEngine();
                 // ENDTEMP
 
+                return true;
+
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failed to load geometry asset from file: {file}");
             }
+
+            return false;
         }
 
         public override byte[] PackForEngine()
@@ -419,13 +412,13 @@ namespace Editor.Content
             return memStream.ToArray();
         }
 
-        private void ImportFbx(string file)
+        private bool ImportFbx(string file)
         {
             Logger.LogAsync(LogLevel.INFO, $"Importing FBX file {file}");
 
             var tempPath = Application.Current.Dispatcher.Invoke(() => Project.Current.TempFolder);
 
-            if (string.IsNullOrEmpty(tempPath)) return;
+            if (string.IsNullOrEmpty(tempPath)) return false;
 
             lock(_lock)
             {
@@ -435,7 +428,25 @@ namespace Editor.Content
             var tempFile = $"{tempPath}{RandomString.GetRandomString()}.fbx";
 
             File.Copy(file, tempFile, true);
-            ContentToolsAPI.ImportFbx(tempFile, this);
+
+            bool result = false;
+
+            try
+            {
+                ContentToolsAPI.ImportFbx(tempFile, this);
+                result = true;
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                var msg = $"Failed to read {file} for import";
+                Debug.WriteLine(msg);
+                Logger.LogAsync(LogLevel.ERROR, msg);
+            }
+
+            if (ImportSettings.ImportEmbeddedTextures) { }
+
+            return result;
         }
     }
 }

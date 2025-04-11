@@ -10,9 +10,8 @@ namespace Editor.Content
         private string _fullPath;
 
         public const string AssetFileExtension = ".lngasset";
-        public AssetType Type { get; private set; }
+        public AssetType Type { get; }
         public byte[] Icon { get; protected set; }
-        public string SourcePath { get; protected set; }
         public Guid Guid { get; protected set; } = Guid.NewGuid();
         public DateTime ImportDate { get; protected set; }
         public byte[] Hash { get; protected set; }
@@ -33,8 +32,8 @@ namespace Editor.Content
         }
 
         public abstract IEnumerable<string> Save(string file);
-        public abstract void Import(string file);
-        public abstract void Load(string file);
+        public abstract bool Import(string file);
+        public abstract bool Load(string file);
         public abstract byte[] PackForEngine();
 
         public static AssetInfo GetAssetInfo(string file)
@@ -76,7 +75,6 @@ namespace Editor.Content
             }
             else writer.Write(0);
 
-            writer.Write(SourcePath ?? "");
             writer.Write(Icon.Length);
             writer.Write(Icon);
         }
@@ -90,7 +88,6 @@ namespace Editor.Content
             Guid = info.Guid;
             ImportDate = info.ImportDate;
             Hash = info.Hash;
-            SourcePath = info.SourcePath;
             Icon = info.Icon;
         }
 
@@ -114,7 +111,6 @@ namespace Editor.Content
 
             if (hashSize > 0) info.Hash = reader.ReadBytes(hashSize);
 
-            info.SourcePath = reader.ReadString();
             var iconSize = reader.ReadInt32();
             info.Icon = reader.ReadBytes(iconSize);
 
