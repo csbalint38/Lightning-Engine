@@ -4,6 +4,7 @@ using Editor.DLLs;
 using Editor.Editors;
 using Editor.GameProject;
 using Editor.Utilities;
+using MahApps.Metro.Controls;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -199,12 +200,70 @@ namespace Editor.Content
                     _lodGroups.Add(lodGroup);
                 }
 
+                // TEMP
+                PackForEngine();
+                // ENDTEMP
+
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failed to load geometry asset from file: {file}");
             }
+        }
+
+        public override byte[] PackForEngine()
+        {
+            byte[] data = null;
+
+            using var writer = new BinaryWriter(new MemoryStream());
+            writer.Write(GetLodGroup().LODs.Count);
+
+            foreach(var lod in GetLodGroup().LODs)
+            {
+                writer.Write(lod.LODThreshold);
+                writer.Write(lod.Meshes.Count);
+
+                var sizeOfSubmeshesPosition = writer.BaseStream.Position;
+
+                writer.Write(0);
+
+                foreach(var mesh in lod.Meshes)
+                {
+                    writer.Write(mesh.ElementSize);
+                    writer.Write(mesh.VertexCount);
+                    writer.Write(mesh.IndexCount);
+                    writer.Write((int)mesh.ElementsType);
+                    writer.Write((int)mesh.PrimitiveTopology);
+
+                    var alignedPositionBuffer = new byte[MathUtilities.AlignSizeUp(mesh.Positions.Length, 4)];
+                    Array.Copy(mesh.Positions, alignedPositionBuffer, mesh.Positions.Length);
+                    var alignedElementBuffer = new byte[MathUtilities.AlignSizeUp(mesh.Elements.Length, 4)];
+                    Array.Copy(mesh.Elements, alignedElementBuffer, mesh.Elements.Length);
+                }
+
+                var endOfSubmeshes = writer.BaseStream.Position;
+                var sizeOfSubmeshes = (int)(endOfSubmeshes - sizeOfSubmeshesPosition - sizeof(int));
+
+                writer.BaseStream.Position = sizeOfSubmeshesPosition;
+                writer.Write(sizeOfSubmeshes);
+                writer.BaseStream.Position = endOfSubmeshes;
+            }
+
+            writer.Flush();
+
+            data = (writer.BaseStream as MemoryStream)?.ToArray();
+
+            Debug.Assert(data?.Length > 0);
+
+            // TEMP
+            using (var fs = new FileStream(@"..\..\EngineTest\model.model", FileMode.Create))
+            {
+                fs.Write(data, 0, data.Length);
+            }
+            // ENDTEMP
+
+                return data;
         }
 
         private static List<MeshLOD> ReadMeshLODs(int numMeshes, BinaryReader reader)
@@ -241,6 +300,7 @@ namespace Editor.Content
 
             mesh.ElementSize = reader.ReadInt32();
             mesh.ElementsType = (ElementsType)reader.ReadInt32();
+            mesh.PrimitiveTopology = PrimitiveTopology.TRIANGLE_LIST;
             mesh.VertexCount = reader.ReadInt32();
             mesh.IndexSize = reader.ReadInt32();
             mesh.IndexCount = reader.ReadInt32();
@@ -284,6 +344,7 @@ namespace Editor.Content
                 writer.Write(mesh.Name);
                 writer.Write(mesh.ElementSize);
                 writer.Write((int)mesh.ElementsType);
+                writer.Write((int)mesh.PrimitiveTopology);
                 writer.Write(mesh.VertexCount);
                 writer.Write(mesh.IndexSize);
                 writer.Write(mesh.IndexCount);
@@ -316,6 +377,7 @@ namespace Editor.Content
                     Name = reader.ReadString(),
                     ElementSize = reader.ReadInt32(),
                     ElementsType = (ElementsType)reader.ReadInt32(),
+                    PrimitiveTopology = (PrimitiveTopology)reader.ReadInt32(),
                     VertexCount = reader.ReadInt32(),
                     IndexSize = reader.ReadInt32(),
                     IndexCount = reader.ReadInt32(),

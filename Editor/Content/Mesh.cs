@@ -79,6 +79,7 @@ namespace Editor.Content
         }
 
         public ElementsType ElementsType { get; set; }
+        public PrimitiveTopology PrimitiveTopology { get; set; }
         public byte[] Positions { get; set; }
         public byte[] Elements { get; set; }
         public byte[] Indicies { get; set; }

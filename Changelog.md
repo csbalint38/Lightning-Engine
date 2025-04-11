@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Pack meshes for the Engine in the Editor
  - Partial support for other mesh types: skeletal mesh, mesh with joints, mesh with normals, mesh with tangents
  - Highlight and isolate submeshes in FBX files
  - View FBX files
