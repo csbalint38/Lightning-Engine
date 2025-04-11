@@ -1,5 +1,7 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.Content;
+using MahApps.Metro.Controls;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -120,7 +122,6 @@ namespace Editor.Editors
         {
             Debug.Assert(lod?.Meshes.Any() == true);
 
-            var offset = lod.Meshes[0].VertexSize - 3 * sizeof(float) - sizeof(int) - 2 * sizeof(short);
             double minX, minY, minZ;
             double maxX, maxY, maxZ;
 
@@ -137,14 +138,13 @@ namespace Editor.Editors
                     Name = mesh.Name,
                 };
 
-                using (var reader = new BinaryReader(new MemoryStream(mesh.Verticies)))
+                using (var reader = new BinaryReader(new MemoryStream(mesh.Positions)))
                 {
                     for (int i = 0; i < mesh.VertexCount; ++i)
                     {
                         var posX = reader.ReadSingle();
                         var posY = reader.ReadSingle();
                         var posZ = reader.ReadSingle();
-                        var signs = (reader.ReadUInt32() >> 24) & 0x000000ff;
 
                         vertexData.Positions.Add(new Point3D(posX, posY, posZ));
 
@@ -155,22 +155,48 @@ namespace Editor.Editors
                         maxX = Math.Max(maxX, posX);
                         maxY = Math.Max(maxY, posY);
                         maxZ = Math.Max(maxZ, posZ);
+                    }
+                }
 
-                        var normalX = reader.ReadUInt16() * intervals - 1.0f;
-                        var normalY = reader.ReadUInt16() * intervals - 1.0f;
-                        var normalZ = Math.Sqrt(Math.Clamp(1f - (normalX * normalX + normalY * normalY), 0f, 1f)) * ((signs & 0x2) - 1f);
-                        var normal = new Vector3D(normalX, normalY, normalZ);
+                if(mesh.ElementsType.HasFlag(Common.Enums.ElementsType.NORMALS)) {
+                    var tSpaceOffset = 0;
 
-                        normal.Normalize();
-                        vertexData.Normals.Add(normal);
-                        avgNormal += normal;
+                    if (mesh.ElementsType.HasFlag(Common.Enums.ElementsType.JOINTS)) tSpaceOffset = sizeof(short) * 4;
 
-                        reader.BaseStream.Position += (offset - sizeof(float) * 2);
+                    using (var reader = new BinaryReader(new MemoryStream(mesh.Elements)))
+                    {
+                        for (int i = 0; i < mesh.VertexCount; ++i) {
+                            var signs = (reader.ReadUInt32() >> 24) & 0x000000ff;
 
-                        var u = reader.ReadSingle();
-                        var v = reader.ReadSingle();
+                            reader.BaseStream.Position += tSpaceOffset;
 
-                        vertexData.UVs.Add(new Point(u, v));
+                            var normalX = reader.ReadUInt16() * intervals - 1.0f;
+                            var normalY = reader.ReadUInt16() * intervals - 1.0f;
+                            var normalZ = Math.Sqrt(
+                                Math.Clamp(1f - (normalX * normalX + normalY * normalY), 0f, 1f)
+                            ) * ((signs & 0x2) - 1f);
+
+                            var normal = new Vector3D(normalX, normalY, normalZ);
+
+                            normal.Normalize();
+                            vertexData.Normals.Add(normal);
+                            avgNormal += normal;
+
+                            if (mesh.ElementsType.HasFlag(ElementsType.T_SPACE))
+                            {
+                                reader.BaseStream.Position += sizeof(short) * 2;
+
+                                var u = reader.ReadSingle();
+                                var v = reader.ReadSingle();
+
+                                vertexData.UVs.Add(new Point(u, v));
+                            }
+
+                            if(mesh.ElementsType.HasFlag(ElementsType.JOINTS) && mesh.ElementsType.HasFlag(ElementsType.COLORS))
+                            {
+                                reader.BaseStream.Position += 4;
+                            }
+                        }
                     }
                 }
 

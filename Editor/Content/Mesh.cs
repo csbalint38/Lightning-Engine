@@ -1,24 +1,27 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 
 namespace Editor.Content
 {
     public class Mesh : ViewModelBase
     {
-        private int _vertexSize;
+        private int _elementSize;
         private int _vertexCount;
         private int _indexSize;
         private int _indexCount;
         private string _name;
 
-        public int VertexSize
+        public static int PositionSize = sizeof(float) * 3; 
+
+        public int ElementSize
         {
-            get => _vertexSize;
+            get => _elementSize;
             set
             {
-                if (_vertexSize != value)
+                if (_elementSize != value)
                 {
-                    _vertexSize = value;
-                    OnPropertyChanged(nameof(VertexSize));
+                    _elementSize = value;
+                    OnPropertyChanged(nameof(ElementSize));
                 }
             }
         }
@@ -75,7 +78,9 @@ namespace Editor.Content
             }
         }
 
-        public byte[] Verticies { get; set; }
+        public ElementsType ElementsType { get; set; }
+        public byte[] Positions { get; set; }
+        public byte[] Elements { get; set; }
         public byte[] Indicies { get; set; }
     }
 }
