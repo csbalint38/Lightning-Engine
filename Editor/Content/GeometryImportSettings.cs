@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.Utilities;
 using System.IO;
 
 namespace Editor.Content
@@ -43,7 +44,7 @@ namespace Editor.Content
             get => _smoothingAngle;
             set
             {
-                if (_smoothingAngle != value)
+                if (!_smoothingAngle.IsEqual(value))
                 {
                     _smoothingAngle = value;
                     OnPropertyChanged(nameof(SmoothingAngle));
