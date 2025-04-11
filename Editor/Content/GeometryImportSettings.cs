@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Editor.Content
 {
-    public class GeometryImportSettings : ViewModelBase
+    public class GeometryImportSettings : ViewModelBase, IAssetImportSettings
     {
         private bool _calculateNormals;
         private bool _calculateTangents;
