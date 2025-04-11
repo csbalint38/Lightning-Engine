@@ -50,7 +50,7 @@
                                         </CheckBox>
                                         <CheckBox x:Name="CbIsolate" 
                                                   Click="CbIsolate_Click"
-                                                  IsChecked="{Binding IsIsolate, Mode=OneWay}">
+                                                  IsChecked="{Binding IsIsolated, Mode=OneWay}">
                                             <Run Text="Isolate"/>
                                         </CheckBox>
                                     </StackPanel>

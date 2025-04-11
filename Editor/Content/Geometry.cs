@@ -240,6 +240,10 @@ namespace Editor.Content
                     Array.Copy(mesh.Positions, alignedPositionBuffer, mesh.Positions.Length);
                     var alignedElementBuffer = new byte[MathUtilities.AlignSizeUp(mesh.Elements.Length, 4)];
                     Array.Copy(mesh.Elements, alignedElementBuffer, mesh.Elements.Length);
+
+                    writer.Write(alignedPositionBuffer);
+                    writer.Write(alignedElementBuffer);
+                    writer.Write(mesh.Indicies);
                 }
 
                 var endOfSubmeshes = writer.BaseStream.Position;

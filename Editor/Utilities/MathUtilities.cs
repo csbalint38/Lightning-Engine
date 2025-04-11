@@ -23,7 +23,7 @@ namespace Editor.Utilities
 
             Debug.Assert((alignment & mask) == 0, "Alignment should be a power of 2.");
 
-            return ((size + mask) & -mask);
+            return ((size + mask) & ~mask);
         }
 
         public static long AlignSizeDown(long size, long alignment)
@@ -34,7 +34,7 @@ namespace Editor.Utilities
 
             Debug.Assert((alignment & mask) == 0, "Alignement should be a power of 2.");
 
-            return (size & -mask);
+            return (size & ~mask);
         }
     }
 }

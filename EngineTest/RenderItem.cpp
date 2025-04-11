@@ -201,7 +201,7 @@ void create_render_items() {
 		std::thread{ [] { ibl_diffuse_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/diffuse4.texture"); }},
 		std::thread{ [] { ibl_specular_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/specular4.texture"); }},
 
-		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/villa.model"); }},
+		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/model.model"); }},
 		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
 		std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }},
 		std::thread{ [] { fembot_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/fembot.model"); }},
