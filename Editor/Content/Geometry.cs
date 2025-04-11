@@ -239,16 +239,18 @@ namespace Editor.Content
 
             var lodId = reader.ReadInt32();
 
-            mesh.VertexSize = reader.ReadInt32();
+            mesh.ElementSize = reader.ReadInt32();
+            mesh.ElementsType = (ElementsType)reader.ReadInt32();
             mesh.VertexCount = reader.ReadInt32();
             mesh.IndexSize = reader.ReadInt32();
             mesh.IndexCount = reader.ReadInt32();
 
             var lodThreshold = reader.ReadSingle();
-            var vertexBufferSize = mesh.VertexSize * mesh.VertexCount;
+            var elementBufferSize = mesh.ElementSize * mesh.VertexCount;
             var indexBufferSize = mesh.IndexSize * mesh.IndexCount;
 
-            mesh.Verticies = reader.ReadBytes(vertexBufferSize);
+            mesh.Positions = reader.ReadBytes(Mesh.PositionSize * mesh.VertexCount);
+            mesh.Elements = reader.ReadBytes(elementBufferSize);
             mesh.Indicies = reader.ReadBytes(indexBufferSize);
 
             MeshLOD lod;
@@ -280,11 +282,13 @@ namespace Editor.Content
             foreach (var mesh in lod.Meshes)
             {
                 writer.Write(mesh.Name);
-                writer.Write(mesh.VertexSize);
+                writer.Write(mesh.ElementSize);
+                writer.Write((int)mesh.ElementsType);
                 writer.Write(mesh.VertexCount);
                 writer.Write(mesh.IndexSize);
                 writer.Write(mesh.IndexCount);
-                writer.Write(mesh.Verticies);
+                writer.Write(mesh.Positions);
+                writer.Write(mesh.Elements);
                 writer.Write(mesh.Indicies);
             }
 
@@ -310,13 +314,15 @@ namespace Editor.Content
                 var mesh = new Mesh()
                 {
                     Name = reader.ReadString(),
-                    VertexSize = reader.ReadInt32(),
+                    ElementSize = reader.ReadInt32(),
+                    ElementsType = (ElementsType)reader.ReadInt32(),
                     VertexCount = reader.ReadInt32(),
                     IndexSize = reader.ReadInt32(),
                     IndexCount = reader.ReadInt32(),
                 };
 
-                mesh.Verticies = reader.ReadBytes(mesh.VertexSize * mesh.VertexCount);
+                mesh.Positions = reader.ReadBytes(Mesh.PositionSize * mesh.VertexCount);
+                mesh.Elements = reader.ReadBytes(mesh.ElementSize * mesh.VertexCount);
                 mesh.Indicies = reader.ReadBytes(mesh.IndexSize * mesh.IndexCount);
 
                 lod.Meshes.Add(mesh);
