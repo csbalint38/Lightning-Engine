@@ -115,12 +115,12 @@ namespace lightning::util {
 				}
 			}
 
-			constexpr T* const erease(u64 index) {
+			constexpr T* const erase(u64 index) {
 				assert(_data && index < _size);
 				return erease(std::addressof(_data[index]));
 			}
 
-			constexpr T* const erease(T* const item) {
+			constexpr T* const erase(T* const item) {
 				assert(_data && item >= std::addressof(_data[0]) && item < std::addressof(_data[_size]));
 				if constexpr (destruct) item->~T();
 				--_size;

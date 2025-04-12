@@ -30,7 +30,7 @@
                 DockPanel.Dock="Top"
                 VerticalAlignment="Top">
             <StackPanel Orientation="Horizontal">
-                <ComboBox SelectedIndex="2"
+                <ComboBox SelectedIndex="1"
                           Width="100"
                           VerticalAlignment="Center"
                           x:Name="CbPrimitiveType"

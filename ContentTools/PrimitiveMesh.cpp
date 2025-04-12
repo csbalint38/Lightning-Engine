@@ -102,7 +102,7 @@ namespace lightning::tools {
 			const f32 theta_step{ PI / theta_count };
 			const f32 phi_step{ TWO_PI / phi_count };
 			const u32 num_indicies{ 2 * 3 * phi_count + 2 * 3 * phi_count * (theta_count - 2) };
-			const u32 num_verticies{ 2 + phi_count + (theta_count - 1) };
+			const u32 num_verticies{ 2 + phi_count * (theta_count - 1) };
 
 			Mesh m{};
 			m.name = "uv_sphere";

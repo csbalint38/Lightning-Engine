@@ -10,9 +10,7 @@ namespace lightning::tools {
 		math::v3 position{};
 		math::v3 normal{};
 		math::v2 uv{};;
-		u8 red{};
-		u8 green{};
-		u8 blue{};
+		u8 red{}, green{}, blue{};
 		u8 pad{};
 	};
 
