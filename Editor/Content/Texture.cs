@@ -1,5 +1,6 @@
 ﻿
 using Editor.Common.Enums;
+using Editor.Content.ContentBrowser;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
@@ -20,9 +21,7 @@ namespace Editor.Content
 
         public TextureImportSettings ImportSettings { get; } = new();
 
-        public Texture(AssetType type) : base(type)
-        {
-        }
+        public Texture() : base(AssetType.TEXTURE) { }
 
         public List<List<List<Slice>>> Slices
         {
@@ -157,6 +156,12 @@ namespace Editor.Content
 
                     icon = firstMip;
                 }
+
+                Icon = BitmapHelper.CreateThumbnail(
+                    BitmapHelper.ImageFromSlice(icon, IsNormalMap),
+                    ContentInfo.IconWidth,
+                    ContentInfo.IconWidth
+                );
 
                 return true;
             }

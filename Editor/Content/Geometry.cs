@@ -393,23 +393,15 @@ namespace Editor.Content
         private byte[] GenerateIcon(MeshLOD lod)
         {
             var width = ContentInfo.IconWidth * 4;
-
-            using var memStream = new MemoryStream();
-            BitmapSource bmp = null;
+            byte[] icon = null;
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                bmp = GeometryView.RenderToBitmap(new MeshRenderer(lod, null), width, width);
-                bmp = new TransformedBitmap(bmp, new ScaleTransform(0.25, 0.25, 0.25, 0.25));
-
-                memStream.SetLength(0);
-
-                var encoder = new PngBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(bmp));
-                encoder.Save(memStream);
+                var bmp = GeometryView.RenderToBitmap(new MeshRenderer(lod, null), width, width);
+                icon = BitmapHelper.CreateThumbnail(bmp, ContentInfo.IconWidth, ContentInfo.IconWidth);
             });
 
-            return memStream.ToArray();
+            return icon;
         }
 
         private bool ImportFbx(string file)
