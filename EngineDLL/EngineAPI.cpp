@@ -4,6 +4,10 @@
 #include "Graphics/Renderer.h"
 #include "Platform/PlatformTypes.h"
 #include "Platform/Platform.h"
+#include "Content/ContentToEngine.h"
+#include "ShaderCompilation.h"
+#include "../ContentTools/ToolsCommon.h"
+#include "Utilities/IOStream.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -22,6 +26,26 @@ namespace {
 	_get_script_names script_names{ nullptr };
 
 	util::vector<graphics::RenderSurface> surfaces;
+
+	struct ShaderData {
+		u32 type;
+		u32 code_size;
+		u32 byte_code_size;
+		u32 errors_size;
+		u32 assembly_size;
+		u32 hash_size;
+		u8* code;
+		u8* byte_code_error_assembly_hash;
+		const char* function_name;
+		const char* extra_args;
+	};
+
+	struct ShaderGroupData {
+		u32 type;
+		u32 count;
+		u32 data_size;
+		u8* data;
+	};
 }
 
 EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
@@ -77,4 +101,77 @@ EDITOR_INTERFACE HWND get_window_handle(u32 id) {
 EDITOR_INTERFACE void resize_renderer_surface(u32 id) {
 	assert(id < surfaces.size());
 	surfaces[id].window.resize(0, 0);
+}
+
+EDITOR_INTERFACE id::id_type add_shader_group(ShaderGroupData* data) {
+	assert(data && data->type < graphics::ShaderType::count && data->count && data->data_size && data->data);
+
+	const u32 count{ data->count };
+
+	util::BlobStreamReader blob{ data->data };
+	const u32* const keys{ (const u32*)blob.position() };
+
+	blob.skip(count * sizeof(u32));
+
+	const u8** shader_pointers{ (const u8**)alloca(count * sizeof(u8*)) };
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		const u32 block_size{ sizeof(u64) + content::CompiledShader::hash_length + *(u32*)blob.position() };
+		shader_pointers[i] = blob.position();
+		blob.skip(block_size);
+	}
+
+	assert(blob.position() == (data->data + data->data_size));
+
+	return content::add_shader_group(shader_pointers, count, keys);
+}
+
+EDITOR_INTERFACE void remove_shader_group(id::id_type id) {
+	content::remove_shader_group(id);
+}
+
+EDITOR_INTERFACE u32 compile_shader(ShaderData* data) {
+	assert(data && data->code && data->code_size && data->function_name);
+
+	ShaderFileInfo info{};
+	info.function = data->function_name;
+	info.type = (graphics::ShaderType::Type)data->type;
+
+	util::vector<std::string> extra_args{ split(data->extra_args, ';') };
+	util::vector<std::wstring> w_extra_args{};
+
+	for (const auto& str : extra_args) {
+		w_extra_args.emplace_back(to_wstring(str.c_str()));
+	}
+
+	std::unique_ptr<u8[]> compiled_shader{ compile_shader(info, data->code, data->code_size, w_extra_args, true) };
+
+	if (!compiled_shader) return FALSE;
+
+	u64 buffer_size{ 0 };
+
+	{
+		util::BlobStreamReader blob{ compiled_shader.get() };
+		data->byte_code_size = (u32)blob.read<u64>();
+		data->hash_size = content::CompiledShader::hash_length;
+		blob.skip(data->hash_size + data->byte_code_size);
+		data->errors_size = (u32)blob.read<u64>();
+		data->assembly_size = (u32)blob.read<u64>();
+		buffer_size = data->byte_code_size + data->hash_size + data->errors_size + data->assembly_size;
+	}
+
+	assert(buffer_size);
+
+	data->byte_code_error_assembly_hash = (u8*)CoTaskMemAlloc(buffer_size);
+
+	assert(data->byte_code_error_assembly_hash);
+
+	{
+		util::BlobStreamReader blob{ compiled_shader.get() };
+		blob.skip(sizeof(u64));
+		blob.read(&data->byte_code_error_assembly_hash[buffer_size - data->hash_size], data->hash_size);
+		blob.read(data->byte_code_error_assembly_hash, data->byte_code_size);
+		blob.skip(2 * sizeof(u64));
+		blob.read(&data->byte_code_error_assembly_hash[data->byte_code_size], data->errors_size + data->assembly_size);
+	}
 }

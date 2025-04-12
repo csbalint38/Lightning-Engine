@@ -35,6 +35,7 @@
  - Load game code DLL into Editor
 
 ## Engine
+ - Add/remove shader to/from the Engine using the API
  - Shader compilation with DirectX ShaderCompiler
  - Support for HDRI images as skybox texture
  - Image based ambient lighting
