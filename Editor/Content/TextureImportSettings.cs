@@ -7,7 +7,7 @@ namespace Editor.Content
 {
     public class TextureImportSettings : ViewModelBase, IAssetImportSettings
     {
-        private TextureDimension _dimension;
+        private TextureDimension _dimension = TextureDimension.TEXTURE_2D;
         private int _mipLevels;
         private float _alphaThreshold;
         private bool _preferBC7;

@@ -1,7 +1,6 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
 using Editor.Content;
-using MahApps.Metro.Controls;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -158,14 +157,16 @@ namespace Editor.Editors
                     }
                 }
 
-                if(mesh.ElementsType.HasFlag(Common.Enums.ElementsType.NORMALS)) {
+                if (mesh.ElementsType.HasFlag(Common.Enums.ElementsType.NORMALS))
+                {
                     var tSpaceOffset = 0;
 
                     if (mesh.ElementsType.HasFlag(Common.Enums.ElementsType.JOINTS)) tSpaceOffset = sizeof(short) * 4;
 
                     using (var reader = new BinaryReader(new MemoryStream(mesh.Elements)))
                     {
-                        for (int i = 0; i < mesh.VertexCount; ++i) {
+                        for (int i = 0; i < mesh.VertexCount; ++i)
+                        {
                             var signs = (reader.ReadUInt32() >> 24) & 0x000000ff;
 
                             reader.BaseStream.Position += tSpaceOffset;
@@ -192,7 +193,7 @@ namespace Editor.Editors
                                 vertexData.UVs.Add(new Point(u, v));
                             }
 
-                            if(mesh.ElementsType.HasFlag(ElementsType.JOINTS) && mesh.ElementsType.HasFlag(ElementsType.COLORS))
+                            if (mesh.ElementsType.HasFlag(ElementsType.JOINTS) && mesh.ElementsType.HasFlag(ElementsType.COLORS))
                             {
                                 reader.BaseStream.Position += 4;
                             }

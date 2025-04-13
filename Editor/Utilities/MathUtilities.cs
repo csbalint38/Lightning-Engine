@@ -36,5 +36,7 @@ namespace Editor.Utilities
 
             return (size & ~mask);
         }
+
+        public static bool IsPowOf2(int x) => (x != 0) && (x & (x - 1)) == 0;
     }
 }

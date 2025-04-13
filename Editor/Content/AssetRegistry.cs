@@ -36,7 +36,7 @@ namespace Editor.Content
         {
             Debug.Assert(Directory.Exists(path));
 
-            foreach(var entry in Directory.GetFileSystemEntries(path))
+            foreach (var entry in Directory.GetFileSystemEntries(path))
             {
                 if (ContentHelper.IsDirectory(entry)) RegisterAllAssets(entry);
                 else RegisterAsset(entry);
@@ -65,7 +65,7 @@ namespace Editor.Content
                     _assets.Add(_assetDict[file]);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -87,7 +87,7 @@ namespace Editor.Content
 
         private static void UnregisterAsset(string file)
         {
-            if(_assetDict.ContainsKey(file))
+            if (_assetDict.ContainsKey(file))
             {
                 _assets.Remove(_assetDict[file]);
                 _assetDict.Remove(file);

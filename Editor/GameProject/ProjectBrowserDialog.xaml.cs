@@ -24,7 +24,7 @@ namespace Editor.GameProject
             if (!OpenProject.Projects.Any() || GoToNewProjectTab)
             {
                 if (!GoToNewProjectTab) BtnToggleOpenNew.IsEnabled = false;
-                
+
                 BtnToggleOpenNew_Click(BtnToggleOpenNew, new RoutedEventArgs());
             }
 

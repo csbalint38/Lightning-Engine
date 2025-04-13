@@ -44,7 +44,7 @@ namespace Editor.Content
         {
             Loaded -= OnContentBrowserLoaded;
 
-            if(Application.Current?.MainWindow is not null)
+            if (Application.Current?.MainWindow is not null)
             {
                 Application.Current.MainWindow.DataContextChanged += OnProjectChanged;
             }
@@ -57,7 +57,7 @@ namespace Editor.Content
             (DataContext as ContentBrowser.ContentBrowser)?.Dispose();
             DataContext = null;
 
-            if(e.NewValue is Project project)
+            if (e.NewValue is Project project)
             {
                 Debug.Assert(e.NewValue == Project.Current);
 
@@ -71,18 +71,18 @@ namespace Editor.Content
         {
             var vm = sender as ContentBrowser.ContentBrowser;
 
-            if(e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder)) { }
+            if (e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder)) { }
         }
 
         private void LVFolders_Drop(object sender, DragEventArgs e)
         {
             var vm = DataContext as ContentBrowser.ContentBrowser;
 
-            if(vm.SelectedFolder is not null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (vm.SelectedFolder is not null && e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-                if(files?.Length > 0 && Directory.Exists(vm.SelectedFolder))
+                if (files?.Length > 0 && Directory.Exists(vm.SelectedFolder))
                 {
                     _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolder);
                     e.Handled = true;
@@ -94,16 +94,16 @@ namespace Editor.Content
         {
             if (info is null) return;
 
-            if(info.IsDirectory)
+            if (info.IsDirectory)
             {
                 var vm = DataContext as ContentBrowser.ContentBrowser;
                 vm.SelectedFolder = info.FullPath;
             }
-            else if(FileAccess.HasFlag(FileAccess.Read))
+            else if (FileAccess.HasFlag(FileAccess.Read))
             {
                 var assetInfo = Asset.GetAssetInfo(info.FullPath);
 
-                if(assetInfo is not null)
+                if (assetInfo is not null)
                 {
                     OpenAssetEditor(assetInfo);
                 }
@@ -118,7 +118,7 @@ namespace Editor.Content
 
         private void LVFolders_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
             {
                 var info = (sender as FrameworkElement).DataContext as ContentInfo;
                 ExecuteSelection(info);
@@ -131,7 +131,7 @@ namespace Editor.Content
 
             try
             {
-                switch(info.Type)
+                switch (info.Type)
                 {
                     case AssetType.ANIMATION:
                         break;
@@ -150,7 +150,7 @@ namespace Editor.Content
                         break;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex);
             }
@@ -160,9 +160,9 @@ namespace Editor.Content
 
         private IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title) where T : FrameworkElement, new()
         {
-            foreach(Window window in Application.Current.Windows)
+            foreach (Window window in Application.Current.Windows)
             {
-                if(window.Content is FrameworkElement content &&
+                if (window.Content is FrameworkElement content &&
                     content.DataContext is IAssetEditor editor &&
                     editor.Asset.Guid == info.Guid
                 )

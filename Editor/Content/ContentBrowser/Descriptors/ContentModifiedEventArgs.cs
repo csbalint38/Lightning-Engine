@@ -4,7 +4,8 @@
     {
         public string FullPath { get; }
 
-        public ContentModifiedEventArgs(string path) {
+        public ContentModifiedEventArgs(string path)
+        {
             FullPath = path;
         }
     }

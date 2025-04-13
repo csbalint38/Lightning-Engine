@@ -40,7 +40,7 @@ namespace Editor.Content.ContentBrowser
 
             ContentInfoCache.Reset(projectPath);
 
-            if(!string.IsNullOrEmpty(contentFolder))
+            if (!string.IsNullOrEmpty(contentFolder))
             {
                 Debug.Assert(Directory.Exists(contentFolder));
 
@@ -53,11 +53,11 @@ namespace Editor.Content.ContentBrowser
 
         public static void EnableFileWatcher(bool isEnabled)
         {
-            if(_fileWatcherEnableCounter > 0 && isEnabled)
+            if (_fileWatcherEnableCounter > 0 && isEnabled)
             {
                 --_fileWatcherEnableCounter;
             }
-            else if(!isEnabled)
+            else if (!isEnabled)
             {
                 ++_fileWatcherEnableCounter;
             }
@@ -68,7 +68,7 @@ namespace Editor.Content.ContentBrowser
 
         private static void Refresh(object sender, DelayEventTimerArgs e)
         {
-            if(_fileWatcherEnableCounter > 0)
+            if (_fileWatcherEnableCounter > 0)
             {
                 e.RepeatEvent = true;
 

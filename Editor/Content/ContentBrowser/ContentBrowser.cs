@@ -1,5 +1,4 @@
 ﻿using Editor.Common;
-using Editor.Common.Enums;
 using Editor.Content.ContentBrowser.Descriptors;
 using Editor.GameProject;
 using Editor.Utilities;
@@ -7,7 +6,6 @@ using Editor.Utilities.Descriptors;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 
 namespace Editor.Content.ContentBrowser
 {
@@ -63,7 +61,7 @@ namespace Editor.Content.ContentBrowser
 
             try
             {
-                foreach(var dir in Directory.GetDirectories(path))
+                foreach (var dir in Directory.GetDirectories(path))
                 {
                     folderContent.Add(new ContentInfo(dir));
                 }
@@ -75,7 +73,7 @@ namespace Editor.Content.ContentBrowser
                     folderContent.Add(ContentInfoCache.Add(file));
                 }
             }
-            catch(IOException ex)
+            catch (IOException ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -94,7 +92,7 @@ namespace Editor.Content.ContentBrowser
 
         private async Task GetFolderContentAsync()
         {
-             var folderContent = new List<ContentInfo>();
+            var folderContent = new List<ContentInfo>();
 
             await Task.Run(() =>
             {

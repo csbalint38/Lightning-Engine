@@ -141,7 +141,7 @@ namespace Editor.Content
                 Filter = "Asset file (*.lngasset)|*.lngasset",
             };
 
-            if(dialog.ShowDialog() == true)
+            if (dialog.ShowDialog() == true)
             {
                 Debug.Assert(!string.IsNullOrEmpty(dialog.FileName));
 

@@ -15,7 +15,8 @@ namespace Editor.Content.ContentBrowser
 
         public static void Reset(string projectPath)
         {
-            lock (_lock) {
+            lock (_lock)
+            {
                 if (!string.IsNullOrEmpty(_cacheFilePath) && _isDirty)
                 {
                     SaveInfoCache();
@@ -24,7 +25,7 @@ namespace Editor.Content.ContentBrowser
                     _isDirty = false;
                 }
 
-                if(!string.IsNullOrEmpty(projectPath))
+                if (!string.IsNullOrEmpty(projectPath))
                 {
                     Debug.Assert(Directory.Exists(projectPath));
 

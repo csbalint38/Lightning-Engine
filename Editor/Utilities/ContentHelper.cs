@@ -9,8 +9,14 @@ namespace Editor.Utilities
 {
     public static class ContentHelper
     {
+        public static string[] MeshFileExtension { get; } = { ".fbx" };
+        public static string[] ImageFileExtension { get; } = { ".bmp", ".png", ".jpg", ".jpeg", ".tiff", ".tif", ".tga", ".dds", ".hdr" };
+        public static string[] AudioFileExtensions { get; } = { ".ogg", ".waw" };
+
         public static string SanitizeFileName(string name)
         {
+            Debug.Assert(!string.IsNullOrEmpty(name));
+
             var path = new StringBuilder(name.Substring(0, name.LastIndexOf(Path.DirectorySeparatorChar) + 1));
             var file = new StringBuilder(name[(name.LastIndexOf(Path.DirectorySeparatorChar) + 1)..]);
 
@@ -22,7 +28,7 @@ namespace Editor.Utilities
 
         public static byte[] ComputeHash(byte[] data, int offset = 0, int count = 0)
         {
-            if(data.Length > 0)
+            if (data.Length > 0)
             {
 
                 return SHA256.HashData(data.AsSpan(offset, count > 0 ? count : data.Length));
@@ -60,7 +66,7 @@ namespace Editor.Utilities
 
                 await Task.WhenAll(tasks);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to import files to {destination}");
                 Debug.WriteLine(ex.Message);
@@ -71,53 +77,57 @@ namespace Editor.Utilities
             }
         }
 
-        private static void Import(string file, string destination)
+        private static Asset Import(string file, string destination)
         {
             Debug.Assert(!string.IsNullOrEmpty(file));
 
-            if (IsDirectory(file)) return;
-            if(!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
+            if (IsDirectory(file)) return null;
+            if (!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
 
             var name = Path.GetFileNameWithoutExtension(file).ToLower();
             var ext = Path.GetExtension(file).ToLower();
 
-            Asset asset = null;
-
-            switch(ext)
+            Asset asset = ext switch
             {
-                case ".fbx":
-                    asset = new Geometry();
-                    break;
-                case ".bmp": break;
-                case ".png": break;
-                case ".jpg": break;
-                case ".jpeg": break;
-                case ".tiff": break;
-                case ".tif": break;
-                case ".tga": break;
-                case ".waw": break;
-                case ".ogg": break;
-                default:
-                    break;
-            }
+                { } when MeshFileExtension.Contains(ext) => new Geometry(),
+                { } when ImageFileExtension.Contains(ext) => new Texture(),
+                { } when AudioFileExtensions.Contains(ext) => null,
+                _ => null
+            };
 
-            if(asset is not null)
+            if (asset is not null)
             {
                 Import(asset, name, file, destination);
             }
+
+            return asset;
         }
 
         private static void Import(Asset asset, string name, string file, string destination)
         {
+            destination = destination?.Trim();
+
             Debug.Assert(asset is not null);
+            Debug.Assert(!string.IsNullOrEmpty(destination) && Directory.Exists(destination));
+
+            if (!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
 
             asset.FullPath = destination + name + Asset.AssetFileExtension;
 
-            if (!string.IsNullOrEmpty(file)) asset.Import(file);
+            bool importSucceeded = false;
 
-            asset.Save(asset.FullPath);
+            try
+            {
+                importSucceeded = !string.IsNullOrEmpty(file) && asset.Import(file);
 
-            return;
+                if (importSucceeded) asset.Save(asset.FullPath);
+
+                return;
+            }
+            finally
+            {
+
+            }
         }
     }
 }

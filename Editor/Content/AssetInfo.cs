@@ -9,7 +9,6 @@ namespace Editor.Content
         public byte[] Icon { get; set; }
         public string FullPath { get; set; }
         public string FileName => Path.GetFileNameWithoutExtension(FullPath);
-        public string? SourcePath { get; set; }
         public DateTime RegisterTime { get; set; }
         public DateTime ImportDate { get; set; }
         public Guid Guid { get; set; }

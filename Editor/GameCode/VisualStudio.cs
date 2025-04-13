@@ -187,7 +187,7 @@ namespace Editor.GameCode
             {
                 if (_vsInstance is not null)
                 {
-                    CallOnSTAThread(() => 
+                    CallOnSTAThread(() =>
                     {
                         if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
                         else _vsInstance.ExecuteCommand("File.SaveAll");
@@ -237,10 +237,11 @@ namespace Editor.GameCode
             OpenVisualStudioInternal(project.Solution);
             BuildFinished = BuildSucceeded = false;
 
-            CallOnSTAThread(() => {
+            CallOnSTAThread(() =>
+            {
 
                 _vsInstance.MainWindow.Visible = showWindow;
-                
+
                 if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
 
                 _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
@@ -256,7 +257,7 @@ namespace Editor.GameCode
                     File.Delete(pdb);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -300,7 +301,8 @@ namespace Editor.GameCode
 
         private static void StopInternal()
         {
-            CallOnSTAThread(() => {
+            CallOnSTAThread(() =>
+            {
                 if (_vsInstance is not null && IsDebuggingInternal()) _vsInstance.ExecuteCommand("Debug.StopDebugging");
             });
         }
