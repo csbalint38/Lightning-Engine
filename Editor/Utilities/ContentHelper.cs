@@ -28,7 +28,7 @@ namespace Editor.Utilities
 
         public static byte[] ComputeHash(byte[] data, int offset = 0, int count = 0)
         {
-            if(data.Length > 0)
+            if (data.Length > 0)
             {
 
                 return SHA256.HashData(data.AsSpan(offset, count > 0 ? count : data.Length));
@@ -66,7 +66,7 @@ namespace Editor.Utilities
 
                 await Task.WhenAll(tasks);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to import files to {destination}");
                 Debug.WriteLine(ex.Message);
@@ -82,7 +82,7 @@ namespace Editor.Utilities
             Debug.Assert(!string.IsNullOrEmpty(file));
 
             if (IsDirectory(file)) return null;
-            if(!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
+            if (!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
 
             var name = Path.GetFileNameWithoutExtension(file).ToLower();
             var ext = Path.GetExtension(file).ToLower();
@@ -95,7 +95,7 @@ namespace Editor.Utilities
                 _ => null
             };
 
-            if(asset is not null)
+            if (asset is not null)
             {
                 Import(asset, name, file, destination);
             }
@@ -110,7 +110,7 @@ namespace Editor.Utilities
             Debug.Assert(asset is not null);
             Debug.Assert(!string.IsNullOrEmpty(destination) && Directory.Exists(destination));
 
-            if(!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
+            if (!destination.EndsWith(Path.DirectorySeparatorChar)) destination += Path.DirectorySeparatorChar;
 
             asset.FullPath = destination + name + Asset.AssetFileExtension;
 

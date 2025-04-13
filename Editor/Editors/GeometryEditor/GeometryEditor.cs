@@ -73,7 +73,7 @@ namespace Editor.Editors
                     MaxLODIndex = (lods.Count > 0) ? lods.Count - 1 : 0;
                     OnPropertyChanged(nameof(MaxLODIndex));
 
-                    if(lods.Count > 1)
+                    if (lods.Count > 1)
                     {
                         MeshRenderer.PropertyChanged += (s, e) =>
                         {
@@ -95,14 +95,14 @@ namespace Editor.Editors
                 Geometry = geometry;
                 var numLods = geometry.GetLodGroup().LODs.Count;
 
-                if(LODIndex >= numLods)
+                if (LODIndex >= numLods)
                 {
                     LODIndex = numLods - 1;
                 }
                 else
                 {
                     MeshRenderer = new MeshRenderer(Geometry.GetLodGroup().LODs[0], MeshRenderer);
-                } 
+                }
             }
         }
 
@@ -121,7 +121,7 @@ namespace Editor.Editors
 
                 SetAsset(geometry);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -134,7 +134,7 @@ namespace Editor.Editors
             var p = MeshRenderer.OffsetCameraPosition;
             var distance = new Vector3D(p.X, p.Y, p.Z).Length;
 
-            for(int i = MaxLODIndex; i >= 0; --i)
+            for (int i = MaxLODIndex; i >= 0; --i)
             {
                 if (lods[i].LODThreshold < distance)
                 {

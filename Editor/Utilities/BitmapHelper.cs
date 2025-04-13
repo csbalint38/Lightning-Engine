@@ -37,7 +37,7 @@ namespace Editor.Utilities
             else if (bytesPerPixel == 3 || bytesPerPixel == 2) format = PixelFormats.Bgr24;
             else if (bytesPerPixel == 1) format = PixelFormats.Gray8;
 
-            if(bytesPerPixel == 16)
+            if (bytesPerPixel == 16)
             {
                 bgrData = new byte[data.Length];
                 Buffer.BlockCopy(data, 0, bgrData, 0, data.Length);
@@ -47,7 +47,7 @@ namespace Editor.Utilities
                 bgrData = new byte[data.Length];
                 Buffer.BlockCopy(data, 0, bgrData, 0, data.Length);
 
-                for(int i = 0; i< data.Length; i += bytesPerPixel)
+                for (int i = 0; i < data.Length; i += bytesPerPixel)
                 {
                     var r = bgrData[i + 2];
 
@@ -55,7 +55,7 @@ namespace Editor.Utilities
                     bgrData[i] = r;
                 }
             }
-            else if(bytesPerPixel == 2)
+            else if (bytesPerPixel == 2)
             {
                 bgrData = new byte[slice.Width * slice.Height * 3];
                 stride = slice.Width * 3;
@@ -64,10 +64,10 @@ namespace Editor.Utilities
                 var isNormal = isNormalMap ? 1 : 0;
                 int index = 0;
 
-                for(int i = 0; i <data.Length; i+=2)
+                for (int i = 0; i < data.Length; i += 2)
                 {
                     var r = data[i] * inv255 * 2.0 - 1.0;
-                    var g = data[i+1] * inv255 * 2.0 - 1.0;
+                    var g = data[i + 1] * inv255 * 2.0 - 1.0;
                     var b = (Math.Sqrt(Math.Clamp(1.0 - (r * r + g * g), 0, 1.0)) + 1.0) * .5 * 255.0;
 
                     bgrData[index + 2] = data[i];
@@ -77,7 +77,7 @@ namespace Editor.Utilities
                     index += 3;
                 }
             }
-            else if(bytesPerPixel == 1)
+            else if (bytesPerPixel == 1)
             {
                 bgrData = new byte[data.Length];
                 Buffer.BlockCopy(data, 0, bgrData, 0, data.Length);

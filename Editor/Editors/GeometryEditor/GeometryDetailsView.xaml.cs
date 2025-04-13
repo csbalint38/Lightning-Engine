@@ -17,7 +17,7 @@ namespace Editor.Editors
         {
             var vm = DataContext as GeometryEditor;
 
-            foreach(var m in vm.MeshRenderer.Meshes)
+            foreach (var m in vm.MeshRenderer.Meshes)
             {
                 m.IsHighlighted = false;
             }
@@ -31,17 +31,17 @@ namespace Editor.Editors
         {
             var vm = DataContext as GeometryEditor;
 
-            foreach(var m in vm.MeshRenderer.Meshes)
+            foreach (var m in vm.MeshRenderer.Meshes)
             {
                 m.IsIsolated = false;
             }
 
             var checkBox = sender as CheckBox;
             var mesh = checkBox.DataContext as MeshRendererVertexData;
-            
+
             mesh.IsIsolated = checkBox.IsChecked == true;
 
-            if(Tag is GeometryView geometryView)
+            if (Tag is GeometryView geometryView)
             {
                 geometryView.SetGeometry(mesh.IsIsolated ? vm.MeshRenderer.Meshes.IndexOf(mesh) : -1);
             }

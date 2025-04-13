@@ -294,7 +294,7 @@ namespace Editor.GameProject
 
         private void DeleteTempFolder()
         {
-            if(Directory.Exists(TempFolder)) Directory.Delete(TempFolder, true);
+            if (Directory.Exists(TempFolder)) Directory.Delete(TempFolder, true);
         }
     }
 }

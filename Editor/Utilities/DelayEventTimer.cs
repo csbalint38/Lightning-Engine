@@ -24,7 +24,7 @@ namespace Editor.Utilities
 
         public void Trigger(object data = null)
         {
-            if(data is not null) _data.Add(data);
+            if (data is not null) _data.Add(data);
 
             _lastEventTime = DateTime.Now;
             _timer.IsEnabled = true;

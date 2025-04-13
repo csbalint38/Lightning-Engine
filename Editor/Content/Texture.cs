@@ -1,6 +1,7 @@
 ﻿
 using Editor.Common.Enums;
 using Editor.Content.ContentBrowser;
+using Editor.DLLs;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
@@ -26,7 +27,7 @@ namespace Editor.Content
         public List<List<List<Slice>>> Slices
         {
             get => _slices;
-            set
+            private set
             {
                 if (_slices != value)
                 {
@@ -128,7 +129,7 @@ namespace Editor.Content
         public bool IsNormalMap => Flags.HasFlag(TextureFlags.IS_IMPORTED_AS_NORMAL_MAP);
         public bool IsCubeMap => Flags.HasFlag(TextureFlags.IS_CUBE_MAP);
         public bool IsVolumeMap => Flags.HasFlag(TextureFlags.IS_VOLUME_MAP);
-        public string FormatName => (ImportSettings.Compress) ? ((BCFormat)Format).GetDescription() : Format.GetDescription();
+        public string FormatName => ImportSettings.Compress ? ((BCFormat)Format).GetDescription() : Format.GetDescription();
 
         public override bool Import(string file)
         {
@@ -138,10 +139,9 @@ namespace Editor.Content
             {
                 Logger.LogAsync(LogLevel.INFO, $"Importing image file {file}");
 
-                List<List<List<Slice>>> slices = new();
-                Slice icon = new();
+                (var slices, var icon) = ContentToolsAPI.Import(this);
 
-                // Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
+                Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
 
                 if (slices.Any() && slices.First().Any() && slices.First().First().Any()) Slices = slices;
                 else return false;
@@ -150,7 +150,7 @@ namespace Editor.Content
 
                 HasValidDimensions(firstMip.Width, firstMip.Height, file);
 
-                if(icon is null)
+                if (icon is null)
                 {
                     Debug.Assert(!ImportSettings.Compress);
 
@@ -165,13 +165,15 @@ namespace Editor.Content
 
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 var msg = "Failed to read {file} for import";
                 Debug.WriteLine(msg);
                 Logger.LogAsync(LogLevel.ERROR, msg);
             }
+
+            return false;
         }
 
         public override bool Load(string file)
@@ -193,19 +195,19 @@ namespace Editor.Content
         {
             bool result = true;
 
-            if(width % 4 != 0 || height % 4 != 0)
+            if (width % 4 != 0 || height % 4 != 0)
             {
                 Logger.LogAsync(LogLevel.WARNING, $"Image dimensions not a multiple of 4! (file: {file})");
                 result = false;
             }
 
-            if( width != height)
+            if (width != height)
             {
                 Logger.LogAsync(LogLevel.WARNING, $"Non-square image (width and height not equal)! (file: {file})");
                 result = false;
             }
 
-            if(!MathUtilities.IsPowOf2(width) || !MathUtilities.IsPowOf2(height))
+            if (!MathUtilities.IsPowOf2(width) || !MathUtilities.IsPowOf2(height))
             {
                 Logger.LogAsync(LogLevel.WARNING, $"Image dimensions not a power of 2! (file: {file})");
                 result = false;

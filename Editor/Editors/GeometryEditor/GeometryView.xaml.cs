@@ -13,7 +13,8 @@ namespace Editor.Editors
     /// </summary>
     public partial class GeometryView : UserControl
     {
-        private static readonly GeometryView _instance = new() {
+        private static readonly GeometryView _instance = new()
+        {
             Background = Brushes.LightGray,
         };
 

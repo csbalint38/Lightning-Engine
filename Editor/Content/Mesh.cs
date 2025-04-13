@@ -11,7 +11,7 @@ namespace Editor.Content
         private int _indexCount;
         private string _name;
 
-        public static int PositionSize = sizeof(float) * 3; 
+        public static int PositionSize => sizeof(float) * 3;
 
         public int ElementSize
         {

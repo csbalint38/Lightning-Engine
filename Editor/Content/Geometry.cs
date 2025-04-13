@@ -4,13 +4,10 @@ using Editor.DLLs;
 using Editor.Editors;
 using Editor.GameProject;
 using Editor.Utilities;
-using MahApps.Metro.Controls;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace Editor.Content
 {
@@ -72,17 +69,17 @@ namespace Editor.Content
         public override IEnumerable<string> Save(string file)
         {
             Debug.Assert(_lodGroups.Any());
-            
+
             var savedFiles = new List<string>();
 
-            if(!_lodGroups.Any()) return savedFiles;
+            if (!_lodGroups.Any()) return savedFiles;
 
             var path = Path.GetDirectoryName(file) + Path.DirectorySeparatorChar;
             var fileName = Path.GetFileNameWithoutExtension(file);
 
             try
             {
-                foreach(var lodGroup in _lodGroups)
+                foreach (var lodGroup in _lodGroups)
                 {
                     Debug.Assert(lodGroup.LODs.Any());
 
@@ -97,14 +94,14 @@ namespace Editor.Content
                     Guid = TryGetAssetInfo(meshFileName) is AssetInfo info && info.Type == Type ? info.Guid : Guid.NewGuid();
                     byte[] data = null;
 
-                    using(var writer = new BinaryWriter(new MemoryStream()))
+                    using (var writer = new BinaryWriter(new MemoryStream()))
                     {
                         writer.Write(lodGroup.Name);
                         writer.Write(lodGroup.LODs.Count);
 
                         var hashes = new List<byte>();
 
-                        foreach(var lod in lodGroup.LODs)
+                        foreach (var lod in lodGroup.LODs)
                         {
                             LODToBinary(lod, writer, out var hash);
                             hashes.AddRange(hash);
@@ -128,8 +125,10 @@ namespace Editor.Content
                     Logger.LogAsync(LogLevel.INFO, $"Saved geometry to {meshFileName}");
                     savedFiles.Add(meshFileName);
                 }
+
+                FullPath = file;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failed to save Geometry to {file}");
@@ -148,7 +147,7 @@ namespace Editor.Content
             if (ext == ".fbx") return ImportFbx(file);
 
             return false;
-            
+
         }
 
         public override bool Load(string file)
@@ -180,7 +179,7 @@ namespace Editor.Content
 
                     var lodCount = reader.ReadInt32();
 
-                    for(int i = 0; i < lodCount; ++i)
+                    for (int i = 0; i < lodCount; ++i)
                     {
                         lodGroup.LODs.Add(BinaryToLOD(reader));
                     }
@@ -212,7 +211,7 @@ namespace Editor.Content
             using var writer = new BinaryWriter(new MemoryStream());
             writer.Write(GetLodGroup().LODs.Count);
 
-            foreach(var lod in GetLodGroup().LODs)
+            foreach (var lod in GetLodGroup().LODs)
             {
                 writer.Write(lod.LODThreshold);
                 writer.Write(lod.Meshes.Count);
@@ -221,7 +220,7 @@ namespace Editor.Content
 
                 writer.Write(0);
 
-                foreach(var mesh in lod.Meshes)
+                foreach (var mesh in lod.Meshes)
                 {
                     writer.Write(mesh.ElementSize);
                     writer.Write(mesh.VertexCount);
@@ -260,7 +259,7 @@ namespace Editor.Content
             }
             // ENDTEMP
 
-                return data;
+            return data;
         }
 
         private static List<MeshLOD> ReadMeshLODs(int numMeshes, BinaryReader reader)
@@ -303,11 +302,11 @@ namespace Editor.Content
             mesh.IndexCount = reader.ReadInt32();
 
             var lodThreshold = reader.ReadSingle();
-            var elementBufferSize = mesh.ElementSize * mesh.VertexCount;
+            var elementsBufferSize = mesh.ElementSize * mesh.VertexCount;
             var indexBufferSize = mesh.IndexSize * mesh.IndexCount;
 
             mesh.Positions = reader.ReadBytes(Mesh.PositionSize * mesh.VertexCount);
-            mesh.Elements = reader.ReadBytes(elementBufferSize);
+            mesh.Elements = reader.ReadBytes(elementsBufferSize);
             mesh.Indicies = reader.ReadBytes(indexBufferSize);
 
             MeshLOD lod;
@@ -361,13 +360,13 @@ namespace Editor.Content
         private MeshLOD BinaryToLOD(BinaryReader reader)
         {
             var lod = new MeshLOD();
-           
+
             lod.Name = reader.ReadString();
             lod.LODThreshold = reader.ReadSingle();
 
             var meshCount = reader.ReadInt32();
 
-            for(int i = 0; i < meshCount; ++i)
+            for (int i = 0; i < meshCount; ++i)
             {
                 var mesh = new Mesh()
                 {
@@ -390,7 +389,7 @@ namespace Editor.Content
             return lod;
         }
 
-        private byte[] GenerateIcon(MeshLOD lod)
+        private static byte[] GenerateIcon(MeshLOD lod)
         {
             var width = ContentInfo.IconWidth * 4;
             byte[] icon = null;
@@ -412,9 +411,9 @@ namespace Editor.Content
 
             if (string.IsNullOrEmpty(tempPath)) return false;
 
-            lock(_lock)
+            lock (_lock)
             {
-                if(!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+                if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
             }
 
             var tempFile = $"{tempPath}{RandomString.GetRandomString()}.fbx";
@@ -428,7 +427,7 @@ namespace Editor.Content
                 ContentToolsAPI.ImportFbx(tempFile, this);
                 result = true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 var msg = $"Failed to read {file} for import";

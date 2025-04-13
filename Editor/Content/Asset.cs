@@ -62,13 +62,13 @@ namespace Editor.Content
             var importDate = DateTime.Now.ToBinary();
 
             writer.BaseStream.Position = 0;
-            
+
             writer.Write((int)Type);
             writer.Write(id.Length);
             writer.Write(id);
             writer.Write(importDate);
 
-            if(Hash?.Length > 0)
+            if (Hash?.Length > 0)
             {
                 writer.Write(Hash.Length);
                 writer.Write(Hash);
@@ -117,7 +117,7 @@ namespace Editor.Content
             return info;
         }
 
-        public static AssetInfo? TryGetAssetInfo(string file) => 
+        public static AssetInfo? TryGetAssetInfo(string file) =>
             File.Exists(file) && Path.GetExtension(file) == AssetFileExtension
                 ? AssetRegistry.GetAssetInfo(file) ?? GetAssetInfo(file)
                 : null;
