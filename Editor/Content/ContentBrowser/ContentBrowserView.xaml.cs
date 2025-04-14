@@ -140,11 +140,12 @@ namespace Editor.Content
                     case AssetType.MATERIAL:
                         break;
                     case AssetType.MESH:
-                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "GeometryEditor");
+                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "Geometry Editor");
                         break;
                     case AssetType.SKELETON:
                         break;
                     case AssetType.TEXTURE:
+                        editor = OpenEditorPanel<TextureEditorView>(info, info.Guid, "Texture Editor");
                         break;
                     default:
                         break;
@@ -164,7 +165,7 @@ namespace Editor.Content
             {
                 if (window.Content is FrameworkElement content &&
                     content.DataContext is IAssetEditor editor &&
-                    editor.Asset.Guid == info.Guid
+                    editor.AssetGuid == info.Guid
                 )
                 {
                     window.Activate();
@@ -172,11 +173,17 @@ namespace Editor.Content
                 }
             }
 
+            var newEditor = CreateEditorWindow<T>(title);
+            (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
+
+            return newEditor.DataContext as IAssetEditor;
+        }
+
+        private static FrameworkElement CreateEditorWindow<T>(string title) where T : FrameworkElement, new()
+        {
             var newEditor = new T();
 
             Debug.Assert(newEditor.DataContext is IAssetEditor);
-
-            (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
 
             var win = new Window()
             {
@@ -189,7 +196,7 @@ namespace Editor.Content
 
             win.Show();
 
-            return newEditor.DataContext as IAssetEditor;
+            return newEditor;
         }
     }
 }

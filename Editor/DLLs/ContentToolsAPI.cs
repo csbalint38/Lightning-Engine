@@ -67,6 +67,88 @@ namespace Editor.DLLs
             }
         }
 
+        public static List<List<List<Slice>>> SlicesFromBinary(byte[] data, int arraySize, int mipLevels, bool is3D)
+        {
+            Debug.Assert(data?.Length > 0 && arraySize > 0);
+            Debug.Assert(mipLevels > 0 && mipLevels < Texture.MaxMipLevels);
+
+            var depthPerMipLevel = Enumerable.Repeat(1, mipLevels).ToList();
+
+            if (is3D)
+            {
+                var depth = arraySize;
+                arraySize = 1;
+
+                for (var i = 0; i < mipLevels; ++i)
+                {
+                    depthPerMipLevel[i] = depth;
+                    depth = Math.Max(depth >> 1, 1);
+                }
+            }
+
+            using var reader = new BinaryReader(new MemoryStream(data));
+            var slices = new List<List<List<Slice>>>();
+
+            for (var i = 0; i < arraySize; ++i)
+            {
+                var arraySlice = new List<List<Slice>>();
+
+                for (var j = 0; j < mipLevels; ++j)
+                {
+                    var mipSlice = new List<Slice>();
+
+                    for (var k = 0; k < depthPerMipLevel[i]; ++k)
+                    {
+                        var slice = new Slice();
+
+                        slice.Width = reader.ReadInt32();
+                        slice.Height = reader.ReadInt32();
+                        slice.RowPitch = reader.ReadInt32();
+                        slice.SlicePitch = reader.ReadInt32();
+                        slice.RawContent = reader.ReadBytes(slice.SlicePitch);
+
+                        mipSlice.Add(slice);
+                    }
+
+                    arraySlice.Add(mipSlice);
+                }
+
+                slices.Add(arraySlice);
+            }
+
+            return slices;
+        }
+
+        public static byte[] SlicesToBinary(List<List<List<Slice>>> slices)
+        {
+            Debug.Assert(slices?.Any() == true && slices.First().Any() == true);
+
+            using var writer = new BinaryWriter(new MemoryStream());
+
+            foreach(var arraySlice in slices)
+            {
+                foreach(var mipLevel in arraySlice)
+                {
+                    foreach(var slice in mipLevel)
+                    {
+                        writer.Write(slice.Width);
+                        writer.Write(slice.Height);
+                        writer.Write(slice.RowPitch);
+                        writer.Write(slice.SlicePitch);
+                        writer.Write(slice.RawContent);
+                    }
+                } 
+            }
+
+            writer.Flush();
+
+            var data = (writer.BaseStream as MemoryStream)?.ToArray();
+
+            Debug.Assert(data?.Length > 0);
+
+            return data;
+        }
+
         private static void GeometryFromSceneData(Geometry geometry, Action<SceneData> sceneDataGenerator, string failureMessage)
         {
             Debug.Assert(geometry is not null);
@@ -130,58 +212,6 @@ namespace Editor.DLLs
                 data.Info.MipLevels,
                 ((TextureFlags)data.Info.Flags).HasFlag(TextureFlags.IS_VOLUME_MAP)
             );
-        }
-
-        private static List<List<List<Slice>>> SlicesFromBinary(byte[] data, int arraySize, int mipLevels, bool is3D)
-        {
-            Debug.Assert(data?.Length > 0 && arraySize > 0);
-            Debug.Assert(mipLevels > 0 && mipLevels < Texture.MaxMipLevels);
-
-            var depthPerMipLevel = Enumerable.Repeat(1, mipLevels).ToList();
-
-            if (is3D)
-            {
-                var depth = arraySize;
-                arraySize = 1;
-
-                for (var i = 0; i < mipLevels; ++i)
-                {
-                    depthPerMipLevel[i] = depth;
-                    depth = Math.Max(depth >> 1, 1);
-                }
-            }
-
-            using var reader = new BinaryReader(new MemoryStream(data));
-            var slices = new List<List<List<Slice>>>();
-
-            for (var i = 0; i < arraySize; ++i)
-            {
-                var arraySlice = new List<List<Slice>>();
-
-                for (var j = 0; j < mipLevels; ++j)
-                {
-                    var mipSlice = new List<Slice>();
-
-                    for (var k = 0; k < depthPerMipLevel[i]; ++k)
-                    {
-                        var slice = new Slice();
-
-                        slice.Width = reader.ReadInt32();
-                        slice.Height = reader.ReadInt32();
-                        slice.RowPitch = reader.ReadInt32();
-                        slice.SlicePitch = reader.ReadInt32();
-                        slice.RawContent = reader.ReadBytes(slice.SlicePitch);
-
-                        mipSlice.Add(slice);
-                    }
-
-                    arraySlice.Add(mipSlice);
-                }
-
-                slices.Add(arraySlice);
-            }
-
-            return slices;
         }
 
         private static Slice GetIcon(TextureData data)

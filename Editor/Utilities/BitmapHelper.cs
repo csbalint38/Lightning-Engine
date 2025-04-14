@@ -60,21 +60,32 @@ namespace Editor.Utilities
                 bgrData = new byte[slice.Width * slice.Height * 3];
                 stride = slice.Width * 3;
 
-                var inv255 = 1.0 / 255.0;
-                var isNormal = isNormalMap ? 1 : 0;
                 int index = 0;
 
                 for (int i = 0; i < data.Length; i += 2)
                 {
-                    var r = data[i] * inv255 * 2.0 - 1.0;
-                    var g = data[i + 1] * inv255 * 2.0 - 1.0;
-                    var b = (Math.Sqrt(Math.Clamp(1.0 - (r * r + g * g), 0, 1.0)) + 1.0) * .5 * 255.0;
-
                     bgrData[index + 2] = data[i];
                     bgrData[index + 1] = data[i + 1];
-                    bgrData[index] = (byte)(b * isNormal);
+                    bgrData[index] = 0;
 
                     index += 3;
+                }
+
+                if(isNormalMap)
+                {
+                    var inv255 = 1.0 / 255.0;
+                    index = 0;
+
+                    for(int i = 0; i < data.Length; i+=2)
+                    {
+                        var r = data[i] * inv255 * 2.0 - 1.0;
+                        var g = data[i + 1] * inv255 * 2.0 - 1.0;
+                        var b = (Math.Sqrt(Math.Clamp(1.0 - (r * r + g * g), 0.0, 1.0)) + 1.0) * 0.5 * 255.0;
+
+                        bgrData[index] = (byte)b;
+
+                        index += 3;
+                    }
                 }
             }
             else if (bytesPerPixel == 1)

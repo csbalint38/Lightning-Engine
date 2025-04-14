@@ -1,7 +1,9 @@
 ﻿using Editor.Content;
+using System.Runtime.InteropServices;
 
 namespace Editor.DLLs.Descriptors
 {
+    [StructLayout(LayoutKind.Sequential)]
     public class TextureImportSettings
     {
         public string Sources;

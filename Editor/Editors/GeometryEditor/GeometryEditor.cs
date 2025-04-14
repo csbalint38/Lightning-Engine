@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.Content;
 using System.Diagnostics;
 using System.IO;
@@ -12,10 +13,11 @@ namespace Editor.Editors
         private MeshRenderer _meshRenderer;
         private bool _autoLOD = true;
         private int _lodIndex;
+        private AssetEditorState _state;
 
         public Asset Asset => Geometry;
         public int MaxLODIndex { get; private set; }
-
+        public Guid AssetGuid { get; private set; }
 
         public Geometry Geometry
         {
@@ -86,12 +88,26 @@ namespace Editor.Editors
             }
         }
 
+        public AssetEditorState State
+        {
+            get => _state;
+            set
+            {
+                if (_state != value)
+                {
+                    _state = value;
+                    OnPropertyChanged(nameof(State));
+                }
+            }
+        }
+
         public void SetAsset(Asset asset)
         {
             Debug.Assert(asset is Content.Geometry);
 
             if (asset is Content.Geometry geometry)
             {
+                AssetGuid = asset.Guid;
                 Geometry = geometry;
                 var numLods = geometry.GetLodGroup().LODs.Count;
 
@@ -110,6 +126,8 @@ namespace Editor.Editors
         {
             try
             {
+                AssetGuid = info.Guid;
+
                 Debug.Assert(info is not null && File.Exists(info.FullPath));
 
                 var geometry = new Geometry();
