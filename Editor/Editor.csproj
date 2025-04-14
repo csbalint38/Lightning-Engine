@@ -31,6 +31,7 @@
     <None Remove="Resources\FolderSmall.png" />
     <None Remove="Resources\PlaneTexture.png" />
     <None Remove="Resources\SphereUvChecker.png" />
+    <None Remove="Resources\TextureEditor\Checkerboard.png" />
   </ItemGroup>
 	
   <ItemGroup>
@@ -55,5 +56,6 @@
     <Resource Include="Resources\SphereUvChecker.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Resources\TextureEditor\Checkerboard.png" />
   </ItemGroup>
 </Project>

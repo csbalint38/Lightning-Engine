@@ -11,6 +11,38 @@
              FocusVisualStyle="{x:Null}"
              Focusable="True">
     <Grid>
-        <Grid Background="Pink" ClipToBounds="True"/>
+        <Grid ClipToBounds="True"
+              Background="Transparent"
+              x:Name="GrdBackground"
+              MouseLeftButtonDown="GrdBackground_MouseLeftButtonDown"
+              MouseLeftButtonUp="GrdBackground_MouseLeftButtonUp"
+              MouseWheel="GrdBackground_MouseWheel"
+              PreviewMouseMove="GrdBackground_PreviewMouseMove">
+            <Grid.LayoutTransform>
+                <ScaleTransform ScaleX="{Binding ScaleFactor}"
+                                ScaleY="{Binding ScaleFactor}"/>
+            </Grid.LayoutTransform>
+            <Canvas IsHitTestVisible="True">
+                <Rectangle Canvas.Left="{Binding PanOffset.X}"
+                           Canvas.Top="{Binding PanOffset.Y}"
+                           Width="{Binding Path=ActualWidth, ElementName=textureImage}"
+                           Height="{Binding Path=ActualHeight, ElementName=textureImage}">
+                    <Rectangle.Fill>
+                        <ImageBrush x:Name="textureBackground"
+                                    ImageSource="/Resources/TextureEditor/Checkerboard.png"
+                                    TileMode="Tile"
+                                    Viewport="0,0,64,64"
+                                    ViewportUnits="Absolute"/>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Canvas>
+            <Canvas IsHitTestVisible="True">
+                <Image x:Name="textureImage"
+                       Source="{Binding SelectedSliceBitmap}"
+                       Canvas.Left="{Binding PanOffset.X}"
+                       Canvas.Top="{Binding PanOffset.Y}"
+                       Opacity="0.1"/>
+            </Canvas>
+        </Grid>
     </Grid>
 </UserControl>

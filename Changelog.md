@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Texture editor
  - Import textures
  - Pack meshes for the Engine in the Editor
  - Partial support for other mesh types: skeletal mesh, mesh with joints, mesh with normals, mesh with tangents
