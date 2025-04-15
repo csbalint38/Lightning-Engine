@@ -58,6 +58,7 @@ namespace Editor.Editors
         };
 
         public float Stride => (float?)SelectedSliceBitmap?.Format.BitsPerPixel / 8 ?? 1f;
+        public long DataSize => Texture?.Slices?.Sum(x => x.Sum(y => y.Sum(z => z.RawContent.LongLength))) ?? 0;
 
         public AssetEditorState State
         {
@@ -271,6 +272,7 @@ namespace Editor.Editors
 
                 GenerateSliceBitMaps(texture.IsNormalMap);
                 OnPropertyChanged(nameof(Texture));
+                OnPropertyChanged(nameof(DataSize));
             }
             catch(Exception ex)
             {
@@ -374,6 +376,7 @@ namespace Editor.Editors
         {
             OnPropertyChanged(nameof(Channels));
             OnPropertyChanged(nameof(Stride));
+            OnPropertyChanged(nameof(DataSize));
         }
     }
 }

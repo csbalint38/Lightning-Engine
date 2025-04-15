@@ -2,7 +2,7 @@
 using System.Text;
 using System.Windows.Data;
 
-namespace Editor.Utilities
+namespace Editor.Utilities.Converters
 {
     class EnumValueConverter : IValueConverter
     {

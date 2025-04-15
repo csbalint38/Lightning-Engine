@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:enum="clr-namespace:Editor.Common.Enums"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=local:TextureEditor}"
              d:DesignHeight="450"
@@ -63,6 +64,105 @@
                        FontFamily="Bahnschrift condensed"
                        FontSize="32"
                        Foreground="#FFC800"/>
+        </Border>
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                d:Visibility="Visible"
+                Background="#50000000"
+                CornerRadius="5"
+                IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="{x:Type Border}">
+                    <Setter Property="Visibility"
+                            Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding State}"
+                                     Value="{x:Static enum:AssetEditorState.DONE}">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="0"
+                                                         Duration="0:0:2"/>
+                                        <ObjectAnimationUsingKeyFrames BeginTime="0:0:0"
+                                                                       Duration="0:0:2"
+                                                                       Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:2"
+                                                                    Value="{x:Static Visibility.Collapsed}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         To="1"
+                                                         Duration="0:0:0.1"/>
+                                        <ObjectAnimationUsingKeyFrames BeginTime="0:0:0"
+                                                                       Duration="0:0:0.1"
+                                                                       Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0:0:0.1"
+                                                                    Value="{x:Static Visibility.Visible}"/>
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock Margin="10,5"
+                       FontFamily="Bahnschrift condensed"
+                       FontSize="32"
+                       Foreground="#FFC800"
+                       d:Text="LOADING...">
+                <TextBlock.Style>
+                    <Style TargetType="{x:Type TextBlock}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding State}"
+                                         Value="{x:Static enum:AssetEditorState.DONE}">
+                                <Setter Property="Text"
+                                        Value="DONE"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding State}"
+                                         Value="{x:Static enum:AssetEditorState.IMPORTING}">
+                                <Setter Property="Text"
+                                        Value="IMPORTING..."/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding State}"
+                                         Value="{x:Static enum:AssetEditorState.LOADING}">
+                                <Setter Property="Text"
+                                        Value="LOADING..."/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding State}"
+                                         Value="{x:Static enum:AssetEditorState.PROCESSING}">
+                                <Setter Property="Text"
+                                        Value="PROCESSING..."/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding State}"
+                                         Value="{x:Static enum:AssetEditorState.SAVING}">
+                                <Setter Property="Text"
+                                        Value="SAVING..."/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+                <TextBlock.Triggers>
+                    <EventTrigger RoutedEvent="Loaded">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation AutoReverse="True"
+                                                 RepeatBehavior="Forever"
+                                                 Storyboard.TargetProperty="Opacity"
+                                                 From="1"
+                                                 To="0"
+                                                 Duration="0:0:1"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </TextBlock.Triggers>
+            </TextBlock>
         </Border>
     </Grid>
 </UserControl>

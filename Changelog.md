@@ -7,6 +7,8 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Texture details in texture editor side panel
+ - Texture loading status display
  - View individual color channels of a texture
  - Texture editor controls: zoom, center, original size
  - Viewing different mip-levels of a texture

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Editor.Content"
         xmlns:common="clr-namespace:Editor.Common.Enums"
-        xmlns:util="clr-namespace:Editor.Utilities"
+        xmlns:util="clr-namespace:Editor.Utilities.Converters"
         xmlns:ed="clr-namespace:Editor.Editors"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
