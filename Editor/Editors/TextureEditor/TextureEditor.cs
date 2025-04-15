@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace Editor.Editors
@@ -23,10 +24,10 @@ namespace Editor.Editors
         private int _arrayIndex;
         private int _mipIndex;
         private int _depthIndex;
-        private bool _isRedChannelSet;
-        private bool _isGreenChannelSet;
-        private bool _isBlueChannelSet;
-        private bool _isAlphaChannelSet;
+        private bool _isRedChannelSet = true;
+        private bool _isGreenChannelSet = true;
+        private bool _isBlueChannelSet = true;
+        private bool _isAlphaChannelSet = true;
 
         public Guid AssetGuid { get; private set; }
         
@@ -47,6 +48,16 @@ namespace Editor.Editors
             _sliceBitmaps.Any() && _sliceBitmaps.First().Any() && _sliceBitmaps.First().First().Any() ?
                 _sliceBitmaps.ElementAtOrDefault(ArrayIndex).ElementAtOrDefault(MipIndex).Count - 1 :
                 0;
+
+        public Color Channels => new()
+        {
+            ScR = IsRedChannelSet ? 1f : 0f,
+            ScG = IsGreenChannelSet ? 1f : 0f,
+            ScB = IsBlueChannelSet ? 1f : 0f,
+            ScA = IsAlphaChannelSet ? 1f : 0f
+        };
+
+        public float Stride => (float?)SelectedSliceBitmap?.Format.BitsPerPixel / 8 ?? 1f;
 
         public AssetEditorState State
         {
@@ -70,6 +81,7 @@ namespace Editor.Editors
                     _texture = value;
                     OnPropertyChanged(nameof(Texture));
                     SetSelectedBitmap();
+                    SetImageChannels();
                 }
             }
         }
@@ -111,6 +123,7 @@ namespace Editor.Editors
                     _arrayIndex = value;
                     OnPropertyChanged(nameof(ArrayIndex));
                     SetSelectedBitmap();
+                    SetImageChannels();
                 }
             }
         }
@@ -127,6 +140,7 @@ namespace Editor.Editors
                     OnPropertyChanged(nameof(MipIndex));
                     OnPropertyChanged(nameof(MaxDepthIndex));
                     SetSelectedBitmap();
+                    SetImageChannels();
                 }
             }
         }
@@ -142,6 +156,7 @@ namespace Editor.Editors
                     _depthIndex = value;
                     OnPropertyChanged(nameof(DepthIndex));
                     SetSelectedBitmap();
+                    SetImageChannels();
                 }
             }
         }
@@ -155,6 +170,7 @@ namespace Editor.Editors
                 {
                     _isRedChannelSet = value;
                     OnPropertyChanged(nameof(IsRedChannelSet));
+                    SetImageChannels();
                 }
             }
         }
@@ -168,6 +184,7 @@ namespace Editor.Editors
                 {
                     _isGreenChannelSet = value;
                     OnPropertyChanged(nameof(IsGreenChannelSet));
+                    SetImageChannels();
                 }
             }
         }
@@ -181,6 +198,7 @@ namespace Editor.Editors
                 {
                     _isBlueChannelSet = value;
                     OnPropertyChanged(nameof(IsBlueChannelSet));
+                    SetImageChannels();
                 }
             }
         }
@@ -194,6 +212,7 @@ namespace Editor.Editors
                 {
                     _isAlphaChannelSet = value;
                     OnPropertyChanged(nameof(IsAlphaChannelSet));
+                    SetImageChannels();
                 }
             }
         }
@@ -307,6 +326,8 @@ namespace Editor.Editors
             OnPropertyChanged(nameof(IsGreenChannelSet));
             OnPropertyChanged(nameof(IsBlueChannelSet));
             OnPropertyChanged(nameof(IsAlphaChannelSet));
+
+            SetImageChannels();
         }
 
         private void OnSetChannelCommand(string obj)
@@ -322,6 +343,8 @@ namespace Editor.Editors
                 OnPropertyChanged(nameof(IsGreenChannelSet));
                 OnPropertyChanged(nameof(IsBlueChannelSet));
                 OnPropertyChanged(nameof(IsAlphaChannelSet));
+
+                SetImageChannels();
             }
 
             switch (obj)
@@ -344,6 +367,13 @@ namespace Editor.Editors
         private void OnRegenerateBitmapsCommand(bool isNormal) {
             GenerateSliceBitMaps(isNormal);
             OnPropertyChanged(nameof(SelectedSliceBitmap));
+            SetImageChannels();
+        }
+
+        private void SetImageChannels()
+        {
+            OnPropertyChanged(nameof(Channels));
+            OnPropertyChanged(nameof(Stride));
         }
     }
 }

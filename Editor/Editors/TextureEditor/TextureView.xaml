@@ -38,7 +38,12 @@
                 <Image x:Name="textureImage"
                        Source="{Binding SelectedSliceBitmap}"
                        Canvas.Left="{Binding PanOffset.X}"
-                       Canvas.Top="{Binding PanOffset.Y}"/>
+                       Canvas.Top="{Binding PanOffset.Y}">
+                    <Image.Effect>
+                        <local:ChannelSelectEffect Channels="{Binding Channels}"
+                                                   Stride="{Binding Stride}"/>
+                    </Image.Effect>
+                </Image>
             </Canvas>
         </Grid>
         <Border x:Name="zoomLabel"

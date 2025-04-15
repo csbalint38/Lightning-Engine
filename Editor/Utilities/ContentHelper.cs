@@ -77,6 +77,14 @@ namespace Editor.Utilities
             }
         }
 
+        public static Uri GetPackUri(string relativePath, Type type)
+        {
+            var assembyShortName = type.Assembly.ToString().Split(',')[0];
+            var packUriString = $"pack://application:,,,/{assembyShortName};component/{relativePath}";
+
+            return new Uri(packUriString);
+        }
+
         private static Asset Import(string file, string destination)
         {
             Debug.Assert(!string.IsNullOrEmpty(file));
