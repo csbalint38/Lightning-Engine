@@ -1,6 +1,7 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
 using Editor.Content;
+using Editor.DLLs;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
@@ -18,12 +19,25 @@ namespace Editor.Editors
         private List<List<List<Slice>>> _slices;
         private Point _panOffset;
         private double _scaleFactor = 1.0;
+        private int _arrayIndex;
+        private int _mipIndex;
+        private int _depthIndex;
 
         public Guid AssetGuid { get; private set; }
 
         Asset IAssetEditor.Asset => Texture;
-        public BitmapSource SelectedSliceBitmap => _sliceBitmaps.ElementAtOrDefault(0)?.ElementAtOrDefault(0)?.ElementAtOrDefault(0);
-        public Slice SelectedSlice => Texture?.Slices?.ElementAtOrDefault(0)?.ElementAtOrDefault(0)?.ElementAtOrDefault(0);
+        public BitmapSource SelectedSliceBitmap =>
+            _sliceBitmaps.ElementAtOrDefault(ArrayIndex)?.ElementAtOrDefault(MipIndex)?.ElementAtOrDefault(DepthIndex);
+
+        public Slice SelectedSlice =>
+            Texture?.Slices?.ElementAtOrDefault(ArrayIndex)?.ElementAtOrDefault(MipIndex)?.ElementAtOrDefault(DepthIndex);
+
+        public int MaxMipIndex => _sliceBitmaps.Any() && _sliceBitmaps.First().Any() ? _sliceBitmaps.First().Count - 1 : 0;
+        public int MaxArrayIndex => _sliceBitmaps.Any() ? _sliceBitmaps.Count -1 : 0;
+        public int MaxDepthIndex =>
+            _sliceBitmaps.Any() && _sliceBitmaps.First().Any() && _sliceBitmaps.First().First().Any() ?
+                _sliceBitmaps.ElementAtOrDefault(ArrayIndex).ElementAtOrDefault(MipIndex).Count - 1 :
+                0;
 
         public AssetEditorState State
         {
@@ -77,6 +91,51 @@ namespace Editor.Editors
             }
         }
 
+        public int ArrayIndex
+        {
+            get => Math.Min(MaxArrayIndex, _arrayIndex);
+            set
+            {
+                value = Math.Min(value, MaxArrayIndex);
+                if (value != _arrayIndex)
+                {
+                    _arrayIndex = value;
+                    OnPropertyChanged(nameof(ArrayIndex));
+                    SetSelectedBitmap();
+                }
+            }
+        }
+
+        public int MipIndex
+        {
+            get => Math.Min(MaxMipIndex, _mipIndex);
+            set
+            {
+                value = Math.Min(value, MaxMipIndex);
+                if (value != _mipIndex)
+                {
+                    _mipIndex = value;
+                    OnPropertyChanged(nameof(MipIndex));
+                    OnPropertyChanged(nameof(MaxDepthIndex));
+                    SetSelectedBitmap();
+                }
+            }
+        }
+
+        public int DepthIndex
+        {
+            get => Math.Min(MaxDepthIndex, _depthIndex);
+            set
+            {
+                value = Math.Min(value, MaxDepthIndex);
+                if (value != _depthIndex)
+                {
+                    _mipIndex = value;
+                    OnPropertyChanged(nameof(DepthIndex));
+                    SetSelectedBitmap();
+                }
+            }
+        }
 
         public async void SetAssetAsync(AssetInfo info)
         {
@@ -118,7 +177,7 @@ namespace Editor.Editors
             {
                 await Task.Run(() =>
                 {
-                    _slices = texture.Slices;
+                    _slices = texture.ImportSettings.Compress ? ContentToolsAPI.Decompress(texture) : texture.Slices;
                 });
 
                 Debug.Assert(_slices?.Any() == true && _slices.First()?.Any() == true);
@@ -157,6 +216,10 @@ namespace Editor.Editors
                 }
                 _sliceBitmaps.Add(mipmapsBitmaps);
             }
+
+            OnPropertyChanged(nameof(MaxMipIndex));
+            OnPropertyChanged(nameof(MaxArrayIndex));
+            OnPropertyChanged(nameof(MaxDepthIndex));
         }
 
         private void SetSelectedBitmap()

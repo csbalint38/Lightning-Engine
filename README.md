@@ -8,12 +8,12 @@
 | language | files | lines |
 | :--- | ---: | ---: |
 | C++ | 100 | 15,025 |
-| C# | 119 |  7,961 |
-| XAML | 24 | 1,672 |
+| C# | 119 |  8,088 |
+| XAML | 24 | 1,827 |
 | HLSL | 13 |  1,536 |
 | Python | 8 | 277 |
-| Markdown | 3 | 180 |
-| XML | 5 | 100 |
+| Markdown | 3 | 184 |
+| XML | 5 | 102 |
 ... +1 others (less than 100 lines)
 
 ## Requirements

@@ -7,6 +7,8 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Viewing different mip-levels of a texture
+ - Viewing block-compressed textures
  - Texture editor
  - Import textures
  - Pack meshes for the Engine in the Editor

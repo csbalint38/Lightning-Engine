@@ -21,6 +21,9 @@ namespace Editor.DLLs
         [DllImport(_contentToolsDll)] // Modify entry point
         private static extern void Import([In, Out] TextureData data);
 
+        [DllImport(_contentToolsDll)] // Modify entry point
+        private static extern void Decompress([In, Out] TextureData data);
+
         public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
             GeometryFromSceneData(
                 geometry,
@@ -39,7 +42,6 @@ namespace Editor.DLLs
 
             try
             {
-                GetTextureDataInfo(texture, textureData);
                 textureData.ImportSettings.FromContentSettings(texture);
 
                 Import(textureData);
@@ -149,6 +151,41 @@ namespace Editor.DLLs
             return data;
         }
 
+        public static List<List<List<Slice>>> Decompress(Texture texture)
+        {
+            Debug.Assert(texture.ImportSettings.Compress);
+
+            using var textureData = new TextureData();
+
+            try
+            {
+                GetTextureDataInfo(texture, textureData);
+                textureData.ImportSettings.FromContentSettings(texture);
+                SetSubresourceData(texture.Slices, textureData);
+
+                Decompress(textureData);
+
+                if(textureData.Info.ImportError != 0)
+                {
+                    Logger.LogAsync(
+                        LogLevel.ERROR,
+                        $"Error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
+                    );
+
+                    throw new Exception($"Error while trying to decompress image. Error code: {textureData.Info.ImportError}");
+                }
+
+                return GetSlices(textureData);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to decompress {texture.FileName}");
+                Debug.WriteLine(ex.Message);
+
+                return new();
+            }
+        }
+
         private static void GeometryFromSceneData(Geometry geometry, Action<SceneData> sceneDataGenerator, string failureMessage)
         {
             Debug.Assert(geometry is not null);
@@ -225,6 +262,16 @@ namespace Editor.DLLs
             Marshal.Copy(data.Icon, icon, 0, data.IconSize);
 
             return SlicesFromBinary(icon, 1, 1, false).First()?.First()?.First();
+        }
+
+        private static void SetSubresourceData(List<List<List<Slice>>> slices, TextureData data)
+        {
+            var subresourceData = SlicesToBinary(slices);
+
+            data.SubresourceData = Marshal.AllocCoTaskMem(subresourceData.Length);
+            data.SubresourceSize = subresourceData.Length;
+
+            Marshal.Copy(subresourceData, 0, data.SubresourceData, data.SubresourceSize);
         }
     }
 }

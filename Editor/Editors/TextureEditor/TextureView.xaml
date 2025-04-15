@@ -10,9 +10,9 @@
              d:DesignWidth="800"
              FocusVisualStyle="{x:Null}"
              Focusable="True">
-    <Grid>
+    <Grid Background="#1f242d">
         <Grid ClipToBounds="True"
-              Background="Transparent"
+              Background="{StaticResource TiledGridBackground}"
               x:Name="GrdBackground"
               MouseLeftButtonDown="GrdBackground_MouseLeftButtonDown"
               MouseLeftButtonUp="GrdBackground_MouseLeftButtonUp"
@@ -40,8 +40,7 @@
                 <Image x:Name="textureImage"
                        Source="{Binding SelectedSliceBitmap}"
                        Canvas.Left="{Binding PanOffset.X}"
-                       Canvas.Top="{Binding PanOffset.Y}"
-                       Opacity="0.1"/>
+                       Canvas.Top="{Binding PanOffset.Y}"/>
             </Canvas>
         </Grid>
     </Grid>
