@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Texture editor controls: zoom, center, original size
  - Viewing different mip-levels of a texture
  - Viewing block-compressed textures
  - Texture editor

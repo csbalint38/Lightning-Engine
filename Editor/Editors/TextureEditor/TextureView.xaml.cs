@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Editor.Editors
 {
@@ -21,10 +22,51 @@ namespace Editor.Editors
         {
             InitializeComponent();
 
-            PreviewMouseDown += (_, __) => Focus();
-            Loaded += (_, __) => Focus();
-
+            SizeChanged += (_, __) => Center();
+            textureImage.SizeChanged += (_, __) => ZoomFit();
             DataContextChanged += OnDataContextChanged;
+        }
+
+        public void Center()
+        {
+            var vm = DataContext as TextureEditor;
+            var offsetX = (RenderSize.Width / vm.ScaleFactor - textureImage.ActualWidth) * 0.5;
+            var offsetY = (RenderSize.Height / vm.ScaleFactor - textureImage.ActualHeight) * 0.5;
+
+            vm.PanOffset = new(offsetX, offsetY);
+        }
+
+        public void ZoomIn()
+        {
+            var vm = DataContext as TextureEditor;
+            var newScaleFactor = Math.Round(vm.ScaleFactor, 1) + 0.1;
+
+            Zoom(newScaleFactor, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
+        }
+
+        public void ZoomOut()
+        {
+            var vm = DataContext as TextureEditor;
+            var newScaleFactor = Math.Round(vm.ScaleFactor, 1) - 0.1;
+
+            Zoom(newScaleFactor, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
+        }
+
+        public void ZoomFit()
+        {
+            var scaleX = RenderSize.Width / textureImage.ActualWidth;
+            var scaleY = RenderSize.Height / textureImage.ActualHeight;
+            var ratio = Math.Min(scaleX, scaleY);
+
+            Center();
+
+            Zoom(ratio, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
+        }
+
+        public void ActualSize()
+        {
+            Center();
+            Zoom(1.0, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
         }
 
         private void GrdBackground_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -44,10 +86,17 @@ namespace Editor.Editors
 
         private void GrdBackground_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var vm = DataContext as TextureEditor;
-            var newScaleFactor = vm.ScaleFactor * (1 + Math.Sin(e.Delta) * 0.1);
+            if (zoomLabel.Opacity > 0)
+            {
+                var vm = DataContext as TextureEditor;
+                var newScaleFactor = vm.ScaleFactor * (1 + Math.Sin(e.Delta) * 0.1);
 
-            Zoom(newScaleFactor, e.GetPosition(this));
+                Zoom(newScaleFactor, e.GetPosition(this));
+            }
+            else
+            {
+                SetZoomLabel();
+            }
         }
 
         private void GrdBackground_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -83,6 +132,8 @@ namespace Editor.Editors
 
             textureBackground.Viewport = rect;
             vm.PanOffset = new(vm.PanOffset.X + offset.X, vm.PanOffset.Y + offset.Y);
+
+            SetZoomLabel();
         }
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -117,6 +168,21 @@ namespace Editor.Editors
             }
 
             _oldPanOffset = editor.PanOffset;
+        }
+
+        private void SetZoomLabel()
+        {
+            var vm = DataContext as TextureEditor;
+
+            DoubleAnimation fadeIn = new(1.0, new(TimeSpan.FromSeconds(2.0)));
+
+            fadeIn.Completed += (_, __) =>
+            {
+                DoubleAnimation fadeOut = new(0, new(TimeSpan.FromSeconds(2.0)));
+                zoomLabel.BeginAnimation(OpacityProperty, fadeOut);
+            };
+
+            zoomLabel.BeginAnimation(OpacityProperty, fadeIn);
         }
     }
 }

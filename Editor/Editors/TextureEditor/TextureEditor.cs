@@ -6,6 +6,7 @@ using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media.Imaging;
 
 namespace Editor.Editors
@@ -22,8 +23,16 @@ namespace Editor.Editors
         private int _arrayIndex;
         private int _mipIndex;
         private int _depthIndex;
+        private bool _isRedChannelSet;
+        private bool _isGreenChannelSet;
+        private bool _isBlueChannelSet;
+        private bool _isAlphaChannelSet;
 
         public Guid AssetGuid { get; private set; }
+        
+        public ICommand SetAllChannelsCommand { get; init; }
+        public ICommand SetChannelCommand { get; init; }
+        public ICommand RegenerateBitmapsCommand { get; init; }
 
         Asset IAssetEditor.Asset => Texture;
         public BitmapSource SelectedSliceBitmap =>
@@ -130,11 +139,70 @@ namespace Editor.Editors
                 value = Math.Min(value, MaxDepthIndex);
                 if (value != _depthIndex)
                 {
-                    _mipIndex = value;
+                    _depthIndex = value;
                     OnPropertyChanged(nameof(DepthIndex));
                     SetSelectedBitmap();
                 }
             }
+        }
+
+        public bool IsRedChannelSet
+        {
+            get => _isRedChannelSet;
+            set
+            {
+                if (value != _isRedChannelSet)
+                {
+                    _isRedChannelSet = value;
+                    OnPropertyChanged(nameof(IsRedChannelSet));
+                }
+            }
+        }
+
+        public bool IsGreenChannelSet
+        {
+            get => _isGreenChannelSet;
+            set
+            {
+                if (value != _isGreenChannelSet)
+                {
+                    _isGreenChannelSet = value;
+                    OnPropertyChanged(nameof(IsGreenChannelSet));
+                }
+            }
+        }
+
+        public bool IsBlueChannelSet
+        {
+            get => _isBlueChannelSet;
+            set
+            {
+                if (value != _isBlueChannelSet)
+                {
+                    _isBlueChannelSet = value;
+                    OnPropertyChanged(nameof(IsBlueChannelSet));
+                }
+            }
+        }
+
+        public bool IsAlphaChannelSet
+        {
+            get => _isAlphaChannelSet;
+            set
+            {
+                if (value != _isAlphaChannelSet)
+                {
+                    _isAlphaChannelSet = value;
+                    OnPropertyChanged(nameof(IsAlphaChannelSet));
+                }
+            }
+        }
+
+        public TextureEditor()
+        {
+            SetAllChannelsCommand = new RelayCommand<string>(OnSetAllChannelsCommand);
+            SetChannelCommand = new RelayCommand<string>(OnSetChannelCommand);
+            RegenerateBitmapsCommand = new RelayCommand<bool>(OnRegenerateBitmapsCommand);
         }
 
         public async void SetAssetAsync(AssetInfo info)
@@ -226,6 +294,56 @@ namespace Editor.Editors
         {
             OnPropertyChanged(nameof(SelectedSliceBitmap));
             OnPropertyChanged(nameof(SelectedSlice));
+        }
+
+        private void OnSetAllChannelsCommand(string obj)
+        {
+            _isRedChannelSet = true;
+            _isGreenChannelSet = true;
+            _isBlueChannelSet = true;
+            _isAlphaChannelSet = true;
+
+            OnPropertyChanged(nameof(IsRedChannelSet));
+            OnPropertyChanged(nameof(IsGreenChannelSet));
+            OnPropertyChanged(nameof(IsBlueChannelSet));
+            OnPropertyChanged(nameof(IsAlphaChannelSet));
+        }
+
+        private void OnSetChannelCommand(string obj)
+        {
+            if(!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                _isRedChannelSet = false;
+                _isGreenChannelSet = false;
+                _isBlueChannelSet = false;
+                _isAlphaChannelSet = false;
+
+                OnPropertyChanged(nameof(IsRedChannelSet));
+                OnPropertyChanged(nameof(IsGreenChannelSet));
+                OnPropertyChanged(nameof(IsBlueChannelSet));
+                OnPropertyChanged(nameof(IsAlphaChannelSet));
+            }
+
+            switch (obj)
+            {
+                case "R":
+                    IsRedChannelSet = !IsRedChannelSet;
+                    break;
+                case "G":
+                    IsGreenChannelSet = !IsGreenChannelSet;
+                    break;
+                case "B":
+                    IsBlueChannelSet = !IsBlueChannelSet;
+                    break;
+                case "A":
+                    IsAlphaChannelSet = !IsAlphaChannelSet;
+                    break;
+            }
+        }
+
+        private void OnRegenerateBitmapsCommand(bool isNormal) {
+            GenerateSliceBitMaps(isNormal);
+            OnPropertyChanged(nameof(SelectedSliceBitmap));
         }
     }
 }

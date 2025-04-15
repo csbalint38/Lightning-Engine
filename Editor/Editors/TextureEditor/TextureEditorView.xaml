@@ -4,8 +4,28 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:enum="clr-namespace:Editor.Common.Enums"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             FocusVisualStyle="{x:Null}"
+             Focusable="True">
+    <UserControl.CommandBindings>
+        <CommandBinding x:Name="centerTexture"
+                        Command="{x:Static local:TextureViewCommands.CenterCommand}"
+                        Executed="centerTexture_Executed"/>
+        <CommandBinding x:Name="zoomInTexture"
+                        Command="{x:Static local:TextureViewCommands.ZoomInCommand}"
+                        Executed="zoomInTexture_Executed"/>
+        <CommandBinding x:Name="zoomOutTexture"
+                        Command="{x:Static local:TextureViewCommands.ZoomOutCommand}"
+                        Executed="zoomOutTexture_Executed"/>
+        <CommandBinding x:Name="zoomFitTexture"
+                        Command="{x:Static local:TextureViewCommands.ZoomFitCommand}"
+                        Executed="zoomFitTexture_Executed"/>
+        <CommandBinding x:Name="actualTextureSize"
+                        Command="{x:Static local:TextureViewCommands.ActualSizeCommand}"
+                        Executed="actualTextureSize_Executed"/>
+    </UserControl.CommandBindings>
     <UserControl.DataContext>
         <local:TextureEditor/>
     </UserControl.DataContext>
@@ -24,7 +44,82 @@
         <Border Height="32"
                 VerticalAlignment="Top"
                 DockPanel.Dock="Top">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        Margin="5,2">
+                <Button Margin="0,0,2,0"
+                        VerticalAlignment="Stretch"
+                        Content="All"
+                        Command="{Binding SetAllChannelsCommand}"/>
+                <ToggleButton Margin="0,0,2,0"
+                              VerticalAlignment="Stretch"
+                              VerticalContentAlignment="Stretch"
+                              Command="{Binding SetChannelCommand}"
+                              IsChecked="{Binding IsRedChannelSet, Mode=OneWay}"
+                              CommandParameter="R">
+                    <Rectangle Width="8"
+                               Fill="Red"
+                               IsHitTestVisible="False"
+                               Margin="0,0,3,0"/>
+                </ToggleButton>
+                <ToggleButton Margin="0,0,2,0"
+                              VerticalAlignment="Stretch"
+                              VerticalContentAlignment="Stretch"
+                              Command="{Binding SetChannelCommand}"
+                              CommandParameter="G"
+                              IsChecked="{Binding IsGreenChannelSet, Mode=OneWay}">
+                    <Rectangle Width="8"
+                               Fill="Green"
+                               IsHitTestVisible="False"
+                               Margin="0,0,3,0"/>
+                </ToggleButton>
+                <ToggleButton Margin="0,0,2,0"
+                              VerticalAlignment="Stretch"
+                              VerticalContentAlignment="Stretch"
+                              Command="{Binding SetChannelCommand}"
+                              CommandParameter="B"
+                              IsChecked="{Binding IsBlueChannelSet, Mode=OneWay}">
+                    <Rectangle Width="8"
+                               Fill="Blue"
+                               IsHitTestVisible="False"
+                               Margin="0,0,3,0"/>
+                </ToggleButton>
+                <ToggleButton Margin="0,0,2,0"
+                              VerticalAlignment="Stretch"
+                              VerticalContentAlignment="Stretch"
+                              Command="{Binding SetChannelCommand}"
+                              CommandParameter="A"
+                              IsChecked="{Binding IsAlphaChannelSet, Mode=OneWay}">
+                    <Rectangle Width="8"
+                               Fill="Transparent"
+                               IsHitTestVisible="False"
+                               Margin="0,0,3,0"/>
+                </ToggleButton>
+                <ToggleButton Content="Normal"
+                              Padding="5"
+                              Margin="5,0"
+                              VerticalAlignment="Stretch"
+                              Command="{Binding RegenerateBitmapsCommand}"
+                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                              IsChecked="{Binding Texture.IsNormalMap, Mode=OneWay}"
+                              d:Visibility="Visible">
+                    <ToggleButton.Style>
+                        <Style TargetType="{x:Type ToggleButton}">
+                            <Setter Property="IsEnabled"
+                                    Value="False"/>
+                            <Setter Property="Visibility"
+                                    Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Texture.Format}"
+                                             Value="{x:Static enum:DXGIFormat.DXGI_FORMAT_BC5_UNORM}">
+                                    <Setter Property="IsEnabled"
+                                            Value="True" />
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
                 <TextBlock Margin="5,0"
                            Text="Layer:"
                            Visibility="{Binding Path=Visibility, ElementName=SldArray}" />
