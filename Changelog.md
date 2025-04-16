@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Configure import settings
  - Texture editor controls help section
  - Texture details in texture editor side panel
  - Texture loading status display

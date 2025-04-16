@@ -57,7 +57,7 @@ namespace lightning::tools {
 
 					v2 uv{ u_range.x, 1.f - v_range.x };
 					uv.x += j * u_step;
-					uv.y += i * v_step;
+					uv.y -= i * v_step;
 					uvs.emplace_back(uv);
 				}
 			}
