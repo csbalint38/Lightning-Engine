@@ -1,5 +1,4 @@
-﻿
-using Editor.Common.Enums;
+﻿using Editor.Common.Enums;
 using Editor.Content.ContentBrowser;
 using Editor.DLLs;
 using Editor.Utilities;
@@ -19,6 +18,8 @@ namespace Editor.Content
         private DXGIFormat _format;
 
         public static int MaxMipLevels => 14;
+        public static int MaxArraySize => 2048;
+        public static int Max3DSize => 2048;
 
         public TextureImportSettings ImportSettings { get; } = new();
 
@@ -91,6 +92,7 @@ namespace Editor.Content
                     OnPropertyChanged(nameof(IsNormalMap));
                     OnPropertyChanged(nameof(IsCubeMap));
                     OnPropertyChanged(nameof(IsVolumeMap));
+                    OnPropertyChanged(nameof(IsSRGB));
                 }
             }
         }
@@ -130,6 +132,7 @@ namespace Editor.Content
         public bool IsCubeMap => Flags.HasFlag(TextureFlags.IS_CUBE_MAP);
         public bool IsVolumeMap => Flags.HasFlag(TextureFlags.IS_VOLUME_MAP);
         public string FormatName => ImportSettings.Compress ? ((BCFormat)Format).GetDescription() : Format.GetDescription();
+        public bool IsSRGB => Flags.HasFlag(TextureFlags.IS_SRGB);
 
         public override bool Import(string file)
         {
@@ -150,7 +153,7 @@ namespace Editor.Content
 
                 var firstMip = Slices[0][0][0];
 
-                HasValidDimensions(firstMip.Width, firstMip.Height, file);
+                if(!HasValidDimensions(firstMip.Width, firstMip.Height, ArraySize, IsVolumeMap, file)) return false;
 
                 if (icon is null)
                 {
@@ -204,7 +207,7 @@ namespace Editor.Content
                 var compressed = reader.ReadBytes(compressedLength);
 
                 DecompressContent(compressed);
-                HasValidDimensions(Width, Height, file);
+                HasValidDimensions(Width, Height, ArraySize, IsVolumeMap, file);
 
                 FullPath = file;
 
@@ -267,26 +270,41 @@ namespace Editor.Content
             return [];
         }
 
-        private static bool HasValidDimensions(int width, int height, string file)
+        private static bool HasValidDimensions(int width, int height, int arrayOrDepth, bool is3D, string file)
         {
             bool result = true;
 
+            if (width > (1 << MaxMipLevels) || height > (1 << MaxMipLevels))
+            {
+                Logger.LogAsync(LogLevel.ERROR, $"Image dimension greater than {1 << MaxMipLevels}! (file: {file})");
+                result = false;
+            }
+
             if (width % 4 != 0 || height % 4 != 0)
             {
-                Logger.LogAsync(LogLevel.WARNING, $"Image dimensions not a multiple of 4! (file: {file})");
+                Logger.LogAsync(LogLevel.ERROR, $"Image dimensions not a multiple of 4! (file: {file})");
+                result = false;
+            }
+
+            if(is3D && (width > Max3DSize || height > Max3DSize || arrayOrDepth > Max3DSize))
+            {
+                Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {Max3DSize}! (file: {file})");
+                result = false;
+            }
+            else if(arrayOrDepth > MaxArraySize)
+            {
+                Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {MaxArraySize}! (file: {file})");
                 result = false;
             }
 
             if (width != height)
             {
                 Logger.LogAsync(LogLevel.WARNING, $"Non-square image (width and height not equal)! (file: {file})");
-                result = false;
             }
 
             if (!MathUtilities.IsPowOf2(width) || !MathUtilities.IsPowOf2(height))
             {
                 Logger.LogAsync(LogLevel.WARNING, $"Image dimensions not a power of 2! (file: {file})");
-                result = false;
             }
 
             return result;

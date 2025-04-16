@@ -1,5 +1,4 @@
 ﻿using Editor.Utilities;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,7 +15,32 @@ namespace Editor.Editors
     {
         private Point _gridClickPosition = new(0, 0);
         private bool _capturedRight;
-        private Point _oldPanOffset = new(0, 0);
+
+        public static readonly DependencyProperty PanOffsetProperty = DependencyProperty.Register(
+            nameof(PanOffset),
+            typeof(Point),
+            typeof(TextureView),
+            new PropertyMetadata(new Point(0, 0), OnPanOffsetChanged)
+        );
+
+        public static readonly DependencyProperty ScaleFactorProperty = DependencyProperty.Register(
+            nameof(ScaleFactor),
+            typeof(double),
+            typeof(TextureView),
+            new PropertyMetadata(1.0, OnScaleFactorChanged)
+        );
+
+        public Point PanOffset
+        {
+            get => (Point)GetValue(PanOffsetProperty);
+            set => SetValue(PanOffsetProperty, value);
+        }
+
+        public double ScaleFactor
+        {
+            get => (double)GetValue(ScaleFactorProperty);
+            set => SetValue(ScaleFactorProperty, value);
+        }
 
         public TextureView()
         {
@@ -24,30 +48,26 @@ namespace Editor.Editors
 
             SizeChanged += (_, __) => Center();
             textureImage.SizeChanged += (_, __) => ZoomFit();
-            DataContextChanged += OnDataContextChanged;
         }
 
         public void Center()
         {
-            var vm = DataContext as TextureEditor;
-            var offsetX = (RenderSize.Width / vm.ScaleFactor - textureImage.ActualWidth) * 0.5;
-            var offsetY = (RenderSize.Height / vm.ScaleFactor - textureImage.ActualHeight) * 0.5;
+            var offsetX = (RenderSize.Width / ScaleFactor - textureImage.ActualWidth) * 0.5;
+            var offsetY = (RenderSize.Height / ScaleFactor - textureImage.ActualHeight) * 0.5;
 
-            vm.PanOffset = new(offsetX, offsetY);
+            PanOffset = new(offsetX, offsetY);
         }
 
         public void ZoomIn()
         {
-            var vm = DataContext as TextureEditor;
-            var newScaleFactor = Math.Round(vm.ScaleFactor, 1) + 0.1;
+            var newScaleFactor = Math.Round(ScaleFactor, 1) + 0.1;
 
             Zoom(newScaleFactor, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
         }
 
         public void ZoomOut()
         {
-            var vm = DataContext as TextureEditor;
-            var newScaleFactor = Math.Round(vm.ScaleFactor, 1) - 0.1;
+            var newScaleFactor = Math.Round(ScaleFactor, 1) - 0.1;
 
             Zoom(newScaleFactor, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
         }
@@ -69,17 +89,46 @@ namespace Editor.Editors
             Zoom(1.0, new(RenderSize.Width * 0.5, RenderSize.Height * 0.5));
         }
 
+        private static void OnPanOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(d is TextureView tv)
+            {
+                var current = (Point)e.NewValue;
+                var prev = (Point)e.OldValue;
+
+                if(tv.GrdBackground.Background is TileBrush brush)
+                {
+                    var offset = current - prev;
+                    var viewport = brush.Viewport;
+
+                    viewport.X += offset.X;
+                    viewport.Y += offset.Y;
+                    brush.Viewport = viewport;
+                }
+
+                Canvas.SetLeft(tv.imageBorder, current.X);
+                Canvas.SetTop(tv.imageBorder, current.Y);
+            }
+        }
+
+        private static void OnScaleFactorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(d is TextureView tv && tv.GrdBackground.LayoutTransform is ScaleTransform scale)
+            {
+                scale.ScaleX = (double)e.NewValue;
+                scale.ScaleY = (double)e.NewValue;
+            }
+        }
+
         private void GrdBackground_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            var vm = DataContext as TextureEditor;
-
             if(_capturedRight && sender is Grid)
             {
                 var mousePos = e.GetPosition(this);
                 var offset = mousePos - _gridClickPosition;
 
-                offset /= vm.ScaleFactor;
-                vm.PanOffset = new(vm.PanOffset.X + offset.X, vm.PanOffset.Y + offset.Y);
+                offset /= ScaleFactor;
+                PanOffset = new(PanOffset.X + offset.X, PanOffset.Y + offset.Y);
                 _gridClickPosition = mousePos;
             }
         }
@@ -88,8 +137,7 @@ namespace Editor.Editors
         {
             if (zoomLabel.Opacity > 0)
             {
-                var vm = DataContext as TextureEditor;
-                var newScaleFactor = vm.ScaleFactor * (1 + Math.Sin(e.Delta) * 0.1);
+                var newScaleFactor = ScaleFactor * (1 + Math.Sin(e.Delta) * 0.1);
 
                 Zoom(newScaleFactor, e.GetPosition(this));
             }
@@ -117,13 +165,15 @@ namespace Editor.Editors
         {
             if(scale < 0.1) scale = 0.1;
 
-            var vm = DataContext as TextureEditor;
+            if (MathUtilities.IsEqual(scale, ScaleFactor))
+            {
+                SetZoomLabel();
+                return;
+            }
 
-            if (MathUtilities.IsEqual(scale, vm.ScaleFactor)) return;
+            var oldScaleFactor = ScaleFactor;
 
-            var oldScaleFactor = vm.ScaleFactor;
-
-            vm.ScaleFactor = scale;
+            ScaleFactor = scale;
 
             var newPos = new Point(center.X * scale / oldScaleFactor, center.Y * scale / oldScaleFactor);
             var offset = (center - newPos) / scale;
@@ -131,43 +181,9 @@ namespace Editor.Editors
             var rect = new Rect(vp.X, vp.Y, vp.Width * oldScaleFactor / scale, vp.Height * oldScaleFactor / scale);
 
             textureBackground.Viewport = rect;
-            vm.PanOffset = new(vm.PanOffset.X + offset.X, vm.PanOffset.Y + offset.Y);
+            PanOffset = new(PanOffset.X + offset.X, PanOffset.Y + offset.Y);
 
             SetZoomLabel();
-        }
-
-        private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if (e.OldValue is TextureEditor oldVm) oldVm.PropertyChanged -= OnViewModelPropertyChanged;
-
-            if (e.NewValue is TextureEditor newVm)
-            {
-                _oldPanOffset = newVm.PanOffset;
-                newVm.PropertyChanged += OnViewModelPropertyChanged;
-            }
-        }
-
-        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(TextureEditor.PanOffset))
-            {
-                OnPanOffsetPropertyChanged(sender as TextureEditor);
-            }
-        }
-
-        private void OnPanOffsetPropertyChanged(TextureEditor editor)
-        {
-            if(GrdBackground.Background is TileBrush brush)
-            {
-                var offset = editor.PanOffset - _oldPanOffset;
-                var viewport = brush.Viewport;
-
-                viewport.X += offset.X;
-                viewport.Y += offset.Y;
-                brush.Viewport = viewport;
-            }
-
-            _oldPanOffset = editor.PanOffset;
         }
 
         private void SetZoomLabel()
