@@ -181,7 +181,7 @@
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <content:ContentBrowserView/>
+                    <content:ContentBrowserView AllowImport="True"/>
                     <GridSplitter Grid.Column="1"/>
                     <TabControl Grid.Column="1">
                         <TabItem Header="History">

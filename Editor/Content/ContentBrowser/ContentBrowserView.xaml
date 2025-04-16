@@ -92,8 +92,7 @@
                   Grid.Row="1"
                   x:Name="LVFolders"
                   IsTextSearchEnabled="True"
-                  TextSearch.TextPath="FileName"
-                  Drop="LVFolders_Drop">
+                  TextSearch.TextPath="FileName">
             <ListView.Style>
                 <Style TargetType="{x:Type ListView}">
                     <Setter Property="Background"
@@ -103,10 +102,168 @@
                     <Setter Property="View"
                             Value="{StaticResource gridView}"/>
                     <Setter Property="AllowDrop"
-                            Value="{Binding Path=AllowDrop, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}" />
+                            Value="{Binding Path=AllowImport, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}" />
+                    <EventSetter Event="DragEnter"
+                                 Handler="ListView_DragEnter"/>
                 </Style>
             </ListView.Style>
         </ListView>
+        <Border Visibility="Collapsed"
+                d:Visibility="Visible"
+                Background="DarkMagenta"
+                x:Name="BDrop"
+                AllowDrop="{Binding Path=AllowDrop, ElementName=LVFolders}"
+                Grid.Row="1"
+                DragLeave="BDrop_DragLeave"
+                Drop="BDrop_Drop">
+            <Grid>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Border x:Name="filesDrop"
+                            Background="Blue"
+                            Grid.Row="0"/>
+                    <Border x:Name="cfgDrop"
+                            Background="Green"
+                            Grid.Row="1"/>
+                </Grid>
+                <Border BorderBrush="#FFC800"
+                        BorderThickness="2"
+                        CornerRadius="50"
+                        Background="#66000000"
+                        SnapsToDevicePixels="True"
+                        UseLayoutRounding="True"
+                        IsHitTestVisible="False">
+                    <Border Background="#CC000000"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            CornerRadius="20"
+                            BorderBrush="#FFC800"
+                            BorderThickness="2">
+                        <StackPanel>
+                            <Border CornerRadius="16,16,0,0"
+                                    HorizontalAlignment="Center"
+                                    Width="250"
+                                    x:Name="BFile"
+                                    Background="Transparent">
+                                <TextBlock x:Name="TbFile"
+                                           Text="Import Individual Files"
+                                           FontFamily="Bahnschrift condensed"
+                                           FontSize="24"
+                                           Foreground="#FFC800"
+                                           Margin="20"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border CornerRadius="0,0,16,16"
+                                    HorizontalAlignment="Center"
+                                    Width="250"
+                                    x:Name="BCfg"
+                                    Background="Transparent">
+                                <TextBlock x:Name="TbCfg"
+                                           Text="Configure Import Settings"
+                                           FontFamily="Bahnschrift condensed"
+                                           FontSize="24"
+                                           Foreground="#FFC800"
+                                           Margin="20"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Border>
+            </Grid>
+            <Border.Triggers>
+                <EventTrigger RoutedEvent="DragEnter"
+                              SourceName="filesDrop">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetName="BFiles"
+                                            Storyboard.TargetProperty="Background.Color"
+                                            From="Transparent"
+                                            To="Red"
+                                            Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetName="BFiles"
+                                             Storyboard.TargetProperty="Background.Opacity"
+                                             From="0"
+                                             To="0.6"
+                                             Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetName="TbFiles"
+                                            Storyboard.TargetProperty="Foreground.Color"
+                                            From="White"
+                                            To="Red"
+                                            Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="DragLeave"
+                              SourceName="filesDrop">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetName="BFiles"
+                                            Storyboard.TargetProperty="Background.Color"
+                                            From="Red"
+                                            To="Transparent"
+                                            Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetName="BFiles"
+                                             Storyboard.TargetProperty="Background.Opacity"
+                                             From="0.6"
+                                             To="0"
+                                             Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetName="TbFiles"
+                                            Storyboard.TargetProperty="Foreground.Color"
+                                            From="Red"
+                                            To="Wheat"
+                                            Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="DragEnter"
+                              SourceName="cfgDrop">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetName="BCfg"
+                                            Storyboard.TargetProperty="Background.Color"
+                                            From="Transparent"
+                                            To="Red"
+                                            Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetName="BCfg"
+                                             Storyboard.TargetProperty="Background.Opacity"
+                                             From="0"
+                                             To="0.6"
+                                             Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetName="TbCfg"
+                                            Storyboard.TargetProperty="Foreground.Color"
+                                            From="White"
+                                            To="Red"
+                                            Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="DragLeave"
+                              SourceName="cfgDrop">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ColorAnimation Storyboard.TargetName="BCfg"
+                                            Storyboard.TargetProperty="Background.Color"
+                                            From="Red"
+                                            To="Transparent"
+                                            Duration="0:0:0.2"/>
+                            <DoubleAnimation Storyboard.TargetName="BCfg"
+                                             Storyboard.TargetProperty="Background.Opacity"
+                                             From="0.6"
+                                             To="0"
+                                             Duration="0:0:0.2"/>
+                            <ColorAnimation Storyboard.TargetName="TbCfg"
+                                            Storyboard.TargetProperty="Foreground.Color"
+                                            From="Red"
+                                            To="Wheat"
+                                            Duration="0:0:0.2"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Border.Triggers>
+        </Border>
         <Border VerticalAlignment="Top">
             <TextBlock Text="PLACEHOLDER TEXT !!!" />
         </Border>

@@ -9,6 +9,8 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Editor.Content
 {
@@ -24,10 +26,23 @@ namespace Editor.Content
             new PropertyMetadata(FileAccess.ReadWrite)
         );
 
+        public static readonly DependencyProperty AllowImportProperty = DependencyProperty.Register(
+            nameof(AllowImport),
+            typeof(bool),
+            typeof(ContentBrowserView),
+            new PropertyMetadata(false)
+        );
+
         public FileAccess FileAccess
         {
             get => (FileAccess)GetValue(FileAccessProperty);
             set => SetValue(FileAccessProperty, value);
+        }
+
+        public bool AllowImport
+        {
+            get => (bool)GetValue(AllowImportProperty);
+            set => SetValue(AllowImportProperty, value);
         }
 
         public ContentBrowserView()
@@ -36,8 +51,6 @@ namespace Editor.Content
             InitializeComponent();
 
             Loaded += OnContentBrowserLoaded;
-
-            AllowDrop = true;
         }
 
         private void OnContentBrowserLoaded(object sender, RoutedEventArgs e)
@@ -74,20 +87,30 @@ namespace Editor.Content
             if (e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder)) { }
         }
 
-        private void LVFolders_Drop(object sender, DragEventArgs e)
+        private void BDrop_Drop(object sender, DragEventArgs e)
         {
             var vm = DataContext as ContentBrowser.ContentBrowser;
 
-            if (vm.SelectedFolder is not null && e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (Directory.Exists(vm.SelectedFolder) && e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-                if (files?.Length > 0 && Directory.Exists(vm.SelectedFolder))
+                if (files?.Length > 0)
                 {
-                    _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolder);
-                    e.Handled = true;
+                    if (e.OriginalSource == filesDrop)
+                    {
+                        _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolder);
+                        e.Handled = true;
+                    }
+                    else if(e.OriginalSource == cfgDrop)
+                    {
+                        e.Handled = true;
+                    }
                 }
             }
+
+            e.Effects = DragDropEffects.None;
+            BDrop_DragLeave(sender, e);
         }
 
         private void ExecuteSelection(ContentInfo info)
@@ -197,6 +220,32 @@ namespace Editor.Content
             win.Show();
 
             return newEditor;
+        }
+
+        private void BDrop_DragLeave(object sender, DragEventArgs e)
+        {
+            if(sender == BDrop && e?.Effects != DragDropEffects.None)
+            {
+                var point = e.GetPosition(BDrop);
+                var result = VisualTreeHelper.HitTest(BDrop, point);
+
+                if (result is not null) return;
+            }
+
+            var fadeOut = new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(100)));
+
+            fadeOut.Completed += (_, __) => BDrop.Visibility = Visibility.Collapsed;
+            BDrop.BeginAnimation(OpacityProperty, fadeOut);
+        }
+
+        private void ListView_DragEnter(object sender, DragEventArgs e)
+        {
+            BDrop.Opacity = 0;
+            BDrop.Visibility = Visibility.Visible;
+
+            var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(100)));
+
+            BDrop.BeginAnimation(OpacityProperty, fadeIn);
         }
     }
 }
