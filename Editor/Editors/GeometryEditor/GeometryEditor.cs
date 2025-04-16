@@ -22,7 +22,7 @@ namespace Editor.Editors
         public Geometry Geometry
         {
             get => _geometry;
-            set
+            private set
             {
                 if (_geometry != value)
                 {
@@ -91,7 +91,7 @@ namespace Editor.Editors
         public AssetEditorState State
         {
             get => _state;
-            set
+            private set
             {
                 if (_state != value)
                 {

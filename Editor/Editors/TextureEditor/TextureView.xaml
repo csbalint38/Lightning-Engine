@@ -18,33 +18,25 @@
               MouseWheel="GrdBackground_MouseWheel"
               PreviewMouseMove="GrdBackground_PreviewMouseMove">
             <Grid.LayoutTransform>
-                <ScaleTransform ScaleX="{Binding ScaleFactor}"
-                                ScaleY="{Binding ScaleFactor}"/>
+                <ScaleTransform />
             </Grid.LayoutTransform>
-            <Canvas IsHitTestVisible="True">
-                <Rectangle Canvas.Left="{Binding PanOffset.X}"
-                           Canvas.Top="{Binding PanOffset.Y}"
-                           Width="{Binding Path=ActualWidth, ElementName=textureImage}"
-                           Height="{Binding Path=ActualHeight, ElementName=textureImage}">
-                    <Rectangle.Fill>
+            <Canvas IsHitTestVisible="False">
+                <Border x:Name="imageBorder">
+                    <Border.Background>
                         <ImageBrush x:Name="textureBackground"
-                                    ImageSource="/Resources/TextureEditor/Checkerboard.png"
                                     TileMode="Tile"
                                     Viewport="0,0,64,64"
-                                    ViewportUnits="Absolute"/>
-                    </Rectangle.Fill>
-                </Rectangle>
-            </Canvas>
-            <Canvas IsHitTestVisible="True">
-                <Image x:Name="textureImage"
-                       Source="{Binding SelectedSliceBitmap}"
-                       Canvas.Left="{Binding PanOffset.X}"
-                       Canvas.Top="{Binding PanOffset.Y}">
-                    <Image.Effect>
-                        <local:ChannelSelectEffect Channels="{Binding Channels}"
-                                                   Stride="{Binding Stride}"/>
-                    </Image.Effect>
-                </Image>
+                                    ViewportUnits="Absolute"
+                                    ImageSource="/Resources/TextureEditor/Checkerboard.png"/>
+                    </Border.Background>
+                    <Image x:Name="textureImage"
+                           Source="{Binding SelectedSliceBitmap}">
+                        <Image.Effect>
+                            <local:ChannelSelectEffect Channels="{Binding Channels}"
+                                                       Stride="{Binding Stride}" />
+                        </Image.Effect>
+                    </Image>
+                </Border>
             </Canvas>
         </Grid>
         <Border x:Name="zoomLabel"
@@ -56,7 +48,7 @@
                 IsHitTestVisible="False"
                 Opacity="0"
                 d:Opacity="1">
-            <TextBlock Text="{Binding ScaleFactor, StringFormat=ZOOM {0:p0}}"
+            <TextBlock Text="{Binding Path=ScaleFactor, RelativeSource={RelativeSource AncestorType={x:Type local:TextureView}}, StringFormat=ZOOM {0:p0}}"
                        d:Text="ZOOM 50%"
                        Margin="10,5"
                        HorizontalAlignment="Left"

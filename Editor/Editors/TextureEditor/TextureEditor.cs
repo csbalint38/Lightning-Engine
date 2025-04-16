@@ -19,8 +19,6 @@ namespace Editor.Editors
         private AssetEditorState _state;
         private Texture _texture;
         private List<List<List<Slice>>> _slices;
-        private Point _panOffset;
-        private double _scaleFactor = 1.0;
         private int _arrayIndex;
         private int _mipIndex;
         private int _depthIndex;
@@ -63,7 +61,7 @@ namespace Editor.Editors
         public AssetEditorState State
         {
             get => _state;
-            set {
+            private set {
                 if (_state != value)
                 {
                     _state = value;
@@ -83,32 +81,6 @@ namespace Editor.Editors
                     OnPropertyChanged(nameof(Texture));
                     SetSelectedBitmap();
                     SetImageChannels();
-                }
-            }
-        }
-
-        public Point PanOffset
-        {
-            get => _panOffset;
-            set
-            {
-                if (value != _panOffset)
-                {
-                    _panOffset = value;
-                    OnPropertyChanged(nameof(PanOffset));
-                }
-            }
-        }
-
-        public double ScaleFactor
-        {
-            get => _scaleFactor;
-            set
-            {
-                if (value != _scaleFactor)
-                {
-                    _scaleFactor = value;
-                    OnPropertyChanged(nameof(ScaleFactor));
                 }
             }
         }
@@ -138,6 +110,7 @@ namespace Editor.Editors
                 if (value != _mipIndex)
                 {
                     _mipIndex = value;
+                    DepthIndex = _depthIndex;
                     OnPropertyChanged(nameof(MipIndex));
                     OnPropertyChanged(nameof(MaxDepthIndex));
                     SetSelectedBitmap();
@@ -317,7 +290,7 @@ namespace Editor.Editors
             OnPropertyChanged(nameof(SelectedSlice));
         }
 
-        private void OnSetAllChannelsCommand(string obj)
+        private void OnSetAllChannelsCommand(object obj)
         {
             _isRedChannelSet = true;
             _isGreenChannelSet = true;

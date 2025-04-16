@@ -24,6 +24,9 @@ namespace Editor.DLLs
         [DllImport(_contentToolsDll)] // Modify entry point
         private static extern void Decompress([In, Out] TextureData data);
 
+        [DllImport(_contentToolsDll)] // Modify entry point
+        public static extern void ShutdownContentTools(); 
+
         public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
             GeometryFromSceneData(
                 geometry,
