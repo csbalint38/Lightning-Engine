@@ -1,4 +1,5 @@
 ﻿using Editor.Content.ContentBrowser;
+using Editor.DLLs;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.ComponentModel;
@@ -40,9 +41,13 @@ public partial class MainWindow : Window
 
             if (DataContext is not null) Application.Current.MainWindow.Show();
         }
-
-        Closing -= OnMainWindowClosing;
-        Project.Current?.Unload();
+        else
+        {
+            Closing -= OnMainWindowClosing;
+            Project.Current?.Unload();
+            DataContext = null;
+            ContentToolsAPI.ShutdownContentTools();
+        }
     }
 
     private void OpenProjectBrowserDialog()
