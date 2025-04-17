@@ -53,6 +53,89 @@ namespace Editor.Content
             Loaded += OnContentBrowserLoaded;
         }
 
+        private static IAssetEditor OpenAssetEditor(AssetInfo info)
+        {
+            IAssetEditor editor = null;
+
+            try
+            {
+                switch (info.Type)
+                {
+                    case AssetType.ANIMATION:
+                        break;
+                    case AssetType.AUDIO:
+                        break;
+                    case AssetType.MATERIAL:
+                        break;
+                    case AssetType.MESH:
+                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "Geometry Editor");
+                        break;
+                    case AssetType.SKELETON:
+                        break;
+                    case AssetType.TEXTURE:
+                        editor = OpenEditorPanel<TextureEditorView>(info, info.Guid, "Texture Editor");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+            return editor;
+        }
+
+        private static IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title) where T : FrameworkElement, new()
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window.Content is FrameworkElement content &&
+                    content.DataContext is IAssetEditor editor &&
+                    editor.AssetGuid == info.Guid
+                )
+                {
+                    window.Activate();
+                    return editor;
+                }
+            }
+
+            var newEditor = CreateEditorWindow<T>(title);
+            (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
+
+            return newEditor.DataContext as IAssetEditor;
+        }
+
+        private static void OpenImportSettingsConfigurator(string[] files, string selectedFolder)
+        {
+            ConfigureImportSettings settingsConfigurator = null;
+
+            foreach(Window win in Application.Current.Windows)
+            {
+                if(win.DataContext is ConfigureImportSettings cfg)
+                {
+                    if (files?.Length > 0) cfg.AddFiles(files, selectedFolder);
+
+                    settingsConfigurator = cfg;
+                    win.Activate();
+
+                    break;
+                }
+            }
+
+            if(settingsConfigurator is null)
+            {
+                settingsConfigurator = files?.Length > 0 ? new(files, selectedFolder) : new(selectedFolder);
+
+                new ConfigureImportSettingsWindow()
+                {
+                    DataContext = settingsConfigurator,
+                    Owner = Application.Current.MainWindow,
+                }.Show();
+            }
+        }
+
         private void OnContentBrowserLoaded(object sender, RoutedEventArgs e)
         {
             Loaded -= OnContentBrowserLoaded;
@@ -99,11 +182,13 @@ namespace Editor.Content
                 {
                     if (e.OriginalSource == filesDrop)
                     {
-                        _ = ContentHelper.ImportFilesAsync(files, vm.SelectedFolder);
+                        new ConfigureImportSettings(files, vm.SelectedFolder).Import();
+
                         e.Handled = true;
                     }
                     else if(e.OriginalSource == cfgDrop)
                     {
+                        OpenImportSettingsConfigurator(files, vm.SelectedFolder);
                         e.Handled = true;
                     }
                 }
@@ -146,60 +231,6 @@ namespace Editor.Content
                 var info = (sender as FrameworkElement).DataContext as ContentInfo;
                 ExecuteSelection(info);
             }
-        }
-
-        private IAssetEditor OpenAssetEditor(AssetInfo info)
-        {
-            IAssetEditor editor = null;
-
-            try
-            {
-                switch (info.Type)
-                {
-                    case AssetType.ANIMATION:
-                        break;
-                    case AssetType.AUDIO:
-                        break;
-                    case AssetType.MATERIAL:
-                        break;
-                    case AssetType.MESH:
-                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "Geometry Editor");
-                        break;
-                    case AssetType.SKELETON:
-                        break;
-                    case AssetType.TEXTURE:
-                        editor = OpenEditorPanel<TextureEditorView>(info, info.Guid, "Texture Editor");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
-
-            return editor;
-        }
-
-        private IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title) where T : FrameworkElement, new()
-        {
-            foreach (Window window in Application.Current.Windows)
-            {
-                if (window.Content is FrameworkElement content &&
-                    content.DataContext is IAssetEditor editor &&
-                    editor.AssetGuid == info.Guid
-                )
-                {
-                    window.Activate();
-                    return editor;
-                }
-            }
-
-            var newEditor = CreateEditorWindow<T>(title);
-            (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
-
-            return newEditor.DataContext as IAssetEditor;
         }
 
         private static FrameworkElement CreateEditorWindow<T>(string title) where T : FrameworkElement, new()

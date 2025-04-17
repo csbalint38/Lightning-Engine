@@ -23,8 +23,6 @@ namespace Editor.Content
 
         public TextureImportSettings ImportSettings { get; } = new();
 
-        public Texture() : base(AssetType.TEXTURE) { }
-
         public List<List<List<Slice>>> Slices
         {
             get => _slices;
@@ -133,6 +131,14 @@ namespace Editor.Content
         public bool IsVolumeMap => Flags.HasFlag(TextureFlags.IS_VOLUME_MAP);
         public string FormatName => ImportSettings.Compress ? ((BCFormat)Format).GetDescription() : Format.GetDescription();
         public bool IsSRGB => Flags.HasFlag(TextureFlags.IS_SRGB);
+
+        public Texture() : base(AssetType.TEXTURE) { }
+
+        public Texture(IAssetImportSettings importSettings) : this() {
+            Debug.Assert(importSettings is TextureImportSettings);
+
+            ImportSettings = (TextureImportSettings)importSettings;
+        }
 
         public override bool Import(string file)
         {

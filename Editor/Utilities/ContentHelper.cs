@@ -1,5 +1,6 @@
 ﻿using Editor.Content;
 using Editor.Content.ContentBrowser;
+using Editor.Content.ImportSettingsConfig;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -9,8 +10,8 @@ namespace Editor.Utilities
 {
     public static class ContentHelper
     {
-        public static string[] MeshFileExtension { get; } = { ".fbx" };
-        public static string[] ImageFileExtension { get; } = { ".bmp", ".png", ".jpg", ".jpeg", ".tiff", ".tif", ".tga", ".dds", ".hdr" };
+        public static string[] MeshFileExtensions { get; } = { ".fbx" };
+        public static string[] ImageFileExtensions { get; } = { ".bmp", ".png", ".jpg", ".jpeg", ".tiff", ".tif", ".tga", ".dds", ".hdr" };
         public static string[] AudioFileExtensions { get; } = { ".ogg", ".waw" };
 
         public static string SanitizeFileName(string name)
@@ -51,30 +52,33 @@ namespace Editor.Utilities
             return false;
         }
 
-        public static async Task ImportFilesAsync(string[] files, string destination)
+        public static async Task<List<Asset>> ImportFilesAsync(IEnumerable<AssetProxy> proxies)
         {
+            List<Asset> assets = new();
+
             try
             {
-                Debug.Assert(!string.IsNullOrEmpty(destination));
-
                 ContentWatcher.EnableFileWatcher(false);
 
-                var tasks = files.Select(async file => await Task.Run(() =>
+                var tasks = proxies.Select(async proxy => await Task.Run(() =>
                 {
-                    Import(file, destination);
+                    assets.Add(Import(proxy.FileInfo.FullName, proxy.ImportSettings, proxy.DestinationFolder));
                 }));
 
                 await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Failed to import files to {destination}");
+                Debug.WriteLine($"Failed to import files.");
                 Debug.WriteLine(ex.Message);
             }
             finally
             {
                 ContentWatcher.EnableFileWatcher(true);
+
             }
+            
+            return assets;
         }
 
         public static Uri GetPackUri(string relativePath, Type type)
@@ -85,7 +89,7 @@ namespace Editor.Utilities
             return new Uri(packUriString);
         }
 
-        private static Asset Import(string file, string destination)
+        private static Asset Import(string file, IAssetImportSettings settings, string destination)
         {
             Debug.Assert(!string.IsNullOrEmpty(file));
 
@@ -97,8 +101,8 @@ namespace Editor.Utilities
 
             Asset asset = ext switch
             {
-                { } when MeshFileExtension.Contains(ext) => new Geometry(),
-                { } when ImageFileExtension.Contains(ext) => new Texture(),
+                { } when MeshFileExtensions.Contains(ext) => new Geometry(settings),
+                { } when ImageFileExtensions.Contains(ext) => new Texture(settings),
                 { } when AudioFileExtensions.Contains(ext) => null,
                 _ => null
             };

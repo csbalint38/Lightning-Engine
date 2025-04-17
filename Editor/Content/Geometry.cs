@@ -20,6 +20,13 @@ namespace Editor.Content
 
         public Geometry() : base(AssetType.MESH) { }
 
+        public Geometry(IAssetImportSettings importSettings) : this()
+        {
+            Debug.Assert(importSettings is GeometryImportSettings);
+
+            ImportSettings = (GeometryImportSettings)importSettings;
+        }
+
         public void FromRawData(byte[] data)
         {
             Debug.Assert(data?.Length > 0);
@@ -435,7 +442,19 @@ namespace Editor.Content
                 Logger.LogAsync(LogLevel.ERROR, msg);
             }
 
-            if (ImportSettings.ImportEmbeddedTextures) { }
+            if (ImportSettings.ImportEmbeddedTextures)
+            {
+                var embeddedMediaDir = $@"{tempPath}{Path.GetFileNameWithoutExtension(tempFile)}.fbm{Path.DirectorySeparatorChar}";
+
+                if(Directory.Exists(embeddedMediaDir))
+                {
+                    Debug.Assert(!string.IsNullOrEmpty(FullPath));
+
+                    var files = Directory.GetFiles(embeddedMediaDir);
+
+                    new ConfigureImportSettings(files, FullPath).Import();
+                }
+            }
 
             return result;
         }
