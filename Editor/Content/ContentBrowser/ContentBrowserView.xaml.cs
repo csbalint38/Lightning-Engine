@@ -3,7 +3,6 @@ using Editor.Content.ContentBrowser;
 using Editor.Content.ImportSettingsConfig;
 using Editor.Editors;
 using Editor.GameProject;
-using Editor.Utilities;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -18,7 +17,7 @@ namespace Editor.Content
     /// <summary>
     /// Interaction logic for ContentBrowserView.xaml
     /// </summary>
-    public partial class ContentBrowserView : UserControl
+    public partial class ContentBrowserView : UserControl, IDisposable
     {
         public static readonly DependencyProperty FileAccessProperty = DependencyProperty.Register(
             nameof(FileAccess),
@@ -108,7 +107,7 @@ namespace Editor.Content
             return newEditor.DataContext as IAssetEditor;
         }
 
-        private static void OpenImportSettingsConfigurator(string[] files, string selectedFolder)
+        private static void OpenImportSettingsConfigurator(string[] files, string selectedFolder, bool forceOpen = false)
         {
             ConfigureImportSettings settingsConfigurator = null;
 
@@ -129,11 +128,14 @@ namespace Editor.Content
             {
                 settingsConfigurator = files?.Length > 0 ? new(files, selectedFolder) : new(selectedFolder);
 
-                new ConfigureImportSettingsWindow()
+                if (settingsConfigurator.FileCount > 0 || forceOpen)
                 {
-                    DataContext = settingsConfigurator,
-                    Owner = Application.Current.MainWindow,
-                }.Show();
+                    new ConfigureImportSettingsWindow()
+                    {
+                        DataContext = settingsConfigurator,
+                        Owner = Application.Current.MainWindow,
+                    }.Show();
+                }
             }
         }
 
@@ -278,6 +280,10 @@ namespace Editor.Content
             var fadeIn = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(100)));
 
             BDrop.BeginAnimation(OpacityProperty, fadeIn);
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Editor.Content;
+using Editor.Content.ContentBrowser;
 using Editor.GameCode;
 using Editor.GameProject;
 using System.Windows;
@@ -35,18 +36,42 @@ namespace Editor.Editors
         private void MINewProject_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             ProjectBrowserDialog.GoToNewProjectTab = true;
-            Project.Current?.Unload();
-            Application.Current.MainWindow.DataContext = null;
-            Application.Current.MainWindow.Close();
+            
+            UnloadAndCloseAllWindows();
         }
 
-        private void MIOpenProject_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void MIOpenProject_Executed(object sender, ExecutedRoutedEventArgs e) => UnloadAndCloseAllWindows();
+        private void MIExit_Executed(object sender, ExecutedRoutedEventArgs e) => Application.Current.MainWindow.Close();
+        private void contentBrowserView_Loaded(object sender, RoutedEventArgs e) =>
+            contentBrowserView_IsVisibleChanged(sender, default);
+
+        private void contentBrowserView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if(
+                (sender as FrameworkElement).DataContext is ContentBrowser cb &&
+                string.IsNullOrEmpty(cb.SelectedFolder?.Trim())
+            ) {
+                cb.SelectedFolder = cb.ContentFolder;
+            }
+        }
+
+        private void UnloadAndCloseAllWindows()
         {
             Project.Current?.Unload();
-            Application.Current.MainWindow.DataContext = null;
-            Application.Current.MainWindow.Close();
-        }
 
-        private void MIExit_Executed(object sender, ExecutedRoutedEventArgs e) => Application.Current.MainWindow.Close();
+            var mainWindow = Application.Current.MainWindow;
+
+            foreach(Window win in Application.Current.Windows)
+            {
+                if(win != mainWindow)
+                {
+                    win.DataContext = null;
+                    win.Close();
+                }
+            }
+
+            mainWindow.DataContext = null;
+            mainWindow.Close();
+        }
     }
 }

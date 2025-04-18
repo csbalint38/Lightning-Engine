@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Editor.Content.ImportSettingsConfig
 {
@@ -27,7 +22,22 @@ namespace Editor.Content.ImportSettingsConfig
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            var proxy = (sender as Button).DataContext as AssetProxy;
+            var destinationFolder = proxy.DestinationFolder;
 
+            if (Path.EndsInDirectorySeparator(destinationFolder))
+            {
+                destinationFolder = Path.GetDirectoryName(destinationFolder);
+            }
+
+            var dialog = new SelectFolderDialog(destinationFolder);
+
+            if(dialog.ShowDialog() == true)
+            {
+                Debug.Assert(!string.IsNullOrEmpty(dialog.SelectedFolder));
+
+                proxy.DestinationFolder = dialog.SelectedFolder;
+            }
         }
     }
 }
