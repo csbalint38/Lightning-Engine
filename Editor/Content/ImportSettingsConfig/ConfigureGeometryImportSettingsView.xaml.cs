@@ -22,25 +22,13 @@ namespace Editor.Content.ImportSettingsConfig
         private void BtnImport_Click(object sender, RoutedEventArgs e) =>
             ((sender as FrameworkElement).DataContext as GeometryImportSettingsConfigurator).Import();
 
-        private void LBGeometry_Drop(object sender, DragEventArgs e)
-        {
+        private void LBGeometry_Drop(object sender, DragEventArgs e) =>
             ConfigureImportSettingsWindow.AddDroppedFiles(DataContext as ConfigureImportSettings, sender as ListBox, e);
-
-            RefreshListBoxItems();
-        }
 
         private void BtnRemove_Click(object sender, RoutedEventArgs e)
         {
             var vm = DataContext as ConfigureImportSettings;
             vm.GeometryImportSettingsConfigurator.RemoveFile((sender as FrameworkElement).DataContext as GeometryProxy);
-
-            RefreshListBoxItems();
-        }
-
-        private void RefreshListBoxItems()
-        {
-            var vm = (DataContext as ConfigureImportSettings).GeometryImportSettingsConfigurator;
-            vm.OnPropertyChanged(nameof(vm.GeometryProxies));
         }
 
         private void BtnApplyToSelection_Click(object sender, RoutedEventArgs e)

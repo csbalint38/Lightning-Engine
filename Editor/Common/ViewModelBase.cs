@@ -8,7 +8,7 @@ namespace Editor.Common
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected internal void OnPropertyChanged(string propertyName)
+        protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
