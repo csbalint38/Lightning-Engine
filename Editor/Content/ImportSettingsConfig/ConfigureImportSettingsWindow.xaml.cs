@@ -1,6 +1,8 @@
-﻿using System.Windows;
+﻿using Editor.Content.ImportSettingsConfig;
+using System.Windows;
+using System.Windows.Controls;
 
-namespace Editor.Content
+namespace Editor.Content.ImportSettingsConfig
 {
     /// <summary>
     /// Interaction logic for ConfigureImportSettingsWindow.xaml
@@ -10,6 +12,33 @@ namespace Editor.Content
         public ConfigureImportSettingsWindow()
         {
             InitializeComponent();
+
+            Loaded += (_, __) =>
+            {
+                var vm = DataContext as ConfigureImportSettings;
+
+                tabControl.SelectedIndex = vm.GeometryImportSettingsConfigurator.GeometryProxies.Any() ?
+                    0 :
+                    vm.TextureImportSettingsConfigurator.TextureProxies.Any() ?
+                    1 :
+                    //vm.AudioImportSettingsConfigurator.AudioProxies.Any() ?
+                    //2 :
+                    0;
+            };
+        }
+
+        internal static void AddDroppedFiles(ConfigureImportSettings dataContext, ListBox listBox, DragEventArgs e)
+        {
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+            if(files?.Length > 0)
+            {
+                var destFolder = listBox.HasItems ?
+                    (listBox.Items[^1] as AssetProxy).DestinationFolder :
+                    dataContext.LastDestinationFolder;
+
+                dataContext.AddFiles(files, destFolder);
+            }
         }
     }
 }
