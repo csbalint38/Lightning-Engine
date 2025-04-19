@@ -1,4 +1,5 @@
-﻿using Editor.Content;
+﻿using Editor.Common.Enums;
+using Editor.Content;
 using Editor.Content.ContentBrowser;
 using Editor.Content.ImportSettingsConfig;
 using System.Diagnostics;
@@ -58,6 +59,7 @@ namespace Editor.Utilities
 
             try
             {
+                ImportingItemCollection.Init();
                 ContentWatcher.EnableFileWatcher(false);
 
                 var tasks = proxies.Select(async proxy => await Task.Run(() =>
@@ -126,10 +128,15 @@ namespace Editor.Utilities
 
             asset.FullPath = destination + name + Asset.AssetFileExtension;
 
+            var importingItem = new ImportingItem(name, asset);
+            ImportingItemCollection.Add(importingItem);
+
             bool importSucceeded = false;
 
             try
             {
+                Debug.Assert(asset.FullPath?.Contains(destination) == true);
+
                 importSucceeded = !string.IsNullOrEmpty(file) && asset.Import(file);
 
                 if (importSucceeded) asset.Save(asset.FullPath);
@@ -138,7 +145,7 @@ namespace Editor.Utilities
             }
             finally
             {
-
+                importingItem.Status = importSucceeded ? ImportStatus.SUCCEEDED : ImportStatus.FAILED;
             }
         }
     }

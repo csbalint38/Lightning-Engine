@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Editor.Common.Enums;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Editor.Content.ImportSettingsConfig
@@ -45,6 +46,14 @@ namespace Editor.Content.ImportSettingsConfig
             var vm = DataContext as ConfigureImportSettings;
 
             foreach(var proxy in vm.GeometryImportSettingsConfigurator.GeometryProxies) proxy.CopySettings(settings);
+        }
+
+        private void BtnClear_Click(object sender, RoutedEventArgs e)
+        {
+            ImportingItemCollection.Clear(AssetType.ANIMATION);
+            ImportingItemCollection.Clear(AssetType.MATERIAL);
+            ImportingItemCollection.Clear(AssetType.MESH);
+            ImportingItemCollection.Clear(AssetType.SKELETON);
         }
     }
 }

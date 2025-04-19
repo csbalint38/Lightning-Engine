@@ -1,4 +1,5 @@
-﻿using Editor.Content.ImportSettingsConfig;
+﻿using Editor.Common.Enums;
+using Editor.Content.ImportSettingsConfig;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -17,7 +18,7 @@ namespace Editor.Content.ImportSettingsConfig
             {
                 var vm = DataContext as ConfigureImportSettings;
 
-                tabControl.SelectedIndex = vm.GeometryImportSettingsConfigurator.GeometryProxies.Any() ?
+                TCAssetTypes.SelectedIndex = vm.GeometryImportSettingsConfigurator.GeometryProxies.Any() ?
                     0 :
                     vm.TextureImportSettingsConfigurator.TextureProxies.Any() ?
                     1 :
@@ -40,5 +41,8 @@ namespace Editor.Content.ImportSettingsConfig
                 dataContext.AddFiles(files, destFolder);
             }
         }
+
+        private void TCAssetTypes_SelectionChanged_1(object sender, SelectionChangedEventArgs e) =>
+            ImportingItemCollection.SetItemFilter((AssetType)(TCAssetTypes.SelectedItem as TabItem)?.Tag);
     }
 }
