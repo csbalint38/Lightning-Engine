@@ -43,9 +43,9 @@ namespace Editor.Editors
         private void MIOpenProject_Executed(object sender, ExecutedRoutedEventArgs e) => UnloadAndCloseAllWindows();
         private void MIExit_Executed(object sender, ExecutedRoutedEventArgs e) => Application.Current.MainWindow.Close();
         private void contentBrowserView_Loaded(object sender, RoutedEventArgs e) =>
-            contentBrowserView_IsVisibleChanged(sender, default);
+            ContentBrowserView_IsVisibleChanged(sender, default);
 
-        private void contentBrowserView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void ContentBrowserView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if(
                 (sender as FrameworkElement).DataContext is ContentBrowser cb &&

@@ -110,7 +110,7 @@ namespace Editor.DLLs
                 {
                     var mipSlice = new List<Slice>();
 
-                    for (var k = 0; k < depthPerMipLevel[i]; ++k)
+                    for (var k = 0; k < depthPerMipLevel[j]; ++k)
                     {
                         var slice = new Slice();
 
@@ -208,7 +208,7 @@ namespace Editor.DLLs
                 sceneData.ImportSettings.FromContentSettings(geometry);
                 sceneDataGenerator(sceneData);
 
-                Debug.Assert(sceneData.Data != IntPtr.Zero && sceneData.DataSize > 0);
+                if(sceneData.Data == IntPtr.Zero || sceneData.DataSize == 0) throw new Exception(failureMessage);
 
                 var data = new byte[sceneData.DataSize];
                 Marshal.Copy(sceneData.Data, data, 0, sceneData.DataSize);

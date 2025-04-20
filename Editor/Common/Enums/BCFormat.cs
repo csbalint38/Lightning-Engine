@@ -10,13 +10,13 @@ namespace Editor.Common.Enums
         [Description("BC1 (RGBA) Low Quality Aplpha")]
         DXGI_FORMAT_BC1_UNORM = 71,
 
-        [Description("BC1 (sSRGB) Low Quality Aplpha")]
+        [Description("BC1 (sRGBA) Low Quality Aplpha")]
         DXGI_FORMAT_BC1_UNORM_SRGB = 72,
 
         [Description("BC3 (RGBA) Medium Quality")]
         DXGI_FORMAT_BC3_UNORM = 77,
 
-        [Description("BC3 (sSRGB) Medium Quality")]
+        [Description("BC3 (sRGB) Medium Quality")]
         DXGI_FORMAT_BC3_UNORM_SRGB = 78,
 
         [Description("BC4 (R8) Single-Channel Gray")]

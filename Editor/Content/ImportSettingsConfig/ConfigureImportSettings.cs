@@ -1,5 +1,4 @@
 ﻿using Editor.Common;
-using Editor.Content.ImportSettingsConfig;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
@@ -23,6 +22,7 @@ namespace Editor.Content.ImportSettingsConfig
         public ConfigureImportSettings(string[] files, string destinationFolder)
         {
             AddFiles(files, destinationFolder);
+            LastDestinationFolder = destinationFolder;
         }
 
         public ConfigureImportSettings(string destinationFolder)
@@ -30,6 +30,8 @@ namespace Editor.Content.ImportSettingsConfig
             Debug.Assert(!string.IsNullOrEmpty(destinationFolder) && Directory.Exists(destinationFolder));
 
             if (!destinationFolder.EndsWith(Path.DirectorySeparatorChar)) destinationFolder += Path.DirectorySeparatorChar;
+
+            LastDestinationFolder = destinationFolder;
 
             Debug.Assert(Application.Current.Dispatcher.Invoke(() => destinationFolder.Contains(Project.Current.ContentPath)));
         }

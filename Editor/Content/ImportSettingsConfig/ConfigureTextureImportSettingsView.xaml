@@ -309,9 +309,9 @@
                            d:Text="Import settings for image.png"
                            FontSize="16"
                            Margin="10"/>
-                <!--local:GeometryImportSettingsView Grid.Row="1"
-                                                  Margin="10,0,10,28"
-                                                  DataContext="{Binding ImportSettings}"/-->
+                <local:TextureImportSettingsView Grid.Row="1"
+                                                 Margin="10,0,10,28"
+                                                 DataContext="{Binding ImportSettings}"/>
                 <Border Grid.Row="1"
                         CornerRadius="5"
                         BorderBrush="#FFC800"
@@ -400,7 +400,7 @@
                             <Button.Style>
                                 <Style TargetType="{x:Type Button}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSource}"
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
                                                      Value="1">
                                             <Setter Property="IsEnabled"
                                                     Value="False"/>
@@ -421,7 +421,7 @@
                             <RepeatButton.Style>
                                 <Style TargetType="{x:Type RepeatButton}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSource}"
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
                                                  Value="1">
                                             <Setter Property="IsEnabled"
                                                 Value="False"/>
@@ -442,7 +442,7 @@
                             <RepeatButton.Style>
                                 <Style TargetType="{x:Type RepeatButton}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSource}"
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
                                                      Value="1">
                                             <Setter Property="IsEnabled"
                                                     Value="False"/>

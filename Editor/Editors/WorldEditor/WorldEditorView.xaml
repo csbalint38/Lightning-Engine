@@ -194,7 +194,7 @@
                                                 AllowDrop="True"
                                                 x:Name="contentBrowserView"
                                                 Loaded="contentBrowserView_Loaded"
-                                                IsVisibleChanged="contentBrowserView_IsVisibleChanged"/>
+                                                IsVisibleChanged="ContentBrowserView_IsVisibleChanged"/>
                     <GridSplitter Grid.Column="1"/>
                     <TabControl Grid.Column="1">
                         <TabItem Header="History">
