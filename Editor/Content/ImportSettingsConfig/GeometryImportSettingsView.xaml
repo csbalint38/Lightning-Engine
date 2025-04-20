@@ -69,7 +69,7 @@
                    VerticalAlignment="Center">
             <TextBlock Text="Coalesce Meshes"
                        Width="150"/>
-            <CheckBox IsChecked="False"
+            <CheckBox IsChecked="{Binding CoalesceMeshes}"
                       Margin="-1,0,0,0"
                       d:IsChecked="False"/>
         </DockPanel>

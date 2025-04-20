@@ -117,7 +117,7 @@ namespace lightning::tools {
 		}
 	}
 
-	void FbxContext::get_mesh(FbxNodeAttribute* attribute, util::vector<Mesh>& meshes, u32 lod_id, f32 lod_treshold) {
+	void FbxContext::get_mesh(FbxNodeAttribute* attribute, util::vector<Mesh>& meshes, u32 lod_id, f32 lod_threshold) {
 		assert(attribute);
 
 		FbxMesh* fbx_mesh{ (FbxMesh*)attribute };
@@ -131,7 +131,7 @@ namespace lightning::tools {
 
 		Mesh m;
 		m.lod_id = lod_id;
-		m.lod_threshold = lod_treshold;
+		m.lod_threshold = lod_threshold;
 		m.name = (node->GetName()[0] != '\0') ? node->GetName() : fbx_mesh->GetName();
 		if (get_mesh_data(fbx_mesh, m)) {
 			meshes.emplace_back(m);

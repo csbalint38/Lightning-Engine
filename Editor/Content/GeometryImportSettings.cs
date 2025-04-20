@@ -12,6 +12,7 @@ namespace Editor.Content
         private bool _reverseHandedness;
         private bool _importEmbeddedTextures;
         private bool _importAnimations;
+        private bool _coalesceMeshes;
 
         public bool CalculateNormals
         {
@@ -91,6 +92,19 @@ namespace Editor.Content
             }
         }
 
+        public bool CoalesceMeshes
+        {
+            get => _coalesceMeshes;
+            set
+            {
+                if (_coalesceMeshes != value)
+                {
+                    _coalesceMeshes = value;
+                    OnPropertyChanged(nameof(CoalesceMeshes));
+                }
+            }
+        }
+
         public GeometryImportSettings()
         {
             CalculateNormals = false;
@@ -99,6 +113,7 @@ namespace Editor.Content
             ReverseHandedness = false;
             ImportEmbeddedTextures = true;
             ImportAnimations = true;
+            CoalesceMeshes = false;
         }
 
         public void ToBinary(BinaryWriter writer)
@@ -109,6 +124,7 @@ namespace Editor.Content
             writer.Write(ReverseHandedness);
             writer.Write(ImportEmbeddedTextures);
             writer.Write(ImportAnimations);
+            writer.Write(CoalesceMeshes);
         }
 
         public void FromBinary(BinaryReader reader)
@@ -119,6 +135,7 @@ namespace Editor.Content
             ReverseHandedness = reader.ReadBoolean();
             ImportEmbeddedTextures = reader.ReadBoolean();
             ImportAnimations = reader.ReadBoolean();
+            CoalesceMeshes = reader.ReadBoolean();
         }
     }
 }

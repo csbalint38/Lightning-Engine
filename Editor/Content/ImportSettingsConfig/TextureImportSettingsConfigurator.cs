@@ -1,6 +1,7 @@
 ﻿using Editor.Common;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace Editor.Content.ImportSettingsConfig
 {
@@ -25,10 +26,40 @@ namespace Editor.Content.ImportSettingsConfig
         {
             if (!_textureProxies.Any()) return;
 
+            foreach(var proxy in _textureProxies)
+            {
+                proxy.ImportSettings.Sources.Clear();
+
+                foreach (var source in proxy.Sources) proxy.ImportSettings.Sources.Add(source.FileInfo.FullName);
+            }
+
             _ = ContentHelper.ImportFilesAsync(_textureProxies);
             _textureProxies.Clear();
         }
 
         public void RemoveFile(TextureProxy proxy) => _textureProxies.Remove(proxy);
+
+        public void MoveToTarget(TextureProxy proxy, TextureProxy target)
+        {
+            if(proxy != target && proxy.Sources.Count == 1 && target.AddProxy(proxy))
+            {
+                _textureProxies.Remove(proxy);
+            }
+        }
+
+        public void MoveFromTarget(TextureProxy proxy, TextureProxy target)
+        {
+            if(proxy != target)
+            {
+                Debug.Assert(proxy.Sources.Count == 1);
+
+                target.RemoveProxy(proxy);
+
+                if(!_textureProxies.Any(x => x.FileInfo.FullName == proxy.FileInfo.FullName))
+                {
+                    _textureProxies.Add(proxy);
+                }
+            }
+        }
     }
 }

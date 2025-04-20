@@ -96,10 +96,10 @@
                                          Value="{x:Static enums:ImportStatus.SUCCEEDED}">
                                 <Setter Property="Text"
                                         TargetName="TBStatus"
-                                        Value="Importing..."/>
+                                        Value="Done."/>
                                 <Setter Property="Foreground"
                                         TargetName="TBStatus"
-                                        Value="#FFC800"/>
+                                        Value="Green"/>
                                 <Setter Property="Fill"
                                         TargetName="RectStatus"
                                         Value="Green"/>

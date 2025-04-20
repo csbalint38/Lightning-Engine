@@ -73,5 +73,8 @@ namespace Editor.Editors
             mainWindow.DataContext = null;
             mainWindow.Close();
         }
+
+        private void BtnImport_Click(object sender, RoutedEventArgs e) =>
+            contentBrowserView.OpenImportSettingsConfigurator();
     }
 }

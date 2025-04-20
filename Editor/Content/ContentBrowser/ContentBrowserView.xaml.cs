@@ -53,6 +53,13 @@ namespace Editor.Content
             Loaded += OnContentBrowserLoaded;
         }
 
+        public void OpenImportSettingsConfigurator()
+        {
+            var vm = DataContext as ContentBrowser.ContentBrowser;
+
+            OpenImportSettingsConfigurator(null, vm.SelectedFolder, true);
+        }
+
         private static IAssetEditor OpenAssetEditor(AssetInfo info)
         {
             IAssetEditor editor = null;
@@ -282,8 +289,6 @@ namespace Editor.Content
             BDrop.BeginAnimation(OpacityProperty, fadeIn);
         }
 
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

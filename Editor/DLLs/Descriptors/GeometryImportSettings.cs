@@ -12,6 +12,7 @@ namespace Editor.DLLs.Descriptors
         public byte ReverseHandedness = 0;
         public byte ImportEmbededTextures = 1;
         public byte ImportAnimations = 1;
+        public byte CoalesceMeshes = 0;
 
         public void FromContentSettings(Geometry geometry)
         {
@@ -23,6 +24,7 @@ namespace Editor.DLLs.Descriptors
             ReverseHandedness = ToByte(settings.ReverseHandedness);
             ImportEmbededTextures = ToByte(settings.ImportEmbeddedTextures);
             ImportAnimations = ToByte(settings.ImportAnimations);
+            CoalesceMeshes = ToByte(settings.CoalesceMeshes);
         }
 
         private byte ToByte(bool value) => value ? (byte)1 : (byte)0;

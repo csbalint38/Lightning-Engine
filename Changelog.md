@@ -8,7 +8,7 @@
 
 ## Editor
  - Asset import progression
- - Configure import settings
+ - Configure geometry import settings
  - Texture editor controls help section
  - Texture details in texture editor side panel
  - Texture loading status display

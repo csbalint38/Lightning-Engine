@@ -1,5 +1,6 @@
 ﻿using Editor.Common.Enums;
 using Editor.Content;
+using Editor.Content.ImportSettingsConfig;
 using Editor.DLLs.Descriptors;
 using Editor.Utilities;
 using System.Diagnostics;
@@ -11,12 +12,13 @@ namespace Editor.DLLs
     static class ContentToolsAPI
     {
         private const string _contentToolsDll = "ContentTools.dll";
+        private delegate void ProgressCallback(int value, int maxValue);
 
         [DllImport(_contentToolsDll)] // Modify entry point
         private static extern void CreatePrimitiveMesh([In, Out] SceneData data, PrimitiveInitInfo info);
 
         [DllImport(_contentToolsDll)] // Modify entry point
-        private static extern void ImportFbx(string file, [In, Out] SceneData data);
+        private static extern void ImportFbx(string file, [In, Out] SceneData data, ProgressCallback callback);
 
         [DllImport(_contentToolsDll)] // Modify entry point
         private static extern void Import([In, Out] TextureData data);
@@ -34,8 +36,14 @@ namespace Editor.DLLs
                 $"Failed to create {info.Type} primitive mesh."
             );
 
-        public static void ImportFbx(string file, Geometry geometry) =>
-            GeometryFromSceneData(geometry, (sceneData) => ImportFbx(file, sceneData), $"Failed to import from FBX file: {file}");
+        public static void ImportFbx(string file, Geometry geometry)
+        {
+            var item = ImportingItemCollection.GetItem(geometry);
+            ProgressCallback callback = item is not null ? item.SetProgress : null;
+
+            GeometryFromSceneData(geometry, (sceneData) =>
+                ImportFbx(file, sceneData, callback), $"Failed to import from FBX file: {file}");
+        }
 
         public static (List<List<List<Slice>>> slices, Slice icon) Import(Texture texture)
         {

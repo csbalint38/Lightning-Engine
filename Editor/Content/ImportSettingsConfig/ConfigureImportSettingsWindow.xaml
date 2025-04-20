@@ -20,7 +20,16 @@
             <TabItem Header="Geometry"
                      MinWidth="96"
                      Tag="{x:Static enums:AssetType.MESH}">
-                <local:ConfigureGeometryImportSettingsView/>
+                <local:ConfigureGeometryImportSettingsView RenderTransformOrigin="0.5,0.5">
+                    <local:ConfigureGeometryImportSettingsView.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform AngleY="0.108"/>
+                            <RotateTransform/>
+                            <TranslateTransform Y="0.56"/>
+                        </TransformGroup>
+                    </local:ConfigureGeometryImportSettingsView.RenderTransform>
+                </local:ConfigureGeometryImportSettingsView>
             </TabItem>
             <TabItem Header="Texture"
                      MinWidth="96"
