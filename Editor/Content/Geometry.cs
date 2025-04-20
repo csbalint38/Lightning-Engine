@@ -212,6 +212,31 @@ namespace Editor.Content
             return false;
         }
 
+        /// <summary>
+        /// Packs the geometry into a byte array wich can be used by the Engine.
+        /// </summary>
+        /// <returns>
+        /// struct {
+        ///     u32 lod_count,
+        ///     
+        ///     struct {
+        ///         f32 lod_threshold,
+        ///         u32 submesh_count,
+        ///         u32 size_of_submeshes,
+        ///         
+        ///         struct {
+        ///             u32 element_size,
+        ///             u32 vertex_count,
+        ///             u32 index_count,
+        ///             u32 elements_type,
+        ///             u32 primitive_topology,
+        ///             u8 positions[sizeof(f32) * 3 * vertex_count],
+        ///             u8 elements[sizeof(element_size) * vertex_count],
+        ///             u8 indices[index_size * index_count]
+        ///         } Submeshes[submesh_vount]
+        ///     } MeshLods[lod_count]
+        /// } Geometry
+        /// </returns>
         public override byte[] PackForEngine()
         {
             byte[] data = null;

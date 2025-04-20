@@ -175,7 +175,7 @@ namespace Editor.Editors
                             var normalY = reader.ReadUInt16() * intervals - 1.0f;
                             var normalZ = Math.Sqrt(
                                 Math.Clamp(1f - (normalX * normalX + normalY * normalY), 0f, 1f)
-                            ) * ((signs & 0x2) - 1f);
+                            ) * (((signs & 0x4) >> 1) - 1f);
 
                             var normal = new Vector3D(normalX, normalY, normalZ);
 

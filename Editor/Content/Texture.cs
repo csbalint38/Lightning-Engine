@@ -215,6 +215,10 @@ namespace Editor.Content
 
                 FullPath = file;
 
+                // TEMP
+                PackForEngine();
+                // TEMP
+
                 return true;
             }
             catch(Exception ex)
@@ -226,9 +230,65 @@ namespace Editor.Content
             return false;
         }
 
+        /// <summary>
+        /// Pack the texture into a byte array wich can be used by the Engine.
+        /// </summary>
+        /// <returns>
+        /// struct {
+        ///     u32 width,
+        ///     u32 height,
+        ///     u32 array_size_or_depth,
+        ///     u32 flags,
+        ///     u32 mip_levels,
+        ///     u32 format,
+        ///     
+        ///     struct {
+        ///         u32 row_pitch,
+        ///         u32 slice_pitch,
+        ///         u8 image[mip_level][slice_pitch * depth_per_mip]
+        ///     } Images[]
+        /// } Texture
+        /// </returns>
         public override byte[] PackForEngine()
         {
-            throw new NotImplementedException();
+            using var writer = new BinaryWriter(new MemoryStream());
+
+            writer.Write(Width);
+            writer.Write(Height);
+            writer.Write(ArraySize);
+            writer.Write((int)Flags);
+            writer.Write(MipLevels);
+            writer.Write((int)Format);
+
+            Debug.Assert(Slices?.Any() == true);
+
+            foreach(var arraySlice in Slices)
+            {
+                foreach(var mipLevel in arraySlice)
+                {
+                    writer.Write(mipLevel[0].RowPitch);
+                    writer.Write(mipLevel[0].SlicePitch);
+                    foreach (var slice in mipLevel)
+                    {
+                        writer.Write(slice.RawContent);
+                    }
+                }
+            }
+
+            writer.Flush();
+
+            var data = (writer.BaseStream as MemoryStream)?.ToArray();
+
+            Debug.Assert(data?.Length > 0);
+
+            // TEMP
+            using (var fs = new FileStream(@"..\..\x64\texture.tex", FileMode.Create))
+            {
+                fs.Write(data, 0, data.Length);
+            }
+            // TEMP
+
+            return data;
         }
 
         public override IEnumerable<string> Save(string file)
@@ -319,6 +379,8 @@ namespace Editor.Content
             Debug.Assert(Slices.First().Any() && Slices.First().Count == MipLevels);
 
             var data = ContentToolsAPI.SlicesToBinary(Slices);
+
+            Debug.Assert(data?.Length > 0);
 
             return CompressionHelper.Compress(data);
         }

@@ -1,5 +1,6 @@
 ﻿namespace Editor.Common.Enums
 {
+    [Flags]
     public enum TextureFlags : int
     {
         IS_HDR = 0x01,

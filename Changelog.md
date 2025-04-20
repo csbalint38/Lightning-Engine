@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Pack textures in the Editor for the Engine
  - Reimport textures
  - Configure Texture import settings
  - Group textures

@@ -108,7 +108,7 @@ namespace Editor.Content
         public GeometryImportSettings()
         {
             CalculateNormals = false;
-            CalculateTangents = false;
+            CalculateTangents = true;
             SmoothingAngle = 178f;
             ReverseHandedness = false;
             ImportEmbeddedTextures = true;

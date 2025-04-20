@@ -1,4 +1,5 @@
 ﻿using Editor.Common;
+using Editor.Utilities;
 using System.Collections.ObjectModel;
 
 namespace Editor.Content
@@ -26,7 +27,7 @@ namespace Editor.Content
             get => _lodThreshold;
             set
             {
-                if (_lodThreshold != value)
+                if (!_lodThreshold.IsEqual(value))
                 {
                     _lodThreshold = value;
                     OnPropertyChanged(nameof(LODThreshold));
