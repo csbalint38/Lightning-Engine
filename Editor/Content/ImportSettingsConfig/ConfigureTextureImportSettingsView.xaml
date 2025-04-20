@@ -4,9 +4,489 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Content.ImportSettingsConfig"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type={x:Type local:ConfigureImportSettings}}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+    <UserControl.Resources>
+        <AlternationConverter x:Key="alternationConverter">
+            <SolidColorBrush Color="Transparent"/>
+            <SolidColorBrush Color="LightCoral"/>
+        </AlternationConverter>
+        <Style TargetType="{x:Type ListBoxItem}"
+               x:Key="alternateColorListBoxItemStyle">
+            <Setter Property="FocusVisualStyle"
+                    Value="{x:Null}"/>
+            <Setter Property="Background"
+                    Value="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource Self}, Converter={StaticResource alternationConverter}}"/>
+        </Style>
+        <Style TargetType="{x:Type Button}"
+               x:Key="removeButtonStyle">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="14"/>
+            <Setter Property="Margin"
+                    Value="0,2,2,0"/>
+            <Setter Property="VerticalAlignment"
+                    Value="Top"/>
+            <Setter Property="SnapsToDevicePixels"
+                    Value="True"/>
+        </Style>
+        <Style TargetType="{x:Type Line}"
+               x:Key="RedLineStyle">
+            <Setter Property="Stroke"
+                    Value="Red"/>
+            <Setter Property="StrokeThickness"
+                    Value="2"/>
+            <Setter Property="StrokeStartLineCap"
+                    Value="Round"/>
+            <Setter Property="StrokeEndLineCap"
+                    Value="Round" />
+        </Style>
+        <DataTemplate x:Key="imageSourceListBoxItemTemplate">
+            <Grid ToolTip="{Binding FileInfo.DirectoryName}"
+                  ToolTipService.InitialShowDelay="500">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"/>
+                <TextBlock Text="{Binding FileInfo.Name}"
+                           Foreground="#FFC800"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="0,0,5,0"
+                           Grid.Row="0"
+                           Grid.Column="1"/>
+                <TextBlock Text="{Binding FileInfo.LastWriteTime}"
+                           Grid.Row="1"
+                           Grid.Column="0"
+                           Grid.ColumnSpan="2"/>
+                <TextBlock Text="{Binding FileInfo.Length}"
+                           Grid.Row="2"
+                           Grid.Column="0"
+                           Grid.ColumnSpan="2"/>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid d:DataContext="{d:DesignInstance Type={x:Type local:TextureImportSettingsConfigurator}}"
+          DataContext="{Binding TextureImportSettingsConfigurator}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="250"/>
+            <ColumnDefinition MinWidth="300"/>
+            <ColumnDefinition MinWidth="250"
+                              Width="250"/>
+        </Grid.ColumnDefinitions>
+        <Border Margin="0,0,5,0">
+            <DockPanel Margin="10">
+                <StackPanel DockPanel.Dock="Top"
+                            Orientation="Horizontal"
+                            Margin="0,0,0,10">
+                    <Button x:Name="BtnImport"
+                            Content="Import"
+                            Width="64"
+                            Click="BtnImport_Click"
+                            IsEnabled="{Binding TextureProxies.Count}"/>
+                </StackPanel>
+                <ListBox ItemsSource="{Binding TextureProxies}"
+                         AlternationCount="{Binding TextureProxies.Count}"
+                         SelectionMode="Extended"
+                         x:Name="LBTexture"
+                         HorizontalContentAlignment="Stretch"
+                         BorderBrush="#FFC800"
+                         SelectedIndex="0"
+                         AllowDrop="True"
+                         Drop="LBTexture_Drop"
+                         ItemContainerStyle="{StaticResource alternateColorListBoxItemStyle}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.Triggers>
+                        <EventTrigger RoutedEvent="PreviewDragEnter">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <ThicknessAnimation Storyboard.TargetProperty="BorderThickness"
+                                                        From="0"
+                                                        To="2"
+                                                        Duration="0:0:0.2"/>
+                                    <ThicknessAnimation Storyboard.TargetProperty="Margin"
+                                                        From="0"
+                                                        To="-2"
+                                                        Duration="0:0:0.2"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="PreviewDragLeave">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <ThicknessAnimation Storyboard.TargetProperty="BorderThickness"
+                                                        From="2"
+                                                        To="0"
+                                                        Duration="0:0:0.2"/>
+                                    <ThicknessAnimation Storyboard.TargetProperty="Margin"
+                                                        From="-2"
+                                                        To="0"
+                                                        Duration="0:0:0.2"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                        <EventTrigger RoutedEvent="Drop">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <ThicknessAnimation Storyboard.TargetProperty="BorderThickness"
+                                                        From="2"
+                                                        To="0"
+                                                        Duration="0:0:0.2"/>
+                                    <ThicknessAnimation Storyboard.TargetProperty="Margin"
+                                                        From="-2"
+                                                        To="0"
+                                                        Duration="0:0:0.2"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </ListBox.Triggers>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ToolTip="{Binding FileInfo.DirectoryName}"
+                                  ToolTipService.InitialShowDelay="500"
+                                  Background="Transparent">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Border Background="Green"
+                                        Width="5"
+                                        Margin="0,0,5,0"
+                                        x:Name="BrdHasImages"
+                                        Grid.Row="0"
+                                        Grid.RowSpan="4">
+                                    <Border.Style>
+                                        <Style TargetType="{x:Type Border}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Sources.Count}"
+                                                             Value="1">
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                                <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}, StringFormat='{}{0}. '}"
+                                           Grid.Column="1"/>
+                                <TextBlock Text="{Binding FileInfo.Name}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Margin="0,0,20,0"
+                                           Grid.Column="2"/>
+                                <TextBlock Text="{Binding FileInfo.LastWriteTime}"
+                                           Grid.Row="1"
+                                           Grid.Column="1"
+                                           Grid.ColumnSpan="2"/>
+                                <TextBlock Text="{Binding FileInfo.Length}"
+                                           Grid.Row="2"
+                                           Grid.Column="1"
+                                           Grid.ColumnSpan="2"/>
+                                <Expander Visibility="{Binding Path=Visibility, ElementName=BrdHasImages}"
+                                          Focusable="False"
+                                          Margin="0,5,0,0"
+                                          Grid.Row="3"
+                                          Grid.Column="1"
+                                          Grid.ColumnSpan="2">
+                                    <Expander.Header>
+                                        <TextBlock Text="SOURCE_IMAGES"
+                                                   FontWeight="Bold"/>
+                                    </Expander.Header>
+                                    <ItemsControl ItemsSource="{Binding Sources}"
+                                                  Margin="23,5,0,10">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding FileInfo.Name}"
+                                                           Foreground="#FFC500"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,0,20,0"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+                                <Button x:Name="BtnRemove"
+                                        Click="BtnRemove_Click"
+                                        Background="Transparent"
+                                        Grid.Column="2"
+                                        Visibility="Collapsed"
+                                        Style="{StaticResource removeButtonStyle}">
+                                    <Button.Content>
+                                        <Grid>
+                                            <Line X1="1"
+                                                  X2="8"
+                                                  Y1="1.5"
+                                                  Y2="8.5"
+                                                  Style="{StaticResource RedLineStyle}"/>
+                                            <Line X1="1"
+                                                  X2="8"
+                                                  Y1="8.5"
+                                                  Y2="1.5"
+                                                  Style="{StaticResource RedLineStyle}"/>
+                                        </Grid>
+                                    </Button.Content>
+                                </Button>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                         Value="True">
+                                    <Setter Property="Visibility"
+                                            TargetName="BtnRemove"
+                                            Value="Visible"/>
+                                </Trigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+        <TextBlock FontFamily="Bahnschrift condensed"
+                   FontSize="24"
+                   Text="Drop Files Here"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   x:Name="TBDrop"
+                   IsHitTestVisible="False"
+                   d:Visibility="Visible">
+            <TextBlock.Style>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter Property="Visibility"
+                            Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=Items.Count, ElementName=LBTexture}"
+                                     Value="0">
+                            <Setter Property="Visibility"
+                                    Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <GridSplitter HorizontalAlignment="Right"
+                      VerticalAlignment="Stretch"
+                      Width="5"
+                      Background="Transparent"/>
+        <Border Grid.Column="1"
+                Margin="0,0,5,0">
+            <Grid d:DataContext="{d:DesignInstance Type={x:Type local:TextureProxy}}"
+                  d:Visibility="Visible"
+                  DataContext="{Binding Path=SelectedItem, ElementName=LBTexture}">
+                <Grid.Style>
+                    <Style TargetType="{x:Type Grid}">
+                        <Style.Triggers>
+                            <Trigger Property="DataContext"
+                                     Value="{x:Null}">
+                                <Setter Property="Visibility"
+                                        Value="Collapsed"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <TextBlock Text="{Binding FileInfo.Name, StringFormat='Import settings for {0}'}"
+                           TextTrimming="CharacterEllipsis"
+                           d:Text="Import settings for image.png"
+                           FontSize="16"
+                           Margin="10"/>
+                <!--local:GeometryImportSettingsView Grid.Row="1"
+                                                  Margin="10,0,10,28"
+                                                  DataContext="{Binding ImportSettings}"/-->
+                <Border Grid.Row="1"
+                        CornerRadius="5"
+                        BorderBrush="#FFC800"
+                        BorderThickness="1"
+                        Background="#50000000"
+                        Margin="5,-5,5,23"
+                        x:Name="BrdLock"
+                        ToolTipService.InitialShowDelay="100"
+                        ToolTip="Import settings are locked when multiple sources are selected. &#13;Current settings can be applied to the selection.">
+                    <Border.Style>
+                        <Style TargetType="{x:Type Border}">
+                            <Setter Property="Visibility"
+                                    Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBTexture}"
+                                             Value="1">
+                                    <Setter Property="Visibility"
+                                            Value="Hidden"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <!--Lock icon here-->
+                </Border>
+                <StackPanel Grid.Row="2"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Margin="10,0">
+                    <Button Content="Apply to selection"
+                            Width="120"
+                            x:Name="BtnApplyToSelection"
+                            Click="BtnApplyToSelection_Click"
+                            Visibility="{Binding Path=Visibility, ElementName=BrdLock}"/>
+                    <Button Content="Apply to all"
+                            Width="120"
+                            x:Name="BtnApplyToAll"
+                            Click="BtnApplyToAll_Click"
+                            Margin="0,8"/>
+                    <Button Content="Set as Default"
+                            Width="120"/>
+                </StackPanel>
+                <local:ChangeDestinationFolderView Grid.Row="3"
+                                                   Margin="10,20,10,10"
+                                                   VerticalAlignment="Top"/>
+                <Grid Grid.Row="4" 
+                      Margin="10,0,10,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Top">
+                        <TextBlock Text="SOURCE IMAGES"
+                                   FontWeight="Bold"
+                                   Margin="-2,3,0,10">
+                            <TextBlock.LayoutTransform>
+                                <RotateTransform Angle="90"/>
+                            </TextBlock.LayoutTransform>
+                        </TextBlock>
+                        <Button Margin="0,0,5,5"
+                                Padding="0"
+                                x:Name="BtnAddImageSource"
+                                Click="BtnAddImageSource_Click"
+                                ToolTip="Add selected images to image source list."
+                                Focusable="False">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBTexture}"
+                                                     Value="1">
+                                            <Setter Property="IsEnabled"
+                                                    Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Content>
+                                <TextBlock Text="-->"/>
+                            </Button.Content>
+                        </Button>
+                        <Button Margin="0,0,5,5"
+                                Padding="0"
+                                x:Name="BtnRemoveImageSource"
+                                Click="BtnRemoveImageSource_Click"
+                                ToolTip="Remove selected images from image source list."
+                                Focusable="False">
+                            <Button.Style>
+                                <Style TargetType="{x:Type Button}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSource}"
+                                                     Value="1">
+                                            <Setter Property="IsEnabled"
+                                                    Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Content>
+                                <TextBlock Text="&lt;--"/>
+                            </Button.Content>
+                        </Button>
+                        <RepeatButton Margin="0,0,5,5"
+                                      Padding="0"
+                                      x:Name="BtnMoveUp"
+                                      Click="BtnMoveUp_Click"
+                                      ToolTip="Move up selected image sources."
+                                      Focusable="False">
+                            <RepeatButton.Style>
+                                <Style TargetType="{x:Type RepeatButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSource}"
+                                                 Value="1">
+                                            <Setter Property="IsEnabled"
+                                                Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </RepeatButton.Style>
+                            <RepeatButton.Content>
+                                <TextBlock Text="Up"/>
+                            </RepeatButton.Content>
+                        </RepeatButton>
+                        <RepeatButton Margin="0,0,5,5"
+                                      Padding="0"
+                                      x:Name="BtnMoveDown"
+                                      Click="BtnMoveDown_Click"
+                                      ToolTip="Move down selected image sources."
+                                      Focusable="False">
+                            <RepeatButton.Style>
+                                <Style TargetType="{x:Type RepeatButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSource}"
+                                                     Value="1">
+                                            <Setter Property="IsEnabled"
+                                                    Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </RepeatButton.Style>
+                            <RepeatButton.Content>
+                                <TextBlock Text="Down"/>
+                            </RepeatButton.Content>
+                        </RepeatButton>
+                    </StackPanel>
+                    <ListBox Grid.Column="1"
+                             ItemsSource="{Binding Sources}"
+                             AlternationCount="{Binding Sources.Count}"
+                             SelectionMode="Extended"
+                             x:Name="LBImageSources"
+                             HorizontalAlignment="Stretch"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             SelectedIndex="0"
+                             ItemContainerStyle="{StaticResource alternateColorListBoxItemStyle}"
+                             ItemTemplate="{StaticResource imageSourceListBoxItemTemplate}">
+                    </ListBox>
+                </Grid>
+            </Grid>
+        </Border>
+        <GridSplitter Grid.Column="1"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Stretch"
+                      Width="5"
+                      Background="Transparent"/>
+        <Grid Grid.Column="2">
+            <Button Content="Clear"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Right"
+                    Margin="10"
+                    x:Name="BtnClear"
+                    Click="BtnClear_Click"/>
+            <DockPanel Margin="10">
+                <TextBlock Text="Imported files"
+                           DockPanel.Dock="Top"
+                           FontSize="16"/>
+                <local:ImportingItemsView Margin="0,10,0,0"/>
+            </DockPanel>
+        </Grid>
     </Grid>
 </UserControl>

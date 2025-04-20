@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Group textures
  - Asset import progression
  - Configure geometry import settings
  - Texture editor controls help section

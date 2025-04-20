@@ -33,7 +33,9 @@
             </TabItem>
             <TabItem Header="Texture"
                      MinWidth="96"
-                     Tag="{x:Static enums:AssetType.TEXTURE}"/>
+                     Tag="{x:Static enums:AssetType.TEXTURE}">
+                <local:ConfigureTextureImportSettingsView/>
+            </TabItem>
             <TabItem Header="Audio"
                      MinWidth="96"
                      Tag="{x:Static enums:AssetType.AUDIO}"/>

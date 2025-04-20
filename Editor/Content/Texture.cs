@@ -148,8 +148,6 @@ namespace Editor.Content
             {
                 Logger.LogAsync(LogLevel.INFO, $"Importing image file {file}");
 
-                ImportSettings.Sources.Add(file);
-
                 (var slices, var icon) = ContentToolsAPI.Import(this);
 
                 Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
