@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Reimport textures
  - Configure Texture import settings
  - Group textures
  - Asset import progression
@@ -117,6 +118,6 @@
  - tkinter setup
 
 ## Engine
- - Id syste
+ - Id system
  - Entity system
  - Transform component
