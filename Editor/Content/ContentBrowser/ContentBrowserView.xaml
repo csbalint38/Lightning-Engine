@@ -53,10 +53,19 @@
                                    Width="18"
                                    Margin="5,0"
                                    VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding FileName}"
+                            <Grid VerticalAlignment="Center"
+                                  HorizontalAlignment="Stretch">
+                                <TextBlock Text="{Binding FileName}"
                                        Margin="5,2,0,2"
                                        VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"/>
+                                <TextBox Margin="0, -2"
+                                         HorizontalAlignment="Stretch"
+                                         Padding="2,0,0,0"
+                                         Tag="{Binding RenameCommand}"
+                                         Text="{Binding FileName, UpdateSourceTrigger=Explicit, Mode=OneWay}"
+                                         Visibility="Collapsed"/>
+                            </Grid>
                         </DockPanel>
                     </DataTemplate>
                 </GridViewColumn.CellTemplate>
@@ -82,6 +91,16 @@
                 </GridViewColumn.Header>
             </GridViewColumn>
         </GridView>
+        <ContextMenu x:Key="contextMenu">
+            <MenuItem Header="New">
+                <MenuItem x:Name="MINewFolder"
+                          Header="Folder"
+                          Click="MINewFolder_ClickAsync"/>
+                <Separator/>
+                <MenuItem Header="Texture"/>
+                <MenuItem Header="Material"/>
+            </MenuItem>
+        </ContextMenu>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -102,9 +121,9 @@
                     <Setter Property="View"
                             Value="{StaticResource gridView}"/>
                     <Setter Property="AllowDrop"
-                            Value="{Binding Path=AllowImport, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}" />
-                    <EventSetter Event="DragEnter"
-                                 Handler="ListView_DragEnter"/>
+                            Value="{Binding Path=AllowDrop, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}" />
+                    <EventSetter Event="SelectionChanged"
+                                 Handler="ListView_SelectionChanged"/>
                 </Style>
             </ListView.Style>
         </ListView>
