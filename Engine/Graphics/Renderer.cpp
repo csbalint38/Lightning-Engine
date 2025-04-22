@@ -16,6 +16,9 @@ namespace lightning::graphics {
 			case lightning::graphics::GraphicsPlatform::DIRECT3D12:
 				direct3d12::get_platform_interface(pi);
 				break;
+			case lightning::graphics::GraphicsPlatform::OPEN_GL:
+				//opengl::get_platform_interface(pi);
+				break;
 			default:
 				return false;
 			}
