@@ -111,7 +111,8 @@
                   Grid.Row="1"
                   x:Name="LVFolders"
                   IsTextSearchEnabled="True"
-                  TextSearch.TextPath="FileName">
+                  TextSearch.TextPath="FileName"
+                  AllowDrop="True">
             <ListView.Style>
                 <Style TargetType="{x:Type ListView}">
                     <Setter Property="Background"
@@ -120,8 +121,8 @@
                             Value="0"/>
                     <Setter Property="View"
                             Value="{StaticResource gridView}"/>
-                    <Setter Property="AllowDrop"
-                            Value="{Binding Path=AllowDrop, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}" />
+                    <!--Setter Property="AllowDrop"
+                            Value="{Binding Path=AllowDrop, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}" /-->
                     <EventSetter Event="SelectionChanged"
                                  Handler="ListView_SelectionChanged"/>
                 </Style>

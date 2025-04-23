@@ -14,25 +14,25 @@ namespace Editor.DLLs
         private const string _contentToolsDll = "ContentTools.dll";
         private delegate void ProgressCallback(int value, int maxValue);
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="create_primitive_mesh")]
         private static extern void CreatePrimitiveMesh([In, Out] SceneData data, PrimitiveInitInfo info);
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="import_fbx")]
         private static extern void ImportFbx(string file, [In, Out] SceneData data, ProgressCallback callback);
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="import")]
         private static extern void Import([In, Out] TextureData data);
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="decompress")]
         private static extern void Decompress([In, Out] TextureData data);
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="shutdown_content_tools")]
         public static extern void ShutdownContentTools();
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="prefilter_diffuse_ibl")]
         public static extern void PrefilterDiffuseIBL([In, Out] TextureData data);
 
-        [DllImport(_contentToolsDll)] // Modify entry point
+        [DllImport(_contentToolsDll, EntryPoint="prefilter_specular_ibl")]
         public static extern void PrefilterSpecularIBL([In, Out] TextureData data);
 
         public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
@@ -98,7 +98,11 @@ namespace Editor.DLLs
                 }
 
                 textureData.GetTextureInfo(texture);
-                texture.SetData(textureData.GetSlices(), textureData.GetIcon(), diffuseIBLCubemap);
+
+                if(!texture.SetData(textureData.GetSlices(), textureData.GetIcon(), diffuseIBLCubemap))
+                {
+                    throw new InvalidDataException();
+                }
             }
             catch (Exception ex)
             {

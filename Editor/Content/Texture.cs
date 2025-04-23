@@ -208,8 +208,14 @@ namespace Editor.Content
                         if (!IBLPair.Load(iblFile)) return false;
                     }
                 }
+                else
+                {
+                    Logger.LogAsync(LogLevel.ERROR, $"Unable to open IBL pair asset. File: {file}");
 
-                var compressedLength = reader.ReadInt32();
+                    return false;
+                }
+
+                    var compressedLength = reader.ReadInt32();
 
                 Debug.Assert(compressedLength > 0);
 

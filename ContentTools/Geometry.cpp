@@ -658,7 +658,7 @@ namespace lightning::tools {
 					if (m.normals.size()) submesh.normals.emplace_back(m.normals[j]);
 					if (m.tangents.size()) submesh.tangents.emplace_back(m.tangents[j]);
 
-					for (u32 k{ 0 }; i < m.uv_sets.size(); ++k) {
+					for (u32 k{ 0 }; k < m.uv_sets.size(); ++k) {
 						if (m.uv_sets[k].size()) {
 							submesh.uv_sets[k].emplace_back(m.uv_sets[k][j]);
 						}
