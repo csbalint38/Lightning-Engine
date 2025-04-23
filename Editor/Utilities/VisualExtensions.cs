@@ -20,5 +20,20 @@ namespace Editor.Utilities
 
             return null;
         }
+
+        public static T FindVisualChild<T>(this DependencyObject depObject) where T : DependencyObject
+        {
+            if (depObject is not Visual) return null;
+
+            for(int i = 0; i < VisualTreeHelper.GetChildrenCount(depObject); i++)
+            {
+                var child = VisualTreeHelper.GetChild(depObject, i);
+                var result = (child as T) ?? FindVisualChild<T>(child);
+
+                if (result is not null) return result;
+            }
+
+            return null;
+        }
     }
 }

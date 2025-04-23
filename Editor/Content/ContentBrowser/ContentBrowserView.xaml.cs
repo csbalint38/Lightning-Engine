@@ -146,6 +146,26 @@ namespace Editor.Content
             }
         }
 
+        private static FrameworkElement CreateEditorWindow<T>(string title) where T : FrameworkElement, new()
+        {
+            var newEditor = new T();
+
+            Debug.Assert(newEditor.DataContext is IAssetEditor);
+
+            var win = new Window()
+            {
+                Content = newEditor,
+                Title = title,
+                Owner = Application.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                // Set style here
+            };
+
+            win.Show();
+
+            return newEditor;
+        }
+
         private void OnContentBrowserLoaded(object sender, RoutedEventArgs e)
         {
             Loaded -= OnContentBrowserLoaded;
@@ -236,31 +256,137 @@ namespace Editor.Content
 
         private void LVFolders_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            var info = (sender as FrameworkElement).DataContext as ContentInfo;
+
+            if (e.Key == Key.Enter) ExecuteSelection(info);
+            else if (e.Key == Key.F2) TryEdit(LVFolders, info.FullPath);
+        }
+
+        private IAssetEditor OpenAssetEditor(AssetInfo info)
+        {
+            IAssetEditor editor = null;
+
+            try
             {
-                var info = (sender as FrameworkElement).DataContext as ContentInfo;
-                ExecuteSelection(info);
+                switch (info.Type)
+                {
+                    case AssetType.ANIMATION:
+                        break;
+                    case AssetType.AUDIO:
+                        break;
+                    case AssetType.MATERIAL:
+                        break;
+                    case AssetType.MESH:
+                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "Geometry Editor");
+                        break;
+                    case AssetType.SKELETON:
+                        break;
+                    case AssetType.TEXTURE:
+                        editor = OpenEditorPanel<TextureEditorView>(info, info.Guid, "Texture Editor");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+
+            return editor;
+        }
+
+        private IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title) where T : FrameworkElement, new()
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window.Content is FrameworkElement content &&
+                    content.DataContext is IAssetEditor editor &&
+                    editor.AssetGuid == info.Guid
+                )
+                {
+                    window.Activate();
+                    return editor;
+                }
+            }
+
+            var newEditor = CreateEditorWindow<T>(title);
+            (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
+
+            return newEditor.DataContext as IAssetEditor;
+        }
+
+        private bool TryEdit(ListView list, string path)
+        {
+            foreach(ContentInfo item in list.Items)
+            {
+                if (item.FullPath == path)
+                {
+                    var listBoxItem = list.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem; 
+
+                    listBoxItem.IsSelected = true;
+                    list.SelectedItem = item;
+                    list.SelectedIndex = list.Items.IndexOf(item);
+
+                    TryEdit(listBoxItem, path);
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void TryEdit(ListBoxItem item, string path)
+        {
+            var textBox = item.FindVisualChild<TextBox>();
+
+            if(textBox is not null)
+            {
+                textBox.Visibility = Visibility.Visible;
+                textBox.Focus();
             }
         }
 
-        private static FrameworkElement CreateEditorWindow<T>(string title) where T : FrameworkElement, new()
+        private async void MINewFolder_ClickAsync(object sender, RoutedEventArgs e)
         {
-            var newEditor = new T();
+            var vm = DataContext as ContentBrowser.ContentBrowser;
+            var path = vm.SelectedFolder;
 
-            Debug.Assert(newEditor.DataContext is IAssetEditor);
+            if(!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
 
-            var win = new Window()
+            var folder = "NewFolder";
+            var index = 1;
+
+            while(Directory.Exists(path + folder))
             {
-                Content = newEditor,
-                Title = title,
-                Owner = Application.Current.MainWindow,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                // Set style here
-            };
+                folder = $"NewFolder{index++:0#}";
+            }
 
-            win.Show();
+            folder = path + folder;
 
-            return newEditor;
+            try
+            {
+                Directory.CreateDirectory(folder);
+
+                var waitCounter = 0;
+
+                while (waitCounter < 30 && !TryEdit(LVFolders, folder))
+                {
+                    await Task.Run(() => Thread.Sleep(100));
+                    ++waitCounter;
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Debug.WriteLine($"Error: failed to create new folder: {folder}");
+            }
+        }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
 
         private void BDrop_DragLeave(object sender, DragEventArgs e)

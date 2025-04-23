@@ -67,8 +67,6 @@ namespace Editor.Content.ContentBrowser
 
                 foreach (var file in Directory.GetFiles(path, $"*{Asset.AssetFileExtension}"))
                 {
-                    var fileInfo = new FileInfo(file);
-
                     folderContent.Add(ContentInfoCache.Add(file));
                 }
             }

@@ -7,6 +7,8 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - View cubemaps in the Texture Editor
+ - Create folders, rename assets
  - Pack textures in the Editor for the Engine
  - Reimport textures
  - Configure Texture import settings
