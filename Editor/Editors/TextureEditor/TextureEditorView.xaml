@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Editor.Editors"
              xmlns:enum="clr-namespace:Editor.Common.Enums"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800"
+             d:DesignHeight="800" d:DesignWidth="800"
              FocusVisualStyle="{x:Null}"
              Focusable="True">
     <UserControl.CommandBindings>
@@ -92,7 +92,8 @@
                               Command="{Binding SetChannelCommand}"
                               CommandParameter="A"
                               IsChecked="{Binding IsAlphaChannelSet, Mode=OneWay}"
-                              Visibility="{Binding Texture.HasAlpha, Converter={StaticResource booleanToVisibilityConverter}}">
+                              Visibility="{Binding Texture.HasAlpha, Converter={StaticResource booleanToVisibilityConverter}}"
+                              d:Visibility="Visible">
                     <Rectangle Width="8"
                                Fill="Transparent"
                                IsHitTestVisible="False"
@@ -124,13 +125,36 @@
                         </Style>
                     </ToggleButton.Style>
                 </ToggleButton>
+                <ToggleButton Content="View as Cubemap"
+                              Padding="5"
+                              Margin="5,0"
+                              IsChecked="{Binding ViewAsCubemap}"
+                              d:Visibility="Visible">
+                    <ToggleButton.Style>
+                        <Style TargetType="{x:Type ToggleButton}">
+                            <Setter Property="IsEnabled"
+                                    Value="False"/>
+                            <Setter Property="Visibility"
+                                    Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Texture.IsCubeMap}"
+                                             Value="True">
+                                    <Setter Property="IsEnabled"
+                                            Value="True"/>
+                                    <Setter Property="Visibility"
+                                            Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
                 <TextBlock Margin="5,0"
                            Text="Layer:"
                            Visibility="{Binding Path=Visibility, ElementName=SldArray}" />
                 <Slider x:Name="SldArray"
                         Width="200"
                         VerticalAlignment="Center"
-                        Interval="1"
+                        TickFrequency="1"
                         IsSnapToTickEnabled="True"
                         Maximum="{Binding MaxArrayIndex}"
                         Minimum="0"
@@ -165,7 +189,7 @@
                 <Slider x:Name="SldDepth"
                         Width="200"
                         VerticalAlignment="Center"
-                        Interval="1"
+                        TickFrequency="1"
                         IsSnapToTickEnabled="True"
                         Maximum="{Binding MaxDepthIndex}"
                         Minimum="0"
@@ -198,7 +222,7 @@
                 <Slider x:Name="SldMip"
                         Width="200"
                         VerticalAlignment="Center"
-                        Interval="1"
+                        TickFrequency="1"
                         IsSnapToTickEnabled="True"
                         Maximum="{Binding MaxMipIndex}"
                         Minimum="0"

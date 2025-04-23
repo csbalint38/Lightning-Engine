@@ -15,6 +15,29 @@ namespace Editor.Utilities
         public static string[] ImageFileExtensions { get; } = { ".bmp", ".png", ".jpg", ".jpeg", ".tiff", ".tif", ".tga", ".dds", ".hdr" };
         public static string[] AudioFileExtensions { get; } = { ".ogg", ".waw" };
 
+        internal static IEnumerable<string> SaveAsset(this Asset asset)
+        {
+            try
+            {
+                ContentWatcher.EnableFileWatcher(false);
+
+                Debug.Assert(!string.IsNullOrEmpty(asset.FullPath));
+
+                return asset.Save(asset.FullPath);
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Failed to save asset {asset.FullPath}");
+                Debug.WriteLine(ex.Message);
+
+                return new List<string>();
+            }
+            finally
+            {
+                ContentWatcher.EnableFileWatcher(true);
+            }
+        }
+
         public static string SanitizeFileName(string name)
         {
             Debug.Assert(!string.IsNullOrEmpty(name));

@@ -149,6 +149,7 @@ namespace Editor.Content
 
                 Debug.Assert(asset is not null);
 
+                // TODO: Update after new SaveFileDialog
                 asset.Save(dialog.FileName);
             }
         }

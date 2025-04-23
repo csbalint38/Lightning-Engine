@@ -1,4 +1,8 @@
-﻿namespace Editor.Common
+﻿global using SliceArray3D = System.Collections.Generic.List<
+    System.Collections.Generic.List<System.Collections.Generic.List<Editor.Content.Slice>>
+>;
+
+namespace Editor.Common
 {
     public static class Constants
     {

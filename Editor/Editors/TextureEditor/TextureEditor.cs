@@ -17,7 +17,7 @@ namespace Editor.Editors
 
         private AssetEditorState _state;
         private Texture _texture = new();
-        private List<List<List<Slice>>> _slices;
+        private SliceArray3D _slices;
         private int _arrayIndex;
         private int _mipIndex;
         private int _depthIndex;
@@ -26,6 +26,8 @@ namespace Editor.Editors
         private bool _isBlueChannelSet = true;
         private bool _isAlphaChannelSet = true;
         private bool _canSaveChanges;
+        private CubeMap _cubemap;
+        private bool _viewAsCupemap = true;
 
         public Guid AssetGuid { get; private set; }
         public TextureImportSettings ImportSettings { get; } = new();
@@ -213,6 +215,32 @@ namespace Editor.Editors
             }
         }
 
+        public CubeMap Cubemap
+        {
+            get => _cubemap;
+            set
+            {
+                if (value != _cubemap)
+                {
+                    _cubemap = value;
+                    OnPropertyChanged(nameof(Cubemap));
+                }
+            }
+        }
+
+        public bool ViewAsCubemap
+        {
+            get => _viewAsCupemap;
+            set
+            {
+                if (value != _viewAsCupemap)
+                {
+                    _viewAsCupemap = value;
+                    OnPropertyChanged(nameof(ViewAsCubemap));
+                }
+            }
+        }
+
         public TextureEditor()
         {
             SetAllChannelsCommand = new RelayCommand<string>(OnSetAllChannelsCommand);
@@ -265,7 +293,7 @@ namespace Editor.Editors
                     _slices = texture.ImportSettings.Compress ? ContentToolsAPI.Decompress(texture) : texture.Slices;
                 });
 
-                Debug.Assert(_slices?.Any() == true && _slices.First()?.Any() == true);
+                Debug.Assert(_slices?.Any() == true && _slices.First().Any());
 
                 GenerateSliceBitMaps(texture.IsNormalMap);
                 OnPropertyChanged(nameof(Texture));
@@ -281,6 +309,7 @@ namespace Editor.Editors
         private void GenerateSliceBitMaps(bool isNormalMap)
         {
             _sliceBitmaps.Clear();
+            _cubemap = null;
 
             foreach (var arraySlice in _slices)
             {
@@ -310,8 +339,10 @@ namespace Editor.Editors
 
         private void SetSelectedBitmap()
         {
+            SetCubeMap();
             OnPropertyChanged(nameof(SelectedSliceBitmap));
             OnPropertyChanged(nameof(SelectedSlice));
+            OnPropertyChanged(nameof(DataSize));
         }
 
         private void OnSetAllChannelsCommand(object obj)
@@ -414,9 +445,51 @@ namespace Editor.Editors
             State = AssetEditorState.SAVING;
             CanSaveChanges = false;
 
-            await Task.Run(() => Texture.Save(Texture.FullPath));
+            await Task.Run(() => Texture.SaveAsset());
 
             State = AssetEditorState.DONE;
+        }
+
+        private void SetCubeMap()
+        {
+            if (Texture?.IsCubeMap != true) return;
+
+            var index = (ArrayIndex / 6) * 6;
+
+            if(Cubemap is null || index != Cubemap.ArrayIndex || MipIndex != Cubemap.MipIndex)
+            {
+                Debug.Assert(index + 5 <= MaxArrayIndex);
+
+                Cubemap = new()
+                {
+                    ArrayIndex = index,
+                    MipIndex = MipIndex,
+                    PositiveX = _sliceBitmaps
+                                    .ElementAtOrDefault(index)?
+                                    .ElementAtOrDefault(MipIndex)?
+                                    .ElementAtOrDefault(DepthIndex),
+                    NegativeX = _sliceBitmaps
+                                    .ElementAtOrDefault(index + 1)?
+                                    .ElementAtOrDefault(MipIndex)?
+                                    .ElementAtOrDefault(DepthIndex),
+                    PositiveY = _sliceBitmaps
+                                    .ElementAtOrDefault(index + 2)?
+                                    .ElementAtOrDefault(MipIndex)?
+                                    .ElementAtOrDefault(DepthIndex),
+                    NegativeY = _sliceBitmaps
+                                    .ElementAtOrDefault(index + 3)?
+                                    .ElementAtOrDefault(MipIndex)?
+                                    .ElementAtOrDefault(DepthIndex),
+                    PositiveZ = _sliceBitmaps
+                                    .ElementAtOrDefault(index + 4)?
+                                    .ElementAtOrDefault(MipIndex)?
+                                    .ElementAtOrDefault(DepthIndex),
+                    NegativeZ = _sliceBitmaps
+                                    .ElementAtOrDefault(index + 5)?
+                                    .ElementAtOrDefault(MipIndex)?
+                                    .ElementAtOrDefault(DepthIndex)
+                };
+            }
         }
     }
 }

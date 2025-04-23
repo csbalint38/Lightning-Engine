@@ -34,7 +34,9 @@ namespace Editor.Common.Enums
         [Description("Source image file not found")]
         FILE_NOT_FOUND,
 
-        [Description("Number of images for cubemaps should be a multiple of 6")]
+        [Description(
+            "Number of images for cubemaps should be a multiple of 6, or the source images should be equirectangular images with the same size and format."
+        )]
         NEED_6_IMAGES
     }
 }

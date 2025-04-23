@@ -14,6 +14,9 @@ namespace Editor.DLLs.Descriptors
         public int PreferBC7;
         public int OutputFormat;
         public int Compress;
+        public int CubemapSize;
+        public int MirrorCubemap;
+        public int PrefilterCubemap;
 
         public void FromContentSettings(Texture texture)
         {
@@ -27,6 +30,9 @@ namespace Editor.DLLs.Descriptors
             PreferBC7 = settings.PreferBC7 ? 1 : 0;
             OutputFormat = (int)settings.OutputFormat;
             Compress = settings.Compress ? 1 : 0;
+            CubemapSize = settings.CubemapSize;
+            MirrorCubemap = settings.MirrorCubemap ? 1 : 0;
+            PrefilterCubemap = settings.PrefilterCubemap ? 1 : 0;
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Editor.Content
 {
     public class Texture : Asset
     {
-        private List<List<List<Slice>>> _slices;
+        private SliceArray3D _slices;
         private int _width;
         private int _height;
         private int _arraySize;
@@ -23,7 +23,7 @@ namespace Editor.Content
 
         public TextureImportSettings ImportSettings { get; } = new();
 
-        public List<List<List<Slice>>> Slices
+        public SliceArray3D Slices
         {
             get => _slices;
             private set

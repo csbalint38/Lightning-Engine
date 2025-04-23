@@ -11,153 +11,201 @@
             mc:Ignorable="d"  
             d:DataContext="{d:DesignInstance Type={x:Type content:TextureImportSettings}}"  
             d:DesignHeight="450" d:DesignWidth="800">  
-   <UserControl.Resources>  
-       <converters:TextureDimensionToBoolConverter x:Key="textureDimensionToBoolConverter"/>
-       <converters:EnumDescriptionConverter x:Key="enumDescriptionConverter"/>
-       <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter"/>
-        <Style x:Key="{x:Type TextBlock}"  
-              TargetType="{x:Type TextBlock}">  
-           <Setter Property="VerticalAlignment"  
-                   Value="Center"/>  
-       </Style>
-       <ObjectDataProvider x:Key="bcFormatEnumDataSource"  
-                           MethodName="GetValues"  
-                           ObjectType="{x:Type sys:Enum}">  
-           <ObjectDataProvider.MethodParameters>  
-               <x:Type TypeName="enum:BCFormat"/>  
-           </ObjectDataProvider.MethodParameters>  
-       </ObjectDataProvider>  
-   </UserControl.Resources>  
-   <Grid VerticalAlignment="Top">  
-       <Grid.ColumnDefinitions>  
-           <ColumnDefinition Width="100"/>  
-           <ColumnDefinition/>  
-       </Grid.ColumnDefinitions>  
-       <Grid.RowDefinitions>  
-           <RowDefinition MinHeight="28"/>  
-           <RowDefinition MinHeight="28"/>  
-           <RowDefinition MinHeight="28"/>  
-           <RowDefinition MinHeight="28"/>  
-           <RowDefinition MinHeight="28"/>  
-       </Grid.RowDefinitions>  
-       <TextBlock Grid.Row="0"  
-                  Grid.Column="0"  
-                  Text="Dimension"/>  
-       <WrapPanel VerticalAlignment="Center"  
-                  Grid.Row="0"  
-                  Grid.Column="1"  
-                  Margin="0,5"  
-                  Orientation="Horizontal">  
-           <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=0}"  
-                        Margin="0,1,20,2"  
-                        Content="1D"  
-                        GroupName="Dimension"/>  
-           <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=1}"  
-                        Margin="0,1,20,2"  
-                        Content="2D"  
-                        d:IsChecked="True"  
-                        GroupName="Dimension"/>  
-           <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=2}"  
-                        Margin="0,1,20,2"  
-                        Content="3D"  
-                        GroupName="Dimension"/>  
-           <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=3}"  
-                        Margin="0,1,20,2"  
-                        Content="Cubemap"  
-                        GroupName="Dimension"/>  
-       </WrapPanel>  
-       <TextBlock Grid.Row="1"  
-                  Grid.Column="0"  
-                  Text="Mip Levels"/>  
-       <Slider Grid.Row="1"  
-               Grid.Column="1"  
-               IsMoveToPointEnabled="True"  
-               VerticalAlignment="Center"  
-               TickFrequency="1"  
-               TickPlacement="BottomRight"  
-               Minimum="0"  
-               MaxHeight="{Binding Source={x:Static content:Texture.MaxMipLevels}}"  
-               Value="{Binding MipLevels}"  
-               SmallChange="1"/>  
-       <TextBlock Grid.Row="2"  
-                  Grid.Column="0"  
-                  Text="Compress"/>  
-       <StackPanel Grid.Row="2"  
+    <UserControl.Resources>  
+        <converters:TextureDimensionToBoolConverter x:Key="textureDimensionToBoolConverter"/>
+        <converters:EnumDescriptionConverter x:Key="enumDescriptionConverter"/>
+        <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter"/>
+         <Style x:Key="{x:Type TextBlock}"  
+               TargetType="{x:Type TextBlock}">  
+            <Setter Property="VerticalAlignment"  
+                    Value="Center"/>  
+        </Style>
+        <ObjectDataProvider x:Key="bcFormatEnumDataSource"  
+                            MethodName="GetValues"  
+                            ObjectType="{x:Type sys:Enum}">  
+            <ObjectDataProvider.MethodParameters>  
+                <x:Type TypeName="enum:BCFormat"/>  
+            </ObjectDataProvider.MethodParameters>  
+        </ObjectDataProvider>  
+    </UserControl.Resources>  
+    <Grid VerticalAlignment="Top">  
+        <Grid.ColumnDefinitions>  
+            <ColumnDefinition Width="100"/>  
+            <ColumnDefinition/>  
+        </Grid.ColumnDefinitions>  
+        <Grid.RowDefinitions>  
+            <RowDefinition MinHeight="28"/>  
+            <RowDefinition MinHeight="28"/>  
+            <RowDefinition MinHeight="28"/>  
+            <RowDefinition MinHeight="28"/>  
+            <RowDefinition MinHeight="28"/>  
+        </Grid.RowDefinitions>  
+        <TextBlock Grid.Row="0"  
+                   Grid.Column="0"  
+                   Text="Dimension"/>  
+        <WrapPanel VerticalAlignment="Center"  
+                   Grid.Row="0"  
                    Grid.Column="1"  
+                   Margin="0,5"  
                    Orientation="Horizontal">  
-           <CheckBox x:Name="ChBCompress"  
-                     VerticalAlignment="Center"  
-                     IsChecked="{Binding Compress}"  
-                     d:IsChecked="True"/>  
-           <StackPanel Orientation="Horizontal">  
-               <StackPanel.Style>  
-                   <Style TargetType="{x:Type StackPanel}">  
-                       <Setter Property="Visibility"  
-                               Value="Collapsed"/>  
-                       <Style.Triggers>  
-                           <MultiDataTrigger>  
-                               <MultiDataTrigger.Conditions>  
-                                   <Condition Binding="{Binding Compress}"  
-                                              Value="True"/>  
-                                   <Condition Binding="{Binding FormatIndex}"  
-                                              Value="0"/>  
-                               </MultiDataTrigger.Conditions>  
-                               <Setter Property="Visibility"  
-                                       Value="Visible"/>  
-                           </MultiDataTrigger>  
-                       </Style.Triggers>  
-                   </Style>  
-               </StackPanel.Style>  
-               <TextBlock Margin="30,0,5,0"  
-                          Text="Prefer BC7"/>  
-               <CheckBox VerticalAlignment="Center"  
-                         IsChecked="{Binding PreferBC7}"/>  
-           </StackPanel>  
-       </StackPanel>  
-       <TextBlock Grid.Row="3"  
-                  Grid.Column="0"  
-                  Text="Output format"/>
-       <Grid Grid.Row="3" Grid.Column="1">
-           <TextBlock Text="{Binding OutputFormat, Converter={StaticResource enumDescriptionConverter}}"/>
-           <ComboBox ItemsSource="{Binding Source={StaticResource bcFormatEnumDataSource}, Converter={StaticResource enumDescriptionConverter}}"
-                     x:Name="CBFormat"
-                     VerticalAlignment="Center"
-                     SelectedIndex="{Binding FormatIndex}"
-                     Visibility="{Binding Compress, Converter={StaticResource booleanToVisibilityConverter}}"/>
-           
-       </Grid>
-       <TextBlock Grid.Row="4"  
-                  Grid.Column="0"  
-                  Text="Alpha Threashold"
-                  x:Name="TBAlphaThreshold"
-                  d:Visibility="Visible">
-           <TextBlock.Style>
-               <Style TargetType="{x:Type TextBlock}">
-                   <Setter Property="Visibility"
-                           Value="Collapsed"/>
-                   <Style.Triggers>
-                       <MultiDataTrigger>
-                           <MultiDataTrigger.Conditions>
-                               <Condition Binding="{Binding Compress}"
-                                          Value="True"/>
-                               <Condition Binding="{Binding FormatIndex}"
-                                          Value="1"/>
-                           </MultiDataTrigger.Conditions>
-                           <Setter Property="Visibility"
-                                   Value="Visible"/>
-                       </MultiDataTrigger>
-                   </Style.Triggers>
-               </Style>
-           </TextBlock.Style>
-       </TextBlock>
-       <Slider Grid.Row="4"
-               Grid.Column="1"
-               Minimum="0"
-               Maximum="1"
-               Value="{Binding AlphaThreshold}"
-               VerticalAlignment="Center"
-               LargeChange="0.1"
-               Visibility="{Binding Path=Visibility, ElementName=TBAlphaThreshold}"
-               d:Visibility="Visible"/>
-    </Grid>  
+            <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=0}"  
+                         Margin="0,1,20,2"  
+                         Content="1D"  
+                         GroupName="Dimension"/>  
+            <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=1}"  
+                         Margin="0,1,20,2"  
+                         Content="2D"  
+                         d:IsChecked="True"  
+                         GroupName="Dimension"/>  
+            <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=2}"  
+                         Margin="0,1,20,2"  
+                         Content="3D"  
+                         GroupName="Dimension"/>
+            <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=3}"  
+                         Margin="0,1,20,2"  
+                         Content="Cubemap"  
+                         GroupName="Dimension"/>
+            <StackPanel Orientation="Horizontal" 
+                        d:Visibility="Visible">
+                <StackPanel.Style>
+                    <Style TargetType="{x:Type StackPanel}">
+                        <Setter Property="IsEnabled"
+                                Value="False"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Dimension}"
+                                         Value="{x:Static enum:TextureDimension.TEXTURE_CUBE}">
+                                <Setter Property="IsEnabled"
+                                        Value="True"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="{x:Type StackPanel}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PrefilterCubemap}"
+                                             Value="True">
+                                    <Setter Property="IsEnabled"
+                                            Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="Cubemap Size"
+                               Width="100"/>
+                    <TextBox Text="{Binding CubemapSize}"
+                             Width="48"
+                             Padding="0"
+                             d:Text="1024"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Mirror Cubemap"
+                               Width="100"/>
+                    <CheckBox IsChecked="{Binding MirrorCubemap}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Prefilter"
+                               Width="100"/>
+                    <CheckBox IsChecked="{Binding PrefilterCubemap}"/>
+                </StackPanel>
+            </StackPanel>
+        </WrapPanel>  
+        <TextBlock Grid.Row="1"  
+                   Grid.Column="0"  
+                   Text="Mip Levels"/>  
+        <Slider Grid.Row="1"  
+                Grid.Column="1"  
+                IsMoveToPointEnabled="True"  
+                VerticalAlignment="Center"  
+                TickFrequency="1"  
+                TickPlacement="BottomRight"  
+                Minimum="0"  
+                MaxHeight="{Binding Source={x:Static content:Texture.MaxMipLevels}}"  
+                Value="{Binding MipLevels}"  
+                SmallChange="1"/>  
+        <TextBlock Grid.Row="2"  
+                   Grid.Column="0"
+                   Margin="0,0,5,0"
+                   Text="Compress"/>  
+        <StackPanel Grid.Row="2"  
+                    Grid.Column="1"  
+                    Orientation="Horizontal">  
+            <CheckBox x:Name="ChBCompress"  
+                      VerticalAlignment="Center"  
+                      IsChecked="{Binding Compress}"  
+                      d:IsChecked="True"/>  
+            <StackPanel Orientation="Horizontal">  
+                <StackPanel.Style>  
+                    <Style TargetType="{x:Type StackPanel}">  
+                        <Setter Property="Visibility"  
+                                Value="Collapsed"/>  
+                        <Style.Triggers>  
+                            <MultiDataTrigger>  
+                                <MultiDataTrigger.Conditions>  
+                                    <Condition Binding="{Binding Compress}"  
+                                               Value="True"/>  
+                                    <Condition Binding="{Binding FormatIndex}"  
+                                               Value="0"/>  
+                                </MultiDataTrigger.Conditions>  
+                                <Setter Property="Visibility"  
+                                        Value="Visible"/>  
+                            </MultiDataTrigger>  
+                        </Style.Triggers>  
+                    </Style>  
+                </StackPanel.Style>  
+                <TextBlock Margin="30,0,5,0"  
+                           Text="Prefer BC7"/>  
+                <CheckBox VerticalAlignment="Center"  
+                          IsChecked="{Binding PreferBC7}"/>  
+            </StackPanel>  
+        </StackPanel>  
+        <TextBlock Grid.Row="3"  
+                   Grid.Column="0"
+                   Margin="0,0,20,0"
+                   Text="Output format"/>
+        <Grid Grid.Row="3" Grid.Column="1">
+            <TextBlock Text="{Binding OutputFormat, Converter={StaticResource enumDescriptionConverter}}"/>
+            <ComboBox ItemsSource="{Binding Source={StaticResource bcFormatEnumDataSource}, Converter={StaticResource enumDescriptionConverter}}"
+                      x:Name="CBFormat"
+                      VerticalAlignment="Center"
+                      SelectedIndex="{Binding FormatIndex}"
+                      Visibility="{Binding Compress, Converter={StaticResource booleanToVisibilityConverter}}"/>
+            
+        </Grid>
+        <TextBlock Grid.Row="4"  
+                   Grid.Column="0"  
+                   Text="Alpha Threashold"
+                   Margin="0,0,5,0"
+                   x:Name="TBAlphaThreshold"
+                   d:Visibility="Visible">
+            <TextBlock.Style>
+                <Style TargetType="{x:Type TextBlock}">
+                    <Setter Property="Visibility"
+                            Value="Collapsed"/>
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding Compress}"
+                                           Value="True"/>
+                                <Condition Binding="{Binding FormatIndex}"
+                                           Value="1"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility"
+                                    Value="Visible"/>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <Slider Grid.Row="4"
+                Grid.Column="1"
+                Minimum="0"
+                Maximum="1"
+                Value="{Binding AlphaThreshold}"
+                VerticalAlignment="Center"
+                LargeChange="0.1"
+                Visibility="{Binding Path=Visibility, ElementName=TBAlphaThreshold}"
+                d:Visibility="Visible"/>
+     </Grid>  
 </UserControl>

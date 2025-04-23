@@ -25,7 +25,7 @@
                         Value="{Binding LODIndex}"
                         Minimum="0"
                         Maximum="{Binding MaxLODIndex}"
-                        Interval="1"
+                        TickFrequency="1"
                         IsSnapToTickEnabled="True"
                         TickPlacement="BottomRight">
                     <Slider.Style>

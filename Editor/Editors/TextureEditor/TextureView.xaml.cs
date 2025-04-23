@@ -74,6 +74,8 @@ namespace Editor.Editors
 
         public void ZoomFit()
         {
+            if (textureImage.ActualWidth.IsEqual(0) || textureImage.ActualHeight.IsEqual(0)) return;
+
             var scaleX = RenderSize.Width / textureImage.ActualWidth;
             var scaleY = RenderSize.Height / textureImage.ActualHeight;
             var ratio = Math.Min(scaleX, scaleY);

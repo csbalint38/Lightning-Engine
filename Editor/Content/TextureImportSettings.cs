@@ -1,5 +1,6 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
+using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.IO;
 
@@ -13,6 +14,9 @@ namespace Editor.Content
         private bool _preferBC7;
         private int _formatIndex;
         private bool _compress;
+        private int _cubemapSize;
+        private bool _mirrorCubemap;
+        private bool _prefilterCubemap;
 
         public ObservableCollection<string> Sources { get; } = new();
 
@@ -49,7 +53,7 @@ namespace Editor.Content
             set
             {
                 value = Math.Clamp(value, 0f, 1f);
-                if (_alphaThreshold != value)
+                if (!_alphaThreshold.IsEqual(value))
                 {
                     _alphaThreshold = value;
                     OnPropertyChanged(nameof(AlphaThreshold));
@@ -98,6 +102,45 @@ namespace Editor.Content
             }
         }
 
+        public int CubemapSize
+        {
+            get => _cubemapSize;
+            set
+            {
+                if (_cubemapSize != value)
+                {
+                    _cubemapSize = value;
+                    OnPropertyChanged(nameof(CubemapSize));
+                }
+            }
+        }
+
+        public bool MirrorCubemap
+        {
+            get => _mirrorCubemap;
+            set
+            {
+                if (_mirrorCubemap != value)
+                {
+                    _mirrorCubemap = value;
+                    OnPropertyChanged(nameof(MirrorCubemap));
+                }
+            }
+        }
+
+        public bool PrefilterCubemap
+        {
+            get => _prefilterCubemap;
+            set
+            {
+                if (_prefilterCubemap != value)
+                {
+                    _prefilterCubemap = value;
+                    OnPropertyChanged(nameof(PrefilterCubemap));
+                }
+            }
+        }
+
         public DXGIFormat OutputFormat =>
             Compress ? (DXGIFormat)Enum.GetValues<BCFormat>()[FormatIndex] : DXGIFormat.DXGI_FORMAT_UNKNOWN;
 
@@ -108,13 +151,16 @@ namespace Editor.Content
             PreferBC7 = true;
             FormatIndex = 0;
             Compress = true;
+            CubemapSize = 256;
+            MirrorCubemap = true;
+            PrefilterCubemap = true;
         }
 
         public void FromBinary(BinaryReader reader)
         {
             Sources.Clear();
 
-            reader.ReadString().Split(';').ToList().ForEach(x => Sources.Add(x));
+            reader.ReadString().Split(';').Where(x => !string.IsNullOrEmpty(x)).ToList().ForEach(x => Sources.Add(x));
 
             Dimension = (TextureDimension)reader.ReadInt32();
             MipLevels = reader.ReadInt32();
@@ -122,6 +168,9 @@ namespace Editor.Content
             PreferBC7 = reader.ReadBoolean();
             FormatIndex = reader.ReadInt32();
             Compress = reader.ReadBoolean();
+            CubemapSize = reader.ReadInt32();
+            MirrorCubemap = reader.ReadBoolean();
+            PrefilterCubemap = reader.ReadBoolean();
         }
 
         public void ToBinary(BinaryWriter writer)
@@ -133,6 +182,9 @@ namespace Editor.Content
             writer.Write(PreferBC7);
             writer.Write(FormatIndex);
             writer.Write(Compress);
+            writer.Write(CubemapSize);
+            writer.Write(MirrorCubemap);
+            writer.Write(PrefilterCubemap);
         }
     }
 }

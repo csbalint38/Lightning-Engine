@@ -45,7 +45,7 @@ namespace Editor.DLLs
                 ImportFbx(file, sceneData, callback), $"Failed to import from FBX file: {file}");
         }
 
-        public static (List<List<List<Slice>>> slices, Slice icon) Import(Texture texture)
+        public static (SliceArray3D slices, Slice icon) Import(Texture texture)
         {
             Debug.Assert(texture.ImportSettings.Sources.Any());
 
@@ -80,7 +80,7 @@ namespace Editor.DLLs
             }
         }
 
-        public static List<List<List<Slice>>> SlicesFromBinary(byte[] data, int arraySize, int mipLevels, bool is3D)
+        public static SliceArray3D SlicesFromBinary(byte[] data, int arraySize, int mipLevels, bool is3D)
         {
             Debug.Assert(data?.Length > 0 && arraySize > 0);
             Debug.Assert(mipLevels > 0 && mipLevels < Texture.MaxMipLevels);
@@ -100,7 +100,7 @@ namespace Editor.DLLs
             }
 
             using var reader = new BinaryReader(new MemoryStream(data));
-            var slices = new List<List<List<Slice>>>();
+            var slices = new SliceArray3D();
 
             for (var i = 0; i < arraySize; ++i)
             {
@@ -132,7 +132,7 @@ namespace Editor.DLLs
             return slices;
         }
 
-        public static byte[] SlicesToBinary(List<List<List<Slice>>> slices)
+        public static byte[] SlicesToBinary(SliceArray3D slices)
         {
             Debug.Assert(slices?.Any() == true && slices.First().Any() == true);
 
@@ -162,7 +162,7 @@ namespace Editor.DLLs
             return data;
         }
 
-        public static List<List<List<Slice>>> Decompress(Texture texture)
+        public static SliceArray3D Decompress(Texture texture)
         {
             Debug.Assert(texture.ImportSettings.Compress);
 
@@ -237,15 +237,15 @@ namespace Editor.DLLs
         {
             var info = data.Info;
 
+            texture.Flags = (TextureFlags)info.Flags;
             texture.Width = info.Width;
             texture.Height = info.Height;
             texture.ArraySize = info.ArraySize;
             texture.MipLevels = info.MipLevels;
             texture.Format = (DXGIFormat)info.Format;
-            texture.Flags = (TextureFlags)info.Flags;
         }
 
-        private static List<List<List<Slice>>> GetSlices(TextureData data)
+        private static SliceArray3D GetSlices(TextureData data)
         {
             Debug.Assert(data.Info.MipLevels > 0);
             Debug.Assert(data.SubresourceData != IntPtr.Zero && data.SubresourceSize > 0);
@@ -275,7 +275,7 @@ namespace Editor.DLLs
             return SlicesFromBinary(icon, 1, 1, false).First()?.First()?.First();
         }
 
-        private static void SetSubresourceData(List<List<List<Slice>>> slices, TextureData data)
+        private static void SetSubresourceData(SliceArray3D slices, TextureData data)
         {
             var subresourceData = SlicesToBinary(slices);
 
