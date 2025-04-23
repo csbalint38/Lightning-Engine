@@ -14,10 +14,10 @@ namespace Editor.Editors
         private bool _autoLOD = true;
         private int _lodIndex;
         private AssetEditorState _state;
+        private Guid _assetGuid;
 
         public Asset Asset => Geometry;
         public int MaxLODIndex { get; private set; }
-        public Guid AssetGuid { get; private set; }
 
         public Geometry Geometry
         {
@@ -64,7 +64,7 @@ namespace Editor.Editors
         public MeshRenderer MeshRenderer
         {
             get => _meshRenderer;
-            set
+            private set
             {
                 if (_meshRenderer != value)
                 {
@@ -101,13 +101,17 @@ namespace Editor.Editors
             }
         }
 
+        public Guid AssetGuid => throw new NotImplementedException();
+
+        public bool CheckAssetGuid(Guid guid) => _assetGuid == guid;
+
         public void SetAsset(Asset asset)
         {
             Debug.Assert(asset is Content.Geometry);
 
             if (asset is Content.Geometry geometry)
             {
-                AssetGuid = asset.Guid;
+                _assetGuid = asset.Guid;
                 Geometry = geometry;
                 var numLods = geometry.GetLodGroup().LODs.Count;
 
@@ -117,16 +121,16 @@ namespace Editor.Editors
                 }
                 else
                 {
-                    MeshRenderer = new MeshRenderer(Geometry.GetLodGroup().LODs[0], MeshRenderer);
+                    MeshRenderer = new MeshRenderer(Geometry.GetLodGroup().LODs[LODIndex], MeshRenderer);
                 }
             }
         }
 
-        public async void SetAssetAsync(AssetInfo info)
+        public async Task SetAssetAsync(AssetInfo info)
         {
             try
             {
-                AssetGuid = info.Guid;
+                _assetGuid = info.Guid;
 
                 Debug.Assert(info is not null && File.Exists(info.FullPath));
 
@@ -142,6 +146,7 @@ namespace Editor.Editors
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+                Debug.WriteLine($"Failed to set geometry for use in Geometry Editor. File: {info.FullPath}");
             }
         }
 

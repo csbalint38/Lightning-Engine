@@ -9,6 +9,7 @@ namespace Editor.Editors
         Guid AssetGuid { get; }
         Asset Asset { get; }
 
-        void SetAssetAsync(AssetInfo info);
+        Task SetAssetAsync(AssetInfo info);
+        bool CheckAssetGuid(Guid guid);
     }
 }

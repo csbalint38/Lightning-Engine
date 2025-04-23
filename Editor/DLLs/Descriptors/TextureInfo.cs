@@ -12,5 +12,16 @@ namespace Editor.DLLs.Descriptors
         public int Format;
         public int ImportError;
         public int Flags;
+
+        public TextureInfo Clone() => new()
+        {
+            Width = Width,
+            Height = Height,
+            ArraySize = ArraySize,
+            MipLevels = MipLevels,
+            Format = Format,
+            ImportError = ImportError,
+            Flags = Flags,
+        };
     }
 }

@@ -18,10 +18,8 @@ namespace Editor.DLLs.Descriptors
         public int MirrorCubemap;
         public int PrefilterCubemap;
 
-        public void FromContentSettings(Texture texture)
+        public void FromContentSettings(Content.TextureImportSettings settings)
         {
-            var settings = texture.ImportSettings;
-
             Sources = string.Join(';', settings.Sources);
             SourceCount = settings.Sources.Count;
             Dimension = (int)settings.Dimension;

@@ -1,7 +1,9 @@
 ﻿using Editor.Common.Enums;
 using Editor.Content.ContentBrowser;
 using Editor.DLLs;
+using Editor.DLLs.Descriptors;
 using Editor.Utilities;
+using Microsoft.VisualStudio.TextManager.Interop;
 using System.Diagnostics;
 using System.IO;
 
@@ -16,6 +18,9 @@ namespace Editor.Content
         private TextureFlags _flags;
         private int _mipLevels;
         private DXGIFormat _format;
+        private bool _isSaving;
+        private Texture _iblPair;
+        private bool _isPrefilteredIBL;
 
         public static int MaxMipLevels => 14;
         public static int MaxArraySize => 2048;
@@ -109,6 +114,32 @@ namespace Editor.Content
             }
         }
 
+        public Texture IBLPair
+        {
+            get => _iblPair;
+            set
+            {
+                if (_iblPair != value)
+                {
+                    _iblPair = value;
+                    OnPropertyChanged(nameof(IBLPair));
+                }
+            }
+        }
+
+        public bool IsPrefilteredIBL
+        {
+            get => _isPrefilteredIBL;
+            set
+            {
+                if (_isPrefilteredIBL != value)
+                {
+                    _isPrefilteredIBL = value;
+                    OnPropertyChanged(nameof(IsPrefilteredIBL));
+                }
+            }
+        }
+
         public DXGIFormat Format
         {
             get => _format;
@@ -140,51 +171,6 @@ namespace Editor.Content
             ImportSettings = (TextureImportSettings)importSettings;
         }
 
-        public override bool Import(string file)
-        {
-            Debug.Assert(File.Exists(file));
-
-            try
-            {
-                Logger.LogAsync(LogLevel.INFO, $"Importing image file {file}");
-
-                (var slices, var icon) = ContentToolsAPI.Import(this);
-
-                Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
-
-                if (slices.Any() && slices.First().Any() && slices.First().First().Any()) Slices = slices;
-                else return false;
-
-                var firstMip = Slices[0][0][0];
-
-                if(!HasValidDimensions(firstMip.Width, firstMip.Height, ArraySize, IsVolumeMap, file)) return false;
-
-                if (icon is null)
-                {
-                    Debug.Assert(!ImportSettings.Compress);
-
-                    icon = firstMip;
-                }
-
-                Icon = BitmapHelper.CreateThumbnail(
-                    BitmapHelper.ImageFromSlice(icon, IsNormalMap),
-                    ContentInfo.IconWidth,
-                    ContentInfo.IconWidth
-                );
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                var msg = $"Failed to read {file} for import";
-                Debug.WriteLine(msg);
-                Logger.LogAsync(LogLevel.ERROR, msg);
-            }
-
-            return false;
-        }
-
         public override bool Load(string file)
         {
             Debug.Assert(File.Exists(file));
@@ -203,6 +189,25 @@ namespace Editor.Content
                 Flags = (TextureFlags)reader.ReadInt32();
                 MipLevels = reader.ReadInt32();
                 Format = (DXGIFormat)reader.ReadInt32();
+
+                var iblPairGuid = new Guid(reader.ReadString());
+
+                if(iblPairGuid != Guid.Empty)
+                {
+                    IsPrefilteredIBL = true;
+
+                    var iblFile = AssetRegistry.GetAssetInfo(iblPairGuid)?.FullPath;
+
+                    if(!string.IsNullOrEmpty(iblFile) && IBLPair is null)
+                    {
+                        IBLPair = new()
+                        {
+                            IBLPair = this,
+                        };
+
+                        if (!IBLPair.Load(iblFile)) return false;
+                    }
+                }
 
                 var compressedLength = reader.ReadInt32();
 
@@ -293,9 +298,38 @@ namespace Editor.Content
 
         public override IEnumerable<string> Save(string file)
         {
+            _isSaving = true;
+
             try
             {
-                if(TryGetAssetInfo(file) is AssetInfo info && info.Type == Type) Guid = info.Guid;
+                if (TryGetAssetInfo(file) is AssetInfo info && info.Type == Type) Guid = info.Guid;
+                else file = AssetRegistry.GetAssetInfo(Guid)?.FullPath ?? file;
+
+                if(IBLPair?.IBLPair?.Guid == Guid && !IBLPair._isSaving)
+                {
+                    var pairFile = string.IsNullOrEmpty(IBLPair.FullPath) ?
+                        file.Replace(AssetFileExtension, $"_diffuse_ibl{AssetFileExtension}") :
+                        IBLPair.FullPath;
+
+                    if(IsCubeMap && ImportSettings.PrefilterCubemap)
+                    {
+                        IBLPair.Save(pairFile);
+
+                        Debug.Assert(IBLPair is not null && IBLPair.IBLPair?.Guid == Guid && IBLPair.IsCubeMap && IsCubeMap);
+                    }
+
+                    else
+                    {
+                        var fileName = AssetRegistry.GetAssetInfo(IBLPair.Guid)?.FullPath;
+
+                        if(!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
+                        {
+                            IBLPair = null;
+
+                            File.Delete(pairFile);
+                        }
+                    }
+                }
 
                 var compressed = CompressContent();
 
@@ -314,6 +348,7 @@ namespace Editor.Content
                 writer.Write((int)Flags);
                 writer.Write(MipLevels);
                 writer.Write((int)Format);
+                writer.Write(IBLPair is not null ? IBLPair.Guid.ToString() : Guid.Empty.ToString());
                 writer.Write(compressed.Length);
                 writer.Write(compressed);
 
@@ -329,9 +364,38 @@ namespace Editor.Content
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failde to save texture to {file}");
+
+                return [];
+            }
+            finally
+            {
+                _isSaving = false;
+            }
+        }
+
+        public override bool Import(string file)
+        {
+            Debug.Assert(File.Exists(file));
+
+            try
+            {
+                Logger.LogAsync(LogLevel.INFO, $"Importing image file {file}");
+                ContentToolsAPI.Import(this);
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+
+                var message = $"Failed to import {file}";
+
+                Debug.WriteLine(message);
+
+                Logger.LogAsync(LogLevel.ERROR, message);
             }
 
-            return [];
+            return false;
         }
 
         private static bool HasValidDimensions(int width, int height, int arrayOrDepth, bool is3D, string file)
@@ -374,11 +438,42 @@ namespace Editor.Content
             return result;
         }
 
+        public bool SetData(SliceArray3D slices, Slice icon, Texture iblPair)
+        {
+            Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
+
+            if (slices.Any() && slices.First().Any() && slices.First().First().Any()) Slices = slices;
+            else return false;
+
+            var firstMip = Slices[0][0][0];
+
+            if (!HasValidDimensions(firstMip.Width, firstMip.Height, ArraySize, IsVolumeMap, FullPath)) return false;
+            
+            if (icon is null)
+            {
+                Debug.Assert(!ImportSettings.Compress);
+
+                icon = firstMip;
+            }
+
+            Icon = BitmapHelper.CreateThumbnail(
+                BitmapHelper.ImageFromSlice(icon, Format, IsNormalMap),
+                ContentInfo.IconWidth,
+                ContentInfo.IconWidth
+            );
+
+            IsPrefilteredIBL = iblPair is not null;
+
+            if(IsPrefilteredIBL) IBLPair = iblPair;
+
+            return true;
+        }
+
         private byte[] CompressContent()
         {
             Debug.Assert(Slices.First().Any() && Slices.First().Count == MipLevels);
 
-            var data = ContentToolsAPI.SlicesToBinary(Slices);
+            var data = TextureData.SlicesToBinary(Slices);
 
             Debug.Assert(data?.Length > 0);
 
@@ -389,7 +484,7 @@ namespace Editor.Content
         {
             var decompressed = CompressionHelper.Decompress(compressed);
 
-            Slices = ContentToolsAPI.SlicesFromBinary(decompressed, ArraySize, MipLevels, IsVolumeMap);
+            Slices = TextureData.SlicesFromBinary(decompressed, ArraySize, MipLevels, IsVolumeMap);
         }
     }
 }

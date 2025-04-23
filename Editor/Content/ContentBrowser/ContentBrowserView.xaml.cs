@@ -3,6 +3,7 @@ using Editor.Content.ContentBrowser;
 using Editor.Content.ImportSettingsConfig;
 using Editor.Editors;
 using Editor.GameProject;
+using Editor.Utilities;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -239,7 +240,7 @@ namespace Editor.Content
             }
             else if (FileAccess.HasFlag(FileAccess.Read))
             {
-                var assetInfo = Asset.GetAssetInfo(info.FullPath);
+                var assetInfo = Asset.TryGetAssetInfo(info.FullPath);
 
                 if (assetInfo is not null)
                 {
@@ -262,50 +263,17 @@ namespace Editor.Content
             else if (e.Key == Key.F2) TryEdit(LVFolders, info.FullPath);
         }
 
-        private IAssetEditor OpenAssetEditor(AssetInfo info)
-        {
-            IAssetEditor editor = null;
-
-            try
-            {
-                switch (info.Type)
-                {
-                    case AssetType.ANIMATION:
-                        break;
-                    case AssetType.AUDIO:
-                        break;
-                    case AssetType.MATERIAL:
-                        break;
-                    case AssetType.MESH:
-                        editor = OpenEditorPanel<GeometryEditorView>(info, info.Guid, "Geometry Editor");
-                        break;
-                    case AssetType.SKELETON:
-                        break;
-                    case AssetType.TEXTURE:
-                        editor = OpenEditorPanel<TextureEditorView>(info, info.Guid, "Texture Editor");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
-
-            return editor;
-        }
-
-        private IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title) where T : FrameworkElement, new()
+        private IAssetEditor OpenEditorPanel<T>(AssetInfo info, string title) where T : FrameworkElement, new()
         {
             foreach (Window window in Application.Current.Windows)
             {
                 if (window.Content is FrameworkElement content &&
                     content.DataContext is IAssetEditor editor &&
-                    editor.AssetGuid == info.Guid
+                    editor.CheckAssetGuid(info.Guid)
                 )
                 {
                     window.Activate();
+
                     return editor;
                 }
             }

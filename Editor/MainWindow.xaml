@@ -7,7 +7,7 @@
         xmlns:editors="clr-namespace:Editor.Editors"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="Lightning Editor"
+        Title="{Binding Name, StringFormat='Lightning Editor - {0}'}"
         Height="720"
         Width="1280">
     <Grid>

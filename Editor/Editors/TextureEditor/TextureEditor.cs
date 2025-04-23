@@ -28,6 +28,7 @@ namespace Editor.Editors
         private bool _canSaveChanges;
         private CubeMap _cubemap;
         private bool _viewAsCupemap = true;
+        private Guid _assetGuid;
 
         public Guid AssetGuid { get; private set; }
         public TextureImportSettings ImportSettings { get; } = new();
@@ -250,11 +251,25 @@ namespace Editor.Editors
             SaveCommand = new RelayCommand<object>(async x => await OnSaveCommandAsync(x));
         }
 
-        public async void SetAssetAsync(AssetInfo info)
+        public async Task SetAssetAsync(Asset asset)
+        {
+            Debug.Assert(asset is Texture);
+
+            if(asset is Texture texture)
+            {
+                _assetGuid = texture.Guid;
+
+                await SetMipmapsAsync(texture);
+
+                Texture = texture;
+            }
+        }
+
+        public async Task SetAssetAsync(AssetInfo info)
         {
             try
             {
-                AssetGuid = info.Guid;
+                _assetGuid = info.Guid;
                 Texture = null;
 
                 Debug.Assert(info is not null && File.Exists(info.FullPath));
@@ -276,6 +291,7 @@ namespace Editor.Editors
             {
                 Debug.WriteLine(ex.Message);
                 Debug.WriteLine($"Failed to set texture for use in texture editor. File: {info.FullPath}");
+
                 Texture = new();
             }
             finally
@@ -283,6 +299,9 @@ namespace Editor.Editors
                 State = AssetEditorState.DONE;
             }
         }
+
+        public bool CheckAssetGuid(Guid guid) =>
+            _assetGuid == guid || Texture?.Guid == guid || Texture?.IBLPair?.Guid == guid;
 
         private async Task SetMipmapsAsync(Texture texture)
         {
@@ -295,7 +314,7 @@ namespace Editor.Editors
 
                 Debug.Assert(_slices?.Any() == true && _slices.First().Any());
 
-                GenerateSliceBitMaps(texture.IsNormalMap);
+                GenerateSliceBitMaps(texture.IsNormalMap, texture.Format);
                 OnPropertyChanged(nameof(Texture));
                 OnPropertyChanged(nameof(DataSize));
             }
@@ -306,7 +325,7 @@ namespace Editor.Editors
             }
         }
 
-        private void GenerateSliceBitMaps(bool isNormalMap)
+        private void GenerateSliceBitMaps(bool isNormalMap, DXGIFormat format)
         {
             _sliceBitmaps.Clear();
             _cubemap = null;
@@ -321,7 +340,7 @@ namespace Editor.Editors
 
                     foreach (var slice in mipLevel)
                     {
-                        var image = BitmapHelper.ImageFromSlice(slice, isNormalMap);
+                        var image = BitmapHelper.ImageFromSlice(slice, format, isNormalMap);
 
                         Debug.Assert(image is not null);
 
@@ -395,7 +414,7 @@ namespace Editor.Editors
         }
 
         private void OnRegenerateBitmapsCommand(bool isNormal) {
-            GenerateSliceBitMaps(isNormal);
+            GenerateSliceBitMaps(isNormal, Texture?.Format ?? DXGIFormat.DXGI_FORMAT_UNKNOWN);
             OnPropertyChanged(nameof(SelectedSliceBitmap));
             SetImageChannels();
         }
