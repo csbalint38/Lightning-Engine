@@ -6,7 +6,7 @@ namespace Editor.Content
     {
         static void CopyImportSettings(IAssetImportSettings from, IAssetImportSettings to)
         {
-            if(from is null || to is null)
+            if (from is null || to is null)
             {
                 throw new ArgumentNullException("Arguments should not be null");
             }

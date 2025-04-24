@@ -60,8 +60,8 @@ namespace Editor.Content
                     Debug.Assert(info is not null);
 
                     info.RegisterTime = DateTime.Now;
-                    
-                    if(!isNew && _assetFileDict[file].Guid != info.Guid)
+
+                    if (!isNew && _assetFileDict[file].Guid != info.Guid)
                     {
                         _assetGuidDict.Remove(_assetFileDict[file].Guid);
                     }
@@ -69,7 +69,7 @@ namespace Editor.Content
                     _assetFileDict[file] = info;
                     _assetGuidDict[info.Guid] = info;
 
-                    if(isNew)
+                    if (isNew)
                     {
                         Debug.Assert(!_assets.Contains(info));
 
@@ -110,11 +110,11 @@ namespace Editor.Content
             if (_assetFileDict.ContainsKey(file))
             {
                 var info = _assetFileDict[file];
-                
+
                 _assets.Remove(info);
                 _assetFileDict.Remove(file);
 
-                if(_assetGuidDict.ContainsKey(info.Guid) && !File.Exists(_assetGuidDict[info.Guid].FullPath))
+                if (_assetGuidDict.ContainsKey(info.Guid) && !File.Exists(_assetGuidDict[info.Guid].FullPath))
                 {
                     _assetGuidDict.Remove(info.Guid);
                 }

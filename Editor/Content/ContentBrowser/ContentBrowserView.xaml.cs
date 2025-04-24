@@ -119,9 +119,9 @@ namespace Editor.Content
         {
             ConfigureImportSettings settingsConfigurator = null;
 
-            foreach(Window win in Application.Current.Windows)
+            foreach (Window win in Application.Current.Windows)
             {
-                if(win.DataContext is ConfigureImportSettings cfg)
+                if (win.DataContext is ConfigureImportSettings cfg)
                 {
                     if (files?.Length > 0) cfg.AddFiles(files, selectedFolder);
 
@@ -132,7 +132,7 @@ namespace Editor.Content
                 }
             }
 
-            if(settingsConfigurator is null)
+            if (settingsConfigurator is null)
             {
                 settingsConfigurator = files?.Length > 0 ? new(files, selectedFolder) : new(selectedFolder);
 
@@ -217,7 +217,7 @@ namespace Editor.Content
 
                         e.Handled = true;
                     }
-                    else if(e.OriginalSource == cfgDrop)
+                    else if (e.OriginalSource == cfgDrop)
                     {
                         OpenImportSettingsConfigurator(files, vm.SelectedFolder);
                         e.Handled = true;
@@ -286,11 +286,11 @@ namespace Editor.Content
 
         private bool TryEdit(ListView list, string path)
         {
-            foreach(ContentInfo item in list.Items)
+            foreach (ContentInfo item in list.Items)
             {
                 if (item.FullPath == path)
                 {
-                    var listBoxItem = list.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem; 
+                    var listBoxItem = list.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
 
                     listBoxItem.IsSelected = true;
                     list.SelectedItem = item;
@@ -309,7 +309,7 @@ namespace Editor.Content
         {
             var textBox = item.FindVisualChild<TextBox>();
 
-            if(textBox is not null)
+            if (textBox is not null)
             {
                 textBox.Visibility = Visibility.Visible;
                 textBox.Focus();
@@ -321,12 +321,12 @@ namespace Editor.Content
             var vm = DataContext as ContentBrowser.ContentBrowser;
             var path = vm.SelectedFolder;
 
-            if(!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
+            if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
 
             var folder = "NewFolder";
             var index = 1;
 
-            while(Directory.Exists(path + folder))
+            while (Directory.Exists(path + folder))
             {
                 folder = $"NewFolder{index++:0#}";
             }
@@ -345,7 +345,7 @@ namespace Editor.Content
                     ++waitCounter;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Debug.WriteLine($"Error: failed to create new folder: {folder}");
@@ -359,7 +359,7 @@ namespace Editor.Content
 
         private void BDrop_DragLeave(object sender, DragEventArgs e)
         {
-            if(sender == BDrop && e?.Effects != DragDropEffects.None)
+            if (sender == BDrop && e?.Effects != DragDropEffects.None)
             {
                 var point = e.GetPosition(BDrop);
                 var result = VisualTreeHelper.HitTest(BDrop, point);

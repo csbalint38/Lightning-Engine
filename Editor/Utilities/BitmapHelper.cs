@@ -59,7 +59,7 @@ namespace Editor.Utilities
             }
             else if (bytesPerPixel == 4)
             {
-                if(bytesPerChannel == 2)
+                if (bytesPerChannel == 2)
                 {
                     int offset = 0;
                     Half[] dataFloats = data
@@ -69,7 +69,7 @@ namespace Editor.Utilities
 
                     using var writer = new BinaryWriter(new MemoryStream());
 
-                    for(int i = 0; i < dataFloats.Length; i += bytesPerChannel)
+                    for (int i = 0; i < dataFloats.Length; i += bytesPerChannel)
                     {
                         writer.Write((float)dataFloats[i]);
                         writer.Write((float)dataFloats[i + 1]);
@@ -83,7 +83,7 @@ namespace Editor.Utilities
                     format = PixelFormats.Rgba128Float;
                     stride = slice.Width * 16;
                 }
-                else if(bytesPerChannel == 4)
+                else if (bytesPerChannel == 4)
                 {
                     int offset = 0;
                     float[] dataFloats = data
@@ -93,7 +93,7 @@ namespace Editor.Utilities
 
                     using var writer = new BinaryWriter(new MemoryStream());
 
-                    foreach(var f in dataFloats)
+                    foreach (var f in dataFloats)
                     {
                         writer.Write(f);
                         writer.Write(0f);
@@ -109,14 +109,14 @@ namespace Editor.Utilities
             }
             else if (bytesPerPixel == 2)
             {
-                if(bytesPerChannel == 1)
+                if (bytesPerChannel == 1)
                 {
                     bgrData = new byte[slice.Width * slice.Height * 3];
                     stride = slice.Width * 3;
 
                     int index = 0;
 
-                    for(int i = 0; i < data.Length; i += 2)
+                    for (int i = 0; i < data.Length; i += 2)
                     {
                         bgrData[index + 2] = data[i];
                         bgrData[index + 1] = data[i + 1];
@@ -125,13 +125,13 @@ namespace Editor.Utilities
                         index += 3;
                     }
 
-                    if(isNormalMap)
+                    if (isNormalMap)
                     {
                         var inv255 = 1.0 / 255.0;
 
                         index = 0;
 
-                        for(int i = 0; i < data.Length; i += 2)
+                        for (int i = 0; i < data.Length; i += 2)
                         {
                             var r = data[i] * inv255 * 2.0 - 1.0;
                             var g = data[i + 1] * inv255 * 2.0 - 1.0;
@@ -143,7 +143,7 @@ namespace Editor.Utilities
                         }
                     }
                 }
-                else if(bytesPerChannel == 2)
+                else if (bytesPerChannel == 2)
                 {
                     int offset = 0;
                     Half[] dataFloats = data
@@ -153,7 +153,7 @@ namespace Editor.Utilities
 
                     using var writer = new BinaryWriter(new MemoryStream());
 
-                    foreach(var f in dataFloats)
+                    foreach (var f in dataFloats)
                     {
                         writer.Write(f);
                         writer.Write(0f);

@@ -14,25 +14,25 @@ namespace Editor.DLLs
         private const string _contentToolsDll = "ContentTools.dll";
         private delegate void ProgressCallback(int value, int maxValue);
 
-        [DllImport(_contentToolsDll, EntryPoint="create_primitive_mesh")]
+        [DllImport(_contentToolsDll, EntryPoint = "create_primitive_mesh")]
         private static extern void CreatePrimitiveMesh([In, Out] SceneData data, PrimitiveInitInfo info);
 
-        [DllImport(_contentToolsDll, EntryPoint="import_fbx")]
+        [DllImport(_contentToolsDll, EntryPoint = "import_fbx")]
         private static extern void ImportFbx(string file, [In, Out] SceneData data, ProgressCallback callback);
 
-        [DllImport(_contentToolsDll, EntryPoint="import")]
+        [DllImport(_contentToolsDll, EntryPoint = "import")]
         private static extern void Import([In, Out] TextureData data);
 
-        [DllImport(_contentToolsDll, EntryPoint="decompress")]
+        [DllImport(_contentToolsDll, EntryPoint = "decompress")]
         private static extern void Decompress([In, Out] TextureData data);
 
-        [DllImport(_contentToolsDll, EntryPoint="shutdown_content_tools")]
+        [DllImport(_contentToolsDll, EntryPoint = "shutdown_content_tools")]
         public static extern void ShutdownContentTools();
 
-        [DllImport(_contentToolsDll, EntryPoint="prefilter_diffuse_ibl")]
+        [DllImport(_contentToolsDll, EntryPoint = "prefilter_diffuse_ibl")]
         public static extern void PrefilterDiffuseIBL([In, Out] TextureData data);
 
-        [DllImport(_contentToolsDll, EntryPoint="prefilter_specular_ibl")]
+        [DllImport(_contentToolsDll, EntryPoint = "prefilter_specular_ibl")]
         public static extern void PrefilterSpecularIBL([In, Out] TextureData data);
 
         public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
@@ -67,9 +67,7 @@ namespace Editor.DLLs
                 {
                     Logger.LogAsync(
                         LogLevel.ERROR,
-                        $"Texture import error: {
-                            EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)
-                        }"
+                        $"Texture import error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
                     );
 
                     throw new Exception($"Error while trying to import image. Error code: {textureData.Info.ImportError}");
@@ -77,7 +75,7 @@ namespace Editor.DLLs
 
                 Texture diffuseIBLCubemap = null;
 
-                if(
+                if (
                     texture.ImportSettings.PrefilterCubemap &&
                     ((TextureFlags)textureData.Info.Flags).HasFlag(TextureFlags.IS_CUBE_MAP)
                 )
@@ -99,7 +97,7 @@ namespace Editor.DLLs
 
                 textureData.GetTextureInfo(texture);
 
-                if(!texture.SetData(textureData.GetSlices(), textureData.GetIcon(), diffuseIBLCubemap))
+                if (!texture.SetData(textureData.GetSlices(), textureData.GetIcon(), diffuseIBLCubemap))
                 {
                     throw new InvalidDataException();
                 }
@@ -125,7 +123,7 @@ namespace Editor.DLLs
 
                 Decompress(textureData);
 
-                if(textureData.Info.ImportError != 0)
+                if (textureData.Info.ImportError != 0)
                 {
                     Logger.LogAsync(
                         LogLevel.ERROR,
@@ -163,7 +161,7 @@ namespace Editor.DLLs
                 sceneData.ImportSettings.FromContentSettings(geometry);
                 sceneDataGenerator(sceneData);
 
-                if(sceneData.Data == IntPtr.Zero || sceneData.DataSize == 0) throw new Exception(failureMessage);
+                if (sceneData.Data == IntPtr.Zero || sceneData.DataSize == 0) throw new Exception(failureMessage);
 
                 var data = new byte[sceneData.DataSize];
                 Marshal.Copy(sceneData.Data, data, 0, sceneData.DataSize);

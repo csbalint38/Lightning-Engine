@@ -93,12 +93,12 @@ namespace Editor.Editors
 
         private static void OnPanOffsetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if(d is TextureView tv)
+            if (d is TextureView tv)
             {
                 var current = (Point)e.NewValue;
                 var prev = (Point)e.OldValue;
 
-                if(tv.GrdBackground.Background is TileBrush brush)
+                if (tv.GrdBackground.Background is TileBrush brush)
                 {
                     var offset = current - prev;
                     var viewport = brush.Viewport;
@@ -115,7 +115,7 @@ namespace Editor.Editors
 
         private static void OnScaleFactorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if(d is TextureView tv && tv.GrdBackground.LayoutTransform is ScaleTransform scale)
+            if (d is TextureView tv && tv.GrdBackground.LayoutTransform is ScaleTransform scale)
             {
                 scale.ScaleX = (double)e.NewValue;
                 scale.ScaleY = (double)e.NewValue;
@@ -124,7 +124,7 @@ namespace Editor.Editors
 
         private void GrdBackground_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if(_capturedRight && sender is Grid)
+            if (_capturedRight && sender is Grid)
             {
                 var mousePos = e.GetPosition(this);
                 var offset = mousePos - _gridClickPosition;
@@ -165,7 +165,7 @@ namespace Editor.Editors
 
         private void Zoom(double scale, Point center)
         {
-            if(scale < 0.1) scale = 0.1;
+            if (scale < 0.1) scale = 0.1;
 
             if (MathUtilities.IsEqual(scale, ScaleFactor))
             {

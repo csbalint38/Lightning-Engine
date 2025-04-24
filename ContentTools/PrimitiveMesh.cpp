@@ -96,6 +96,19 @@ namespace lightning::tools {
 			return m;
 		}
 
+		constexpr v3 get_face_vertex(u32 face, f32 x, f32 y) {
+			v3 face_vertex[6] = {
+				{ -1.f, -y, x },
+				{ 1.f, -y, -x },
+				{ x, 1.f, y },
+				{ x, -1.f, -y },
+				{ x, -y, 1.f },
+				{ -x, -y, -1.f },
+			};
+
+			return face_vertex[face];
+		}
+
 		Mesh create_uv_sphere(const PrimitiveInitInfo& info) {
 			const u32 phi_count{ clamp(info.segments[Axis::x], 3u, 64u) };
 			const u32 theta_count{ clamp(info.segments[Axis::y], 2u, 64u) };
@@ -217,6 +230,76 @@ namespace lightning::tools {
 			return m;
 		}
 
+		Mesh create_cube(const PrimitiveInitInfo& info) {
+			const u32* const segments{ &info.segments[0] };
+			constexpr u32v2 axes[3]{ { Axis::z, Axis::y }, { Axis::x, Axis::z }, { Axis::x, Axis::y } };
+			constexpr f32 u_range[6]{ 0.f, .5f, .25f, .25f, .25f, .75f };
+			constexpr f32 v_range[6]{ .375f, .375f, .125f, .625f, .375f, .375f };
+
+			Mesh m{};
+			util::vector<v2> uvs{};
+
+			for (u32 face{ 0 }; face < 6; ++face) {
+				const u32 axes_index{ face >> 1 };
+				const u32v2& axis{ axes[axes_index] };
+				const u32 x_count{ clamp(segments[axis.x], (u32)1, (u32)10) };
+				const u32 y_count{ clamp(segments[axis.y], (u32)1, (u32)10) };
+				const f32 x_step{ 1.f / x_count };
+				const f32 y_step{ 1.f / y_count };
+				const f32 u_step{ .25f / x_count };
+				const f32 v_step{ .25f / y_count };
+				const u32 raw_index_offset{ (u32)m.positions.size() };
+
+				for (u32 y{ 0 }; y <= y_count; ++y) {
+					for (u32 x{ 0 }; x <= x_count; ++x) {
+						v2 pos{ 2.f * x * x_step - 1.f, 2.f * y * y_step - 1.f };
+						v3 position{ get_face_vertex(face, pos.x, pos.y) };
+						m.positions.emplace_back(position.x * info.size.x, position.y * info.size.y, position.z * info.size.z);
+
+						#if 1
+						v2 uv{ u_range[face], 1.f - v_range[face] };
+						uv.x += x * u_step;
+						uv.y -= y * v_step;
+						#else
+						v2 uv{ 0.f, 1.f };
+						uv.x += (f32)(x % 2);
+						uv.y -= (f32)(y % 2);
+						#endif
+
+						uvs.emplace_back(uv);
+					}
+				}
+
+				const u32 row_length{ x_count + 1 };
+
+				for (u32 y{ 0 }; y < y_count; ++y) {
+					for (u32 x{ 0 }; x < x_count; ++x) {
+						const u32 index[4]{
+							raw_index_offset + x + y * row_length,
+							raw_index_offset + x + (y + 1) * row_length,
+							raw_index_offset + (x + 1) + y * row_length,
+							raw_index_offset + (x + 1) + (y + 1) * row_length,
+						};
+
+						m.raw_indicies.emplace_back(index[0]);
+						m.raw_indicies.emplace_back(index[1]);
+						m.raw_indicies.emplace_back(index[2]);
+						m.raw_indicies.emplace_back(index[2]);
+						m.raw_indicies.emplace_back(index[1]);
+						m.raw_indicies.emplace_back(index[3]);
+					}
+				}
+			}
+			
+			m.uv_sets.resize(1);
+
+			for (u32 i{ 0 }; i < m.raw_indicies.size(); ++i) {
+				m.uv_sets[0].emplace_back(uvs[m.raw_indicies[i]]);
+			}
+
+			return m;
+		}
+
 		void create_plane(Scene& scene, const PrimitiveInitInfo& info) {
 			LodGroup lod{};
 			lod.name = "plane";
@@ -224,7 +307,17 @@ namespace lightning::tools {
 			scene.lod_groups.emplace_back(lod);
 		};
 
-		void create_cube(Scene& scene, const PrimitiveInitInfo& info) {};
+		void create_cube(Scene& scene, const PrimitiveInitInfo& info) {
+			Mesh cube{};
+			cube.name = "cube";
+			cube.uv_sets.resize(1);
+
+			LodGroup lod{};
+			lod.name = "cube";
+			lod.meshes.emplace_back(create_cube(info));
+			scene.lod_groups.emplace_back(lod);
+		};
+
 		void create_uv_sphere(Scene& scene, const PrimitiveInitInfo& info) {
 			LodGroup lod{};
 			lod.name = "uv_sphere";

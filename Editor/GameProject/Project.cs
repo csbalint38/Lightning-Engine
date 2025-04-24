@@ -109,7 +109,9 @@ namespace Editor.GameProject
         public void Unload()
         {
             UnloadGameCodeDLL();
-            VisualStudio.CloseVisualStudio();
+
+            Task.Run(VisualStudio.CloseVisualStudio);
+
             UndoRedo.Reset();
             DeleteTempFolder();
         }

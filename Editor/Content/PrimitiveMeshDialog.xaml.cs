@@ -36,7 +36,7 @@ namespace Editor.Content
             var uris = new List<Uri>
             {
                 new("pack://application:,,,/Resources/PlaneTexture.png"),
-                new("pack://application:,,,/Resources/PlaneTexture.png"),
+                new("pack://application:,,,/Resources/SphereUvChecker.png"),
                 new("pack://application:,,,/Resources/SphereUvChecker.png"),
             };
 
@@ -78,22 +78,29 @@ namespace Editor.Content
             {
                 case PrimitiveMeshType.PLANE:
                     {
-                        info.SegmentX = (int)SldPlaneX.Value;
-                        info.SegmentZ = (int)SldPlaneZ.Value;
+                        info.SegmentX = Value(SldPlaneX);
+                        info.SegmentZ = Value(SldPlaneZ);
                         info.Size.X = Value(TbWidthPlane, .001f);
                         info.Size.Z = Value(TbLengthPlane, .001f);
                     }
                     break;
                 case PrimitiveMeshType.CUBE:
-                    return;
+                    info.SegmentX = Value(SldCubeX);
+                    info.SegmentY = Value(SldCubeY);
+                    info.SegmentZ = Value(SldCubeZ);
+                    info.Size.X = Value(TbXCube, 0.001f);
+                    info.Size.Y = Value(TbYCube, 0.001f);
+                    info.Size.Z = Value(TbZCube, 0.001f);
+                    info.LOD = Value(TbLODCube, 0);
+                    break;
                 case PrimitiveMeshType.UV_SPHERE:
                     {
-                        info.SegmentX = (int)SldUvSphereX.Value;
-                        info.SegmentY = (int)SldUvSphereY.Value;
+                        info.SegmentX = Value(SldUvSphereX);
+                        info.SegmentY = Value(SldUvSphereY);
                         info.Size.X = Value(TbXUvSphere, 0.001f);
                         info.Size.Y = Value(TbYUvSphere, 0.001f);
                         info.Size.Z = Value(TbZUvSphere, 0.001f);
-                        smoothingAngle = (int)SldSmoothingAngle.Value;
+                        smoothingAngle = Value(SldSmoothingAngle);
                     }
                     break;
                 case PrimitiveMeshType.ICO_SPHERE:
@@ -118,6 +125,15 @@ namespace Editor.Content
         private float Value(TextBox tb, float min)
         {
             float.TryParse(tb.Text, out var result);
+
+            return Math.Max(result, min);
+        }
+
+        private int Value(Slider slider) => (int)slider.Value;
+
+        private int Value(TextBox tb, int min)
+        {
+            int.TryParse(tb.Text, out int result);
 
             return Math.Max(result, min);
         }

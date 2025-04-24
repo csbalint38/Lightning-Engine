@@ -25,7 +25,7 @@ namespace Editor.Utilities
         {
             if (depObject is not Visual) return null;
 
-            for(int i = 0; i < VisualTreeHelper.GetChildrenCount(depObject); i++)
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObject); i++)
             {
                 var child = VisualTreeHelper.GetChild(depObject, i);
                 var result = (child as T) ?? FindVisualChild<T>(child);

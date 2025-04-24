@@ -472,7 +472,7 @@ namespace Editor.Content
             {
                 var embeddedMediaDir = $@"{tempPath}{Path.GetFileNameWithoutExtension(tempFile)}.fbm{Path.DirectorySeparatorChar}";
 
-                if(Directory.Exists(embeddedMediaDir))
+                if (Directory.Exists(embeddedMediaDir))
                 {
                     Debug.Assert(!string.IsNullOrEmpty(FullPath));
 

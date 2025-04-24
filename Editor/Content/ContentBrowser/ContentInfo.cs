@@ -59,43 +59,43 @@ namespace Editor.Content.ContentBrowser
                 OnPropertyChanged(nameof(FullPath));
                 OnPropertyChanged(nameof(DateModified));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message); 
+                Debug.WriteLine(ex.Message);
             }
         }
 
         private bool Validate(string path)
         {
             var fileName = Path.GetFileName(path);
-            var dirName = IsDirectory ? path: Path.GetDirectoryName(path);
+            var dirName = IsDirectory ? path : Path.GetDirectoryName(path);
             var errorMsg = string.Empty;
 
-            if(!IsDirectory)
+            if (!IsDirectory)
             {
-                if(fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+                if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
                 {
                     errorMsg = "Invalid character(s) used in file name.";
                 }
-                if(File.Exists(path))
+                if (File.Exists(path))
                 {
                     errorMsg = "File already exists with the same name.";
                 }
             }
             else
             {
-                if(Directory.Exists(path))
+                if (Directory.Exists(path))
                 {
                     errorMsg = "Directory already exists with the same name.";
                 }
             }
 
-            if(dirName.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            if (dirName.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
                 errorMsg = "Invalid character(s) used in path name.";
             }
 
-            if(!string.IsNullOrEmpty(errorMsg))
+            if (!string.IsNullOrEmpty(errorMsg))
             {
                 MessageBox.Show(errorMsg, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }

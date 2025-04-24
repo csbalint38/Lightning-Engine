@@ -37,7 +37,7 @@ namespace Editor.Content.ImportSettingsConfig
             var settings = ((sender as FrameworkElement).DataContext as GeometryProxy).ImportSettings;
             var selection = LBGeometry.SelectedItems;
 
-            foreach(GeometryProxy proxy in selection) proxy.CopySettings(settings);
+            foreach (GeometryProxy proxy in selection) proxy.CopySettings(settings);
         }
 
         private void BtnApplyToAll_Click(object sender, RoutedEventArgs e)
@@ -45,7 +45,7 @@ namespace Editor.Content.ImportSettingsConfig
             var settings = ((sender as FrameworkElement).DataContext as GeometryProxy).ImportSettings;
             var vm = DataContext as ConfigureImportSettings;
 
-            foreach(var proxy in vm.GeometryImportSettingsConfigurator.GeometryProxies) proxy.CopySettings(settings);
+            foreach (var proxy in vm.GeometryImportSettingsConfigurator.GeometryProxies) proxy.CopySettings(settings);
         }
 
         private void BtnClear_Click(object sender, RoutedEventArgs e)

@@ -14,7 +14,7 @@ namespace Editor.Content.ImportSettingsConfig
         {
             Debug.Assert(settings is GeometryImportSettings);
 
-            if(settings is GeometryImportSettings geometryImportSettings)
+            if (settings is GeometryImportSettings geometryImportSettings)
             {
                 IAssetImportSettings.CopyImportSettings(geometryImportSettings, ImportSettings);
             }

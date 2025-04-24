@@ -26,7 +26,7 @@ namespace Editor.Content.ImportSettingsConfig
         {
             if (!_textureProxies.Any()) return;
 
-            foreach(var proxy in _textureProxies)
+            foreach (var proxy in _textureProxies)
             {
                 proxy.ImportSettings.Sources.Clear();
 
@@ -41,7 +41,7 @@ namespace Editor.Content.ImportSettingsConfig
 
         public void MoveToTarget(TextureProxy proxy, TextureProxy target)
         {
-            if(proxy != target && proxy.Sources.Count == 1 && target.AddProxy(proxy))
+            if (proxy != target && proxy.Sources.Count == 1 && target.AddProxy(proxy))
             {
                 _textureProxies.Remove(proxy);
             }
@@ -49,13 +49,13 @@ namespace Editor.Content.ImportSettingsConfig
 
         public void MoveFromTarget(TextureProxy proxy, TextureProxy target)
         {
-            if(proxy != target)
+            if (proxy != target)
             {
                 Debug.Assert(proxy.Sources.Count == 1);
 
                 target.RemoveProxy(proxy);
 
-                if(!_textureProxies.Any(x => x.FileInfo.FullName == proxy.FileInfo.FullName))
+                if (!_textureProxies.Any(x => x.FileInfo.FullName == proxy.FileInfo.FullName))
                 {
                     _textureProxies.Add(proxy);
                 }

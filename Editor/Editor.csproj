@@ -23,17 +23,6 @@
 	<OutputPath>..\x64\ReleaseEditor\</OutputPath>
 	<Optimize>True</Optimize>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Resources\CodeTemplates\cpp.txt" />
-    <None Remove="Resources\CodeTemplates\h.txt" />
-    <None Remove="Resources\FolderBig.png" />
-    <None Remove="Resources\FolderSmall.png" />
-    <None Remove="Resources\PlaneTexture.png" />
-    <None Remove="Resources\SphereUvChecker.png" />
-    <None Remove="Resources\TextureEditor\ChannelSelect.cso" />
-    <None Remove="Resources\TextureEditor\Checkerboard.png" />
-  </ItemGroup>
 	
   <ItemGroup>
     <PackageReference Include="envdte" Version="17.13.40008" />
@@ -60,4 +49,8 @@
     <Resource Include="Resources\TextureEditor\ChannelSelect.cso" />
     <Resource Include="Resources\TextureEditor\Checkerboard.png" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Resources\ProjectTemplates\**" Link=".\Resources\ProjectTemplates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
+	</ItemGroup>
 </Project>

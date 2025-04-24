@@ -16,7 +16,7 @@ namespace Editor.Content.ImportSettingsConfig
             get => _destinationFolder;
             set
             {
-                if(!Path.EndsInDirectorySeparator(value)) value += Path.DirectorySeparatorChar;
+                if (!Path.EndsInDirectorySeparator(value)) value += Path.DirectorySeparatorChar;
 
                 if (_destinationFolder != value)
                 {

@@ -36,7 +36,7 @@ namespace Editor.Editors
         private void MINewProject_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             ProjectBrowserDialog.GoToNewProjectTab = true;
-            
+
             UnloadAndCloseAllWindows();
         }
 
@@ -47,10 +47,11 @@ namespace Editor.Editors
 
         private void ContentBrowserView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if(
+            if (
                 (sender as FrameworkElement).DataContext is ContentBrowser cb &&
                 string.IsNullOrEmpty(cb.SelectedFolder?.Trim())
-            ) {
+            )
+            {
                 cb.SelectedFolder = cb.ContentFolder;
             }
         }
@@ -61,9 +62,9 @@ namespace Editor.Editors
 
             var mainWindow = Application.Current.MainWindow;
 
-            foreach(Window win in Application.Current.Windows)
+            foreach (Window win in Application.Current.Windows)
             {
-                if(win != mainWindow)
+                if (win != mainWindow)
                 {
                     win.DataContext = null;
                     win.Close();

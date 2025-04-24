@@ -7,7 +7,7 @@ namespace Editor.Utilities.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if(value is double n && double.IsNormal(n)) return 1.0 / n;
+            if (value is double n && double.IsNormal(n)) return 1.0 / n;
 
             return 1.0;
         }

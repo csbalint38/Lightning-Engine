@@ -56,7 +56,7 @@ namespace Editor.Content.ImportSettingsConfig
 
             items.CopyTo(selection, 0);
 
-            foreach(TextureProxy proxy in selection) vm.MoveToTarget(proxy, target);
+            foreach (TextureProxy proxy in selection) vm.MoveToTarget(proxy, target);
         }
 
         private void BtnRemoveImageSource_Click(object sender, RoutedEventArgs e)
@@ -83,7 +83,7 @@ namespace Editor.Content.ImportSettingsConfig
             var items = LBImageSources.SelectedItems;
             var selection = new List<TextureProxy>();
 
-            foreach(TextureProxy proxy in items) selection.Add(proxy);
+            foreach (TextureProxy proxy in items) selection.Add(proxy);
 
             action(target, selection);
         }

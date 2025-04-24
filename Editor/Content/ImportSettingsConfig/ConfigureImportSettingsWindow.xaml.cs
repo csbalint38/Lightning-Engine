@@ -1,5 +1,4 @@
 ﻿using Editor.Common.Enums;
-using Editor.Content.ImportSettingsConfig;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -32,7 +31,7 @@ namespace Editor.Content.ImportSettingsConfig
         {
             var files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-            if(files?.Length > 0)
+            if (files?.Length > 0)
             {
                 var destFolder = listBox.HasItems ?
                     (listBox.Items[^1] as AssetProxy).DestinationFolder :

@@ -7,18 +7,18 @@ namespace Editor.Utilities.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if(value is Array arr)
+            if (value is Array arr)
             {
                 var list = new List<string>();
 
-                foreach(var item in arr)
+                foreach (var item in arr)
                 {
-                    if(item is Enum e) list.Add(e.GetDescription());
+                    if (item is Enum e) list.Add(e.GetDescription());
                 }
 
                 return list;
             }
-            else if(value is Enum e) return e.GetDescription();
+            else if (value is Enum e) return e.GetDescription();
 
             return value;
         }

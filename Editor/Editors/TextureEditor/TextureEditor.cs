@@ -67,7 +67,8 @@ namespace Editor.Editors
         public AssetEditorState State
         {
             get => _state;
-            private set {
+            private set
+            {
                 if (_state != value)
                 {
                     _state = value;
@@ -255,7 +256,7 @@ namespace Editor.Editors
         {
             Debug.Assert(asset is Texture);
 
-            if(asset is Texture texture)
+            if (asset is Texture texture)
             {
                 _assetGuid = texture.Guid;
 
@@ -413,7 +414,8 @@ namespace Editor.Editors
             }
         }
 
-        private void OnRegenerateBitmapsCommand(bool isNormal) {
+        private void OnRegenerateBitmapsCommand(bool isNormal)
+        {
             GenerateSliceBitMaps(isNormal, Texture?.Format ?? DXGIFormat.DXGI_FORMAT_UNKNOWN);
             OnPropertyChanged(nameof(SelectedSliceBitmap));
             SetImageChannels();
@@ -475,7 +477,7 @@ namespace Editor.Editors
 
             var index = (ArrayIndex / 6) * 6;
 
-            if(Cubemap is null || index != Cubemap.ArrayIndex || MipIndex != Cubemap.MipIndex)
+            if (Cubemap is null || index != Cubemap.ArrayIndex || MipIndex != Cubemap.MipIndex)
             {
                 Debug.Assert(index + 5 <= MaxArrayIndex);
 

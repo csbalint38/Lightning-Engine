@@ -10,11 +10,12 @@ namespace Editor.GameProject
 {
     class NewProject : ViewModelBase
     {
-        private readonly string _templatePath = $@"..\..\Editor\ProjectTemplates";
         private string _projectName = "NewProject";
-        private string _projectPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\LightningProjects\";
+        private string _projectPath =
+            $@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\LightningProjects\";
+
         private readonly ObservableCollection<ProjectTemplate> _templates = [];
-        private bool _isValid;
+        private bool _isValid = true;
         private string _errorMessage = string.Empty;
 
         public string ProjectName
@@ -48,7 +49,7 @@ namespace Editor.GameProject
         public bool IsValid
         {
             get => _isValid;
-            set
+            private set
             {
                 if (_isValid != value)
                 {
@@ -61,7 +62,7 @@ namespace Editor.GameProject
         public string ErrorMessage
         {
             get => _errorMessage;
-            set
+            private set
             {
                 if (_errorMessage != value)
                 {
@@ -79,7 +80,8 @@ namespace Editor.GameProject
 
             try
             {
-                var templateFiles = Directory.GetFiles(_templatePath, "template.xml", SearchOption.AllDirectories);
+                var templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @".\Resources\ProjectTemplates\");
+                var templateFiles = Directory.GetFiles(templatesPath, "template.xml", SearchOption.AllDirectories);
                 Debug.Assert(templateFiles.Length != 0);
 
                 foreach (var templateFile in templateFiles)
@@ -120,9 +122,11 @@ namespace Editor.GameProject
 
         public string CreateProject(ProjectTemplate template)
         {
-            Validate();
+            if (!Validate()) return string.Empty;
 
-            if (!IsValid) return string.Empty;
+            ProjectName = ProjectName.Trim();
+            ProjectPath = ProjectPath.Trim();
+
             if (!Path.EndsInDirectorySeparator(ProjectPath)) ProjectPath += @"\";
 
             var path = $@"{ProjectPath}{ProjectName}\";
@@ -199,11 +203,11 @@ namespace Editor.GameProject
 
             var nameRegex = new Regex(@"[^A-Za-z0-9_]");
 
-            if (string.IsNullOrWhiteSpace(ProjectName.Trim()))
+            if (string.IsNullOrEmpty(ProjectName.Trim()))
                 ErrorMessage = "Project name cannot be empty.";
             else if (nameRegex.IsMatch(ProjectName))
                 ErrorMessage = "Project name contains invalid characters.";
-            else if (string.IsNullOrWhiteSpace(ProjectPath.Trim()))
+            else if (string.IsNullOrEmpty(ProjectPath.Trim()))
                 ErrorMessage = "Project path cannot be empty.";
             else if (ProjectPath.IndexOfAny(Path.GetInvalidPathChars()) != -1)
                 ErrorMessage = "Project path contains invalid characters.";

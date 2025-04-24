@@ -1,6 +1,4 @@
-﻿using Editor.GameProject;
-using System.ComponentModel;
-using System.IO;
+﻿using System.ComponentModel;
 using System.Windows;
 
 namespace Editor.Content

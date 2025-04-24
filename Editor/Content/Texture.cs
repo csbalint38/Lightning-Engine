@@ -3,7 +3,6 @@ using Editor.Content.ContentBrowser;
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
 using Editor.Utilities;
-using Microsoft.VisualStudio.TextManager.Interop;
 using System.Diagnostics;
 using System.IO;
 
@@ -165,7 +164,8 @@ namespace Editor.Content
 
         public Texture() : base(AssetType.TEXTURE) { }
 
-        public Texture(IAssetImportSettings importSettings) : this() {
+        public Texture(IAssetImportSettings importSettings) : this()
+        {
             Debug.Assert(importSettings is TextureImportSettings);
 
             ImportSettings = (TextureImportSettings)importSettings;
@@ -192,13 +192,20 @@ namespace Editor.Content
 
                 var iblPairGuid = new Guid(reader.ReadString());
 
-                if(iblPairGuid != Guid.Empty)
+                if (iblPairGuid != Guid.Empty)
                 {
                     IsPrefilteredIBL = true;
 
                     var iblFile = AssetRegistry.GetAssetInfo(iblPairGuid)?.FullPath;
 
-                    if(!string.IsNullOrEmpty(iblFile) && IBLPair is null)
+                    if (string.IsNullOrEmpty(iblFile))
+                    {
+                        Logger.LogAsync(LogLevel.ERROR, $"Unable to open IBL pair asset. File: {file}");
+
+                        return false;
+                    }
+
+                    if (IBLPair is null)
                     {
                         IBLPair = new()
                         {
@@ -208,14 +215,8 @@ namespace Editor.Content
                         if (!IBLPair.Load(iblFile)) return false;
                     }
                 }
-                else
-                {
-                    Logger.LogAsync(LogLevel.ERROR, $"Unable to open IBL pair asset. File: {file}");
 
-                    return false;
-                }
-
-                    var compressedLength = reader.ReadInt32();
+                var compressedLength = reader.ReadInt32();
 
                 Debug.Assert(compressedLength > 0);
 
@@ -232,7 +233,7 @@ namespace Editor.Content
 
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failed to load texture asset from file {file}");
@@ -273,9 +274,9 @@ namespace Editor.Content
 
             Debug.Assert(Slices?.Any() == true);
 
-            foreach(var arraySlice in Slices)
+            foreach (var arraySlice in Slices)
             {
-                foreach(var mipLevel in arraySlice)
+                foreach (var mipLevel in arraySlice)
                 {
                     writer.Write(mipLevel[0].RowPitch);
                     writer.Write(mipLevel[0].SlicePitch);
@@ -311,13 +312,13 @@ namespace Editor.Content
                 if (TryGetAssetInfo(file) is AssetInfo info && info.Type == Type) Guid = info.Guid;
                 else file = AssetRegistry.GetAssetInfo(Guid)?.FullPath ?? file;
 
-                if(IBLPair?.IBLPair?.Guid == Guid && !IBLPair._isSaving)
+                if (IBLPair?.IBLPair?.Guid == Guid && !IBLPair._isSaving)
                 {
                     var pairFile = string.IsNullOrEmpty(IBLPair.FullPath) ?
                         file.Replace(AssetFileExtension, $"_diffuse_ibl{AssetFileExtension}") :
                         IBLPair.FullPath;
 
-                    if(IsCubeMap && ImportSettings.PrefilterCubemap)
+                    if (IsCubeMap && ImportSettings.PrefilterCubemap)
                     {
                         IBLPair.Save(pairFile);
 
@@ -328,7 +329,7 @@ namespace Editor.Content
                     {
                         var fileName = AssetRegistry.GetAssetInfo(IBLPair.Guid)?.FullPath;
 
-                        if(!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
+                        if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
                         {
                             IBLPair = null;
 
@@ -366,7 +367,7 @@ namespace Editor.Content
 
                 return savedFiles;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failde to save texture to {file}");
@@ -390,7 +391,7 @@ namespace Editor.Content
 
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
 
@@ -420,12 +421,12 @@ namespace Editor.Content
                 result = false;
             }
 
-            if(is3D && (width > Max3DSize || height > Max3DSize || arrayOrDepth > Max3DSize))
+            if (is3D && (width > Max3DSize || height > Max3DSize || arrayOrDepth > Max3DSize))
             {
                 Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {Max3DSize}! (file: {file})");
                 result = false;
             }
-            else if(arrayOrDepth > MaxArraySize)
+            else if (arrayOrDepth > MaxArraySize)
             {
                 Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {MaxArraySize}! (file: {file})");
                 result = false;
@@ -454,7 +455,7 @@ namespace Editor.Content
             var firstMip = Slices[0][0][0];
 
             if (!HasValidDimensions(firstMip.Width, firstMip.Height, ArraySize, IsVolumeMap, FullPath)) return false;
-            
+
             if (icon is null)
             {
                 Debug.Assert(!ImportSettings.Compress);
@@ -470,7 +471,7 @@ namespace Editor.Content
 
             IsPrefilteredIBL = iblPair is not null;
 
-            if(IsPrefilteredIBL) IBLPair = iblPair;
+            if (IsPrefilteredIBL) IBLPair = iblPair;
 
             return true;
         }

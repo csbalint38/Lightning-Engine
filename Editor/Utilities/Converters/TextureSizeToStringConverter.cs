@@ -14,7 +14,7 @@ namespace Editor.Utilities.Converters
                 var size = $"{texture.Width}x{texture.Height}";
                 var mipSize = $"({editor.SelectedSlice.Width}x{editor.SelectedSlice.Height})";
 
-                if(texture.IsVolumeMap)
+                if (texture.IsVolumeMap)
                 {
                     size += $"x{texture.Slices[0][0].Count}";
                     mipSize += $"{texture.Slices[0][editor.MipIndex].Count}";

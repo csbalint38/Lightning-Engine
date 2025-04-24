@@ -56,7 +56,7 @@ namespace Editor.Content.ImportSettingsConfig
 
         public static void Clear(AssetType type)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -70,7 +70,7 @@ namespace Editor.Content.ImportSettingsConfig
 
         public static ImportingItem GetItem(Asset asset)
         {
-            lock(_lock)
+            lock (_lock)
             {
                 return _importingItems.FirstOrDefault(x => x.Asset == asset);
             }

@@ -77,7 +77,7 @@ namespace Editor.Content.ImportSettingsConfig
             get => _importDuration;
             private set
             {
-                if(_importDuration != value)
+                if (_importDuration != value)
                 {
                     _importDuration = value;
                     OnPropertyChanged(nameof(ImportDuration));
@@ -106,14 +106,14 @@ namespace Editor.Content.ImportSettingsConfig
         {
             ProgressMax = maxValue;
             ProgressValue = progress;
-            NormalizedValue = maxValue > 0 ?  Math.Clamp(progress / maxValue, 0, 1) : 0.0;
+            NormalizedValue = maxValue > 0 ? Math.Clamp(progress / maxValue, 0, 1) : 0.0;
         }
 
         private void UpdateTimer(object sender, EventArgs e)
         {
-            if(Status == ImportStatus.IMPORTING)
+            if (Status == ImportStatus.IMPORTING)
             {
-                if(!_stopwatch.IsRunning) _stopwatch.Start();
+                if (!_stopwatch.IsRunning) _stopwatch.Start();
 
                 var t = _stopwatch.Elapsed;
 

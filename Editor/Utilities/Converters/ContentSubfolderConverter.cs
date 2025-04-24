@@ -11,7 +11,7 @@ namespace Editor.Utilities.Converters
         {
             var contentFolder = Project.Current.ContentPath;
 
-            if(value is string folder && !string.IsNullOrEmpty(folder) && folder.Contains(contentFolder))
+            if (value is string folder && !string.IsNullOrEmpty(folder) && folder.Contains(contentFolder))
             {
                 return $@"{Path.DirectorySeparatorChar}{folder.Replace(contentFolder, "")}";
             }

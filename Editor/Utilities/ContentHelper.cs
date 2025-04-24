@@ -25,7 +25,7 @@ namespace Editor.Utilities
 
                 return asset.Save(asset.FullPath);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to save asset {asset.FullPath}");
                 Debug.WriteLine(ex.Message);
@@ -102,7 +102,7 @@ namespace Editor.Utilities
                 ContentWatcher.EnableFileWatcher(true);
 
             }
-            
+
             return assets;
         }
 

@@ -169,7 +169,7 @@ namespace Editor.DLLs.Descriptors
         {
             TextureData data = new TextureData();
 
-            if(SubresourceData != IntPtr.Zero && SubresourceSize > 0)
+            if (SubresourceData != IntPtr.Zero && SubresourceSize > 0)
             {
                 var bytes = new byte[SubresourceSize];
 
@@ -180,7 +180,7 @@ namespace Editor.DLLs.Descriptors
                 Marshal.Copy(bytes, 0, data.SubresourceData, SubresourceSize);
             }
 
-            if(Icon != IntPtr.Zero && IconSize > 0)
+            if (Icon != IntPtr.Zero && IconSize > 0)
             {
                 var bytes = new byte[IconSize];
 
