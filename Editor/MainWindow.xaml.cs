@@ -1,4 +1,5 @@
-﻿using Editor.Content.ContentBrowser;
+﻿using Editor.Content;
+using Editor.Content.ContentBrowser;
 using Editor.DLLs;
 using Editor.GameProject;
 using Editor.Utilities;
@@ -27,6 +28,8 @@ public partial class MainWindow : Window
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnMainWindowLoaded;
+
+        DefaultAssets.GenerateDefaultAssets();
         GetEnginePath();
         OpenProjectBrowserDialog();
     }

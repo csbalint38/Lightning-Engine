@@ -1,6 +1,7 @@
 ﻿global using SliceArray3D = System.Collections.Generic.List<
     System.Collections.Generic.List<System.Collections.Generic.List<Editor.Content.Slice>>
 >;
+global using IdType = System.Int32;
 
 namespace Editor.Common
 {

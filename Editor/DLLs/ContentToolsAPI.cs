@@ -35,6 +35,9 @@ namespace Editor.DLLs
         [DllImport(_contentToolsDll, EntryPoint = "prefilter_specular_ibl")]
         public static extern void PrefilterSpecularIBL([In, Out] TextureData data);
 
+        [DllImport(_contentToolsDll, EntryPoint = "compute_brdf_integration_lut")]
+        private static extern void ComputeBRDFIntegrationLUT([In, Out] TextureData data);
+
         public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
             GeometryFromSceneData(
                 geometry,
@@ -143,6 +146,40 @@ namespace Editor.DLLs
                 Debug.WriteLine(ex.Message);
 
                 return new();
+            }
+        }
+
+        public static void ComputeBRDFIntegrationLUT(Texture texture)
+        {
+            using var textureData = new TextureData();
+
+            try
+            {
+                texture.ImportSettings.Compress = false;
+                texture.ImportSettings.MipLevels = 1;
+                textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
+
+                ComputeBRDFIntegrationLUT(textureData);
+
+                if(textureData.Info.ImportError != 0)
+                {
+                    Logger.LogAsync(
+                        LogLevel.ERROR,
+                        $"Error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
+                    );
+
+                    throw new Exception(
+                        $"Error while trying to compute BRDF integration LUT. Error code {textureData.Info.ImportError}"
+                    );
+                }
+
+                textureData.GetTextureInfo(texture);
+                texture.SetData(textureData.GetSlices(), null, null);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to compute BRDF integration LUT {texture.FileName}");
+                Debug.WriteLine(ex.Message);
             }
         }
 
