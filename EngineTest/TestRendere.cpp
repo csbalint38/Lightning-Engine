@@ -9,7 +9,8 @@
 #include "Components/Geometry.h"
 #include "Input/Input.h"
 #include "TestRenderer.h"
-#include "ShaderCompilation.h"
+#include "../EngineDLL/ShaderCompilation.h"
+#include "../EngineDLL/ShaderCompilation.cpp"
 
 #include <filesystem>
 #include <fstream>
@@ -29,8 +30,8 @@
 
 	void buffer_test_worker() {
 		while (!shutdown) {
-			auto* resource = graphics::direct3d12::d3dx::create_buffer(buffer.data(), (u32)buffer.size());
-			graphics::direct3d12::core::deferred_release(resource);
+			//auto* resource = graphics::direct3d12::d3dx::create_buffer(buffer.data(), (u32)buffer.size());
+			//graphics::direct3d12::core::deferred_release(resource);
 		}
 	}
 

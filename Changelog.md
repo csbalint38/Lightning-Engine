@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Shader compilation in the Editor
  - Create cube in the Editor
  - View cubemaps in the Texture Editor
  - Create folders, rename assets

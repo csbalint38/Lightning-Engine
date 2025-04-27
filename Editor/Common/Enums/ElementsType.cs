@@ -1,11 +1,16 @@
 ﻿namespace Editor.Common.Enums
 {
-    public enum ElementsType
+    public enum ElementsType : UInt32
     {
-        POSITION = 0x00,
-        NORMALS = 0x01,
-        T_SPACE = 0x03,
-        JOINTS = 0x04,
-        COLORS = 0x08,
+        POSITION_ONLY = 0x00,
+        STATIC_NORMAL = 0x01,
+        STATIC_NORMAL_TEXTURE = 0x03,
+        STATIC_COLOR = 0x04,
+        SKELETAL = 0x08,
+        SKELETAL_COLOR = SKELETAL | STATIC_COLOR,
+        SKELETAL_NORMAL = SKELETAL | STATIC_NORMAL,
+        SKELETAL_NORMAL_COLOR = SKELETAL_NORMAL | STATIC_COLOR,
+        SKELETAL_NORMAL_TEXTURE = SKELETAL | STATIC_NORMAL_TEXTURE,
+        SKELETAL_NORMAL_TEXTURE_COLOR = SKELETAL_NORMAL_TEXTURE | STATIC_COLOR,
     }
 }

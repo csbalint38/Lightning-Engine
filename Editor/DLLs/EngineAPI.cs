@@ -1,5 +1,6 @@
 ﻿using Editor.Common.Enums;
 using Editor.Components;
+using Editor.Content;
 using Editor.DLLs.Descriptors;
 using Editor.GameProject;
 using Editor.Utilities;

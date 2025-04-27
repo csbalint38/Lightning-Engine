@@ -5,38 +5,6 @@ using System.IO;
 
 namespace Editor.Content
 {
-    /*internal sealed class UploadedShaderGroup
-    {
-        private static readonly Dictionary<string, UploadedShaderGroup> _uploadedShaders = [];
-        private static readonly Dictionary<IdType, UploadedShaderGroup> _uploadedShaderIds = [];
-
-        public IdType ContentId { get; private set; } = Id.InvalidId;
-        public byte[] CombinedHashes { get; private set; }
-        public int ReferenceCount { get; private set; }
-
-        public static UploadedShaderGroup UploadToEngine(ShaderGroup shaderGroup)
-        {
-            if (shaderGroup.Count == 0 ||
-                shaderGroup.ByteCode.Any(x => x.Length == 0) ||
-                shaderGroup.Hash.Any(x => x.Length == 0)) return null;
-
-            var combinedHashes = shaderGroup.Hash.SelectMany(x => x).ToArray();
-
-            if(Id.IsValid(shaderGroup.ContentId) &&
-                _uploadedShaderIds.TryGetValue(shaderGroup.ContentId, out var uploadedShader)
-            )
-            {
-                if (uploadedShader.CombinedHashes.SequenceEqual(combinedHashes))
-                {
-                    ++uploadedShader.ReferenceCount;
-
-                    return uploadedShader;
-                }
-                else UnloadFromEngine(uploadedShader.ContentId);
-            }
-        }
-    }*/
-
     public class ShaderGroup
     {
         public static readonly int HashSize = 16;
@@ -132,7 +100,7 @@ namespace Editor.Content
 
         public IdType UploadToEngine()
         {
-            //var uploadedShader = UploadedShaderGroup.UploadToEngine(this);
+            var uploadedShader = UploadedShaderGroup.UploadToEngine(this);
 
             Debug.Assert(uploadedShader is not null && Id.IsValid(uploadedShader.ContentId));
 
@@ -147,7 +115,7 @@ namespace Editor.Content
         {
             if(Id.IsValid(ContentId))
             {
-                //UploadedShaderGroup.UnloadFromEngine(ContentId);
+                UploadedShaderGroup.UnloadFromEngine(ContentId);
 
                 ContentId = Id.InvalidId;
             }

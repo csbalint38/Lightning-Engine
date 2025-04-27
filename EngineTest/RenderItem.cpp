@@ -1,7 +1,7 @@
 #include "CommonHeaders.h"
 #include "Content/ContentToEngine.h"
 #include "Graphics/Renderer.h"
-#include "ShaderCompilation.h"
+#include "../EngineDLL/ShaderCompilation.h"
 #include "Components/Entity.h"
 #include "Components/Geometry.h"
 #include "../ContentTools/Geometry.h"
@@ -82,7 +82,7 @@ namespace {
 		ShaderFileInfo info{};
 		info.file_name = "TestShader.hlsl";
 		info.function = "test_shader_vs";
-		info.type = ShaderType::VERTEX;
+		info.type = graphics::ShaderType::VERTEX;
 
 		const char* shader_path{ "../../EngineTest/" };
 
@@ -108,7 +108,7 @@ namespace {
 
 		extra_args.clear();
 		info.function = "test_shader_ps";
-		info.type = ShaderType::PIXEL;
+		info.type = graphics::ShaderType::PIXEL;
 		util::vector<std::unique_ptr<u8[]>> pixel_shaders;
 
 		pixel_shaders.emplace_back(compile_shader(info, shader_path, extra_args));
@@ -133,8 +133,8 @@ namespace {
 	void create_material() {
 		assert(id::is_valid(vs_id) && id::is_valid(ps_id) && id::is_valid(textured_ps_id));
 		graphics::MaterialInitInfo info{};
-		info.shader_ids[ShaderType::VERTEX] = vs_id;
-		info.shader_ids[ShaderType::PIXEL] = ps_id;
+		info.shader_ids[graphics::ShaderType::VERTEX] = vs_id;
+		info.shader_ids[graphics::ShaderType::PIXEL] = ps_id;
 		info.type = graphics::MaterialType::OPAQUE;
 		default_material_id = content::create_resource(&info, content::AssetType::MATERIAL);
 
@@ -163,7 +163,7 @@ namespace {
 			pbr_material_ids[i] = content::create_resource(&info, content::AssetType::MATERIAL);
 		}
 
-		info.shader_ids[ShaderType::PIXEL] = textured_ps_id;
+		info.shader_ids[graphics::ShaderType::PIXEL] = textured_ps_id;
 		info.texture_count = TextureUsage::count;
 		info.texture_ids = &texture_ids[0];
 		fembot_material_id = content::create_resource(&info, content::AssetType::MATERIAL);

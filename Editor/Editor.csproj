@@ -40,6 +40,7 @@
     </Content>
     <Resource Include="Resources\FolderBig.png" />
     <Resource Include="Resources\FolderSmall.png" />
+    <Resource Include="Resources\MaterialEditor\DefaultMaterialShaders.hlsl" />
     <Resource Include="Resources\PlaneTexture.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
@@ -51,6 +52,10 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Content Include="Resources\ProjectTemplates\**" Link=".\Resources\ProjectTemplates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
+		<Content Include="Resources\ProjectTemplates\**" Link=".\Resources\ProjectTemplates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Resources\MaterialEditor\DefaultMaterialShaders.hlsl" />
 	</ItemGroup>
 </Project>

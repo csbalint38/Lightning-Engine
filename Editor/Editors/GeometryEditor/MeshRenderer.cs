@@ -157,11 +157,11 @@ namespace Editor.Editors
                     }
                 }
 
-                if (mesh.ElementsType.HasFlag(Common.Enums.ElementsType.NORMALS))
+                if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL_NORMAL))
                 {
                     var tSpaceOffset = 0;
 
-                    if (mesh.ElementsType.HasFlag(Common.Enums.ElementsType.JOINTS)) tSpaceOffset = sizeof(short) * 4;
+                    if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL)) tSpaceOffset = sizeof(short) * 4;
 
                     using (var reader = new BinaryReader(new MemoryStream(mesh.Elements)))
                     {
@@ -183,7 +183,7 @@ namespace Editor.Editors
                             vertexData.Normals.Add(normal);
                             avgNormal += normal;
 
-                            if (mesh.ElementsType.HasFlag(ElementsType.T_SPACE))
+                            if (mesh.ElementsType.HasFlag(ElementsType.STATIC_NORMAL_TEXTURE))
                             {
                                 reader.BaseStream.Position += sizeof(short) * 2;
 
@@ -193,7 +193,7 @@ namespace Editor.Editors
                                 vertexData.UVs.Add(new Point(u, v));
                             }
 
-                            if (mesh.ElementsType.HasFlag(ElementsType.JOINTS) && mesh.ElementsType.HasFlag(ElementsType.COLORS))
+                            if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL_COLOR))
                             {
                                 reader.BaseStream.Position += 4;
                             }
