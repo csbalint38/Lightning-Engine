@@ -1,7 +1,9 @@
 #pragma once
 #include "Common/CommonHeaders.h"
-#include "Graphics/GraphicsPlatformInterface.h"
+#include "Graphics/Renderer.h"
 
-#include <GL/glew.h>
+#include <GL/glew.h> 
+ 
+#define GLEW_STATIC
 
-// Include OpenGL headers
+#pragma comment(lib, "glew64s.lib");

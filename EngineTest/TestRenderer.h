@@ -1,6 +1,8 @@
 #pragma once
 #include "Test.h"
 
+#define OPENGL
+
 class EngineTest : public Test {
 	public:
 		bool initialize() override;

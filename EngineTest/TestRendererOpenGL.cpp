@@ -5,6 +5,7 @@
 #include "../Graphics/Renderer.h"
 #include "TestRenderer.h"
 
+#ifdef OPENGL
 using namespace lightning;
 
 graphics::RenderSurface _surfaces[4];
@@ -75,3 +76,4 @@ void EngineTest::shutdown() {
 
     graphics::shutdown();
 }
+#endif // OPENGL
