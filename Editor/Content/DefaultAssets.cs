@@ -37,7 +37,7 @@ namespace Editor.Content
 
             BRDFIntegrationLUT = Asset.GetAssetInfo(brdfLUTFileName);
             DefaultGeometry = Asset.GetAssetInfo(cubeFileName);
-            //DefaultMaterial = Asset.GetAssetInfo(materialFileName);
+            DefaultMaterial = Asset.GetAssetInfo(materialFileName);
         }
 
         private static void ComputeBRDFIntegrationLUT(string file)
@@ -152,6 +152,15 @@ namespace Editor.Content
 
                 var vertexShaders = CompileShaderGroup(ShaderType.VERTEX, code, "main_vs", vsDefines, vsKeys);
                 var pixelShaders = CompileShaderGroup(ShaderType.PIXEL, code, "main_ps", psDefines, psKeys);
+
+                var material = new Material()
+                {
+                    MaterialMode = MaterialMode.DEFAULT,
+                };
+
+                material.AddShaderGroup(vertexShaders);
+                material.AddShaderGroup(pixelShaders);
+                material.Save(file);
             }
             catch (Exception ex)
             {

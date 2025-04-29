@@ -1,4 +1,4 @@
-# v0.3.0-beta - 2025.x.x
+# v0.3.0-beta - 2025.4.29
 
 ## Lightning+
 
@@ -7,6 +7,7 @@
  - Added visualization of importance sampling for specular
 
 ## Editor
+ - Material assets
  - Shader compilation in the Editor
  - Create cube in the Editor
  - View cubemaps in the Texture Editor

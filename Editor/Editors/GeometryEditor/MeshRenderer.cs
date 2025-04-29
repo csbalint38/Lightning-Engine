@@ -157,7 +157,7 @@ namespace Editor.Editors
                     }
                 }
 
-                if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL_NORMAL))
+                if (mesh.ElementsType.HasFlag(ElementsType.STATIC_NORMAL))
                 {
                     var tSpaceOffset = 0;
 

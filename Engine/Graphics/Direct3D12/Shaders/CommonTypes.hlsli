@@ -111,7 +111,6 @@ struct PerObjectData
     float4 base_color;
     float3 emissive;
     float emissive_intensity;
-    float ambient_occlusion;
     float metallic;
     float roughness;
     uint _pad;

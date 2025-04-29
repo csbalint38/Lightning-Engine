@@ -309,7 +309,7 @@ Surface get_surface(VertexOut ps_in, float3 v)
     s.perceptual_roughness = per_object_buffer.roughness;
     s.emissive_color = per_object_buffer.emissive;
     s.emissive_intensity = per_object_buffer.emissive_intensity;
-    s.ambient_occlusion = per_object_buffer.ambient_occlusion;
+    s.ambient_occlusion = 1.f;
     
     #if TEXTURED_MTL
     float2 uv = ps_in.uv;
