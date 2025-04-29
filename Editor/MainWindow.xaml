@@ -9,7 +9,8 @@
         WindowStartupLocation="CenterScreen"
         Title="{Binding Name, StringFormat='Lightning Editor - {0}'}"
         Height="720"
-        Width="1280">
+        Width="1280"
+        Style="{StaticResource LightningWindowStyle}">
     <Grid>
         <editors:WorldEditorView/>
     </Grid>
