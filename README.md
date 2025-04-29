@@ -19,16 +19,16 @@
 ## Requirements
 
 ### Minimum
-**CPU:** Intel Pentium 110 MHz / AMD K5 75-133 MHz\
-**Storage:** 8 GB available space\
-**RAM:** 512 MB**OS:** Windows 7 64 bit\
-**GPU:** Integrated with 400 MB memory\
+**CPU:** Intel Pentium III 1000 MHz / AMD Athlon 64\
+**Storage:** 1 GB available space\
+**RAM:** 1 GB**OS:** Windows 10\
+**GPU:** Integrated with 300 MB memory\
 **DirectX:** DirectX 12
 
 ### Recommended
-**CPU:** Intel Pentium II 220 MHz / AMD K6 166-300 MHz\
-**Storage:** 16GB SSD\
-**RAM:** 1 GB**OS:** Windows 10 Home\
+**CPU:** Intel Pentium M 755 / AMD Athlon 64\
+**Storage:** 2GB SSD\
+**RAM:** 2 GB**OS:** Windows 10 Home\
 **GPU:** NVidia GeForce GT 420\
 **DirectX:** DirectX 12
 

@@ -32,7 +32,7 @@ if(FAILED(x)) {								\
 #endif
 #else
 #ifndef DXCall
-#fedine DXCall(x) x
+#define DXCall(x) x
 #endif
 #endif
 
