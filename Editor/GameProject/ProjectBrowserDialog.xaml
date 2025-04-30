@@ -7,7 +7,10 @@
         mc:Ignorable="d"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        Title="Project Browser" Height="600" Width="900">
+        Title="Project Browser"
+        Height="600"
+        Width="900"
+        Style="{StaticResource LightningDialogStyle}">
     <Grid Margin="20, 20, 20, 20">
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
@@ -15,10 +18,13 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
             <Button Name="BtnToggleOpenNew"
+                    Style="{StaticResource AccentButton}"
                     Content="New Project"
+                    FontSize="14"
+                    FontWeight="DemiBold"
                     Width="100"
                     Height="30"
-                    Margin="0 0 0 20"
+                    Margin="10 0 0 10"
                     Click="BtnToggleOpenNew_Click"/>
         </StackPanel>
         <Border x:Name="BrdContent" Grid.Row="1">

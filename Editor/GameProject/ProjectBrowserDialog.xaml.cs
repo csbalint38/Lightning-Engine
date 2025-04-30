@@ -37,12 +37,14 @@ namespace Editor.GameProject
             {
                 _isOpenProject = false;
                 BtnToggleOpenNew.Content = "Back";
+                BtnToggleOpenNew.Style = (Style)FindResource("RoundedFlatButton");
                 BrdContent.Child = new NewProjectView();
             }
             else
             {
                 _isOpenProject = true;
                 BtnToggleOpenNew.Content = "New Project";
+                BtnToggleOpenNew.Style = (Style)FindResource("AccentButton");
                 BrdContent.Child = new OpenProjectView();
             }
         }

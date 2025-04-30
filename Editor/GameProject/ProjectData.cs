@@ -14,6 +14,9 @@ namespace Editor.GameProject
         [DataMember]
         public DateTime LastOpened { get; set; }
 
+        [DataMember]
+        public string EngineVersion { get; set; }
+
         public string FullPath { get => $"{ProjectPath}{ProjectName}{Project.Extension}"; }
         public byte[] Icon { get; set; }
         public byte[] Screenshot { get; set; }

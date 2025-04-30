@@ -1,4 +1,9 @@
-# v0.3.0-beta - 2025.4.29
+# v0.3.1-beta - 2525.5.13.
+
+## UI
+ - Styles for Window, Titlebar, Dialog Window, Accent Button, FlatButton, TextBox, TextBlock
+
+# v0.3.0-beta - 2025.4.29.
 
 ## Lightning+
 

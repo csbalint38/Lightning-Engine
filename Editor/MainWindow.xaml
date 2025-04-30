@@ -8,6 +8,7 @@
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
         Title="{Binding Name, StringFormat='Lightning Editor - {0}'}"
+        WindowState="Maximized"
         Height="720"
         Width="1280"
         Style="{StaticResource LightningWindowStyle}">

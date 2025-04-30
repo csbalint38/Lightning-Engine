@@ -11,47 +11,68 @@
     <UserControl.DataContext>
         <local:OpenProject/>
     </UserControl.DataContext>
-    <StackPanel Background="AliceBlue">
-        <StackPanel Orientation="Horizontal"
-                HorizontalAlignment="Center">
-            <ListBox x:Name="LbProjects"
-                     Width="500"
-                     Height="300"
-                     ItemsSource="{Binding Projects}"
-                     SelectedIndex="0">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <EventSetter Event="MouseDoubleClick"
-                                     Handler="ListBoxItem_MouseDoubleClick"/>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <Image Source="{Binding Icon}"
-                                   Margin="0,0,5,0"/>
-                            <TextBlock Text="{Binding ProjectName}"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <Border Width="350"
-                    Height="300"
-                    Margin="10, 0, 0, 0">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <TextBlock Text="Recent projects..."
+           Style="{StaticResource LightTextBlockStyle}"
+           FontSize="25"
+           Margin="10,0,0,-15"/>
+        <StackPanel Background="{StaticResource Editor.BackgroundBrush2}"
+                    Grid.Row="1"
+                    Margin="10, 10, 20, 10">
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <ListBox x:Name="LbProjects"
+                         Width="450"
+                         Height="300"
+                         ItemsSource="{Binding Projects}"
+                         SelectedIndex="0"
+                         Margin="15,15,0,15">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <EventSetter Event="MouseDoubleClick"
+                                         Handler="ListBoxItem_MouseDoubleClick"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Width="180">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="{Binding Icon}"
+                                           Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding ProjectName}"
+                                               />
+                                </StackPanel>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Border Width="350"
+                        Height="300">
                 <Border.Background>
-                    <ImageBrush ImageSource="{Binding Path=SelectedItem.Screenshot, ElementName=LbProjects}"/>
-                </Border.Background>
-            </Border>
+                        <ImageBrush ImageSource="{Binding Path=SelectedItem.Screenshot, ElementName=LbProjects}"/>
+                    </Border.Background>
+                </Border>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Margin="0, 30, 0, 0">
+                <Button x:Name="BtnOpen" 
+                        Content="Open"
+                        Width="100"
+                        Height="30"
+                        IsDefault="True"
+                        Style="{StaticResource RoundedFlatButton}"
+                        Click="BtnOpen_Click"/>
+            </StackPanel>
+            <StackPanel.Effect>
+                <DropShadowEffect Opacity=".6"
+                                  BlurRadius="15"
+                                  ShadowDepth="2"/>
+            </StackPanel.Effect>
         </StackPanel>
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Margin="0, 30, 0, 0">
-            <Button x:Name="BtnOpen" 
-                    Content="Open"
-                    Width="100"
-                    Height="30"
-                    IsDefault="True"
-                    Click="BtnOpen_Click"/>
-        </StackPanel>
-    </StackPanel>
+    </Grid>
 </UserControl>
