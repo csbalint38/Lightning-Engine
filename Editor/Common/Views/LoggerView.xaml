@@ -6,37 +6,157 @@
              xmlns:local="clr-namespace:Editor.Common"
              xmlns:enums="clr-namespace:Editor.Common.Enums"
              xmlns:utils="clr-namespace:Editor.Utilities"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <DockPanel>
-        <Border Height="32" DockPanel.Dock="Top">
+    <DockPanel Background="{StaticResource Editor.BackgroundBrush2}">
+        <Border Height="32"
+                DockPanel.Dock="Top">
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center">
                 <Button x:Name="BtnClear"
-                        Content="Clear"
+                        Margin="5,0,5,0"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        Foreground="{StaticResource Editor.FontBrush}"
+                        FontSize="13"
+                        Focusable="False"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
                         Click="BtnClear_Click"
-                        ToolTip="ClearMessages"/>
+                        ToolTip="ClearMessages">
+                    <Button.Content>
+                        <TextBlock Text="clear"
+                                   x:Name="BtnClearText">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver"
+                                                 Value="True">
+                                            <Setter Property="TextDecorations"
+                                                    Value="Underline"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button.Content>
+                    <Button.Style>
+                        <Style TargetType="{x:Type Button}">
+                            <Setter Property="Opacity" Value="0.8"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}">
+                                            <ContentPresenter HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                    <Setter Property="Opacity"
+                                            Value="1"/>
+                                </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                    </Button.Style>
+                </Button>
                 <ToggleButton x:Name="TbtnInfo"
-                              Content="Info"
                               IsChecked="True"
+                              Margin="5,0,5,0"
                               Click="FilterMessage_Click"
-                              ToolTip="Toggle information messages"/>
+                              ToolTip="Toggle information messages"
+                              d:IsChecked="False">
+                    <ToggleButton.Content>
+                        <materialDesign:PackIcon Kind="InfoOutline"
+                                                 Width="20"
+                                                 Height="20"/>
+                    </ToggleButton.Content>
+                    <ToggleButton.Style>
+                        <Style TargetType="{x:Type ToggleButton}"
+                               BasedOn="{StaticResource ToggleIconButton}">
+                            <Style.Triggers>
+                                <Trigger Property="IsChecked"
+                                         Value="False">
+                                    <Setter Property="Foreground"
+                                            Value="{StaticResource Editor.BackgroundBrush5}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked"
+                                         Value="True">
+                                    <Setter Property="Foreground"
+                                            Value="{StaticResource Editor.BlueBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
                 <ToggleButton x:Name="TbtnWarning"
-                              Content="Warning"
                               IsChecked="True"
+                              Margin="5,0,5,0"                              
                               Click="FilterMessage_Click"
-                              ToolTip="Toggle warning messages"/>
+                              ToolTip="Toggle warning messages">
+                    <ToggleButton.Content>
+                        <materialDesign:PackIcon Kind="WarningOutline"
+                                                 Width="20"
+                                                 Height="20"/>
+                    </ToggleButton.Content>
+                    <ToggleButton.Style>
+                        <Style TargetType="{x:Type ToggleButton}"
+                               BasedOn="{StaticResource ToggleIconButton}">
+                            <Style.Triggers>
+                                <Trigger Property="IsChecked"
+                                         Value="False">
+                                    <Setter Property="Foreground"
+                                            Value="{StaticResource Editor.BackgroundBrush5}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked"
+                                         Value="True">
+                                    <Setter Property="Foreground"
+                                            Value="{StaticResource Editor.LightningBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
                 <ToggleButton x:Name="TbtnError"
-                              Content="Error"
                               IsChecked="True"
+                              Margin="5,0,5,0"
                               Click="FilterMessage_Click"
-                              ToolTip="Toggle error messages"/>
+                              ToolTip="Toggle error messages">
+                    <ToggleButton.Content>
+                        <materialDesign:PackIcon Kind="ErrorOutline"
+                                                 Width="20"
+                                                 Height="20"/>
+                    </ToggleButton.Content>
+                    <ToggleButton.Style>
+                        <Style TargetType="{x:Type ToggleButton}"
+                               BasedOn="{StaticResource ToggleIconButton}">
+                            <Style.Triggers>
+                                <Trigger Property="IsChecked"
+                                         Value="False">
+                                    <Setter Property="Foreground"
+                                            Value="{StaticResource Editor.BackgroundBrush5}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked"
+                                         Value="True">
+                                    <Setter Property="Foreground"
+                                            Value="{StaticResource Editor.RedBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
             </StackPanel>
         </Border>
         <ScrollViewer x:Name="SvLogMessages"
                       VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Auto">
+                      HorizontalScrollBarVisibility="Auto"
+                      Margin="5,0,0,0">
             <ItemsControl ItemsSource="{Binding Source={x:Static utils:Logger.FilteredMessages}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -54,31 +174,35 @@
                                         <Trigger Property="IsMouseOver"
                                                  Value="True">
                                             <Setter Property="Background"
-                                                    Value="LightGray"/>
+                                                    Value="{StaticResource Editor.SelectBrush}"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
                             </DockPanel.Style>
-                            <TextBlock Text="{Binding Time, StringFormat=hh:mm:ss}">
+                            <TextBlock Text="{Binding Time, StringFormat=hh:mm:ss}"
+                                       Margin="0,0,5,0">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground"
-                                                Value="Blue"/>
+                                                Value="{StaticResource Editor.BlueBrush}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding LogLevel}"
                                                          Value="{x:Static enums:LogLevel.WARNING}">
-                                                <Setter Property="Foreground" Value="Orange"/>
+                                                <Setter Property="Foreground"
+                                                        Value="{StaticResource Editor.LightningBrush}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding LogLevel}"
                                                          Value="{x:Static enums:LogLevel.ERROR}">
-                                                <Setter Property="Foreground" Value="Red"/>
+                                                <Setter Property="Foreground"
+                                                        Value="{StaticResource Editor.RedBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
                             <TextBlock Text="{Binding Message}"
-                                       TextWrapping="Wrap"/>
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource Editor.FontBrush}"/>
                         </DockPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

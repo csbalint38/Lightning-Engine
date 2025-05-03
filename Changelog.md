@@ -2,6 +2,12 @@
 
 ## UI
  - Styles for Window, Titlebar, Dialog Window, Accent Button, FlatButton, TextBox, TextBlock
+ - Styles for IconButton, ScrollBar, ListBox, ListBoxItem
+ - Restyled OpenProject page, NewProject page, Scenes view, History tab, Console tab
+ - New template icons and screenshots
+
+## Editor
+ - Asset Metadata
 
 # v0.3.0-beta - 2025.4.29.
 

@@ -3,7 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:Editor.GameProject"
+             xmlns:constant="clr-namespace:Editor.Common"
              mc:Ignorable="d"
              Width="860"
              Height="480"
@@ -17,9 +19,9 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <TextBlock Text="Recent projects..."
-           Style="{StaticResource LightTextBlockStyle}"
-           FontSize="25"
-           Margin="10,0,0,-15"/>
+                   Style="{StaticResource LightTextBlockStyle}"
+                   FontSize="25"
+                   Margin="10,0,0,-15"/>
         <StackPanel Background="{StaticResource Editor.BackgroundBrush2}"
                     Grid.Row="1"
                     Margin="10, 10, 20, 10">
@@ -32,19 +34,82 @@
                          SelectedIndex="0"
                          Margin="15,15,0,15">
                     <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
+                        <Style TargetType="{x:Type ListBoxItem}"
+                               BasedOn="{StaticResource {x:Type ListBoxItem}}">
                             <EventSetter Event="MouseDoubleClick"
                                          Handler="ListBoxItem_MouseDoubleClick"/>
                         </Style>
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Width="180">
+                            <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="{Binding Icon}"
-                                           Margin="0,0,5,0"/>
-                                    <TextBlock Text="{Binding ProjectName}"
-                                               />
+                                           Width="40"
+                                           Height="40"
+                                           Margin="5,0,10,0"/>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="280"/>
+                                            <ColumnDefinition />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding ProjectName}"
+                                                   FontSize="18"
+                                                   FontWeight="DemiBold"/>
+                                        <TextBlock Grid.Row="1"
+                                                   Text="{Binding ProjectPath}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Opacity="0.85"
+                                                   ToolTipService.ShowOnDisabled="True"
+                                                   ToolTipService.InitialShowDelay="100"
+                                                   ToolTip="{Binding ProjectPath}"/>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding LastOpened, StringFormat='yyyy.MM.dd HH:mm'}"
+                                                   HorizontalAlignment="Right"
+                                                   Opacity="0.85"/>
+                                        <StackPanel Orientation="Horizontal"
+                                                    HorizontalAlignment="Right"
+                                                    Grid.Row="1"
+                                                    Grid.Column="1">
+                                            <materialDesign:PackIcon Kind="Warning"
+                                                                     HorizontalAlignment="Right"
+                                                                     Margin="0,0,5,0"
+                                                                     IsHitTestVisible="True"
+                                                                     Foreground="{StaticResource Editor.OrangeBrush}"
+                                                                     ToolTipService.ShowOnDisabled="True"
+                                                                     ToolTipService.InitialShowDelay="100"
+                                                                     ToolTip="The project vas created in an earlier version.">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Visibility"
+                                                                Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding EngineVersion}"
+                                                                         Value="{x:Static constant:Constants.EngineVersion}">
+                                                                <Setter Property="Visibility"
+                                                                        Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                                <materialDesign:PackIcon.Effect>
+                                                    <DropShadowEffect Opacity=".6"
+                                                                      BlurRadius="15"
+                                                                      ShadowDepth="2"/>
+                                                </materialDesign:PackIcon.Effect>
+                                            </materialDesign:PackIcon>
+                                            <TextBlock Text="{Binding EngineVersion}"
+                                                       HorizontalAlignment="Right"
+                                                       Opacity="0.5"
+                                                       ToolTipService.ShowOnDisabled="True"
+                                                       ToolTipService.InitialShowDelay="100"
+                                                       ToolTip="Engine version"/>
+                                        </StackPanel>
+                                    </Grid>
                                 </StackPanel>
                             </StackPanel>
                         </DataTemplate>
@@ -52,9 +117,14 @@
                 </ListBox>
                 <Border Width="350"
                         Height="300">
-                <Border.Background>
+                    <Border.Background>
                         <ImageBrush ImageSource="{Binding Path=SelectedItem.Screenshot, ElementName=LbProjects}"/>
                     </Border.Background>
+                    <Border.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="2"/>
+                    </Border.Effect>
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal"

@@ -7,12 +7,12 @@
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 98 | 14,804 |
-| C# | 167 |  11,805 |
-| XAML | 34 | 4,463 |
+| C++ | 98 | 14,810 |
+| C# | 175 |  12,122 |
+| XAML | 34 | 5,127 |
 | HLSL | 15 |  1,892 |
 | Python | 8 | 277 |
-| Markdown | 3 | 205 |
+| Markdown | 3 | 211 |
 | XML | 5 | 102 |
 ... +1 others (less than 100 lines)
 
@@ -50,6 +50,23 @@ E.g. expecting better/faster... result, broken convenience features, typos, UX/U
 
 ### 5 - Nice to have
 E.g. feature suggestions, documentation issues
+
+## Public headers
+`Engine/EngineAPI/Camera.h`
+`Engine/EngineAPI/GameEntity.h`
+`Engine/EngineAPI/GeometryComponent.h`
+`Engine/EngineAPI/Input.h`
+`Engine/EngineAPI/Light.h`
+`Engine/EngineAPI/ScriptComponent.h`
+`Engine/EngineAPI/TransformComponent.h`
+`Engine/Common/CommonHeaders.h`
+`Engine/Common/PrimitiveTypes.h`
+`Engine/Common/Id.h`
+`Engine/Utilities/Math.h`
+`Engine/Utilities/MathTypes.h`
+`Engine/Utilities/Utilities.h`
+`Engine/Utilities/Vector.h`
+`Engine/Components/ComponentsCommonHeader.h`
 
 ## Copiright
 

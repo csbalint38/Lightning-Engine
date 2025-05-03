@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Editor"
         xmlns:editors="clr-namespace:Editor.Editors"
         mc:Ignorable="d"
+        TextOptions.TextFormattingMode="Display"
         WindowStartupLocation="CenterScreen"
         Title="{Binding Name, StringFormat='Lightning Editor - {0}'}"
         WindowState="Maximized"

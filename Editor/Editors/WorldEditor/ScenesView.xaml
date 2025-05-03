@@ -4,27 +4,41 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:proj="clr-namespace:Editor.GameProject"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=proj:Project}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+    <Grid Background="{StaticResource Editor.BackgroundBrush2}"
+          Margin="5,0,0,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
+        <Grid.Effect>
+            <DropShadowEffect Opacity=".6"
+                  BlurRadius="15"
+                  ShadowDepth="2"/>
+        </Grid.Effect>
         <Button Grid.Row="0"
                 x:Name="BtnAddScene"
-                Content="Add Scene"
-                Width="96"
+                Padding="8,4,8,4"
                 VerticalAlignment="Center"
                 Focusable="False"
                 HorizontalAlignment="Left"
-                Margin="20,0,0,0"
-                Command="{Binding AddSceneCommand}"/>
+                Margin="10,10,0,0"
+                Command="{Binding AddSceneCommand}"
+                Style="{StaticResource AccentButton}">
+            <Button.Content>
+                <TextBlock Text="Add scene"
+                           FontWeight="DemiBold"/>
+            </Button.Content>
+        </Button>
         <ScrollViewer Grid.Row="1"
-                       HorizontalScrollBarVisibility="Disabled"
-                       VerticalScrollBarVisibility="Auto">
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto"
+                      Background="{StaticResource Editor.BackgroundBrush3}"
+                      Margin="0,10,0,0">
             <ItemsControl ItemsSource="{Binding Scenes}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -35,33 +49,75 @@
                     <DataTemplate>
                         <Expander IsExpanded="{Binding IsActive, Mode=OneWay}">
                             <Expander.Header>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Name}"/>
-                                    <Button Content="Remove"
-                                            Command="{Binding DataContext.RemoveSceneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}"
+                                               Foreground="{StaticResource Editor.FontBrush}"
+                                               FontWeight="Bold"
+                                               SnapsToDevicePixels="True"
+                                               VerticalAlignment="Center"/>
+                                    <Button Command="{Binding DataContext.RemoveSceneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
+                                            Style="{StaticResource IconButton}"
                                             Margin="20,0"
-                                            Focusable="False"/>
-                                    <Button 
-                                            Name="BtnAddGameEntity"
-                                            Content="+"
+                                            Focusable="False">
+                                        <Button.Content>
+                                            <materialDesign:PackIcon Kind="CancelCircleOutline"
+                                                                     Width="20"
+                                                                     Height="20"/>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Name="BtnAddGameEntity"
                                             IsEnabled="{Binding IsActive}"
-                                            Click="BtnAddEntity_Click"/>
+                                            Style="{StaticResource IconButton}"
+                                            Click="BtnAddEntity_Click">
+                                        <Button.Content>
+                                            <materialDesign:PackIcon Kind="AddCircleOutline"
+                                                                     Width="20"
+                                                                     Height="20">
+                                            </materialDesign:PackIcon>
+                                        </Button.Content>
+                                    </Button>
                                 </StackPanel>
                             </Expander.Header>
                             <ListBox Name ="LbEntities"
                                      ItemsSource="{Binding Entities}"
                                      IsEnabled="{Binding IsActive}"
                                      SelectionMode="Extended"
+                                     Background="{StaticResource Editor.BackgroundBrush4}"
+                                     ScrollViewer.CanContentScroll="False"
+                                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                      SelectionChanged="LbEntities_SelectionChanged">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="{x:Type ListBoxItem}"
+                                           BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                        <Setter Property="HorizontalContentAlignment"
+                                                Value="Stretch"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Name}"/>
-                                            <Button Content="Remove"
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="13"
+                                                       FontWeight="DemiBold"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="1"
                                                     Command="{Binding ParentScene.RemoveEntityCommand}"
-                                                    CommandParameter="{Binding}"/>
-                                        </StackPanel>
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,1,10,1"
+                                                    Style="{StaticResource IconButton}">
+                                                <Button.Content>
+                                                    <materialDesign:PackIcon Kind="CancelCircleOutline"
+                                                                             Width="18"
+                                                                             Height="18"/>
+                                                </Button.Content>
+                                            </Button>
+                                        </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
@@ -69,6 +125,11 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <ScrollViewer.Effect>
+                <DropShadowEffect Opacity=".6"
+                                  BlurRadius="15"
+                                  ShadowDepth="2"/>
+            </ScrollViewer.Effect>
         </ScrollViewer>
     </Grid>
 </UserControl>

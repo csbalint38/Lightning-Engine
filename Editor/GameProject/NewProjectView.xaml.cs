@@ -12,9 +12,11 @@ namespace Editor.GameProject
         public NewProjectView()
         {
             InitializeComponent();
+
+            Loaded += (_, __) => LbTemplates.Focus();
         }
 
-        private void BtnCreate_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void BtnCreate_Click(object sender, RoutedEventArgs e)
         {
             var vm = DataContext as NewProject;
             var projectPath = vm.CreateProject(LbTemplates.SelectedItem as ProjectTemplate);
@@ -24,7 +26,12 @@ namespace Editor.GameProject
             if (!string.IsNullOrEmpty(projectPath))
             {
                 dialogResult = true;
-                var project = OpenProject.Open(new ProjectData() { ProjectName = vm.ProjectName, ProjectPath = projectPath });
+
+                var project = OpenProject.Open(new ProjectData() {
+                    ProjectName = vm.ProjectName,
+                    ProjectPath = projectPath
+                });
+
                 win.DataContext = project;
             }
 

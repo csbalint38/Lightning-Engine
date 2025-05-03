@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:converters="clr-namespace:Editor.Utilities.Converters"
              xmlns:local="clr-namespace:Editor.GameProject"
              mc:Ignorable="d" 
              Width="860"
@@ -12,6 +13,9 @@
     <UserControl.DataContext>
         <local:NewProject/>
     </UserControl.DataContext>
+    <UserControl.Resources>
+        <converters:PascalCaseToSpacedConverter x:Key="templateConverter"/>
+    </UserControl.Resources>
     <StackPanel Background="{StaticResource Editor.BackgroundBrush2}"
                 Margin="10, 10, 20, 10">
         <StackPanel Orientation="Horizontal"
@@ -27,7 +31,10 @@
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{Binding Icon}"
                                    Margin="0,0,5,0"/>
-                            <TextBlock Text="{Binding ProjectType}"/>
+                            <TextBlock Text="{Binding ProjectType, Converter={StaticResource templateConverter}}"
+                                       FontSize="18"
+                                       FontWeight="DemiBold"
+                                       VerticalAlignment="Center"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
@@ -38,6 +45,11 @@
                 <Border.Background>
                     <ImageBrush ImageSource="{Binding Path=SelectedItem.Screenshot, ElementName=LbTemplates}"/>
                 </Border.Background>
+                <Border.Effect>
+                    <DropShadowEffect Opacity=".6"
+                              BlurRadius="15"
+                              ShadowDepth="2"/>
+                </Border.Effect>
             </Border>
         </StackPanel>
         <StackPanel Orientation="Horizontal"

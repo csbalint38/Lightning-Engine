@@ -1,8 +1,10 @@
-﻿using Editor.Common.Enums;
+﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection.Metadata;
 
 namespace Editor.GameProject
 {
@@ -40,16 +42,15 @@ namespace Editor.GameProject
 
             var project = _projects.FirstOrDefault(x => x.FullPath == data.FullPath);
 
-            if (project is not null)
-            {
-                project.LastOpened = DateTime.Now;
-            }
-            else
+            if (project is null)
             {
                 project = data;
-                project.LastOpened = DateTime.Now;
+
                 _projects.Add(project);
             }
+
+            project.LastOpened = DateTime.Now;
+            project.EngineVersion = Constants.EngineVersion;
 
             WriteProjectData();
 

@@ -198,11 +198,11 @@ void create_render_items() {
 		std::thread{ [] { texture_ids[TextureUsage::NORMAL] = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/normal.img"); }},
 
 		std::thread{ [] { ibl_brdf_lut_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/brdf_lut.texture"); }},
-		std::thread{ [] { ibl_diffuse_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/diffuse4.texture"); }},
-		std::thread{ [] { ibl_specular_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/specular4.texture"); }},
+		std::thread{ [] { ibl_diffuse_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/diffuse6.texture"); }},
+		std::thread{ [] { ibl_specular_id = load_texture("C:/Users/balin/Documents/Lightning-Engine/EngineTest/specular6.texture"); }},
 
-		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/model.model"); }},
-		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/turbine.model"); }},
+		std::thread{ [] { building_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/ground.model"); }},
+		std::thread{ [] { fan_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/topdown.model"); }},
 		std::thread{ [] { blades_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/blades.model"); }},
 		std::thread{ [] { fembot_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/fembot.model"); }},
 		std::thread{ [] { sphere_model_id = load_model("C:/Users/balin/Documents/Lightning-Engine/EngineTest/sphere.model"); }},
@@ -227,7 +227,7 @@ void create_render_items() {
 	building_entity_id = create_one_game_entity({}, {}, &geometry_info, nullptr).get_id();
 
 	geometry_info.geometry_content_id = fan_model_id;
-	fan_entity_id = create_one_game_entity({ 0, 0, 69.78f }, {}, &geometry_info, nullptr).get_id();
+	fan_entity_id = create_one_game_entity({ 0, 20, 20 }, {}, &geometry_info, nullptr).get_id();
 
 	geometry_info.geometry_content_id = blades_model_id;
 	blades_entity_id = create_one_game_entity({ -.152f, 60.555f, 66.362f }, {}, &geometry_info, "TurbineScript").get_id();

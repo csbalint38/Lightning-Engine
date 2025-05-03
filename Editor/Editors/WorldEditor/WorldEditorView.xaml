@@ -58,7 +58,7 @@
                     Key="F5"
                     Modifiers="Shift"/>
     </UserControl.InputBindings>
-    <Grid>
+    <Grid Background="{StaticResource Editor.BackgroundBrush1}">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
@@ -150,9 +150,10 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <GridSplitter Grid.Row="1"
-                          Height="5"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Top"/>
+                              Height="5"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Top"
+                              Background="Transparent"/>
                 <Grid Grid.Row="0">
                     <Grid.RowDefinitions>
                         <RowDefinition/>
@@ -196,7 +197,8 @@
                                                 Loaded="contentBrowserView_Loaded"
                                                 IsVisibleChanged="ContentBrowserView_IsVisibleChanged"/>
                     <GridSplitter Grid.Column="1"/>
-                    <TabControl Grid.Column="1">
+                    <TabControl Grid.Column="1"
+                                Margin="0,5,0,0">
                         <TabItem Header="History">
                             <local:UndoRedoView DataContext="{Binding UndoRedo}"/>
                         </TabItem>
@@ -209,18 +211,21 @@
             <GridSplitter Grid.Column="1"
                           Width="5"
                           HorizontalAlignment="Left"
-                           VerticalAlignment="Stretch"/>
+                          VerticalAlignment="Stretch"
+                          Background="Transparent"/>
             <Grid Grid.Column="1" MinWidth="250">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <GridSplitter Grid.Row="1"
-                          Height="5"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Top"/>
+                              Height="5"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Top"
+                              Background="Transparent"/>
                 <local:ScenesView/>
-                <local:EntityView Grid.Row="1"/>
+                <local:EntityView Grid.Row="1"
+                                  Margin="0,5,0,0"/>
             </Grid>
         </Grid>
     </Grid>

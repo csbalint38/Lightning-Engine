@@ -89,6 +89,7 @@ namespace Editor.Components
             }
         }
 
+        [DataMember]
         public Scene ParentScene { get; private set; }
         public ReadOnlyObservableCollection<Component> Components { get; private set; }
 
