@@ -55,7 +55,13 @@ namespace Editor.DLLs
         [DllImport(_engineDll, EntryPoint = "remove_shader_group")]
         public static extern void RemoveShaderGroup(IdType id);
 
-        public static int CreateGameEntity(Entity entity)
+        [DllImport(_engineDll, EntryPoint = "create_resource")]
+        private static extern IdType CreateResource(IntPtr data, int type);
+
+        [DllImport(_engineDll, EntryPoint = "destroy_resource")]
+        public static extern void DestroyResource(IdType id, int type);
+
+        public static IdType CreateGameEntity(Entity entity)
         {
             GameEntityDescriptor desc = new();
 
@@ -194,5 +200,7 @@ namespace Editor.DLLs
                 throw;
             }
         }
+
+        public static IdType CreateResource(byte[] resourceData, AssetType type) => throw new NotImplementedException();
     }
 }

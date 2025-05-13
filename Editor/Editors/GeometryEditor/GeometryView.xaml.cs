@@ -147,11 +147,12 @@ namespace Editor.Editors
             vm.CameraPosition = new Point3D(v.X, v.Y, v.Z);
         }
 
-        internal static BitmapSource RenderToBitmap(MeshRenderer mesh, int width, int height)
+        internal static BitmapSource RenderToBitmap(MeshRenderer mesh, int width, int height, int index)
         {
             var bmp = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Default);
 
             _instance.DataContext = mesh;
+            _instance.SetGeometry(index);
             _instance.Width = width;
             _instance.Height = height;
             _instance.Measure(new Size(width, height));

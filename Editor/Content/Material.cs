@@ -49,6 +49,14 @@ namespace Editor.Content
 
         public Material() : base(AssetType.MATERIAL) { }
 
+        public Material(AssetInfo assetInfo) : this()
+        {
+            Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
+            Debug.Assert(File.Exists(assetInfo.FullPath) && assetInfo.Type == Type);
+
+            Load(assetInfo.FullPath);
+        }
+
         public List<MaterialInput> GetInput() => _materialMode switch
         {
             MaterialMode.NO_INPUT => [],
@@ -167,6 +175,8 @@ namespace Editor.Content
                 return [];
             }
         }
+
+        public override AssetMetadata GetMetadata() => throw new NotImplementedException();
 
         public bool AddShaderGroup(ShaderGroup shaderGroup)
         {

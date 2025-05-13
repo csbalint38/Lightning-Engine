@@ -28,6 +28,14 @@ namespace Editor.Content
             ImportSettings = (GeometryImportSettings)importSettings;
         }
 
+        public Geometry(AssetInfo assetInfo) : this()
+        {
+            Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
+            Debug.Assert(File.Exists(assetInfo.FullPath) && assetInfo.Type == Type);
+
+            Load(assetInfo.FullPath);
+        }
+
         public void FromRawData(byte[] data)
         {
             Debug.Assert(data?.Length > 0);
@@ -295,6 +303,43 @@ namespace Editor.Content
             return data;
         }
 
+        public override AssetMetadata GetMetadata()
+        {
+            var lodGroup = GetLodGroup();
+
+            GeometryMetadata metadata = new() {
+                LODs = []
+            };
+
+            foreach(var lod in lodGroup.LODs)
+            {
+                LodInfo lodInfo = new LodInfo()
+                {
+                    Name = lod.Name,
+                    Threshold = lod.LODThreshold,
+                    Meshes = []
+                };
+
+                metadata.LODs.Add(lodInfo);
+
+                foreach(var mesh in lod.Meshes)
+                {
+                    MeshInfo meshInfo = new()
+                    {
+                        Name = mesh.Name,
+                        Icon = GenerateIcon(lod, lod.Meshes.IndexOf(mesh)),
+                        IndexCount = mesh.IndexCount,
+                        TriangleCount = mesh.IndexCount / 3,
+                        VertexCount = mesh.VertexCount,
+                    };
+
+                    lodInfo.Meshes.Add(meshInfo);
+                }
+            }
+
+            return metadata;
+        }
+
         private static List<MeshLOD> ReadMeshLODs(int numMeshes, BinaryReader reader)
         {
             var lodIds = new List<int>();
@@ -422,14 +467,14 @@ namespace Editor.Content
             return lod;
         }
 
-        private static byte[] GenerateIcon(MeshLOD lod)
+        private static byte[] GenerateIcon(MeshLOD lod, int index = -1)
         {
             var width = ContentInfo.IconWidth * 4;
             byte[] icon = null;
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var bmp = GeometryView.RenderToBitmap(new MeshRenderer(lod, null), width, width);
+                var bmp = GeometryView.RenderToBitmap(new MeshRenderer(lod, null), width, width, index);
                 icon = BitmapHelper.CreateThumbnail(bmp, ContentInfo.IconWidth, ContentInfo.IconWidth);
             });
 

@@ -171,6 +171,14 @@ namespace Editor.Content
             ImportSettings = (TextureImportSettings)importSettings;
         }
 
+        public Texture(AssetInfo assetInfo) : this()
+        {
+            Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
+            Debug.Assert(File.Exists(assetInfo.FullPath) && assetInfo.Type == Type);
+
+            Load(assetInfo.FullPath);
+        }
+
         public override bool Load(string file)
         {
             Debug.Assert(File.Exists(file));
@@ -403,6 +411,19 @@ namespace Editor.Content
             }
 
             return false;
+        }
+
+        public override TextureMetadata GetMetadata()
+        {
+            return new()
+            {
+                Width = Width,
+                Height = Height,
+                DepthOrArraySize = ArraySize,
+                Format = Format,
+                MipLevels = MipLevels,
+                Dimension = ImportSettings.Dimension,
+            };
         }
 
         private static bool HasValidDimensions(int width, int height, int arrayOrDepth, bool is3D, string file)

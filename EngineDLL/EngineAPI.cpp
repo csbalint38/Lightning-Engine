@@ -175,3 +175,9 @@ EDITOR_INTERFACE u32 compile_shader(ShaderData* data) {
 		blob.read(&data->byte_code_error_assembly_hash[data->byte_code_size], data->errors_size + data->assembly_size);
 	}
 }
+
+EDITOR_INTERFACE id::id_type create_resource(u8* data, content::AssetType::Type type) {
+	return id::invalid_id;
+}
+
+EDITOR_INTERFACE void DestroyResource(id::id_type id, content::AssetType::Type type) {}

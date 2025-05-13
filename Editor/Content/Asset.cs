@@ -31,10 +31,12 @@ namespace Editor.Content
             }
         }
 
+        public abstract AssetMetadata GetMetadata();
         public abstract IEnumerable<string> Save(string file);
         public abstract bool Import(string file);
         public abstract bool Load(string file);
         public abstract byte[] PackForEngine();
+        public virtual List<AssetInfo> GetReferencedAssets() => [];
 
         public static AssetInfo GetAssetInfo(string file)
         {
@@ -55,6 +57,17 @@ namespace Editor.Content
 
             return null;
         }
+
+        public AssetInfo GetAssetInfo() => new()
+        {
+            Type = Type,
+            Icon = Icon,
+            FullPath = FullPath,
+            RegisterTime = AssetRegistry.GetAssetInfo(Guid)?.RegisterTime ?? default,
+            ImportDate = ImportDate,
+            Guid = Guid,
+            Hash = Hash,
+        };
 
         protected void WriteAssetFileHeader(BinaryWriter writer)
         {
