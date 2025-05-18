@@ -1,4 +1,10 @@
-# v0.3.1-beta - 2525.5.13.
+# v0.3.2-beta - 2025.5.27.
+
+## Editor 
+ - Engine versioning
+ - Fixed Project Teplates project files
+
+# v0.3.1-beta - 2025.5.13.
 
 ## UI
  - Styles for Window, Titlebar, Dialog Window, Accent Button, FlatButton, TextBox, TextBlock

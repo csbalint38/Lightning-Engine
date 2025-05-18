@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros">
     <LightningIncludePath>{2}</LightningIncludePath>
     <LightningLibraryPath>{3}\$(Platform)\(Configuration)</LightningLibraryPath>
-  <PropertyGroup>
+  </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="LightningIncludePath">
       <Value>$(LightningIncludePath)</Value>
@@ -145,7 +145,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PreprocessorDefinitions>NDEBUG;USE_WITH_EDITOR;_WINDOWS%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;USE_WITH_EDITOR;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(LightningIncludePath)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>GameEntity.h</ForcedIncludeFiles>

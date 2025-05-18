@@ -4,6 +4,7 @@ using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Reflection.Metadata;
 
 namespace Editor.GameProject
@@ -50,7 +51,12 @@ namespace Editor.GameProject
             }
 
             project.LastOpened = DateTime.Now;
-            project.EngineVersion = Constants.EngineVersion;
+
+            project.EngineVersion =
+                Assembly
+                    .GetExecutingAssembly()
+                    .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                    .InformationalVersion;
 
             WriteProjectData();
 
