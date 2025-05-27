@@ -36,7 +36,7 @@ namespace Editor.Dictionaries
             var window = (Window)((FrameworkElement)sender).TemplatedParent;
 
             window.WindowState = (window.WindowState == WindowState.Normal) ?
-                WindowState.Maximized : 
+                WindowState.Maximized :
                 WindowState.Normal;
         }
 

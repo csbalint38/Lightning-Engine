@@ -39,7 +39,7 @@ namespace Editor.Content
             get => _materialMode;
             set
             {
-                if(_materialMode != value)
+                if (_materialMode != value)
                 {
                     _materialMode = value;
                     OnPropertyChanged(nameof(MaterialMode));
@@ -85,7 +85,7 @@ namespace Editor.Content
 
                 _shaders.Clear();
 
-                for(int i = 0; i < shaderGroupCount; ++i)
+                for (int i = 0; i < shaderGroupCount; ++i)
                 {
                     var shaderGroup = new ShaderGroup();
 
@@ -108,7 +108,7 @@ namespace Editor.Content
 
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failed to load material asset from file: {file}");
@@ -143,7 +143,7 @@ namespace Editor.Content
 
                 writer.Write(_shaders.Count);
 
-                foreach(var (_, shaderGroup) in _shaders)
+                foreach (var (_, shaderGroup) in _shaders)
                 {
                     shaderGroup.ToBinary(writer);
                 }
@@ -167,7 +167,7 @@ namespace Editor.Content
 
                 return savedFile;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 Logger.LogAsync(LogLevel.ERROR, $"Failed to save material to: {file}");

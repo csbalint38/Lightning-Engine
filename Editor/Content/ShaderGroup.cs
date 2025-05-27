@@ -16,7 +16,7 @@ namespace Editor.Content
         public List<uint> Keys { get; set; } = [];
         public List<byte[]> ByteCode { get; set; } = [];
         public List<string> Errors { get; set; } = [];
-        public List<string> Assembly {  get; set; } = [];
+        public List<string> Assembly { get; set; } = [];
         public List<byte[]> Hash { get; set; } = [];
         public IdType ContentId { get; private set; } = Id.InvalidId;
 
@@ -71,11 +71,11 @@ namespace Editor.Content
             ExtraArgs.AddRange(Enumerable.Range(0, count).Select(_ => reader.ReadString().Split(';').ToList()));
             Keys.AddRange(Enumerable.Range(0, count).Select(_ => reader.ReadUInt32()));
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 var byteCodeLength = reader.ReadInt64();
 
-                if(byteCodeLength > 0)
+                if (byteCodeLength > 0)
                 {
                     Hash.Add(reader.ReadBytes(HashSize));
                     ByteCode.Add(reader.ReadBytes((int)byteCodeLength));
@@ -113,7 +113,7 @@ namespace Editor.Content
 
         public void UnloadFromEngine()
         {
-            if(Id.IsValid(ContentId))
+            if (Id.IsValid(ContentId))
             {
                 UploadedShaderGroup.UnloadFromEngine(ContentId);
 
@@ -125,13 +125,13 @@ namespace Editor.Content
         {
             Keys.ForEach(key => writer.Write(key));
 
-            for(int i = 0; i < Count; i++)
+            for (int i = 0; i < Count; i++)
             {
                 var byteCodeLength = ByteCode[i].LongLength;
 
                 writer.Write(byteCodeLength);
 
-                if(byteCodeLength > 0)
+                if (byteCodeLength > 0)
                 {
                     writer.Write(Hash[i]);
                     writer.Write(ByteCode[i]);

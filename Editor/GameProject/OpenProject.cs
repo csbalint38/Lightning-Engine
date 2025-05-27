@@ -1,11 +1,9 @@
-﻿using Editor.Common;
-using Editor.Common.Enums;
+﻿using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Reflection.Metadata;
 
 namespace Editor.GameProject
 {

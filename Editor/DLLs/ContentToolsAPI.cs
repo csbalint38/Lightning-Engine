@@ -161,7 +161,7 @@ namespace Editor.DLLs
 
                 ComputeBRDFIntegrationLUT(textureData);
 
-                if(textureData.Info.ImportError != 0)
+                if (textureData.Info.ImportError != 0)
                 {
                     Logger.LogAsync(
                         LogLevel.ERROR,

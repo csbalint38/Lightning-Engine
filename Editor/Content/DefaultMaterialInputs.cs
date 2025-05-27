@@ -11,21 +11,22 @@ namespace Editor.Content
 
         public void AddInput(MaterialInput input)
         {
-            if(!_inputs.Any(x => x.Name == input.Name)) _inputs.Add(input);
+            if (!_inputs.Any(x => x.Name == input.Name)) _inputs.Add(input);
         }
 
         public void RemoveInput(string name) => _inputs.Remove(_inputs.Find(x => x.Name == name));
 
         public void FromBinary(BinaryReader reader)
         {
-            foreach(var input in _inputs)
+            foreach (var input in _inputs)
             {
                 input.Name = reader.ReadString();
             }
         }
 
-        public void ToBinary(BinaryWriter writer) {
-            foreach(var input in _inputs)
+        public void ToBinary(BinaryWriter writer)
+        {
+            foreach (var input in _inputs)
             {
                 writer.Write(input.Name);
             }

@@ -18,7 +18,7 @@ namespace Editor.Content
             get => _baseColor;
             set
             {
-                if(_baseColor != value)
+                if (_baseColor != value)
                 {
                     _baseColor = value;
                     OnPropertyChanged(nameof(BaseColor));
@@ -85,8 +85,8 @@ namespace Editor.Content
             _baseColor.ScB = reader.ReadSingle();
             _baseColor.ScA = reader.ReadSingle();
             _emissiveColor.ScR = reader.ReadSingle();
-            _emissiveColor.ScG= reader.ReadSingle();
-            _emissiveColor.ScB= reader.ReadSingle();
+            _emissiveColor.ScG = reader.ReadSingle();
+            _emissiveColor.ScB = reader.ReadSingle();
             _emissiveIntensity = reader.ReadSingle();
             _metallic = reader.ReadSingle();
             _roughness = reader.ReadSingle();

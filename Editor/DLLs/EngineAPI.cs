@@ -6,7 +6,6 @@ using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.Wasm;
 using System.Text;
 
 namespace Editor.DLLs

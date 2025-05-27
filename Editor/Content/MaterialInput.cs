@@ -11,7 +11,7 @@ namespace Editor.Content
             get => _name;
             set
             {
-                if(_name != value)
+                if (_name != value)
                 {
                     _name = value;
                     OnPropertyChanged(nameof(Name));

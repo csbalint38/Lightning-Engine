@@ -11,7 +11,7 @@ namespace Editor.Content
     static class DefaultAssets
     {
         public static AssetInfo BRDFIntegrationLUT { get; private set; }
-        public static AssetInfo DefaultGeometry {  get; private set; }
+        public static AssetInfo DefaultGeometry { get; private set; }
         public static AssetInfo DefaultMaterial { get; private set; }
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace Editor.Content
         {
             var defaultAssetsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @".\Resources\DefaultAssets");
 
-            if(!Directory.Exists(defaultAssetsPath)) Directory.CreateDirectory(defaultAssetsPath);
+            if (!Directory.Exists(defaultAssetsPath)) Directory.CreateDirectory(defaultAssetsPath);
 
             var brdfLUTFileName = $@"{defaultAssetsPath}BRDFIntegrationLUT{Asset.AssetFileExtension}";
 
@@ -72,7 +72,7 @@ namespace Editor.Content
                 ContentToolsAPI.CreatePrimitiveMesh(cube, info);
                 cube.Save(file);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
             }
@@ -88,7 +88,7 @@ namespace Editor.Content
         {
             var extraArgs = new List<List<string>>();
 
-            foreach(var def in defines)
+            foreach (var def in defines)
             {
                 extraArgs.Add(!string.IsNullOrEmpty(def.Trim()) ? new()
                 {

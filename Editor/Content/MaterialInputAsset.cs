@@ -9,7 +9,7 @@
             get => _asset;
             set
             {
-                if(_asset != value)
+                if (_asset != value)
                 {
                     _asset = value;
                     OnPropertyChanged(nameof(Asset));
@@ -17,6 +17,6 @@
             }
         }
 
-        public MaterialInputAsset(string name) : base(name) { }
+        public MaterialInputAsset(MaterialInput input) : base(input.Name) { }
     }
 }

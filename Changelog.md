@@ -1,8 +1,11 @@
+# v0.3.3-beta - 2025.6.10.
+
 # v0.3.2-beta - 2025.5.27.
 
 ## Editor 
  - Engine versioning
  - Fixed Project Teplates project files
+ - Applied Materials
 
 # v0.3.1-beta - 2025.5.13.
 

@@ -27,7 +27,8 @@ namespace Editor.GameProject
             {
                 dialogResult = true;
 
-                var project = OpenProject.Open(new ProjectData() {
+                var project = OpenProject.Open(new ProjectData()
+                {
                     ProjectName = vm.ProjectName,
                     ProjectPath = projectPath
                 });

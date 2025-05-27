@@ -10,7 +10,7 @@ namespace Editor.Content
         private static readonly Dictionary<Guid, UploadedAsset> _uploadedAssets = [];
 
         private List<UploadedAsset> _referencedAssets = [];
-        
+
         public IdType ContentId { get; private set; } = Id.InvalidId;
         public int ReferenceCount { get; private set; }
         public AssetInfo AssetInfo { get; private set; }
@@ -56,7 +56,7 @@ namespace Editor.Content
             uploadedAsset._referencedAssets.ForEach(RemoveFromScene);
             --uploadedAsset.ReferenceCount;
 
-            if(uploadedAsset.ReferenceCount == 0)
+            if (uploadedAsset.ReferenceCount == 0)
             {
                 UnloadAssetFromEngine(uploadedAsset);
                 _uploadedAssets.Remove(uploadedAsset.AssetInfo.Guid);
@@ -88,7 +88,7 @@ namespace Editor.Content
 
             Debug.Assert(asset is not null);
 
-            if(asset is not null)
+            if (asset is not null)
             {
                 Debug.Assert(asset.Guid == assetInfo.Guid);
 
@@ -98,7 +98,7 @@ namespace Editor.Content
 
                 var data = asset.PackForEngine();
 
-                if(data?.Length > 0)
+                if (data?.Length > 0)
                 {
                     return new()
                     {

@@ -17,6 +17,8 @@ namespace Editor.Content
         private readonly List<LODGroup> _lodGroups = [];
         private readonly object _lock = new();
 
+        public static AssetInfo Default = DefaultAssets.DefaultGeometry;
+
         public GeometryImportSettings ImportSettings { get; } = new GeometryImportSettings();
 
         public Geometry() : base(AssetType.MESH) { }
@@ -307,11 +309,12 @@ namespace Editor.Content
         {
             var lodGroup = GetLodGroup();
 
-            GeometryMetadata metadata = new() {
+            GeometryMetadata metadata = new()
+            {
                 LODs = []
             };
 
-            foreach(var lod in lodGroup.LODs)
+            foreach (var lod in lodGroup.LODs)
             {
                 LodInfo lodInfo = new LodInfo()
                 {
@@ -322,7 +325,7 @@ namespace Editor.Content
 
                 metadata.LODs.Add(lodInfo);
 
-                foreach(var mesh in lod.Meshes)
+                foreach (var mesh in lod.Meshes)
                 {
                     MeshInfo meshInfo = new()
                     {

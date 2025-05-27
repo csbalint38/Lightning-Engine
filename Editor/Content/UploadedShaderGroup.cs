@@ -37,7 +37,7 @@ namespace Editor.Content
 
             var hashString = Convert.ToBase64String(combinedHashes);
 
-            if(_uploadedShaders.TryGetValue(hashString, out var identicalShader))
+            if (_uploadedShaders.TryGetValue(hashString, out var identicalShader))
             {
                 ++identicalShader.ReferenceCount;
 
@@ -63,13 +63,13 @@ namespace Editor.Content
         {
             Debug.Assert(Id.IsValid(id) && _uploadedShaderIds.ContainsKey(id));
 
-            if(Id.IsValid(id) && _uploadedShaderIds.TryGetValue(id, out var uploadedShader))
+            if (Id.IsValid(id) && _uploadedShaderIds.TryGetValue(id, out var uploadedShader))
             {
                 Debug.Assert(uploadedShader.ReferenceCount > 0);
 
                 --uploadedShader.ReferenceCount;
 
-                if(uploadedShader.ReferenceCount == 0)
+                if (uploadedShader.ReferenceCount == 0)
                 {
                     EngineAPI.RemoveShaderGroup(uploadedShader.ContentId);
 

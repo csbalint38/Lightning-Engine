@@ -46,6 +46,18 @@ namespace {
 		u32 data_size;
 		u8* data;
 	};
+
+	u8* patch_material_data(u8* data) {
+		util::BlobStreamReader blob{ data };
+		const u32 texture_count{ blob.read<u32>() };
+
+		if (texture_count) {
+			id::id_type* const texture_ids{ (id::id_type* const)blob.position() };
+			*reinterpret_cast<id::id_type**>(const_cast<u8*>(blob.position())) = texture_ids;
+		}
+
+		return (u8*)blob.position();
+	}
 }
 
 EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
@@ -177,6 +189,10 @@ EDITOR_INTERFACE u32 compile_shader(ShaderData* data) {
 }
 
 EDITOR_INTERFACE id::id_type create_resource(u8* data, content::AssetType::Type type) {
+	if (type == content::AssetType::MATERIAL) {
+		data = patch_material_data(data);
+	}
+
 	return id::invalid_id;
 }
 
