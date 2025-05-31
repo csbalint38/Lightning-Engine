@@ -42,5 +42,40 @@ namespace Editor.Dictionaries
 
         private void BtnMinimize_Click(object sender, RoutedEventArgs e) =>
             ((Window)((FrameworkElement)sender).TemplatedParent).WindowState = WindowState.Minimized;
+
+        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            var exp = textBox.GetBindingExpression(TextBox.TextProperty);
+
+            if(exp is not null)
+            {
+                exp.UpdateTarget();
+                textBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
+                textBox.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void TextBoxWithRename_KeyDown(object sender, KeyEventArgs e)
+        {
+            var textBox = sender as TextBox;
+            var exp = textBox.GetBindingExpression(TextBox.TextProperty);
+
+            if (exp is null) return;
+
+            if (e.Key == Key.Enter)
+            {
+                if (textBox.Tag is ICommand command && command.CanExecute(textBox.Text)) command.Execute(textBox.Text);
+                else exp.UpdateSource();
+
+                textBox.Visibility = Visibility.Collapsed;
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                exp.UpdateTarget();
+                textBox.Visibility= Visibility.Collapsed;
+            }
+        }
     }
 }
