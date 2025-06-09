@@ -13,13 +13,13 @@ namespace Editor.Content
         private static readonly Dictionary<Guid, RefCountMaterial> _loadedMaterials = [];
 
         private readonly Material _material;
-        private readonly ObservableCollection<MaterialInputAsset> _inputs = [];
+        private readonly ObservableCollection<AppliedMaterialInput> _inputs = [];
         private readonly List<IdType> _shaderIds = [];
 
         private byte[] _packedData = [];
         private byte[] _previousPackedData = [];
 
-        public ReadOnlyObservableCollection<MaterialInputAsset> Inputs;
+        public ReadOnlyObservableCollection<AppliedMaterialInput> Inputs { get; }
         public MaterialSurface MaterialSurface { get; init; }
         public UploadedAsset UploadedAsset { get; private set; }
 
@@ -53,7 +53,7 @@ namespace Editor.Content
         public override List<AssetInfo> GetReferencedAssets() =>
             [.. Inputs.Where(x => x.Asset is not null && x.Asset.Guid != Guid.Empty).Select(x => x.Asset)];
 
-        public override AssetMetadata GetMetadata() => new MaterialMetadata()
+        public override MaterialMetadata GetMetadata() => new()
         {
             PackedData = _packedData
         };
@@ -219,7 +219,7 @@ namespace Editor.Content
             {
                 var shaderGroup = _material.GetShaderGroup(shaderType);
 
-                _shaderIds.Add(shaderGroup is not null ? shaderGroup.UploadToEngine() : Id.InvalidId);
+                _shaderIds.Add(shaderGroup?.UploadToEngine() ?? Id.InvalidId);
             }
 
             Debug.Assert(_loadedMaterials.ContainsKey(_material.Guid));

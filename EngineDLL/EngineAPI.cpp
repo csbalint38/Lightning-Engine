@@ -47,6 +47,15 @@ namespace {
 		u8* data;
 	};
 
+	struct EngineInitError {
+		enum ErrorCode : u32 {
+			SUCCEEDED = 0,
+			UNKNOWN,
+			SHADER_COMPILATION,
+			GRAPHICS
+		};
+	};
+
 	u8* patch_material_data(u8* data) {
 		util::BlobStreamReader blob{ data };
 		const u32 texture_count{ blob.read<u32>() };
@@ -59,6 +68,18 @@ namespace {
 		return (u8*)blob.position();
 	}
 }
+
+EDITOR_INTERFACE EngineInitError::ErrorCode initialize_engine() {
+	while (!compile_shaders()) {
+		if (MessageBox(nullptr, "Failed to compile engine shaders.", "Shader Compilation Error", MB_RETRYCANCEL) != IDRETRY) {
+			return EngineInitError::SHADER_COMPILATION;
+		}
+	}
+
+	return graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12) ? EngineInitError::SUCCEEDED : EngineInitError::GRAPHICS;
+}
+
+EDITOR_INTERFACE void shutdown_engine() { graphics::shutdown; }
 
 EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
 	if (game_code_dll) return FALSE;
@@ -193,7 +214,13 @@ EDITOR_INTERFACE id::id_type create_resource(u8* data, content::AssetType::Type 
 		data = patch_material_data(data);
 	}
 
-	return id::invalid_id;
+	assert(data && type < content::AssetType::count);
+
+	return content::create_resource(data, type);
 }
 
-EDITOR_INTERFACE void DestroyResource(id::id_type id, content::AssetType::Type type) {}
+EDITOR_INTERFACE void destroy_resource(id::id_type id, content::AssetType::Type type) {
+	assert(id::is_valid(id) && type < content::AssetType::count);
+
+	content::destroy_resource(id, type);
+}

@@ -1,4 +1,5 @@
-﻿using Editor.Content;
+﻿using Editor.Common.Enums;
+using Editor.Content;
 using Editor.Content.ContentBrowser;
 using Editor.DLLs;
 using Editor.GameProject;
@@ -31,7 +32,24 @@ public partial class MainWindow : Window
 
         DefaultAssets.GenerateDefaultAssets();
         GetEnginePath();
-        OpenProjectBrowserDialog();
+
+        var initResult = EngineAPI.InitializeEngine();
+
+        if (initResult == EngineInitError.SUCCEEDED)
+        {
+            OpenProjectBrowserDialog();
+        }
+        else
+        {
+            MessageBox.Show(
+                $"{initResult.GetDescription()}",
+                "Engine initialization failed",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error
+            );
+
+            Application.Current.Shutdown();
+        }
     }
 
     private void OnMainWindowClosing(object sender, CancelEventArgs e)
@@ -44,13 +62,7 @@ public partial class MainWindow : Window
 
             if (DataContext is not null) Application.Current.MainWindow.Show();
         }
-        else
-        {
-            Closing -= OnMainWindowClosing;
-            Project.Current?.Unload();
-            DataContext = null;
-            ContentToolsAPI.ShutdownContentTools();
-        }
+        else Shutdown();
     }
 
     private void OpenProjectBrowserDialog()
@@ -58,6 +70,7 @@ public partial class MainWindow : Window
         var projectBrowser = new ProjectBrowserDialog();
         if (projectBrowser.ShowDialog() == false || projectBrowser.DataContext is null)
         {
+            Shutdown();
             Application.Current.Shutdown();
         }
         else
@@ -92,5 +105,17 @@ public partial class MainWindow : Window
             }
         }
         else EnginePath = enginePath;
+    }
+
+    private void Shutdown()
+    {
+        Closing -= OnMainWindowClosing;
+
+        Project.Current?.Unload();
+
+        DataContext = null;
+
+        ContentToolsAPI.ShutdownContentTools();
+        EngineAPI.ShutdownEngine();
     }
 }

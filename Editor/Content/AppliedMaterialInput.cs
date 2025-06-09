@@ -1,10 +1,10 @@
 ﻿namespace Editor.Content
 {
-    public class MaterialInputAsset : MaterialInput
+    public class AppliedMaterialInput(MaterialInput input) : MaterialInput(input.Name)
     {
-        private AssetInfo _asset;
+        private AssetInfo? _asset;
 
-        public AssetInfo Asset
+        public AssetInfo? Asset
         {
             get => _asset;
             set
@@ -16,7 +16,5 @@
                 }
             }
         }
-
-        public MaterialInputAsset(MaterialInput input) : base(input.Name) { }
     }
 }

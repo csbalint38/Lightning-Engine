@@ -1,5 +1,8 @@
 # v0.3.3-beta - 2025.6.10.
 
+## Editor
+ - Initialize Engine from the Editor
+
 # v0.3.2-beta - 2025.5.27.
 
 ## Editor 

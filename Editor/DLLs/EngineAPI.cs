@@ -26,6 +26,12 @@ namespace Editor.DLLs
         [DllImport(_engineDll, EntryPoint = "add_shader_group")]
         private static extern IdType AddShaderGroup([In] ShaderGroupData data);
 
+        [DllImport(_engineDll, EntryPoint = "initialize_engine")]
+        public static extern EngineInitError InitializeEngine(); // Add parameter if Engine will support multiple APIs
+
+        [DllImport(_engineDll, EntryPoint = "shutdown_engine")]
+        public static extern void ShutdownEngine();
+
         [DllImport(_engineDll, EntryPoint = "load_game_code_dll", CharSet = CharSet.Ansi)]
         public static extern int LoadGameCodeDll(string path);
 
@@ -40,10 +46,10 @@ namespace Editor.DLLs
         public static extern IntPtr GetScriptCreator(string name);
 
         [DllImport(_engineDll, EntryPoint = "create_renderer_surface")]
-        public static extern IdType CreateRendererSurface(IntPtr host, int width, int height);
+        public static extern int CreateRendererSurface(IntPtr host, int width, int height);
 
         [DllImport(_engineDll, EntryPoint = "remove_renderer_surface")]
-        public static extern void RemoveRendererSurface(IdType surfaceId);
+        public static extern void RemoveRendererSurface(int surfaceId);
 
         [DllImport(_engineDll, EntryPoint = "get_window_handle")]
         public static extern IntPtr GetWindowHandle(IdType surfaceId);
@@ -200,6 +206,22 @@ namespace Editor.DLLs
             }
         }
 
-        public static IdType CreateResource(byte[] resourceData, AssetType type) => throw new NotImplementedException();
+        public static IdType CreateResource(byte[] resourceData, AssetType type)
+        {
+            IntPtr data = IntPtr.Zero;
+
+            try
+            {
+                data = Marshal.AllocCoTaskMem(resourceData.Length);
+
+                Marshal.Copy(resourceData, 0, data, resourceData.Length);
+
+                return CreateResource(data, (int)type);
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(data);
+            }
+        }
     }
 }
