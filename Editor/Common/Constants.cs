@@ -12,7 +12,8 @@ namespace Editor.Common
             Assembly
                 .GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                .InformationalVersion;
+                .InformationalVersion
+                .Split('+')[0];
         public const string EnginePath = "$(LIGHTNING_ENGINE)";
         public const string DefaultMaterialSpecularColor = "#253F4B";
         public const string DefaultMaterialDiffuseColor = "#BFCBD1";

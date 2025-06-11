@@ -1,3 +1,8 @@
+# v0.3.4-beta - 2025.6.24.
+
+## UI
+ - Scalar and Vector controls
+
 # v0.3.3-beta - 2025.6.10.
 
 ## Editor

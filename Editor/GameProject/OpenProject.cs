@@ -1,4 +1,5 @@
-﻿using Editor.Common.Enums;
+﻿using Editor.Common;
+using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -54,7 +55,8 @@ namespace Editor.GameProject
                 Assembly
                     .GetExecutingAssembly()
                     .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                    .InformationalVersion;
+                    .InformationalVersion
+                    .Split('+')[0];
 
             WriteProjectData();
 
