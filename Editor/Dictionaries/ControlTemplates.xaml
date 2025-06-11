@@ -215,30 +215,245 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:NumberBox}">
                     <Grid>
-                        <TextBox x:Name="PART_textBox"
-                                 Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=Explicit}"
-                                 Foreground="{TemplateBinding Foreground}"
-                                 Background="{TemplateBinding Background}"
-                                 HorizontalAlignment="Stretch"
-                                 TextAlignment="Center"
-                                 VerticalContentAlignment="Center"
-                                 MinWidth="20">
-                            <TextBox.Style>
-                                <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxStyle}">
+                        <TextBlock x:Name="PART_textBlock"
+                                   Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
                                     <Style.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Cursor" Value="SizeWE"/>
+                                            <Setter Property="Cursor" Value="SizeWE" />
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
-                            </TextBox.Style>
-                        </TextBox>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBox x:Name="PART_textBox"
+                                 BorderThickness="0"
+                                 Padding="0"
+                                 Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                 Foreground="{TemplateBinding Foreground}"
+                                 Visibility="Collapsed"
+                                 Style="{StaticResource TextBoxStyleWithRename}"
+                                 HorizontalAlignment="Left"
+                                 HorizontalContentAlignment="Left"/>
                     </Grid>
                     <ControlTemplate.Triggers>
-                        <DataTrigger Binding="{Binding Value, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
-                            <Setter Property="Text" TargetName="PART_textBox" Value="---"/>
-                            <Setter Property="ToolTip" TargetName="PART_textBox" Value="Mixed Values"/>
+                        <DataTrigger Binding="{Binding Visibility, ElementName=PART_textBox}" Value="Visible">
+                            <Setter Property="Visibility" TargetName="PART_textBlock" Value="Collapsed"/>
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding Value, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
+                            <Setter Property="Foreground"
+                                    TargetName="PART_textBlock"
+                                    Value="{StaticResource Editor.DisabledFontBrush}"/>
+                            <Setter Property="Text" TargetName="PART_textBlock" Value="---"/>
+                            <Setter Property="Cursor" Value="No"/>
+                            <Setter Property="ToolTip" TargetName="PART_textBlock" Value="Mixed values"/>
+                            <Setter Property="MinWidth" TargetName="PART_textBlock" Value="20"/>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type controls:ScalarBox}" x:Key="{x:Type controls:ScalarBox}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}"/>
+        <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush2}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush5}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="ToolTipService.InitialShowDelay" Value="3000"/>
+        <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:ScalarBox}">
+                    <Border x:Name="border"
+                            SnapsToDevicePixels="True"
+                            Margin="0,2,0,3"
+                            Background="{TemplateBinding Background}"
+                            Padding="5,2"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            CornerRadius="10"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <Grid x:Name="grid" MinWidth="50">
+                            <TextBlock x:Name="PART_textBlock"
+                                       Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
+                                       HorizontalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Cursor" Value="SizeWE"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBox x:Name="PART_textBox"
+                                     BorderThickness="0"
+                                     Padding="0"
+                                     Text="{Binding FallbackValue, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=Explicit}"
+                                     Foreground="{TemplateBinding Foreground}"
+                                     Visibility="Collapsed"
+                                     Style="{StaticResource TextBoxStyleWithRename}"
+                                     HorizontalContentAlignment="Center"
+                                     HorizontalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="BorderBrush"
+                                    TargetName="border"
+                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" TargetName="grid" Value="0.5"/>
+                        </Trigger>
+                        <DataTrigger Binding="{Binding Visibility, ElementName=PART_textBox}" Value="Visible">
+                            <Setter Property="Visibility" TargetName="PART_textBlock" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Value, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
+                            <Setter Property="Background"
+                                    TargetName="PART_textBlock"
+                                    Value="{StaticResource Editor.DisabledFontBrush}"/>
+                            <Setter Property="ToolTip" TargetName="PART_textBlock" Value="Mixed values"/>
+                            <Setter Property="MinWidth" TargetName="PART_textBlock" Value="20"/>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type controls:VectorBox}" x:Key="{x:Type controls:VectorBox}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush2}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush5}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:VectorBox}">
+                    <ControlTemplate.Resources>
+                        <Style TargetType="{x:Type controls:NumberBox}"
+                               BasedOn="{StaticResource {x:Type controls:NumberBox}}">
+                            <Setter Property="MinWidth" Value="20"/>
+                            <Setter Property="ToolTipService.InitialShowDelay" Value="3000"/>
+                            <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
+                            <Setter Property="Multiplier"
+                                    Value="{Binding Multiplier, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        </Style>
+                    </ControlTemplate.Resources>
+                    <Grid x:Name="grid">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="columnDefinition0"/>
+                            <ColumnDefinition x:Name="columnDefinition1"/>
+                            <ColumnDefinition x:Name="columnDefinition2"/>
+                            <ColumnDefinition x:Name="columnDefinition3"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition x:Name="rowDefinition0"/>
+                            <RowDefinition x:Name="rowDefinition1"/>
+                            <RowDefinition x:Name="rowDefinition2"/>
+                            <RowDefinition x:Name="rowDefinition3"/>
+                        </Grid.RowDefinitions>
+                        <Border x:Name="nbX"
+                                CornerRadius="3"
+                                Background="{StaticResource Editor.BackgroundBrush1}"
+                                Margin="2,0,2,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="X"
+                                           Foreground="{StaticResource Editor.RedBrush}"
+                                           FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="5,0,5,0"/>
+                                <controls:NumberBox Value="{Binding X, RelativeSource={RelativeSource TemplatedParent}}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="nbY"
+                                CornerRadius="3"
+                                Background="{StaticResource Editor.BackgroundBrush1}"
+                                Margin="2,0,2,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Y"
+                                           Foreground="{StaticResource Editor.GreenBrush}"
+                                           FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="5,0,5,0"/>
+                                <controls:NumberBox Value="{Binding Y, RelativeSource={RelativeSource TemplatedParent}}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="nbZ"
+                                CornerRadius="3"
+                                Background="{StaticResource Editor.BackgroundBrush1}"
+                                Margin="2,0,2,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Z"
+                                           Foreground="{StaticResource Editor.BlueBrush}"
+                                           FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="5,0,5,0"/>
+                                <controls:NumberBox Value="{Binding Z, RelativeSource={RelativeSource TemplatedParent}}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="nbAlpha"
+                                CornerRadius="3"
+                                Background="{StaticResource Editor.BackgroundBrush1}"
+                                Margin="2,0,2,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="A"
+                                           Foreground="{StaticResource Editor.FontBrush}"
+                                           FontSize="12"
+                                           VerticalAlignment="Center"
+                                           Margin="5,0,5,0"/>
+                                <controls:NumberBox Value="{Binding Alpha, RelativeSource={RelativeSource TemplatedParent}}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="0,0,5,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}" Value="Vertical">
+                            <Setter Property="Grid.Row" TargetName="nbX" Value="0"/>
+                            <Setter Property="Grid.Row" TargetName="nbY" Value="1"/>
+                            <Setter Property="Grid.Row" TargetName="nbZ" Value="2"/>
+                            <Setter Property="Grid.Row" TargetName="nbAlpha" Value="3"/>
+                            <Setter Property="Width" TargetName="columnDefinition1" Value="auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition2" Value="auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition3" Value="auto"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}"
+                                     Value="Horizontal">
+                            <Setter Property="Grid.Column" TargetName="nbX" Value="0"/>
+                            <Setter Property="Grid.Column" TargetName="nbY" Value="1"/>
+                            <Setter Property="Grid.Column" TargetName="nbZ" Value="2"/>
+                            <Setter Property="Grid.Column" TargetName="nbAlpha" Value="3"/>
+                            <Setter Property="Height" TargetName="rowDefinition1" Value="auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition2" Value="auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition3" Value="auto"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}" Value="Vector2">
+                            <Setter Property="Width" TargetName="columnDefinition2" Value="auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition3" Value="auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition2" Value="auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition3" Value="auto"/>
+                            <Setter Property="Visibility" TargetName="nbZ" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}" Value="Vector3">
+                            <Setter Property="Width" TargetName="columnDefinition3" Value="auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition3" Value="auto"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}" Value="Vector4">
+                            <Setter Property="Visibility" TargetName="nbAlpha" Value="Visible"/>
+                        </DataTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" TargetName="grid" Value="0.5"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

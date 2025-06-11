@@ -55,7 +55,8 @@ namespace Editor.GameProject
                 Assembly
                     .GetExecutingAssembly()
                     .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-                    .InformationalVersion;
+                    .InformationalVersion
+                    .Split('+')[0];
 
             WriteProjectData();
 

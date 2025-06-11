@@ -4,27 +4,42 @@ using System.Windows.Input;
 
 namespace Editor.Common.Controls
 {
+    [TemplatePart(Name = "PART_textBlock", Type = typeof(TextBlock))]
     [TemplatePart(Name = "PART_textBox", Type = typeof(TextBox))]
-    internal class NumberBox : Control
+    public class NumberBox : Control
     {
-        public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register(
-                nameof(Value),
-                typeof(string),
-                typeof(NumberBox),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
-        );
-
         private double _originalValue;
         private double _mouseXStart;
         private double _multiplier;
         private bool _captured = false;
         private bool _valueChanged = false;
 
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register(
+                nameof(Value),
+                typeof(string),
+                typeof(NumberBox),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
+            );
+
+        public static readonly DependencyProperty MultiplierProperty =
+            DependencyProperty.Register(
+                nameof(Multiplier),
+                typeof(double),
+                typeof(NumberBox),
+                new PropertyMetadata(1.0)
+            );
+
         public string Value
         {
             get => (string)GetValue(ValueProperty);
             set => SetValue(ValueProperty, value);
+        }
+
+        public double Multiplier
+        {
+            get => (double)GetValue(MultiplierProperty);
+            set => SetValue(MultiplierProperty, value);
         }
 
         static NumberBox()
@@ -36,27 +51,36 @@ namespace Editor.Common.Controls
         {
             base.OnApplyTemplate();
 
-            if(GetTemplateChild("PART_textBox") is TextBox tb)
+            if(GetTemplateChild("PART_textBlock") is TextBlock tb)
             {
-                tb.PreviewMouseLeftButtonDown += OnMouseLeftButtonDown;
-                tb.PreviewMouseLeftButtonUp += OnMouseLeftButtonUp;
-                tb.PreviewMouseMove += OnMouseMove;
+                tb.MouseLeftButtonDown += OnMouseLeftButtonDown;
+                tb.MouseLeftButtonUp += OnMouseLeftButtonUp;
+                tb.MouseMove += OnMouseMove;
+                tb.LostKeyboardFocus += OnLostKeyboardFocus;
             }
+        }
+
+        private void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            var tb = sender as TextBlock;
+
+            tb.Visibility = Visibility.Collapsed;
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
-            if(_captured)
+            if (_captured)
             {
                 var mouseX = e.GetPosition(this).X;
                 var d = mouseX - _mouseXStart;
 
-                if(Math.Abs(d) > SystemParameters.MinimumHorizontalDragDistance)
+                if (Math.Abs(d) > SystemParameters.MinimumHorizontalDragDistance)
                 {
-                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) _multiplier = 0.01;
-                    else if(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) _multiplier = 1;
+                    if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) _multiplier = .01;
+                    else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)) _multiplier = 1;
+                    else _multiplier = .1;
 
-                    var newValue = _originalValue + (d * _multiplier);
+                    var newValue = _originalValue + (d * _multiplier * Multiplier);
 
                     Value = newValue.ToString("0.#####");
 
@@ -77,6 +101,7 @@ namespace Editor.Common.Controls
 
                 if(!_valueChanged && GetTemplateChild("PART_textBox") is TextBox tb)
                 {
+                    tb.Visibility = Visibility.Visible;
                     tb.Focus();
                     tb.SelectAll();
                 }
@@ -84,8 +109,9 @@ namespace Editor.Common.Controls
         }
 
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
+        { 
             double.TryParse(Value, out _originalValue);
+
             Mouse.Capture(sender as UIElement);
 
             _captured = true;
@@ -93,7 +119,6 @@ namespace Editor.Common.Controls
 
             e.Handled = true;
 
-            _multiplier = 0.1;
             _mouseXStart = e.GetPosition(this).X;
         }
     }

@@ -59,7 +59,7 @@
                     Key="F5"
                     Modifiers="Shift"/>
     </UserControl.InputBindings>
-    <Grid Background="{StaticResource Editor.BackgroundBrush1}">
+    <Grid Background="{StaticResource Editor.BackgroundBrush5}">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
@@ -139,7 +139,9 @@
                                              Margin="5,0,5,0"/>
                 </StackPanel>
             </Button>
-            <controls:NumberBox Value="0" Foreground="AntiqueWhite"/>
+            <controls:NumberBox Value="0" Foreground="AntiqueWhite" Width="50"/>
+            <controls:VectorBox X="0" Y="15" Z="110" Alpha="55" VectorType="Vector4" Foreground="White" Margin="5"/>
+            <controls:VectorBox X="0" Y="15" Z="55" VectorType="Vector3" Foreground="White" Margin="5" BorderThickness="0"/>
         </StackPanel>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
