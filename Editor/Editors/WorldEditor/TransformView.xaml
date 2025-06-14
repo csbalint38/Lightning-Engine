@@ -4,88 +4,57 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:controls="clr-namespace:Editor.Common.Controls"
              xmlns:vm="clr-namespace:Editor.Components"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=vm:MSTransform, IsDesignTimeCreatable=True}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <local:ComponentView>
+    <local:ComponentView Header="TRANSFORM" HorizontalAlignment="Stretch">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="78" />
-                <ColumnDefinition />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <TextBlock Text="Position"
                        Grid.Column="0"
-                       Grid.Row="0" />
-            <StackPanel Orientation="Horizontal"
-                        Grid.Row="0"
-                        Grid.Column="1">
-                <TextBox Text="{Binding PosX}"
-                         Width="30"
-                         LostKeyboardFocus="VbPosition_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbPosition_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbPosition_PreviewMouseLeftButtonUp"/>
-                <TextBox Text="{Binding PosY}"
-                         Width="30"
-                         LostKeyboardFocus="VbPosition_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbPosition_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbPosition_PreviewMouseLeftButtonUp"/>
-                <TextBox Text="{Binding PosZ}"
-                         Width="30"
-                         LostKeyboardFocus="VbPosition_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbPosition_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbPosition_PreviewMouseLeftButtonUp"/>
-            </StackPanel>
+                       Grid.Row="0"/>
+            <controls:VectorBox Grid.Column="1"
+                                X="{Binding PosX}"
+                                Y="{Binding PosY}"
+                                Z="{Binding PosZ}"
+                                Margin="0,0,0,5"
+                                LostKeyboardFocus="VbPosition_LostKeyboardFocus"
+                                PreviewMouseLeftButtonDown="VbPosition_PreviewMouseLeftButtonDown"
+                                PreviewMouseLeftButtonUp="VbPosition_PreviewMouseLeftButtonUp"/>
             <TextBlock Text="Rotation"
                        Grid.Column="0"
                        Grid.Row="1" />
-            <StackPanel Orientation="Horizontal"
-                        Grid.Row="1"
-                        Grid.Column="1">
-                <TextBox Text="{Binding RotX}"
-                         Width="30"
-                         LostKeyboardFocus="VbRotation_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbRotation_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbRotation_PreviewMouseLeftButtonUp"/>
-                <TextBox Text="{Binding RotY}"
-                         Width="30"
-                         LostKeyboardFocus="VbRotation_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbRotation_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbRotation_PreviewMouseLeftButtonUp"/>
-                <TextBox Text="{Binding RotZ}"
-                         Width="30"
-                         LostKeyboardFocus="VbRotation_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbRotation_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbRotation_PreviewMouseLeftButtonUp"/>
-            </StackPanel>
+            <controls:VectorBox Grid.Row="1"
+                                Grid.Column="1"
+                                X="{Binding RotX}"
+                                Y="{Binding RotY}"
+                                Z="{Binding RotZ}"
+                                Margin="0,0,0,5"
+                                LostKeyboardFocus="VbRotation_LostKeyboardFocus"
+                                PreviewMouseLeftButtonDown="VbRotation_PreviewMouseLeftButtonDown"
+                                PreviewMouseLeftButtonUp="VbRotation_PreviewMouseLeftButtonUp"/>
             <TextBlock Text="Scale"
                        Grid.Column="0"
                        Grid.Row="2" />
-            <StackPanel Orientation="Horizontal"
-                        Grid.Row="2"
-                        Grid.Column="1">
-                <TextBox Text="{Binding ScaleX}"
-                         Width="30"
-                         LostKeyboardFocus="VbScale_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbScale_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbScale_PreviewMouseLeftButtonUp"/>
-                <TextBox Text="{Binding ScaleY}"
-                         Width="30"
-                         LostKeyboardFocus="VbScale_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbScale_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbScale_PreviewMouseLeftButtonUp"/>
-                <TextBox Text="{Binding ScaleZ}"
-                         Width="30"
-                         LostKeyboardFocus="VbScale_LostKeyboardFocus"
-                         PreviewMouseLeftButtonDown="VbScale_PreviewMouseLeftButtonDown"
-                         PreviewMouseLeftButtonUp="VbScale_PreviewMouseLeftButtonUp"/>
-            </StackPanel>
+            <controls:VectorBox Grid.Row="2"
+                                Grid.Column="1"
+                                X="{Binding ScaleX}"
+                                Y="{Binding ScaleY}"
+                                Z="{Binding ScaleZ}"
+                                Margin="0,0,0,5"
+                                LostKeyboardFocus="VbScale_LostKeyboardFocus"
+                                PreviewMouseLeftButtonDown="VbScale_PreviewMouseLeftButtonDown"
+                                PreviewMouseLeftButtonUp="VbScale_PreviewMouseLeftButtonUp"/>
         </Grid>
     </local:ComponentView>
 </UserControl>

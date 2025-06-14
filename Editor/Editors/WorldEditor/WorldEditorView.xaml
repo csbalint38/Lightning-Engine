@@ -139,14 +139,11 @@
                                              Margin="5,0,5,0"/>
                 </StackPanel>
             </Button>
-            <controls:NumberBox Value="0" Foreground="AntiqueWhite" Width="50"/>
-            <controls:VectorBox X="0" Y="15" Z="110" Alpha="55" VectorType="Vector4" Foreground="White" Margin="5"/>
-            <controls:VectorBox X="0" Y="15" Z="55" VectorType="Vector3" Foreground="White" Margin="5" BorderThickness="0"/>
         </StackPanel>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="250" />
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
@@ -198,7 +195,7 @@
                     <content:ContentBrowserView AllowImport="True"
                                                 AllowDrop="True"
                                                 x:Name="contentBrowserView"
-                                                Loaded="contentBrowserView_Loaded"
+                                                Loaded="ContentBrowserView_Loaded"
                                                 IsVisibleChanged="ContentBrowserView_IsVisibleChanged"/>
                     <GridSplitter Grid.Column="1"/>
                     <TabControl Grid.Column="1"

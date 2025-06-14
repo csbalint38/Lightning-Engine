@@ -4,7 +4,8 @@
                     xmlns:opt="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
                     xmlns:converters="clr-namespace:Editor.Utilities.Converters"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                    xmlns:controls="clr-namespace:Editor.Common.Controls">
+                    xmlns:controls="clr-namespace:Editor.Common.Controls"
+                    xmlns:enums="clr-namespace:Editor.Common.Enums">
     <sys:Double x:Key="AssetIconWidth">90</sys:Double>
     <converters:HeightToCornerRadiusConverter x:Key="heightToCornerRadiusConverter"/>
     <Style x:Key="FocusVisual">
@@ -236,8 +237,8 @@
                                  Foreground="{TemplateBinding Foreground}"
                                  Visibility="Collapsed"
                                  Style="{StaticResource TextBoxStyleWithRename}"
-                                 HorizontalAlignment="Left"
-                                 HorizontalContentAlignment="Left"/>
+                                 HorizontalAlignment="Stretch"
+                                 HorizontalContentAlignment="Stretch"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <DataTrigger Binding="{Binding Visibility, ElementName=PART_textBox}" Value="Visible">
@@ -250,7 +251,7 @@
                             <Setter Property="Text" TargetName="PART_textBlock" Value="---"/>
                             <Setter Property="Cursor" Value="No"/>
                             <Setter Property="ToolTip" TargetName="PART_textBlock" Value="Mixed values"/>
-                            <Setter Property="MinWidth" TargetName="PART_textBlock" Value="20"/>
+                            <Setter Property="MinWidth" TargetName="PART_textBlock" Value="50"/>
                         </DataTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -276,7 +277,7 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             CornerRadius="10"
                             BorderThickness="{TemplateBinding BorderThickness}">
-                        <Grid x:Name="grid" MinWidth="50">
+                        <Grid x:Name="grid" MinWidth="20">
                             <TextBlock x:Name="PART_textBlock"
                                        Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
                                        HorizontalAlignment="Center">
@@ -360,52 +361,75 @@
                                 CornerRadius="3"
                                 Background="{StaticResource Editor.BackgroundBrush1}"
                                 Margin="2,0,2,0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Text="X"
                                            Foreground="{StaticResource Editor.RedBrush}"
                                            FontSize="12"
+                                           FontWeight="Bold"
                                            VerticalAlignment="Center"
                                            Margin="5,0,5,0"/>
                                 <controls:NumberBox Value="{Binding X, RelativeSource={RelativeSource TemplatedParent}}"
                                                     VerticalAlignment="Center"
-                                                    Margin="0,0,5,0"/>
-                            </StackPanel>
+                                                    Margin="0,0,5,0"
+                                                    Grid.Column="1"/>
+                            </Grid>
                         </Border>
                         <Border x:Name="nbY"
                                 CornerRadius="3"
                                 Background="{StaticResource Editor.BackgroundBrush1}"
                                 Margin="2,0,2,0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Text="Y"
                                            Foreground="{StaticResource Editor.GreenBrush}"
                                            FontSize="12"
+                                           FontWeight="Bold"
                                            VerticalAlignment="Center"
                                            Margin="5,0,5,0"/>
                                 <controls:NumberBox Value="{Binding Y, RelativeSource={RelativeSource TemplatedParent}}"
                                                     VerticalAlignment="Center"
-                                                    Margin="0,0,5,0"/>
-                            </StackPanel>
+                                                    Margin="0,0,5,0"
+                                                    Grid.Column="1"/>
+                            </Grid>
                         </Border>
                         <Border x:Name="nbZ"
                                 CornerRadius="3"
                                 Background="{StaticResource Editor.BackgroundBrush1}"
                                 Margin="2,0,2,0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Text="Z"
                                            Foreground="{StaticResource Editor.BlueBrush}"
                                            FontSize="12"
                                            VerticalAlignment="Center"
+                                           FontWeight="Bold"
                                            Margin="5,0,5,0"/>
                                 <controls:NumberBox Value="{Binding Z, RelativeSource={RelativeSource TemplatedParent}}"
                                                     VerticalAlignment="Center"
-                                                    Margin="0,0,5,0"/>
-                            </StackPanel>
+                                                    Margin="0,0,5,0"
+                                                    Grid.Column="1"/>
+                            </Grid>
                         </Border>
                         <Border x:Name="nbAlpha"
                                 CornerRadius="3"
                                 Background="{StaticResource Editor.BackgroundBrush1}"
-                                Margin="2,0,2,0">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                Margin="2,0,2,0"
+                                Visibility="Collapsed">
+                            <Grid VerticalAlignment="Center">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Text="A"
                                            Foreground="{StaticResource Editor.FontBrush}"
                                            FontSize="12"
@@ -413,8 +437,9 @@
                                            Margin="5,0,5,0"/>
                                 <controls:NumberBox Value="{Binding Alpha, RelativeSource={RelativeSource TemplatedParent}}"
                                                     VerticalAlignment="Center"
-                                                    Margin="0,0,5,0"/>
-                            </StackPanel>
+                                                    Margin="0,0,5,0"
+                                                    Grid.Column="1"/>
+                            </Grid>
                         </Border>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -423,9 +448,9 @@
                             <Setter Property="Grid.Row" TargetName="nbY" Value="1"/>
                             <Setter Property="Grid.Row" TargetName="nbZ" Value="2"/>
                             <Setter Property="Grid.Row" TargetName="nbAlpha" Value="3"/>
-                            <Setter Property="Width" TargetName="columnDefinition1" Value="auto"/>
-                            <Setter Property="Width" TargetName="columnDefinition2" Value="auto"/>
-                            <Setter Property="Width" TargetName="columnDefinition3" Value="auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition1" Value="Auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition2" Value="Auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition3" Value="Auto"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}"
                                      Value="Horizontal">
@@ -433,22 +458,25 @@
                             <Setter Property="Grid.Column" TargetName="nbY" Value="1"/>
                             <Setter Property="Grid.Column" TargetName="nbZ" Value="2"/>
                             <Setter Property="Grid.Column" TargetName="nbAlpha" Value="3"/>
-                            <Setter Property="Height" TargetName="rowDefinition1" Value="auto"/>
-                            <Setter Property="Height" TargetName="rowDefinition2" Value="auto"/>
-                            <Setter Property="Height" TargetName="rowDefinition3" Value="auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition1" Value="Auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition2" Value="Auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition3" Value="Auto"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}" Value="Vector2">
-                            <Setter Property="Width" TargetName="columnDefinition2" Value="auto"/>
-                            <Setter Property="Width" TargetName="columnDefinition3" Value="auto"/>
-                            <Setter Property="Height" TargetName="rowDefinition2" Value="auto"/>
-                            <Setter Property="Height" TargetName="rowDefinition3" Value="auto"/>
+                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}"
+                                     Value="{x:Static enums:VectorType.Vector2}">
+                            <Setter Property="Width" TargetName="columnDefinition2" Value="Auto"/>
+                            <Setter Property="Width" TargetName="columnDefinition3" Value="Auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition2" Value="Auto"/>
+                            <Setter Property="Height" TargetName="rowDefinition3" Value="Auto"/>
                             <Setter Property="Visibility" TargetName="nbZ" Value="Collapsed"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}" Value="Vector3">
-                            <Setter Property="Width" TargetName="columnDefinition3" Value="auto"/>
+                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}"
+                                     Value="{x:Static enums:VectorType.Vector3}">
+                            <Setter Property="Width" TargetName="columnDefinition3" Value="Auto"/>
                             <Setter Property="Height" TargetName="rowDefinition3" Value="auto"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}" Value="Vector4">
+                        <DataTrigger Binding="{Binding VectorType, RelativeSource={RelativeSource Self}}"
+                                     Value="{x:Static enums:VectorType.Vector4}">
                             <Setter Property="Visibility" TargetName="nbAlpha" Value="Visible"/>
                         </DataTrigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -493,15 +521,11 @@
                                     Property="Background"
                                     Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </MultiTrigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="Selector.IsSelectionActive" Value="True"/>
-                                <Condition Property="IsSelected" Value="True"/>
-                            </MultiTrigger.Conditions>
+                        <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="border"
                                     Property="Background"
                                     Value="{StaticResource Editor.SelectBrush}"/>
-                        </MultiTrigger>
+                        </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsMouseOver" Value="True"/>
@@ -588,6 +612,66 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType="{x:Type CheckBox}">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush1}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush4}"/>
+        <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <Grid>
+                        <Border x:Name="border"
+                                Width="16"
+                                Height="16"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="2"
+                                CornerRadius="3"/>
+                        <Path x:Name="CheckMark"
+                              Data="M2.8,8 L6.2,11.6 L13.2,4.4"
+                              Stroke="{TemplateBinding Foreground}"
+                              StrokeThickness="2"
+                              Visibility="Collapsed"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Top"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="{x:Null}">
+                            <Setter Property="Visibility" TargetName="CheckMark" Value="Visible"/>
+                            <Setter Property="Data" TargetName="CheckMark" Value="M2,8 L14,8"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border"
+                                    Property="Background"
+                                    Value="{StaticResource Editor.BackgroundBrush5}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border"
+                                    Property="Background"
+                                    Value="{StaticResource Editor.BackgroundBrush5}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource Editor.DisabledFontBrush}"/>
+                            <Setter TargetName="border"
+                                    Property="BorderBrush"
+                                    Value="{StaticResource Editor.BackgroundBrush2}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Opacity="0.6" BlurRadius="15" ShadowDepth="2"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="FlatButton" TargetType="{x:Type Button}">
         <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush3}"/>
         <Setter Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush5}"/>
@@ -620,6 +704,51 @@
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="ToggelButtonBase" TargetType="{x:Type ToggleButton}">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="ClickMode" Value="Press"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}"/>
+        <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush2}"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush5}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ToggleButton}">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background"
+                                    TargetName="border"
+                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background"
+                                    TargetName="border"
+                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Opacity="0.6" BlurRadius="15" ShadowDepth="2"/>
             </Setter.Value>
         </Setter>
     </Style>
@@ -934,24 +1063,154 @@
         </Setter>
     </Style>
     <Canvas Opacity="0.2" x:Key="TiledGridBackground">
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="10" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="30" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="50" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="70" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="90" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="10" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="30" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="50" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="70" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="90" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.1"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="20" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="40" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="60" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="0" Y1="0" Y2="100" Canvas.Left="80" Canvas.Top="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="20" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="40" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="60" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Line X1="0" X2="100" Y1="0" Y2="0" Canvas.Top="80" Canvas.Left="0" Stroke="#FFC800" StrokeThickness="0.2"/>
-        <Rectangle Fill="Transparent" Stroke="#FFC800" StrokeThickness="0.3" Width="100" Height="100"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="10"
+              Canvas.Top="0" 
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="30"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="50"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="70"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0" 
+              Y2="100"
+              Canvas.Left="90"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="10"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="30"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="50"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="70"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="90"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.1"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="20"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="40"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="60"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="0"
+              Y1="0"
+              Y2="100"
+              Canvas.Left="80"
+              Canvas.Top="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="20"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="40"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="60"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Line X1="0"
+              X2="100"
+              Y1="0"
+              Y2="0"
+              Canvas.Top="80"
+              Canvas.Left="0"
+              Stroke="{StaticResource Editor.LightningBrush}"
+              StrokeThickness="0.2"/>
+        <Rectangle Fill="Transparent"
+                   Stroke="{StaticResource Editor.LightningBrush}"
+                   StrokeThickness="0.3"
+                   Width="100"
+                   Height="100"/>
     </Canvas>
 </ResourceDictionary>

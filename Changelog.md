@@ -2,6 +2,7 @@
 
 ## UI
  - Scalar and Vector controls
+ - Upgraded visuals for Transform Component
 
 # v0.3.3-beta - 2025.6.10.
 

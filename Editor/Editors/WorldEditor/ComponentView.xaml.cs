@@ -19,14 +19,14 @@ namespace Editor.Editors
 
         public string Header
         {
-            get { return (string)GetValue(HeaderProperty); }
-            set { SetValue(HeaderProperty, value); }
+            get => (string)GetValue(HeaderProperty);
+            set => SetValue(HeaderProperty, value);
         }
 
         public FrameworkElement ComponentContent
         {
-            get { return (FrameworkElement)GetValue(ComponentContentProperty); }
-            set { SetValue(ComponentContentProperty, value); }
+            get => (FrameworkElement)GetValue(ComponentContentProperty);
+            set => SetValue(ComponentContentProperty, value);
         }
 
         public ComponentView()

@@ -42,7 +42,7 @@ namespace Editor.Editors
 
         private void MIOpenProject_Executed(object sender, ExecutedRoutedEventArgs e) => UnloadAndCloseAllWindows();
         private void MIExit_Executed(object sender, ExecutedRoutedEventArgs e) => Application.Current.MainWindow.Close();
-        private void contentBrowserView_Loaded(object sender, RoutedEventArgs e) =>
+        private void ContentBrowserView_Loaded(object sender, RoutedEventArgs e) =>
             ContentBrowserView_IsVisibleChanged(sender, default);
 
         private void ContentBrowserView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)

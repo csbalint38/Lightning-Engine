@@ -7,11 +7,12 @@
              xmlns:local="clr-namespace:Editor.Editors"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Expander IsExpanded="True">
+    <Expander IsExpanded="True"
+              Background="{StaticResource Editor.BackgroundBrush3}">
         <Expander.Style>
             <Style TargetType="{x:Type Expander}">
                 <Setter Property="Foreground"
-                        Value="Black"/>
+                        Value="{StaticResource Editor.FontBrush}"/>
             </Style>
         </Expander.Style>
         <Expander.Header>
@@ -19,6 +20,11 @@
                        FontWeight="Bold"/>
         </Expander.Header>
         <ContentPresenter Content="{Binding ComponentContent, ElementName=componentView}"
-                          Margin="5" />
+                          Margin="5"/>
+        <Expander.Effect>
+            <DropShadowEffect Opacity=".6"
+                              BlurRadius="15"
+                              ShadowDepth="2"/>
+        </Expander.Effect>
     </Expander>
 </UserControl>
