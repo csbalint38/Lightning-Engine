@@ -150,8 +150,6 @@ ipch/
 *.vsp
 *.vspx
 *.sap
-*.sln
-*.vcxproj
 *.vcxproj.filters
 
 # Visual Studio Trace Files
