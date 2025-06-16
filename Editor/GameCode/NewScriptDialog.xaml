@@ -5,49 +5,89 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Editor.GameCode"
         mc:Ignorable="d"
+        Style="{StaticResource LightningDialogStyle}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         Title="New Script"
         Height="250" 
         Width="400">
-    <Border>
-        <Grid>
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Style.Triggers>
-                        <Trigger Property="IsEnabled"
-                                 Value="False">
-                            <Setter Property="Opacity"
-                                    Value=".5"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
-            <TextBlock x:Name="TbMessage"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <StackPanel>
-                <DockPanel>
-                    <TextBlock Text="Script Name"
-                               Width="72"/>
-                    <TextBox x:Name="TbScriptName"
-                             TextChanged="TbScriptName_TextChanged"/>
-                </DockPanel>
-                <DockPanel>
-                    <TextBlock Text="Location"
-                               Width="72"/>
-                    <TextBox x:Name="TbPath"
-                             TextChanged="TbPath_TextChanged"/>
-                </DockPanel>
-            </StackPanel>
-            <StackPanel VerticalAlignment="Bottom">
-                <Button Content="Create" 
-                        IsDefault="True"
-                        Click="Button_ClickAsync"/>
-                <Button Content="Cancel"
-                        IsCancel="True"/>
-            </StackPanel>
+    <Border CornerRadius="3"
+            Background="{StaticResource Editor.BackgroundBrush2}"
+            HorizontalAlignment="Stretch"
+            Margin="10">
+        <Grid Margin="32">
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled"
+                                     Value="False">
+                                <Setter Property="Opacity"
+                                        Value=".5"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock Text="Script Name"
+                                   Width="72"
+                                   Foreground="{StaticResource Editor.FontBrush}"/>
+                        <TextBox x:Name="TbScriptName"
+                                 TextChanged="TbScriptName_TextChanged"/>
+                    </DockPanel>
+                    <DockPanel Margin="0,5,0,5">
+                        <TextBlock Text="Location"
+                                   Width="72"
+                                   Foreground="{StaticResource Editor.FontBrush}"/>
+                        <TextBox x:Name="TbPath"
+                                 TextChanged="TbPath_TextChanged"/>
+                    </DockPanel>
+                    <TextBlock x:Name="TbMessage"
+                               Grid.Row="2"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Center"
+                               Foreground="{StaticResource Editor.RedBrush}"
+                               Margin="0,0,0,20"
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel VerticalAlignment="Bottom"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal">
+                    <Button Content="Ok"
+                            x:Name="BtnOk"
+                            IsDefault="True"
+                            Width="64"
+                            Height="24"
+                            Margin="0,0,32,0"
+                            Style="{StaticResource RoundedFlatButton}"
+                            IsEnabled="{Binding IsValid}"
+                            Click="Button_ClickAsync">
+                        <Button.Effect>
+                            <DropShadowEffect Opacity=".6"
+                                              BlurRadius="15"
+                                              ShadowDepth="2"/>
+                        </Button.Effect>
+                    </Button>
+                    <Button Content="Cancel"
+                            Width="64"
+                            Height="24"
+                            Style="{StaticResource RoundedFlatButton}"
+                            IsCancel="True">
+                        <Button.Effect>
+                            <DropShadowEffect Opacity=".6"
+                                              BlurRadius="15"
+                                              ShadowDepth="2"/>
+                        </Button.Effect>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
+        <Border.Effect>
+            <DropShadowEffect Opacity=".6"
+                              BlurRadius="15"
+                              ShadowDepth="2"/>
+        </Border.Effect>
     </Border>
 </Window>

@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Editor.GameCode
 {
@@ -77,6 +78,10 @@ namespace Editor.GameCode
             {
                 errorMessage = "Script name contains invalid characters.";
             }
+            else if(name.Length > 64)
+            {
+                errorMessage = "Script name can't be longer, than 64 characters.";
+            }
             else if (string.IsNullOrEmpty(path))
             {
                 errorMessage = "Select a valid folder";
@@ -103,7 +108,9 @@ namespace Editor.GameCode
                 isValid = true;
             }
 
+            TbMessage.Foreground = (isValid ? FindResource("Editor.FontBrush") : FindResource("Editor.RedBrush")) as Brush;
             TbMessage.Text = errorMessage;
+            BtnOk.IsEnabled = isValid;
 
             return isValid;
         }

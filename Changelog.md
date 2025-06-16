@@ -2,7 +2,7 @@
 
 ## UI
  - Scalar and Vector controls
- - Upgraded visuals for Transform Component
+ - Upgraded visuals for Transform Component, Engine Path Dialog
 
 # v0.3.3-beta - 2025.6.10.
 

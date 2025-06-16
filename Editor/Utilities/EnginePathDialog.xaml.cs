@@ -32,7 +32,7 @@ namespace Editor.Utilities
             }
             else if (!Directory.Exists(Path.Combine(path, @"Engine\EngineAPI\")))
             {
-                TbMessage.Text = "Unable to fing the engine at the specific location.";
+                TbMessage.Text = "Unable to find the engine at the specific location.";
             }
             else
             {

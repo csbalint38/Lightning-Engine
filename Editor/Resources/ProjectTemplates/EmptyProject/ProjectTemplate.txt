@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
     <LightningIncludePath>{2}</LightningIncludePath>
-    <LightningLibraryPath>{3}\$(Platform)\$(Configuration)</LightningLibraryPath>
+    <LightningLibraryPath>{3}$(Platform)\$(Configuration)</LightningLibraryPath>
   </PropertyGroup>
   <ItemGroup>
     <BuildMacro Include="LightningIncludePath">

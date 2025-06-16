@@ -5,29 +5,76 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Editor.Utilities"
         mc:Ignorable="d"
+        Style="{StaticResource LightningDialogStyle}"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner"
         Title="Lightning Engine Path"
         Height="250" 
         Width="400">
-    <Border>
-        <Grid>
+    <Border CornerRadius="3"
+            Background="{StaticResource Editor.BackgroundBrush2}"
+            HorizontalAlignment="Stretch"
+            Margin="10">
+        <Grid Margin="32,32,32,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="Where is Lightning Engine installed?"
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource LightTextBlockStyle}"
+                       Margin="0,32,0,10"/>
+            <TextBox x:Name="TbPath"
+                     Grid.Row="1"
+                     Width="250"
+                     HorizontalAlignment="Center"
+                     Margin="0,0,0,5"/>
             <TextBlock x:Name="TbMessage"
-                       VerticalAlignment="Center"
-                       HorizontalAlignment="Center"/>
-            <DockPanel>
-                <TextBlock Text="Engine Path"
-                           Width="72"/>
-                <TextBox x:Name="TbPath"/>
-            </DockPanel>
-            <StackPanel VerticalAlignment="Bottom">
-                <Button Content="Ok" 
+                       Grid.Row="2"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Center"
+                       Foreground="{StaticResource Editor.RedBrush}"
+                       Margin="0,0,0,20"
+                       TextWrapping="Wrap"/>
+            <StackPanel Grid.Row="4"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom">
+                <Button Content="Ok"
+                        x:Name="BtnOk"
                         IsDefault="True"
-                        Click="Button_Click"/>
+                        Width="64"
+                        Height="24"
+                        Margin="0,0,32,0"
+                        Style="{StaticResource RoundedFlatButton}"
+                        Click="Button_Click">
+                    <Button.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="2"/>
+                    </Button.Effect>
+                </Button>
                 <Button Content="Cancel"
-                        IsCancel="True"/>
+                        Width="64"
+                        Height="24"
+                        Style="{StaticResource RoundedFlatButton}"
+                        IsCancel="True">
+                    <Button.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="2"/>
+                    </Button.Effect>
+                </Button>
             </StackPanel>
         </Grid>
+        <Border.Effect>
+            <DropShadowEffect Opacity=".6"
+                              BlurRadius="15"
+                              ShadowDepth="2"/>
+        </Border.Effect>
     </Border>
 </Window>

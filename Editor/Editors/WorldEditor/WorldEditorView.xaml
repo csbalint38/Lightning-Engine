@@ -82,50 +82,177 @@
             <MenuItem Header="Window"/>
         </Menu>
         <StackPanel Orientation="Horizontal"
-                    Grid.Row="1">
-            <Button Command="{Binding UndoCommand}">
-                <StackPanel>
-                    <materialDesign:PackIcon Kind="Undo"
-                                             Width="24"
-                                             Height="24"
-                                             Margin="5,0,5,0"/>
-                </StackPanel>
+                    Grid.Row="1"
+                    Background="{StaticResource Editor.BackgroundBrush2}">
+            <Button Command="{Binding UndoCommand}"
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <Button.Content>
+                    <materialDesign:PackIcon Kind="ArrowULeftTop"
+                                             Width="16"
+                                             Height="16"
+                                             Margin="3"/>
+                </Button.Content>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Undo<LineBreak/>Ctrl+Z
+                    </TextBlock>
+                </Button.ToolTip>
             </Button>
-            <Button Command="{Binding RedoCommand}">
-                <StackPanel>
-                    <materialDesign:PackIcon Kind="Redo"
-                                             Width="24"
-                                             Height="24"
-                                             Margin="5,0,5,0"/>
-                </StackPanel>
+            <Button Command="{Binding RedoCommand}"
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <materialDesign:PackIcon Kind="ArrowURightTop"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Redo<LineBreak/>Ctrl+Y
+                    </TextBlock>
+                </Button.ToolTip>
             </Button>
+            <Button Command="{Binding SaveCommand}"
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <materialDesign:PackIcon Kind="ContentSave"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Save<LineBreak/>Ctrl+S
+                    </TextBlock>
+                </Button.ToolTip>
+            </Button>
+            <Border Width="1"
+                    Margin="3,0,3,0"
+                    Background="#80FFFFFF"
+                    Height="22"
+                    VerticalAlignment="Stretch"/>
             <Button x:Name="BtnNewScript"
                     Click="BtnNewScript_Click"
-                    IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}">
-                <StackPanel>
-                    <materialDesign:PackIcon Kind="FileDocument"
-                                             Width="24"
-                                             Height="24"
-                                             Margin="5,0,5,0"/>
-                </StackPanel>
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}"
+                    ToolTip="New Script"
+                    ToolTipService.InitialShowDelay="1000">
+                <materialDesign:PackIcon Kind="FilePlus"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
             </Button>
             <Button x:Name="BtnBuild"
                     Command="{Binding BuildCommand}"
-                    CommandParameter="{StaticResource True}">
-                <StackPanel>
-                    <materialDesign:PackIcon Kind="Build"
-                                             Width="24"
-                                             Height="24"
-                                             Margin="5,0,5,0"/>
-                </StackPanel>
+                    CommandParameter="{StaticResource True}"
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <materialDesign:PackIcon Kind="Build"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Build<LineBreak/>F7<LineBreak/>Ctrl+Shift+B
+                    </TextBlock>
+                </Button.ToolTip>
             </Button>
             <ComboBox x:Name="buildConfig"
                       VerticalAlignment="Center"
-                      Width="72"
+                      Width="78"
+                      BorderThickness="1"
+                      Style="{StaticResource ComboBoxFlatStyle}"
                       SelectedIndex="{Binding BuildConfiguration}">
-                <ComboBoxItem Content="Debug" />
-                <ComboBoxItem Content="Release" />
+                <ComboBoxItem Content="Debug"
+                              HorizontalAlignment="Stretch"/>
+                <ComboBoxItem Content="Release"
+                              HorizontalAlignment="Stretch"/>
             </ComboBox>
+            <Button x:Name="BtnStart"
+                    Command="{Binding DebugStartCommand}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <materialDesign:PackIcon Kind="Play"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+                <Button.Style>
+                    <Style TargetType="{x:Type Button}"
+                           BasedOn="{StaticResource IconButtonWithHover}">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled"
+                                     Value="True">
+                                <Setter Property="Foreground"
+                                        Value="{StaticResource Editor.GreenBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Start<LineBreak/>F5
+                    </TextBlock>
+                </Button.ToolTip>
+            </Button>
+            <Button x:Name="BtnStartWithoutDebugging"
+                    Command="{Binding DebugStartWithoutDebuggingCommand}"
+                    CommandParameter="{StaticResource True}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <materialDesign:PackIcon Kind="PlayOutline"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+                <Button.Style>
+                    <Style TargetType="{x:Type Button}"
+                           BasedOn="{StaticResource IconButtonWithHover}">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled"
+                                     Value="True">
+                                <Setter Property="Foreground"
+                                        Value="{StaticResource Editor.GreenBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Build<LineBreak/>F7<LineBreak/>Ctrl+Shift+B
+                    </TextBlock>
+                </Button.ToolTip>
+            </Button>
+            <Button x:Name="BtnStop"
+                    Command="{Binding DebugStopCommand}"
+                    CommandParameter="{StaticResource True}"
+                    Margin="3"
+                    ToolTipService.InitialShowDelay="500">
+                <materialDesign:PackIcon Kind="Stop"
+                                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+                <Button.Style>
+                    <Style TargetType="{x:Type Button}"
+                           BasedOn="{StaticResource IconButtonWithHover}">
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled"
+                                     Value="True">
+                                <Setter Property="Foreground"
+                                        Value="{StaticResource Editor.RedBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>                        
+                    </Style>
+                </Button.Style>
+                <Button.ToolTip>
+                    <TextBlock TextWrapping="Wrap">
+                        Build<LineBreak/>F7<LineBreak/>Ctrl+Shift+B
+                    </TextBlock>
+                </Button.ToolTip>
+            </Button>
             <Button x:Name="BtnPrimitiveMesh"
                     Content="PrimitiveMesh"
                     Click="BtnPrimitiveMesh_Click"
