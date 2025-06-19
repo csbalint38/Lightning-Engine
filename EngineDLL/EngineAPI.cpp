@@ -79,7 +79,7 @@ EDITOR_INTERFACE EngineInitError::ErrorCode initialize_engine() {
 	return graphics::initialize(graphics::GraphicsPlatform::DIRECT3D12) ? EngineInitError::SUCCEEDED : EngineInitError::GRAPHICS;
 }
 
-EDITOR_INTERFACE void shutdown_engine() { graphics::shutdown; }
+EDITOR_INTERFACE void shutdown_engine() { graphics::shutdown(); }
 
 EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
 	if (game_code_dll) return FALSE;

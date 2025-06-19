@@ -52,7 +52,7 @@ namespace Editor.DLLs
         public static extern void RemoveRendererSurface(int surfaceId);
 
         [DllImport(_engineDll, EntryPoint = "get_window_handle")]
-        public static extern IntPtr GetWindowHandle(IdType surfaceId);
+        public static extern IntPtr GetWindowHandle(int surfaceId);
 
         [DllImport(_engineDll, EntryPoint = "resize_renderer_surface")]
         public static extern void ResizeRenderSurface(int SurfaceId);
