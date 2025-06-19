@@ -9,6 +9,7 @@
 	<XamlDebuggingInformation>True</XamlDebuggingInformation>
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
+	<UseAppHost>False</UseAppHost>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
 	<InformationalVersion>0.3.4-beta</InformationalVersion>
 	<FileVersion>0.3.4.0</FileVersion>
