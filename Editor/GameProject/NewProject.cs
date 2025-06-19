@@ -167,8 +167,8 @@ namespace Editor.GameProject
 
         private void CreateMSVCSolution(ProjectTemplate template, string projectPath)
         {
-            Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "SolutionTemplate.txt")));
-            Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "ProjectTemplate.txt")));
+            Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "SolutionTemplate.xml")));
+            Debug.Assert(File.Exists(Path.Combine(template.TemplatePath, "ProjectTemplate.xml")));
 
             var engineApiPath = @"$(LIGHTNING_ENGINE)Engine\EngineAPI\";
 
@@ -178,7 +178,7 @@ namespace Editor.GameProject
             var _1 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
             var _2 = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
 
-            var solution = File.ReadAllText(Path.Combine(template.TemplatePath, "SolutionTemplate.txt"));
+            var solution = File.ReadAllText(Path.Combine(template.TemplatePath, "SolutionTemplate.xml"));
             solution = string.Format(solution, _0, _1, _2);
 
             File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $"{_0}.sln")), solution);
@@ -186,7 +186,7 @@ namespace Editor.GameProject
             _2 = engineApiPath;
             var _3 = "$(LIGHTNING_ENGINE)";
 
-            var project = File.ReadAllText(Path.Combine(template.TemplatePath, "ProjectTemplate.txt"));
+            var project = File.ReadAllText(Path.Combine(template.TemplatePath, "ProjectTemplate.xml"));
             project = string.Format(project, _0, _1, _2, _3);
 
             File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $@"Code\{_0}.vcxproj")), project);
