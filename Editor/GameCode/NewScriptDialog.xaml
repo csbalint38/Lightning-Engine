@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Editor.GameCode"
+        xmlns:controls="clr-namespace:Editor.Common.Controls"
+        xmlns:local="clr-namespace:Editor.GameCode" 
         mc:Ignorable="d"
         Style="{StaticResource LightningDialogStyle}"
         ResizeMode="NoResize"
@@ -83,6 +84,8 @@
                     </Button>
                 </StackPanel>
             </Grid>
+            <controls:LoadingSpinner x:Name="loadingSpinner"
+                                     Visibility="Collapsed"/>
         </Grid>
         <Border.Effect>
             <DropShadowEffect Opacity=".6"

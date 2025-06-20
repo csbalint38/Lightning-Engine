@@ -1234,6 +1234,581 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style TargetType="{x:Type controls:LoadingSpinner}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:LoadingSpinner}">
+                    <Grid>
+                        <TextBlock Text="Loading...  "
+                                   x:Name="loadingText"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontFamily="Bahnschrift condensed"
+                                   FontSize="24"
+                                   Foreground="{StaticResource Editor.FontBrush}">
+                            <TextBlock.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation From="0.8"
+                                                             To="0"
+                                                             Duration="0:0:0.8"
+                                                             AutoReverse="True"
+                                                             Storyboard.TargetName="loadingText"
+                                                             Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </TextBlock.Triggers>
+                        </TextBlock>
+                        <Canvas Width="130" Height="130" Background="Transparent">
+                            <Ellipse x:Name="el0"
+                                     Width="18"
+                                     Height="18"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="106"
+                                     Canvas.Top="53"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el1"
+                                     Width="16"
+                                     Height="16"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="98.9"
+                                     Canvas.Top="79.5"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el2"
+                                     Width="14"
+                                     Height="14"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="79.5"
+                                     Canvas.Top="98.9"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el3"
+                                     Width="12"
+                                     Height="12"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="53.0"
+                                     Canvas.Top="106.0"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el4"
+                                     Width="10"
+                                     Height="10"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="26.5"
+                                     Canvas.Top="98.9"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el5"
+                                     Width="8"
+                                     Height="8"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="7.1" 
+                                     Canvas.Top="79.5"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el6"
+                                     Width="6"
+                                     Height="6"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="0.0" 
+                                     Canvas.Top="53.0"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el7"
+                                     Width="4"
+                                     Height="4"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="7.1"
+                                     Canvas.Top="26.5"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el8"
+                                     Width="2"
+                                     Height="2"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="26.5"
+                                     Canvas.Top="7.1"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el9"
+                                     Width="0"
+                                     Height="0"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="53.0"
+                                     Canvas.Top="0.0"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el10"
+                                     Width="0"
+                                     Height="0"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="79.5"
+                                     Canvas.Top="7.1"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Ellipse x:Name="el11"
+                                     Width="0"
+                                     Height="0"
+                                     Fill="{StaticResource Editor.LightningBrush}"
+                                     StrokeThickness="0"
+                                     Canvas.Left="98.9"
+                                     Canvas.Top="26.5"
+                                     RenderTransformOrigin="0.5 0.5">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="{StaticResource Editor.Lightning}"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="0"
+                                                      Opacity="1"
+                                                      RenderingBias="Performance"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                            <Canvas.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <!-- Ellipse 0 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el0"
+                                                                           Duration="0:0:1.2"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el0"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el0"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 1 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el1"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.10"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el1"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.10"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el1"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.10"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 2 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el2"
+                                                                           BeginTime="0:0:0.20"
+                                                                           Duration="0:0:1.2"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el2"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.20"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el2"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.20"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 3 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el3"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.30"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el3"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.30"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el3"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.30"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 4 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el4"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.40"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el4"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.40"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el4"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.40"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 5 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el5"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.50"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el5"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.50"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el5"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.50"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 6 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el6"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.60"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el6"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.60"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el6"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.60"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 7 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el7"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.70"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el7"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.70"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el7"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.70"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 8 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el8"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.80"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el8"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.80"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el8"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.80"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 9 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el9"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:0.90"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el9"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.90"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el9"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:0.90"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 10 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el10"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:1"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el10"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:1"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el10"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:1"
+                                                             RepeatBehavior="Forever"/>
+                                            <!-- Ellipse 11 -->
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity"
+                                                                           Storyboard.TargetName="el11"
+                                                                           Duration="0:0:1.2"
+                                                                           BeginTime="0:0:1.1"
+                                                                           RepeatBehavior="Forever">
+                                                <LinearDoubleKeyFrame KeyTime="0%" Value="1"/>
+                                                <LinearDoubleKeyFrame KeyTime="80%" Value="0"/>
+                                                <LinearDoubleKeyFrame KeyTime="100%" Value="0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                            <DoubleAnimation Storyboard.TargetProperty="Width"
+                                                             Storyboard.TargetName="el11"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:1.10"
+                                                             RepeatBehavior="Forever"/>
+                                            <DoubleAnimation Storyboard.TargetProperty="Height"
+                                                             Storyboard.TargetName="el11"
+                                                             From="18"
+                                                             To="0"
+                                                             Duration="0:0:1.2"
+                                                             BeginTime="0:0:1.10"
+                                                             RepeatBehavior="Forever"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Canvas.Triggers>
+                        </Canvas>
+                    </Grid>
+                    <!--Grid>
+                        <Ellipse Width="130"
+                                 Height="130"
+                                 RenderTransformOrigin="0.5 0.5"
+                                 SnapsToDevicePixels="True"
+                                 StrokeDashArray="1.5 2"
+                                 StrokeThickness="9">
+                            <Ellipse.Stroke>
+                                <LinearGradientBrush StartPoint="0,0"
+                                                     EndPoint="31.5,0"
+                                                     SpreadMethod="Repeat"
+                                                     MappingMode="Absolute">
+                                    <GradientStop Color="#FF007ACC" Offset="0.0"/>
+                                    <GradientStop Color="#00007ACC" Offset="0.2"/>
+                                </LinearGradientBrush>
+                            </Ellipse.Stroke>
+                            <Ellipse.RenderTransform>
+                                <RotateTransform x:Name="rotation" Angle="0"/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation From="0"
+                                                             To="360"
+                                                             Duration="0:0:4"
+                                                             Storyboard.TargetName="rotation"
+                                                             Storyboard.TargetProperty="Angle"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <TextBlock Text="Loading"
+                                   x:Name="loadingText"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontFamily="Bahnschrift condensed"
+                                   FontSize="24"
+                                   Foreground="{StaticResource Editor.FontBrush}">
+                            <TextBlock.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation From="0.8"
+                                                             To="0"
+                                                             Duration="0:0:0.8"
+                                                             AutoReverse="True"
+                                                             Storyboard.TargetName="loadingText"
+                                                             Storyboard.TargetProperty="Opacity"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </TextBlock.Triggers>
+                        </TextBlock>
+                    </Grid-->
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Canvas Opacity="0.2" x:Key="TiledGridBackground">
         <Line X1="0"
               X2="0"

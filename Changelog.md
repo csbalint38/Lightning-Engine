@@ -3,6 +3,7 @@
 ## UI
  - Scalar and Vector controls
  - Upgraded visuals for Transform Component, Engine Path Dialog, New Script Dialog
+ - Loading animation
 
 ## Editor
  - Custom .NET App host application to fix engine initialization error
