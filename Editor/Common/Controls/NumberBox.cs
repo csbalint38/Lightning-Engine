@@ -19,7 +19,11 @@ namespace Editor.Common.Controls
                 nameof(Value),
                 typeof(string),
                 typeof(NumberBox),
-                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault)
+                new FrameworkPropertyMetadata(
+                    null,
+                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    new PropertyChangedCallback(OnValueChanged)
+                )
             );
 
         public static readonly DependencyProperty MultiplierProperty =
@@ -28,6 +32,14 @@ namespace Editor.Common.Controls
                 typeof(double),
                 typeof(NumberBox),
                 new PropertyMetadata(1.0)
+            );
+
+        public static readonly RoutedEvent ValueChangedEvent =
+            EventManager.RegisterRoutedEvent(
+                nameof(ValueChanged),
+                RoutingStrategy.Bubble,
+                typeof(RoutedEventHandler),
+                typeof(NumberBox)
             );
 
         public string Value
@@ -40,6 +52,12 @@ namespace Editor.Common.Controls
         {
             get => (double)GetValue(MultiplierProperty);
             set => SetValue(MultiplierProperty, value);
+        }
+
+        public event RoutedEventHandler ValueChanged
+        {
+            add => AddHandler(ValueChangedEvent, value);
+            remove => RemoveHandler(ValueChangedEvent, value);
         }
 
         static NumberBox()
@@ -59,6 +77,9 @@ namespace Editor.Common.Controls
                 tb.LostKeyboardFocus += OnLostKeyboardFocus;
             }
         }
+
+        private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
+            (d as NumberBox).RaiseEvent(new RoutedEventArgs(ValueChangedEvent));
 
         private void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {

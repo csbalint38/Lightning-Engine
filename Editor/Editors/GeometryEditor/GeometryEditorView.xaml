@@ -74,19 +74,19 @@
                         IsHitTestVisible="False">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding MeshRenderer.CameraPosition.X, StringFormat=F5}"
-                               Foreground="Red"/>
+                               Foreground="{StaticResource Editor.RedBrush}"/>
                     <TextBlock Text="{Binding MeshRenderer.CameraPosition.Y, StringFormat=F5}"
                                Margin="10,0"
-                               Foreground="Green"/>
+                               Foreground="{StaticResource Editor.GreenBrush}"/>
                     <TextBlock Text="{Binding MeshRenderer.CameraPosition.Z, StringFormat=F5}"
-                               Foreground="Blue"/>
+                               Foreground="{StaticResource Editor.BlueBrush}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding MeshRenderer.Meshes[0].Positions.Count}"
-                               Foreground="Orange"/>
+                               Foreground="{StaticResource Editor.LightningBrush}"/>
                     <TextBlock Text="{Binding MeshRenderer.Meshes[0].Indices.Count}"
                                Margin="10,0"
-                               Foreground="Orange"/>
+                               Foreground="{StaticResource Editor.LightningBrush}"/>
                 </StackPanel>
             </StackPanel>
         </Grid>

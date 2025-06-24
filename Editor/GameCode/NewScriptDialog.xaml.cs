@@ -118,7 +118,7 @@ namespace Editor.GameCode
 
         private static void CreateScript(string name, string path, string solution, string projectName)
         {
-            Thread.Sleep(300000000);
+            //Thread.Sleep(300000000);
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 

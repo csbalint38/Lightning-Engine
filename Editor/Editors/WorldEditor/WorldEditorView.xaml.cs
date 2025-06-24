@@ -30,7 +30,7 @@ namespace Editor.Editors
         private void BtnPrimitiveMesh_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new PrimitiveMeshDialog();
-            dialog.Show();
+            dialog.ShowDialog();
         }
 
         private void MINewProject_Executed(object sender, ExecutedRoutedEventArgs e)
