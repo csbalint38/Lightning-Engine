@@ -1,4 +1,5 @@
-﻿using Editor.Common.Enums;
+﻿using Editor.Common.Controls;
+using Editor.Common.Enums;
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
 using Editor.Editors;
@@ -36,7 +37,7 @@ namespace Editor.Content
             var uris = new List<Uri>
             {
                 new("pack://application:,,,/Resources/PlaneTexture.png"),
-                new("pack://application:,,,/Resources/SphereUvChecker.png"),
+                new("pack://application:,,,/Resources/CubeTexture.png"),
                 new("pack://application:,,,/Resources/SphereUvChecker.png"),
             };
 
@@ -64,6 +65,10 @@ namespace Editor.Content
 
         private void CbPrimitiveType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdatePrimitive();
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => UpdatePrimitive();
+        private void ScalarBox_ValueChanged(object sender, RoutedEventArgs e)
+        {
+            UpdatePrimitive();
+        }
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e) => UpdatePrimitive();
 
         private void UpdatePrimitive()
@@ -122,10 +127,16 @@ namespace Editor.Content
             CBTexture_Click(CBTexture, null);
         }
 
+        private float Value(ScalarBox tb, float min)
+        {
+            float.TryParse(tb.Value, out var result);
+
+            return Math.Max(result, min);
+        }
+
         private float Value(TextBox tb, float min)
         {
             float.TryParse(tb.Text, out var result);
-
             return Math.Max(result, min);
         }
 

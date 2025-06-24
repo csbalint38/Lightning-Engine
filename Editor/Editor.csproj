@@ -41,6 +41,9 @@
     <Content Include="Resources\CodeTemplates\h.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Resources\CubeTexture.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Resources\FolderBig.png" />
     <Resource Include="Resources\FolderSmall.png" />
     <Resource Include="Resources\MaterialEditor\DefaultMaterialShaders.hlsl" />
@@ -58,12 +61,16 @@
 		<Content Include="Resources\ProjectTemplates\**" Link=".\Resources\ProjectTemplates\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="Resources\CubeTexture.png" />
+	</ItemGroup>
+
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<PropertyGroup>
 			<NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(NETCoreSdkRuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(NETCoreSdkRuntimeIdentifier)/native</NetHostDir>
 		</PropertyGroup>
-		<Delete Files="$(OutDir)$(TargetName).exe"/>
-		<Exec Command="&quot;$(MSBuildBinPath)\msbuild.exe&quot; -noAutoRsp -nologo -verbosity:minimal -p:SolutionDir=$(SolutionDir) -p:Configuration=$(Configuration) -p:Platform=$(Platform) -p:NetHostDir=&quot;$(NetHostDir)&quot; -p:AppName=$(TargetName) &quot;$(SolutionDir)EditorLauncher\EditorLauncher.vcxproj&quot;"/>
-		<Copy SourceFiles="$(NetHostDir)/nethost.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true"/>
+		<Delete Files="$(OutDir)$(TargetName).exe" />
+		<Exec Command="&quot;$(MSBuildBinPath)\msbuild.exe&quot; -noAutoRsp -nologo -verbosity:minimal -p:SolutionDir=$(SolutionDir) -p:Configuration=$(Configuration) -p:Platform=$(Platform) -p:NetHostDir=&quot;$(NetHostDir)&quot; -p:AppName=$(TargetName) &quot;$(SolutionDir)EditorLauncher\EditorLauncher.vcxproj&quot;" />
+		<Copy SourceFiles="$(NetHostDir)/nethost.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
 	</Target>	
 </Project>

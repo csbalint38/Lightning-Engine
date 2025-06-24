@@ -5,13 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Editor.Content"
         xmlns:common="clr-namespace:Editor.Common.Enums"
+        xmlns:controls="clr-namespace:Editor.Common.Controls"
         xmlns:util="clr-namespace:Editor.Utilities.Converters"
         xmlns:ed="clr-namespace:Editor.Editors"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
+        Style="{StaticResource LightningWindowStyle}"
         ResizeMode="NoResize"
         UseLayoutRounding="True"
-        Title="Primitive Mesh" Height="600" Width="800">
+        Title="Primitive Mesh"
+        Height="600"
+        Width="800">
     <Window.DataContext>
         <ed:GeometryEditor/>
     </Window.DataContext>
@@ -25,23 +29,32 @@
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
     </Window.Resources>
-    <DockPanel>
+    <DockPanel Background="{StaticResource Editor.BackgroundBrush1}">
         <Border Height="32"
                 DockPanel.Dock="Top"
-                VerticalAlignment="Top">
-            <StackPanel Orientation="Horizontal">
-                <ComboBox SelectedIndex="0"
+                VerticalAlignment="Top"
+                Background="{StaticResource Editor.BackgroundBrush2}"
+                Margin="0,0,0,1">
+            <StackPanel Orientation="Horizontal"
+                        Margin="5">
+                <ComboBox SelectedIndex="2"
                           Width="100"
                           VerticalAlignment="Center"
                           x:Name="CbPrimitiveType"
                           ItemsSource="{Binding Source={StaticResource dataFromEnum}}"
+                          Style="{StaticResource ComboBoxFlatStyle}"
                           SelectionChanged="CbPrimitiveType_SelectionChanged">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Converter={StaticResource enumValueConverter}}"/>
+                            <TextBlock Text="{Binding Converter={StaticResource enumValueConverter}}"
+                                       HorizontalAlignment="Stretch"/>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <TextBlock Text="Show texture"
+                           Foreground="{StaticResource Editor.FontBrush}"
+                           VerticalAlignment="Center"
+                           Margin="15,0,5,0"/>
                 <CheckBox x:Name="CBTexture"
                           Content="Show texture"
                           VerticalAlignment="Center"
@@ -56,7 +69,7 @@
                                   MaxWidth="200"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <StackPanel>
+            <StackPanel Background="{StaticResource Editor.BackgroundBrush2}">
                 <StackPanel.Style>
                     <Style TargetType="{x:Type StackPanel}">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -69,14 +82,19 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <Grid Margin="0,5">
-                    <Border>
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
+                    <Border CornerRadius="3"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
+                            Margin="5">
                         <StackPanel Margin="5,15,5,15">
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Width"
                                            Width="40"
                                            DockPanel.Dock="Left"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource Editor.FontBrush}"/>
                                 <TextBox Text="{Binding Path=Value, ElementName=SldPlaneX}"
                                          Width="30"
                                          DockPanel.Dock="Right"/>
@@ -89,11 +107,12 @@
                                         x:Name="SldPlaneX"
                                         ValueChanged="Slider_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Length"
                                            Width="40"
                                            DockPanel.Dock="Left"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource Editor.FontBrush}"/>
                                 <TextBox Text="{Binding Path=Value, ElementName=SldPlaneZ}"
                                          Width="30"
                                          DockPanel.Dock="Right"/>
@@ -108,48 +127,77 @@
                             </DockPanel>
                         </StackPanel>
                     </Border>
-                    <Label Content="Segents"
+                    <Label Content="Segments"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
-                           Padding="5,0"/>
+                           Margin="5"
+                           Padding="5,0"
+                           Panel.ZIndex="5"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Grid Margin="0,5">
-                    <Border>
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
+                    <Border CornerRadius="3"
+                            BorderThickness="1"
+                            Margin="5"
+                            BorderBrush="{StaticResource Editor.FontBrush}">
                         <StackPanel Margin="5,15,5,15">
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Width"
                                            Width="40"
                                            DockPanel.Dock="Left"
-                                           VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbWidthPlane"
-                                         Width="30"
-                                         TextChanged="TextBox_TextChanged"
-                                         DockPanel.Dock="Right"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource Editor.FontBrush}"/>
+                                <controls:ScalarBox x:Name="TbWidthPlane"
+                                                    Value="1"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Length"
                                            Width="40"
                                            DockPanel.Dock="Left"
-                                           VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbLengthPlane"
-                                         Width="30"
-                                         TextChanged="TextBox_TextChanged"
-                                         DockPanel.Dock="Right"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource Editor.FontBrush}"/>
+                                <controls:ScalarBox x:Name="TbLengthPlane"
+                                                    Value="1"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
                         </StackPanel>
                     </Border>
                     <Label Content="Size"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
-                           Padding="5,0"/>
+                           Margin="5"
+                           Padding="5,0"
+                           Foreground="{StaticResource Editor.LightningBrush}"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Button Content="Create" Click="Button_Click"/>
+                <Button Grid.Row="0"
+                        Padding="16,4,16,4"
+                        Margin="0,5"
+                        VerticalAlignment="Center"
+                        Focusable="False"
+                        HorizontalAlignment="Center"
+                        Click="Button_Click"
+                        Style="{StaticResource AccentButton}">
+                    <Button.Content>
+                        <TextBlock Text="Create"
+                                   FontWeight="DemiBold"/>
+                    </Button.Content>
+                </Button>
             </StackPanel>
-            <StackPanel>
+            <StackPanel Background="{StaticResource Editor.BackgroundBrush2}">
                 <StackPanel.Style>
                     <Style TargetType="{x:Type StackPanel}">
                         <Setter Property="Visibility"
@@ -163,13 +211,16 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <Grid Margin="0,5">
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
                     <Border CornerRadius="3"
                             BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
                             Margin="5">
                         <StackPanel Margin="5,15,5,5">
-                            <DockPanel Margin="5">
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="X"
+                                           Foreground="{StaticResource Editor.RedBrush}"
                                            Width="20"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
@@ -182,8 +233,9 @@
                                         x:Name="SldCubeX"
                                         ValueChanged="Slider_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel Margin="5">
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Y"
+                                           Foreground="{StaticResource Editor.GreenBrush}"
                                            Width="20"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
@@ -196,8 +248,9 @@
                                         x:Name="SldCubeY"
                                         ValueChanged="Slider_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel Margin="5">
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Z"
+                                           Foreground="{StaticResource Editor.BlueBrush}"
                                            Width="20"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
@@ -213,73 +266,111 @@
                         </StackPanel>
                     </Border>
                     <Label Content="Segments"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
+                           Margin="5"
                            Padding="5,0"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Grid>
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
                     <Border CornerRadius="3"
                             BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
                             Margin="5">
                         <StackPanel Margin="5,15,5,5">
-                            <DockPanel Margin="5">
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="X"
+                                           Foreground="{StaticResource Editor.RedBrush}"
                                            Width="20"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbXCube"
-                                         TextChanged="TextBox_TextChanged"/>
+                                <controls:ScalarBox x:Name="TbXCube"
+                                                    Value="1"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel Margin="5">
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Y"
+                                           Foreground="{StaticResource Editor.GreenBrush}"
                                            Width="20"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbYCube"
-                                         TextChanged="TextBox_TextChanged"/>
+                                <controls:ScalarBox x:Name="TbYCube"
+                                                    Value="1"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel Margin="5">
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Z"
+                                           Foreground="{StaticResource Editor.BlueBrush}"
                                            Width="20"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbZCube"
-                                         TextChanged="TextBox_TextChanged"/>
+                                <controls:ScalarBox x:Name="TbZCube"
+                                                    Value="1"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
                         </StackPanel>
                     </Border>
                     <Label Content="Size"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
+                           Margin="5"
                            Padding="5,0"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Grid Margin="0,5">
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
                     <Border CornerRadius="3"
                             BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
                             Margin="5">
                         <TextBox Text="1"
-                                 Margin="30,20,10,10"
+                                 Width="25"
+                                 HorizontalAlignment="Left"
+                                 Margin="5,20,10,10"
                                  x:Name="TbLODCube"
                                  TextChanged="TextBox_TextChanged"/>
                     </Border>
                     <Label Content="LOD"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
+                           Margin="5"
                            Padding="5,0"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Button Content="Create"
+                <Button Grid.Row="0"
+                        Padding="16,4,16,4"
+                        Margin="0,5"
+                        VerticalAlignment="Center"
+                        Focusable="False"
+                        HorizontalAlignment="Center"
                         Click="Button_Click"
-                        Width="80"
-                        Margin="5,0"
-                        VerticalAlignment="Bottom"/>
+                        Style="{StaticResource AccentButton}">
+                    <Button.Content>
+                        <TextBlock Text="Create"
+                                   FontWeight="DemiBold"/>
+                    </Button.Content>
+                </Button>
             </StackPanel>
-            <StackPanel>
+            <StackPanel Background="{StaticResource Editor.BackgroundBrush2}">
                 <StackPanel.Style>
                     <Style TargetType="{x:Type StackPanel}">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -292,14 +383,19 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <Grid Margin="0,5">
-                    <Border>
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
+                    <Border CornerRadius="3"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
+                            Margin="5">
                         <StackPanel Margin="5,15,5,15">
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Longitude"
-                                           Width="40"
+                                           Width="55"
                                            DockPanel.Dock="Left"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource Editor.FontBrush}"/>
                                 <TextBox Text="{Binding Path=Value, ElementName=SldUvSphereX}"
                                          Width="30"
                                          DockPanel.Dock="Right"/>
@@ -313,11 +409,12 @@
                                         x:Name="SldUvSphereX"
                                         ValueChanged="Slider_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Latitude"
-                                           Width="40"
+                                           Width="55"
                                            DockPanel.Dock="Left"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource Editor.FontBrush}"/>
                                 <TextBox Text="{Binding Path=Value, ElementName=SldUvSphereY}"
                                          Width="30"
                                          DockPanel.Dock="Right"/>
@@ -336,57 +433,81 @@
                     <Label Content="Segents"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
+                           Margin="5"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            Padding="5,0"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Grid Margin="0,5">
-                    <Border>
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
+                    <Border CornerRadius="3"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
+                            Margin="5">
                         <StackPanel Margin="5,15,5,15">
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="X"
+                                           Foreground="{StaticResource Editor.RedBrush}"
                                            Width="40"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbXUvSphere"
-                                         Width="30"
-                                         TextChanged="TextBox_TextChanged"
-                                         DockPanel.Dock="Right"/>
+                                <controls:ScalarBox Value="1"
+                                                    x:Name="TbXUvSphere"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Y"
+                                           Foreground="{StaticResource Editor.GreenBrush}"
                                            Width="40"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbYUvSphere"
-                                         Width="30"
-                                         TextChanged="TextBox_TextChanged"
-                                         DockPanel.Dock="Right"/>
+                                <controls:ScalarBox Value="1"
+                                                    x:Name="TbYUvSphere"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
-                            <DockPanel>
+                            <DockPanel Margin="5,5,5,0">
                                 <TextBlock Text="Z"
+                                           Foreground="{StaticResource Editor.BlueBrush}"
                                            Width="40"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center"/>
-                                <TextBox Text="1"
-                                         x:Name="TbZUvSphere"
-                                         Width="30"
-                                         TextChanged="TextBox_TextChanged"
-                                         DockPanel.Dock="Right"/>
+                                <controls:ScalarBox Value="1"
+                                                    x:Name="TbZUvSphere"
+                                                    ValueChanged="ScalarBox_ValueChanged"/>
                             </DockPanel>
                         </StackPanel>
                     </Border>
                     <Label Content="Size"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-3,0,0"
+                           Margin="5"
                            Padding="5,0"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Grid Margin="0,5">
-                    <Border>
-                        <DockPanel>
+                <Grid Margin="0,5"
+                      Background="{StaticResource Editor.BackgroundBrush3}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="9*"/>
+                        <ColumnDefinition Width="31*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border CornerRadius="3"
+                            BorderThickness="1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
+                            Margin="5,5,5,4" Grid.ColumnSpan="2">
+                        <DockPanel Margin="5,15,5,5">
                             <TextBlock Text="Angle"
+                                       Foreground="{StaticResource Editor.FontBrush}"
                                        Width="40"
                                        DockPanel.Dock="Left"
                                        VerticalAlignment="Center"/>
@@ -403,12 +524,31 @@
                         </DockPanel>
                     </Border>
                     <Label Content="Smoothing angle"
+                           Foreground="{StaticResource Editor.LightningBrush}"
                            VerticalAlignment="Top"
                            HorizontalAlignment="Left"
-                           Margin="20,-15,0,0"
-                           Padding="5,0"/>
+                           Margin="5"
+                           Padding="5,0" Grid.ColumnSpan="2"/>
+                    <Grid.Effect>
+                        <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="0"
+                                          Color="#FF000000"/>
+                    </Grid.Effect>
                 </Grid>
-                <Button Content="Create" Click="Button_Click"/>
+                <Button Grid.Row="0"
+                        Padding="16,4,16,4"
+                        Margin="0,5"
+                        VerticalAlignment="Center"
+                        Focusable="False"
+                        HorizontalAlignment="Center"
+                        Click="Button_Click"
+                        Style="{StaticResource AccentButton}">
+                    <Button.Content>
+                        <TextBlock Text="Create"
+                                   FontWeight="DemiBold"/>
+                    </Button.Content>
+                </Button>
             </StackPanel>
             <ed:GeometryView DataContext="{Binding MeshRenderer}"
                              Grid.Column="1"/>
@@ -419,19 +559,19 @@
                         IsHitTestVisible="False">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding MeshRenderer.CameraPosition.X, StringFormat=F5}"
-                           Foreground="Red"/>
+                           Foreground="{StaticResource Editor.RedBrush}"/>
                     <TextBlock Text="{Binding MeshRenderer.CameraPosition.Y, StringFormat=F5}"
                            Margin="10,0"
-                           Foreground="Green"/>
+                           Foreground="{StaticResource Editor.GreenBrush}"/>
                     <TextBlock Text="{Binding MeshRenderer.CameraPosition.Z, StringFormat=F5}"
-                           Foreground="Blue"/>
+                           Foreground="{StaticResource Editor.BlueBrush}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding MeshRenderer.Meshes[0].Positions.Count}"
-                           Foreground="Orange"/>
+                           Foreground="{StaticResource Editor.LightningBrush}"/>
                     <TextBlock Text="{Binding MeshRenderer.Meshes[0].Indices.Count}"
                            Margin="10,0"
-                           Foreground="Orange"/>
+                           Foreground="{StaticResource Editor.LightningBrush}"/>
                 </StackPanel>
             </StackPanel>
         </Grid>

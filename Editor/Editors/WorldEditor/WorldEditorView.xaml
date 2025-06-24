@@ -253,10 +253,23 @@
                     </TextBlock>
                 </Button.ToolTip>
             </Button>
+            <Border Width="1"
+                    Margin="3,0,3,0"
+                    Background="#80FFFFFF"
+                    Height="22"
+                    VerticalAlignment="Stretch"/>
             <Button x:Name="BtnPrimitiveMesh"
-                    Content="PrimitiveMesh"
                     Click="BtnPrimitiveMesh_Click"
-                    Margin="10, 0"/>
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}"
+                    ToolTip="New Script"
+                    ToolTipService.InitialShowDelay="1000">
+                <materialDesign:PackIcon Kind="CubeOutline"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
+            </Button>
             <Button x:Name="BtnImport"
                     Click="BtnImport_Click">
                 <StackPanel>
