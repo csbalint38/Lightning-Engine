@@ -69,7 +69,7 @@ namespace Editor.Common.Controls
         {
             base.OnApplyTemplate();
 
-            if(GetTemplateChild("PART_textBlock") is TextBlock tb)
+            if (GetTemplateChild("PART_textBlock") is TextBlock tb)
             {
                 tb.MouseLeftButtonDown += OnMouseLeftButtonDown;
                 tb.MouseLeftButtonUp += OnMouseLeftButtonUp;
@@ -112,7 +112,7 @@ namespace Editor.Common.Controls
 
         private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if(_captured)
+            if (_captured)
             {
                 Mouse.Capture(null);
 
@@ -120,7 +120,7 @@ namespace Editor.Common.Controls
 
                 e.Handled = true;
 
-                if(!_valueChanged && GetTemplateChild("PART_textBox") is TextBox tb)
+                if (!_valueChanged && GetTemplateChild("PART_textBox") is TextBox tb)
                 {
                     tb.Visibility = Visibility.Visible;
                     tb.Focus();
@@ -130,7 +130,7 @@ namespace Editor.Common.Controls
         }
 
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        { 
+        {
             double.TryParse(Value, out _originalValue);
 
             Mouse.Capture(sender as UIElement);

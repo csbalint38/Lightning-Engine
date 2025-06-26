@@ -48,7 +48,7 @@ namespace Editor.Dictionaries
             var textBox = sender as TextBox;
             var exp = textBox.GetBindingExpression(TextBox.TextProperty);
 
-            if(exp is not null)
+            if (exp is not null)
             {
                 exp.UpdateTarget();
                 textBox.MoveFocus(new TraversalRequest(FocusNavigationDirection.Previous));
@@ -74,7 +74,7 @@ namespace Editor.Dictionaries
             else if (e.Key == Key.Escape)
             {
                 exp.UpdateTarget();
-                textBox.Visibility= Visibility.Collapsed;
+                textBox.Visibility = Visibility.Collapsed;
             }
         }
     }

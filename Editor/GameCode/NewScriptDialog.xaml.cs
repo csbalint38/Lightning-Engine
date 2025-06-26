@@ -79,7 +79,7 @@ namespace Editor.GameCode
             {
                 errorMessage = "Script name contains invalid characters.";
             }
-            else if(name.Length > 64)
+            else if (name.Length > 64)
             {
                 errorMessage = "Script name can't be longer, than 64 characters.";
             }

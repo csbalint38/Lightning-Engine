@@ -38,6 +38,26 @@ namespace Editor.Content
             new PropertyMetadata(false)
         );
 
+        public static readonly DependencyProperty SelectionModeProperty = DependencyProperty.Register(
+            nameof(SelectionMode),
+            typeof(SelectionMode),
+            typeof(ContentBrowserView),
+            new PropertyMetadata(SelectionMode.Extended)
+        );
+
+        public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(
+            nameof(SelectedItem),
+            typeof(ContentInfo),
+            typeof(ContentBrowserView),
+            new PropertyMetadata(null)
+        );
+
+        internal ContentInfo SelectedItem
+        {
+            get => (ContentInfo)GetValue(SelectedItemProperty);
+            set => SetValue(SelectedItemProperty, value);
+        }
+
         public FileAccess FileAccess
         {
             get => (FileAccess)GetValue(FileAccessProperty);
@@ -48,6 +68,12 @@ namespace Editor.Content
         {
             get => (bool)GetValue(AllowImportProperty);
             set => SetValue(AllowImportProperty, value);
+        }
+
+        public SelectionMode SelectionMode
+        {
+            get => (SelectionMode)GetValue(SelectionModeProperty);
+            set => SetValue(SelectionModeProperty, value);
         }
 
         public ContentBrowserView()
@@ -65,7 +91,16 @@ namespace Editor.Content
             OpenImportSettingsConfigurator(null, vm.SelectedFolder, true);
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            if (Application.Current?.MainWindow is not null)
+            {
+                Application.Current.MainWindow.DataContextChanged -= OnProjectChanged;
+            }
+
+            (DataContext as ContentBrowser.ContentBrowser)?.Dispose();
+            DataContext = null;
+        }
 
         private static IAssetEditor OpenAssetEditor(AssetInfo info)
         {
@@ -190,7 +225,7 @@ namespace Editor.Content
 
         private void Thumb_DragDelta(object sender, DragDeltaEventArgs e)
         {
-            if(e.OriginalSource is Thumb thumb && thumb.TemplatedParent is GridViewColumnHeader header)
+            if (e.OriginalSource is Thumb thumb && thumb.TemplatedParent is GridViewColumnHeader header)
             {
                 if (header.Column.ActualWidth < 50) header.Column.Width = 50;
                 else if (header.Column.ActualWidth > 300) header.Column.Width = 300;
@@ -367,7 +402,8 @@ namespace Editor.Content
 
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            var item = LVFolders.SelectedItem as ContentInfo;
+            SelectedItem = item?.IsDirectory == true ? null : item;
         }
 
         private void BDrop_DragLeave(object sender, DragEventArgs e)
@@ -405,7 +441,7 @@ namespace Editor.Content
 
             var newDir = ListSortDirection.Ascending;
 
-            if(_sortedProperty == sortBy && _sortDirection == newDir)
+            if (_sortedProperty == sortBy && _sortDirection == newDir)
             {
                 newDir = ListSortDirection.Descending;
             }
@@ -446,7 +482,7 @@ namespace Editor.Content
 
             int i;
 
-            for(i = 0; i < 3; ++i)
+            for (i = 0; i < 3; ++i)
             {
                 paths[i] = path;
                 labels[i] = path[(path.LastIndexOf(Path.DirectorySeparatorChar) + 1)..];
@@ -458,7 +494,7 @@ namespace Editor.Content
 
             if (i == 3) i = 2;
 
-            for(; i >= 0; --i)
+            for (; i >= 0; --i)
             {
                 var btn = new Button()
                 {

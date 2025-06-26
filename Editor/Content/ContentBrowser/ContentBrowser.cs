@@ -11,7 +11,7 @@ namespace Editor.Content.ContentBrowser
 {
     public class ContentBrowser : ViewModelBase, IDisposable
     {
-        private static readonly DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMilliseconds(250));
+        private readonly DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMilliseconds(250));
 
         private readonly ObservableCollection<ContentInfo> _folderContent = [];
 
@@ -46,6 +46,7 @@ namespace Editor.Content.ContentBrowser
 
             contentFolder = Path.TrimEndingDirectorySeparator(contentFolder);
             ContentFolder = contentFolder;
+            SelectedFolder = contentFolder;
             FolderContent = new ReadOnlyObservableCollection<ContentInfo>(_folderContent);
 
             ContentWatcher.ContentModified += OnContentModified;
@@ -67,6 +68,7 @@ namespace Editor.Content.ContentBrowser
 
                 foreach (var file in Directory.GetFiles(path, $"*{Asset.AssetFileExtension}"))
                 {
+                    var fileInfo = new FileInfo(file);
                     folderContent.Add(ContentInfoCache.Add(file));
                 }
             }

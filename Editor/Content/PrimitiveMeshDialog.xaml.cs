@@ -3,8 +3,6 @@ using Editor.Common.Enums;
 using Editor.DLLs;
 using Editor.DLLs.Descriptors;
 using Editor.Editors;
-using Editor.GameProject;
-using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -162,22 +160,19 @@ namespace Editor.Content
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new SaveFileDialog()
-            {
-                InitialDirectory = Project.Current.ContentPath,
-                Filter = "Asset file (*.lngasset)|*.lngasset",
-            };
+            var dialog = new SaveDialog();
 
             if (dialog.ShowDialog() == true)
             {
-                Debug.Assert(!string.IsNullOrEmpty(dialog.FileName));
+                Debug.Assert(!string.IsNullOrEmpty(dialog.SaveFilePath));
 
                 var asset = (DataContext as IAssetEditor).Asset;
 
                 Debug.Assert(asset is not null);
 
-                // TODO: Update after new SaveFileDialog
-                asset.Save(dialog.FileName);
+                asset.Save(dialog.SaveFilePath);
+
+                dialog.Close();
             }
         }
     }
