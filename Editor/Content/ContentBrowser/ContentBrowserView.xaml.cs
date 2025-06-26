@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -20,6 +21,9 @@ namespace Editor.Content
     /// </summary>
     public partial class ContentBrowserView : UserControl, IDisposable
     {
+        private string _sortedProperty = nameof(ContentInfo.FileName);
+        private ListSortDirection _sortDirection;
+
         public static readonly DependencyProperty FileAccessProperty = DependencyProperty.Register(
             nameof(FileAccess),
             typeof(FileAccess),
@@ -60,6 +64,8 @@ namespace Editor.Content
 
             OpenImportSettingsConfigurator(null, vm.SelectedFolder, true);
         }
+
+        public void Dispose() { }
 
         private static IAssetEditor OpenAssetEditor(AssetInfo info)
         {
@@ -177,6 +183,18 @@ namespace Editor.Content
             }
 
             OnProjectChanged(null, new DependencyPropertyChangedEventArgs(DataContextProperty, null, Project.Current));
+
+            LVFolders.AddHandler(Thumb.DragDeltaEvent, new DragDeltaEventHandler(Thumb_DragDelta), true);
+            LVFolders.Items.SortDescriptions.Add(new SortDescription(_sortedProperty, _sortDirection));
+        }
+
+        private void Thumb_DragDelta(object sender, DragDeltaEventArgs e)
+        {
+            if(e.OriginalSource is Thumb thumb && thumb.TemplatedParent is GridViewColumnHeader header)
+            {
+                if (header.Column.ActualWidth < 50) header.Column.Width = 50;
+                else if (header.Column.ActualWidth > 300) header.Column.Width = 300;
+            }
         }
 
         private void OnProjectChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -198,7 +216,10 @@ namespace Editor.Content
         {
             var vm = sender as ContentBrowser.ContentBrowser;
 
-            if (e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder)) { }
+            if (e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder))
+            {
+                GeneratePathStackButtons();
+            }
         }
 
         private void BDrop_Drop(object sender, DragEventArgs e)
@@ -253,14 +274,6 @@ namespace Editor.Content
         {
             var info = (sender as FrameworkElement).DataContext as ContentInfo;
             ExecuteSelection(info);
-        }
-
-        private void LVFolders_KeyDown(object sender, KeyEventArgs e)
-        {
-            var info = (sender as FrameworkElement).DataContext as ContentInfo;
-
-            if (e.Key == Key.Enter) ExecuteSelection(info);
-            else if (e.Key == Key.F2) TryEdit(LVFolders, info.FullPath);
         }
 
         private IAssetEditor OpenEditorPanel<T>(AssetInfo info, string title) where T : FrameworkElement, new()
@@ -383,6 +396,90 @@ namespace Editor.Content
             BDrop.BeginAnimation(OpacityProperty, fadeIn);
         }
 
-        public void Dispose() { }
+        private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            var column = sender as GridViewColumnHeader;
+            var sortBy = column.Tag.ToString();
+
+            LVFolders.Items.SortDescriptions.Clear();
+
+            var newDir = ListSortDirection.Ascending;
+
+            if(_sortedProperty == sortBy && _sortDirection == newDir)
+            {
+                newDir = ListSortDirection.Descending;
+            }
+
+            _sortDirection = newDir;
+            _sortedProperty = sortBy;
+
+            LVFolders.Items.SortDescriptions.Add(new SortDescription(sortBy, newDir));
+        }
+
+        private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var info = (sender as FrameworkElement).DataContext as ContentInfo;
+
+            ExecuteSelection(info);
+        }
+
+        private void ListViewItem_KeyDown(object sender, KeyEventArgs e)
+        {
+            var info = (sender as FrameworkElement).DataContext as ContentInfo;
+
+            if (e.Key == Key.Enter) ExecuteSelection(info);
+            else if (e.Key == Key.F2) TryEdit(LVFolders, info.FullPath);
+        }
+
+        private void GeneratePathStackButtons()
+        {
+            var vm = DataContext as ContentBrowser.ContentBrowser;
+            var path = Directory.GetParent(Path.TrimEndingDirectorySeparator(vm.SelectedFolder)).FullName;
+            var contentPath = Path.TrimEndingDirectorySeparator(vm.ContentFolder);
+
+            SPPath.Children.RemoveRange(1, SPPath.Children.Count - 1);
+
+            if (vm.SelectedFolder == vm.ContentFolder) return;
+
+            string[] paths = new string[3];
+            string[] labels = new string[3];
+
+            int i;
+
+            for(i = 0; i < 3; ++i)
+            {
+                paths[i] = path;
+                labels[i] = path[(path.LastIndexOf(Path.DirectorySeparatorChar) + 1)..];
+
+                if (path == contentPath) break;
+
+                path = path.Substring(0, path.LastIndexOf(Path.DirectorySeparatorChar));
+            }
+
+            if (i == 3) i = 2;
+
+            for(; i >= 0; --i)
+            {
+                var btn = new Button()
+                {
+                    DataContext = paths[i],
+                    Content = new TextBlock()
+                    {
+                        Text = labels[i],
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                    }
+                };
+
+                SPPath.Children.Add(btn);
+
+                if (i > 0) SPPath.Children.Add(new System.Windows.Shapes.Path());
+            }
+        }
+
+        private void OnPathStack_Button_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = DataContext as ContentBrowser.ContentBrowser;
+            vm.SelectedFolder = (sender as Button).DataContext as string;
+        }
     }
 }

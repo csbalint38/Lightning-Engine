@@ -1,3 +1,8 @@
+# v0.3.5-beta - 2025.7.8
+
+## UI 
+ - Content Browser list view
+
 # v0.3.4-beta - 2025.6.24.
 
 ## UI

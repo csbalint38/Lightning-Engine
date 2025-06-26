@@ -9,4 +9,4 @@ using System.Windows;
                                                 // app, or any theme specific resource dictionaries)
 )]
 
-// ALSO BLUE: 26.1 26.3 36 43.1 disable save 63.1 63.3 64.1 65.1 66.1 67.1 72.3
+// ALSO BLUE: 43.1 disable save 63.1 63.3 64.1 65.1 66.1 67.1 72.3

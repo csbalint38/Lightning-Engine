@@ -334,10 +334,13 @@
                     </Grid.ColumnDefinitions>
                     <content:ContentBrowserView AllowImport="True"
                                                 AllowDrop="True"
+                                                Margin="0,5,5,0"
                                                 x:Name="contentBrowserView"
                                                 Loaded="ContentBrowserView_Loaded"
                                                 IsVisibleChanged="ContentBrowserView_IsVisibleChanged"/>
-                    <GridSplitter Grid.Column="1"/>
+                    <GridSplitter Grid.Row="1"
+                                  Background="Transparent"
+                                  Width="5"/>
                     <TabControl Grid.Column="1"
                                 Margin="0,5,0,0">
                         <TabItem Header="History">
