@@ -3,12 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:Editor.Content"
              xmlns:cb="clr-namespace:Editor.Content.ContentBrowser"
+             xmlns:converters="clr-namespace:Editor.Utilities.Converters"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=cb:ContentBrowser}"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
+        <converters:DataSizeToStringConverter x:Key="dataSizeToStringConverter"/>
         <Style x:Key="SmallIconStyle"
                TargetType="{x:Type Image}">
             <Setter Property="Source"
@@ -18,14 +21,13 @@
                              Value="True">
                     <Setter Property="Source"
                             Value="pack://application:,,,/Resources/FolderSmall.png"/>
-                    
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="LargeIconStyle"
                TargetType="{x:Type Image}">
             <Setter Property="Source"
-                    Value="{Binding IconLarge}"/>
+                    Value="{Binding Icon}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsDirectory}"
                              Value="True">
@@ -78,7 +80,7 @@
                     </DataTemplate>
                 </GridViewColumn.CellTemplate>
             </GridViewColumn>
-            <GridViewColumn DisplayMemberBinding="{Binding Size}">
+            <GridViewColumn DisplayMemberBinding="{Binding Size, Converter={StaticResource dataSizeToStringConverter}}">
                 <GridViewColumn.Header>
                     <GridViewColumnHeader Tag="Size"
                                           Content="Size"/>
@@ -306,6 +308,92 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <DataTemplate x:Key="tileTemplate">
+            <StackPanel Width="96"
+                        HorizontalAlignment="Center"
+                        Margin="-4,0,0,0">
+                <Image Style="{StaticResource LargeIconStyle}"
+                       Width="90"
+                       HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding FileName}"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="Wrap"
+                           Foreground="{StaticResource Editor.FontBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="2, 0"
+                           MaxHeight="60"/>
+            </StackPanel>
+        </DataTemplate>
+        <cb:PlainView x:Key="tileView"
+                      ItemTemplate="{StaticResource tileTemplate}">
+            <cb:PlainView.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}"
+                       BasedOn="{StaticResource ListBoxItemStyle}">
+                    <EventSetter Event="MouseDoubleClick"
+                                 Handler="ListViewItem_MouseDoubleClick"/>
+                    <EventSetter Event="KeyDown"
+                                 Handler="ListViewItem_KeyDown"/>
+                </Style>
+            </cb:PlainView.ItemContainerStyle>
+        </cb:PlainView>
+        <Style TargetType="{x:Type ToggleButton}"
+               x:Key="ListViewToggleButtonStyle">
+            <Setter Property="Background"
+                    Value="Transparent"/>
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+            <Setter Property="BorderThickness"
+                    Value="1"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="Focusable"
+                    Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="border"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}"
+                                SnapsToDevicePixels="True">
+                            <materialDesign:PackIcon x:Name="icon"
+                                                     Foreground="{StaticResource Editor.FontBrush}"
+                                                     VerticalAlignment="Center"
+                                                     HorizontalAlignment="Center"
+                                                     Width="22"
+                                                     Height="22"
+                                                     Opacity="0.8"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked"
+                                     Value="True">
+                                <Setter Property="Kind"
+                                        TargetName="icon"
+                                        Value="ViewGrid"/>
+                                <Setter Property="ToolTip"
+                                        TargetName="border"
+                                        Value="Tile view"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked"
+                                     Value="False">
+                                <Setter Property="Kind"
+                                        TargetName="icon"
+                                        Value="ViewList"/>
+                                <Setter Property="ToolTip"
+                                        TargetName="border"
+                                        Value="List view"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter Property="Background"
+                                        TargetName="border"
+                                        Value="{StaticResource Editor.BackgroundBrush5}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -330,6 +418,13 @@
                             Value="{Binding Path=AllowDrop, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}"/>
                     <EventSetter Event="SelectionChanged"
                                  Handler="ListView_SelectionChanged"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Path=IsChecked, ElementName=TBListView}"
+                                     Value="False">
+                            <Setter Property="View"
+                                    Value="{StaticResource tileView}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
             </ListView.Style>
         </ListView>
@@ -497,10 +592,15 @@
                                   ShadowDepth="0"/>
             </Border.Effect>
             <DockPanel>
-                <TextBlock Text="Nope"
-                           DockPanel.Dock="Top"
-                           Margin="5"
-                           Height="32"/>
+                <DockPanel Margin="5"
+                           DockPanel.Dock="Top">
+                    <ToggleButton DockPanel.Dock="Right"
+                                  x:Name="TBListView"
+                                  Width="22"
+                                  Height="22"
+                                  Style="{StaticResource ListViewToggleButtonStyle}"/>
+                    <TextBox/>
+                </DockPanel>
                 <StackPanel Orientation="Horizontal"
                             x:Name="SPPath"
                             Margin="0,0,0,5">

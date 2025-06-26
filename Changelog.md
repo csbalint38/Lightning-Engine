@@ -2,6 +2,7 @@
 
 ## UI 
  - Content Browser list view
+ - Content Browser tile view
 
 # v0.3.4-beta - 2025.6.24.
 
