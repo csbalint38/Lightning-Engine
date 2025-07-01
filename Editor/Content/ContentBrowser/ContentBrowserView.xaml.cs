@@ -136,7 +136,8 @@ namespace Editor.Content
             return editor;
         }
 
-        private static IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title) where T : FrameworkElement, new()
+        private static IAssetEditor OpenEditorPanel<T>(AssetInfo info, Guid guid, string title)
+            where T : FrameworkElement, new()
         {
             foreach (Window window in Application.Current.Windows)
             {
@@ -200,7 +201,7 @@ namespace Editor.Content
                 Title = title,
                 Owner = Application.Current.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                // Set style here
+                Style = Application.Current.FindResource("LightningWindowStyle") as Style
             };
 
             win.Show();
@@ -418,7 +419,7 @@ namespace Editor.Content
 
             var fadeOut = new DoubleAnimation(1, 0, new Duration(TimeSpan.FromMilliseconds(100)));
 
-            fadeOut.Completed += (_, __) => BDrop.Visibility = Visibility.Collapsed;
+            fadeOut.Completed += (_, _) => BDrop.Visibility = Visibility.Collapsed;
             BDrop.BeginAnimation(OpacityProperty, fadeOut);
         }
 
@@ -475,7 +476,7 @@ namespace Editor.Content
 
             SPPath.Children.RemoveRange(1, SPPath.Children.Count - 1);
 
-            if (vm.SelectedFolder == vm.ContentFolder) return;
+            if (vm.SelectedFolder == vm.ContentFolder) goto _addCurrentDirectory;
 
             string[] paths = new string[3];
             string[] labels = new string[3];
@@ -508,8 +509,16 @@ namespace Editor.Content
 
                 SPPath.Children.Add(btn);
 
-                if (i > 0) SPPath.Children.Add(new System.Windows.Shapes.Path());
+                if (i >= 0) SPPath.Children.Add(new System.Windows.Shapes.Path());
             }
+
+            _addCurrentDirectory:
+                SPPath.Children.Add(new TextBlock()
+                {
+                    Text = $"{Path.GetFileName(Path.TrimEndingDirectorySeparator(vm.SelectedFolder))}",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Foreground = Brushes.White
+                });
         }
 
         private void OnPathStack_Button_Click(object sender, RoutedEventArgs e)

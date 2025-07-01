@@ -13,7 +13,7 @@ namespace Editor.Utilities.Converters
 
             if (value is string folder && !string.IsNullOrEmpty(folder) && folder.Contains(contentFolder))
             {
-                return $@"{Path.DirectorySeparatorChar}{folder.Replace(contentFolder, "")}";
+                return $@"Assets{Path.DirectorySeparatorChar}{folder.Replace(contentFolder, "")}";
             }
 
             return null;

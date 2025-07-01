@@ -8,14 +8,23 @@
              d:DataContext="{d:DesignInstance Type=local:GeometryEditor}"
              d:DesignHeight="450" d:DesignWidth="800">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel>
+        <StackPanel Background="{StaticResource Editor.BackgroundBrush2}">
             <Expander Header="Active LOD"
-                      IsExpanded="True">
+                      Foreground="{StaticResource Editor.FontBrush}"
+                      Background="{StaticResource Editor.BackgroundBrush3}"
+                      IsExpanded="True"
+                      Margin="5">
                 <ItemsControl ItemsSource="{Binding MeshRenderer.Meshes}"
                               AlternationCount="{Binding MeshRenderer.Meshes.Count}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel />
+                            <StackPanel>
+                                <StackPanel.Effect>
+                                    <DropShadowEffect Opacity=".6"
+                                                      BlurRadius="15"
+                                                      ShadowDepth="2"/>
+                                </StackPanel.Effect>
+                            </StackPanel>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
@@ -24,12 +33,12 @@
                                 <Border.Style>
                                     <Style TargetType="{x:Type Border}">
                                         <Setter Property="Background"
-                                                Value="Aquamarine"/>
+                                                Value="{StaticResource Editor.BackgroundBrush4}"/>
                                         <Style.Triggers>
                                             <Trigger Property="IsMouseOver"
                                                      Value="True">
                                                 <Setter Property="Background"
-                                                        Value="CadetBlue"/>
+                                                        Value="{StaticResource Editor.BackgroundBrush4}"/>
                                             </Trigger>
                                         </Style.Triggers>
                                     </Style>
@@ -45,13 +54,17 @@
                                                 HorizontalAlignment="Left">
                                         <CheckBox x:Name="CbHighlight" 
                                                   Click="CbHighlight_Click"
-                                                  IsChecked="{Binding IsHighlighted, Mode=OneWay}">
-                                            <Run Text="Highlight"/>
+                                                  IsChecked="{Binding IsHighlighted, Mode=OneWay}"
+                                                  Margin="5,0,0,5">
+                                            <Run Text="Highlight"
+                                                 Foreground="{StaticResource Editor.FontBrush}"/>
                                         </CheckBox>
                                         <CheckBox x:Name="CbIsolate" 
                                                   Click="CbIsolate_Click"
+                                                  Margin="5,0,0,0"
                                                   IsChecked="{Binding IsIsolated, Mode=OneWay}">
-                                            <Run Text="Isolate"/>
+                                            <Run Text="Isolate"
+                                                 Foreground="{StaticResource Editor.FontBrush}"/>
                                         </CheckBox>
                                     </StackPanel>
                                 </Grid>
@@ -59,6 +72,11 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                <Expander.Effect>
+                    <DropShadowEffect Opacity=".6"
+                                      BlurRadius="15"
+                                      ShadowDepth="2"/>
+                </Expander.Effect>
             </Expander>
         </StackPanel>
     </ScrollViewer>

@@ -4,6 +4,7 @@
  - Content Browser list view
  - Content Browser tile view
  - Custom Save File Dialog
+ - Upgraded visuals for Configure Import Settings
 
 # v0.3.4-beta - 2025.6.24.
 

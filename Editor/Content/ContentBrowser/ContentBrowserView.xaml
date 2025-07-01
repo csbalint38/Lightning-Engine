@@ -401,6 +401,7 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <ListView ItemsSource="{Binding FolderContent}"
+                  ContextMenu="{StaticResource contextMenu}"
                   Grid.Row="1"
                   x:Name="LVFolders"
                   IsTextSearchEnabled="True"
@@ -421,6 +422,8 @@
                             Value="{Binding Path=SelectionMode, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type local:ContentBrowserView}}}"/>
                     <EventSetter Event="SelectionChanged"
                                  Handler="ListView_SelectionChanged"/>
+                    <EventSetter Event="DragEnter"
+                                 Handler="ListView_DragEnter"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Path=IsChecked, ElementName=TBListView}"
                                      Value="False">
@@ -432,8 +435,8 @@
             </ListView.Style>
         </ListView>
         <Border Visibility="Collapsed"
-                d:Visibility="Collapsed"
-                Background="DarkMagenta"
+                d:Visibility="Visible"
+                Background="Transparent"
                 x:Name="BDrop"
                 AllowDrop="{Binding Path=AllowDrop, ElementName=LVFolders}"
                 Grid.Row="1"
@@ -446,15 +449,17 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Border x:Name="filesDrop"
-                            Background="Blue"
-                            Grid.Row="0"/>
+                            Background="#66000000"
+                            Grid.Row="0"
+                            BorderThickness="0,0,0,1"
+                            BorderBrush="{StaticResource Editor.FontBrush}"/>
                     <Border x:Name="cfgDrop"
-                            Background="Green"
+                            Background="#66000000"
                             Grid.Row="1"/>
                 </Grid>
-                <Border BorderBrush="#FFC800"
+                <Border BorderBrush="{StaticResource Editor.DisabledFontBrush}"
                         BorderThickness="2"
-                        CornerRadius="50"
+                        CornerRadius="0"
                         Background="#66000000"
                         SnapsToDevicePixels="True"
                         UseLayoutRounding="True"
@@ -463,19 +468,19 @@
                             VerticalAlignment="Center"
                             HorizontalAlignment="Center"
                             CornerRadius="20"
-                            BorderBrush="#FFC800"
+                            BorderBrush="{StaticResource Editor.FontBrush}"
                             BorderThickness="2">
                         <StackPanel>
                             <Border CornerRadius="16,16,0,0"
                                     HorizontalAlignment="Center"
                                     Width="250"
-                                    x:Name="BFile"
+                                    x:Name="BFiles"
                                     Background="Transparent">
-                                <TextBlock x:Name="TbFile"
+                                <TextBlock x:Name="TbFiles"
                                            Text="Import Individual Files"
                                            FontFamily="Bahnschrift condensed"
                                            FontSize="24"
-                                           Foreground="#FFC800"
+                                           Foreground="{StaticResource Editor.FontBrush}"
                                            Margin="20"
                                            HorizontalAlignment="Center"/>
                             </Border>
@@ -488,7 +493,7 @@
                                            Text="Configure Import Settings"
                                            FontFamily="Bahnschrift condensed"
                                            FontSize="24"
-                                           Foreground="#FFC800"
+                                           Foreground="{StaticResource Editor.FontBrush}"
                                            Margin="20"
                                            HorizontalAlignment="Center"/>
                             </Border>
@@ -504,18 +509,13 @@
                             <ColorAnimation Storyboard.TargetName="BFiles"
                                             Storyboard.TargetProperty="Background.Color"
                                             From="Transparent"
-                                            To="Red"
+                                            To="{StaticResource Editor.Font}"
                                             Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetName="BFiles"
                                              Storyboard.TargetProperty="Background.Opacity"
                                              From="0"
                                              To="0.6"
                                              Duration="0:0:0.2"/>
-                            <ColorAnimation Storyboard.TargetName="TbFiles"
-                                            Storyboard.TargetProperty="Foreground.Color"
-                                            From="White"
-                                            To="Red"
-                                            Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
@@ -525,7 +525,7 @@
                         <Storyboard>
                             <ColorAnimation Storyboard.TargetName="BFiles"
                                             Storyboard.TargetProperty="Background.Color"
-                                            From="Red"
+                                            From="{StaticResource Editor.Font}"
                                             To="Transparent"
                                             Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetName="BFiles"
@@ -533,11 +533,6 @@
                                              From="0.6"
                                              To="0"
                                              Duration="0:0:0.2"/>
-                            <ColorAnimation Storyboard.TargetName="TbFiles"
-                                            Storyboard.TargetProperty="Foreground.Color"
-                                            From="Red"
-                                            To="Wheat"
-                                            Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
@@ -548,18 +543,13 @@
                             <ColorAnimation Storyboard.TargetName="BCfg"
                                             Storyboard.TargetProperty="Background.Color"
                                             From="Transparent"
-                                            To="Red"
+                                            To="{StaticResource Editor.Font}"
                                             Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetName="BCfg"
                                              Storyboard.TargetProperty="Background.Opacity"
                                              From="0"
                                              To="0.6"
                                              Duration="0:0:0.2"/>
-                            <ColorAnimation Storyboard.TargetName="TbCfg"
-                                            Storyboard.TargetProperty="Foreground.Color"
-                                            From="White"
-                                            To="Red"
-                                            Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
@@ -569,7 +559,7 @@
                         <Storyboard>
                             <ColorAnimation Storyboard.TargetName="BCfg"
                                             Storyboard.TargetProperty="Background.Color"
-                                            From="Red"
+                                            From="{StaticResource Editor.Font}"
                                             To="Transparent"
                                             Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetName="BCfg"
@@ -577,11 +567,6 @@
                                              From="0.6"
                                              To="0"
                                              Duration="0:0:0.2"/>
-                            <ColorAnimation Storyboard.TargetName="TbCfg"
-                                            Storyboard.TargetProperty="Foreground.Color"
-                                            From="Red"
-                                            To="Wheat"
-                                            Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </EventTrigger>
@@ -611,7 +596,7 @@
                         <Style TargetType="{x:Type Path}"
                                x:Key="{x:Type Path}">
                             <Setter Property="Margin"
-                                    Value="0,3,0,0"/>
+                                    Value="3,3,5,0"/>
                             <Setter Property="Data"
                                     Value="M0,0 L1.5,0 L4.5,3 L1.5,6 L0,6 L3,3 z"/>
                             <Setter Property="Fill"
@@ -648,8 +633,6 @@
                                     Value="3,1"/>
                             <Setter Property="SnapsToDevicePixels"
                                     Value="True"/>
-                            <Setter Property="MinWidth"
-                                    Value="48"/>
                             <Setter Property="MaxWidth"
                                     Value="128"/>
                             <Setter Property="Opacity"

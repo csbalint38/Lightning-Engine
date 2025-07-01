@@ -86,7 +86,7 @@ namespace Editor.Editors
                 {
                     _texture = value;
 
-                    if (Texture is null)
+                    if (Texture is not null)
                     {
                         IAssetImportSettings.CopyImportSettings(_texture.ImportSettings, ImportSettings);
                     }

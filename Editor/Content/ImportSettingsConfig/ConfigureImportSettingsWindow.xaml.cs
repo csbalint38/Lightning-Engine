@@ -1,4 +1,5 @@
 ﻿using Editor.Common.Enums;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -25,6 +26,16 @@ namespace Editor.Content.ImportSettingsConfig
                     //2 :
                     0;
             };
+
+            Closing += ConfigureImportSettingsWindow_Closing;
+        }
+
+        private void ConfigureImportSettingsWindow_Closing(object? sender, CancelEventArgs e)
+        {
+            ImportingItemCollection.Clear(AssetType.ANIMATION);
+            ImportingItemCollection.Clear(AssetType.MATERIAL);
+            ImportingItemCollection.Clear(AssetType.MESH);
+            ImportingItemCollection.Clear(AssetType.SKELETON);
         }
 
         internal static void AddDroppedFiles(ConfigureImportSettings dataContext, ListBox listBox, DragEventArgs e)

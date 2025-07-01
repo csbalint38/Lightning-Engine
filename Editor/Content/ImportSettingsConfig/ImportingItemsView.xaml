@@ -8,7 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Border>
+        <Border Background="{StaticResource Editor.BackgroundBrush3}">
             <ItemsControl ItemsSource="{Binding Source={x:Static local:ImportingItemCollection.FilteredItems}}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -19,13 +19,14 @@
                     <DataTemplate DataType="{x:Type local:ImportingItem}">
                         <Grid Margin="1"
                               x:Name="GrdItem"
-                              ClipToBounds="True">
+                              ClipToBounds="True"
+                              Background="{StaticResource Editor.BackgroundBrush4}">
                             <Rectangle Height="5"
                                        HorizontalAlignment="Stretch"
                                        VerticalAlignment="Top"
                                        Margin="96,0,0,0"
                                        x:Name="RectStatus"
-                                       d:Fill="GreenYellow"/>
+                                       d:Fill="{StaticResource Editor.GreenBrush}"/>
                             <TextBlock FontFamily="Bahnschrift"
                                        FontSize="10"
                                        Foreground="#20ffffff"
@@ -41,9 +42,11 @@
                             </TextBlock>
                             <StackPanel Margin="5,5,5,2">
                                 <TextBlock Text="{Binding Name}"
+                                           Foreground="{StaticResource Editor.FontBrush}"
                                            TextWrapping="Wrap"
                                            d:Text="DiffuseTexture.png"/>
                                 <TextBlock Text="{Binding ImportDuration}"
+                                           Foreground="{StaticResource Editor.FontBrush}"
                                            d:Text="00:20:18"/>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock x:Name="TBStatus"
@@ -62,9 +65,11 @@
                                             </Style>
                                         </StackPanel.Style>
                                         <TextBlock Text="{Binding ProgressValue}"
+                                                   Foreground="{StaticResource Editor.FontBrush}"
                                                    Margin="10,0,0,0"
                                                    d:Text="9"/>
                                         <TextBlock Text="{Binding ProgressMax, StringFormat= /{0}}"
+                                                   Foreground="{StaticResource Editor.FontBrush}"
                                                    d:Text="/10"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -75,10 +80,10 @@
                                      Value="True">
                                 <Setter Property="Foreground"
                                         TargetName="TBAssetType"
-                                        Value="#FFC800"/>
+                                        Value="{StaticResource Editor.LightningBrush}"/>
                                 <Setter Property="Background"
                                         TargetName="GrdItem"
-                                        Value="Black"/>
+                                        Value="{StaticResource Editor.BackgroundBrush5}"/>
                             </Trigger>
                             <DataTrigger Binding="{Binding Status}"
                                          Value="{x:Static enums:ImportStatus.IMPORTING}">
@@ -87,10 +92,10 @@
                                         Value="Importing..."/>
                                 <Setter Property="Foreground"
                                         TargetName="TBStatus"
-                                        Value="#FFC800"/>
+                                        Value="{StaticResource Editor.LightningBrush}"/>
                                 <Setter Property="Fill"
                                         TargetName="RectStatus"
-                                        Value="Orange"/>
+                                        Value="{StaticResource Editor.LightningBrush}"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Status}"
                                          Value="{x:Static enums:ImportStatus.SUCCEEDED}">
@@ -99,10 +104,10 @@
                                         Value="Done."/>
                                 <Setter Property="Foreground"
                                         TargetName="TBStatus"
-                                        Value="Green"/>
+                                        Value="{StaticResource Editor.GreenBrush}"/>
                                 <Setter Property="Fill"
                                         TargetName="RectStatus"
-                                        Value="Green"/>
+                                        Value="{StaticResource Editor.GreenBrush}"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Status}"
                                          Value="{x:Static enums:ImportStatus.FAILED}">
@@ -111,14 +116,14 @@
                                         Value="Importing..."/>
                                 <Setter Property="Foreground"
                                         TargetName="TBStatus"
-                                        Value="#FFC800"/>
+                                        Value="{StaticResource Editor.LightningBrush}"/>
                                 <Setter Property="Fill"
                                         TargetName="RectStatus"
-                                        Value="Red"/>
+                                        Value="{StaticResource Editor.RedBrush}"/>
                                 <Setter Property="Background"
                                         TargetName="GrdItem">
                                     <Setter.Value>
-                                        <SolidColorBrush Color="Red"
+                                        <SolidColorBrush Color="{StaticResource Editor.Red}"
                                                          Opacity="0.1"/>
                                     </Setter.Value>
                                 </Setter>
@@ -164,5 +169,10 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Border>
+        <ScrollViewer.Effect>
+            <DropShadowEffect Opacity="0.6"
+                              BlurRadius="15"
+                              ShadowDepth="2"/>
+        </ScrollViewer.Effect>
     </ScrollViewer>
 </UserControl>

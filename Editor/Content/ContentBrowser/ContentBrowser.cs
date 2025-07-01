@@ -46,7 +46,6 @@ namespace Editor.Content.ContentBrowser
 
             contentFolder = Path.TrimEndingDirectorySeparator(contentFolder);
             ContentFolder = contentFolder;
-            SelectedFolder = contentFolder;
             FolderContent = new ReadOnlyObservableCollection<ContentInfo>(_folderContent);
 
             ContentWatcher.ContentModified += OnContentModified;

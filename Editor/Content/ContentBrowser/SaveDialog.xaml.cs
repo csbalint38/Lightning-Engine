@@ -15,6 +15,12 @@ namespace Editor.Content
         {
             InitializeComponent();
 
+            contentBrowserView.Loaded += (_, __) =>
+            {
+                var contentBrowser = contentBrowserView.DataContext as ContentBrowser.ContentBrowser;
+                contentBrowser.SelectedFolder = contentBrowser.ContentFolder;
+            };
+
             Closing += OnSaveDialogClosing;
         }
 

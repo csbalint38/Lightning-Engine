@@ -10,15 +10,23 @@
     <UserControl.DataContext>
         <local:GeometryEditor/>
     </UserControl.DataContext>
-    <DockPanel>
-        <Border Height="32"
+    <DockPanel Background="{StaticResource Editor.BackgroundBrush1}">
+        <Border Background="{StaticResource Editor.BackgroundBrush2}"
+                Height="32"
                 DockPanel.Dock="Top"
                 VerticalAlignment="Top"
                 Margin="0,0,0,1">
+            <Border.Effect>
+                <DropShadowEffect Opacity="0.3"
+                                  BlurRadius="10"
+                                  ShadowDepth="0"/>
+            </Border.Effect>
             <StackPanel Orientation="Horizontal"
                         Margin="5,2">
                 <TextBlock Text="LOD:"
-                           Margin="0,0,0,5"/>
+                           Margin="0,0,5,0"
+                           Foreground="{StaticResource Editor.FontBrush}"
+                           VerticalAlignment="Center"/>
                 <Slider Width="128"
                         VerticalAlignment="Center"
                         x:Name="SldLOD"
@@ -37,7 +45,7 @@
                                             Value="False"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding AutoLOD}"
-                                             Value="true">
+                                             Value="True">
                                     <Setter Property="IsEnabled"
                                             Value="False"/>
                                 </DataTrigger>
@@ -45,10 +53,13 @@
                         </Style>
                     </Slider.Style>
                 </Slider>
-                    <TextBox Width="32"
-                             Text="{Binding Path=Value, ElementName=SldLOD}"
-                             IsEnabled="{Binding Path=IsEnabled, ElementName=SldLOD}"/>
+                <TextBox Width="32"
+                         Text="{Binding Path=Value, ElementName=SldLOD}"
+                         IsEnabled="{Binding Path=IsEnabled, ElementName=SldLOD}"
+                         Margin="5,0,0,0"/>
                 <TextBlock Text="Auto LOD"
+                           Foreground="{StaticResource Editor.FontBrush}"
+                           VerticalAlignment="Center"
                            Margin="15,0,5,0"/>
                 <CheckBox IsChecked="{Binding AutoLOD}"
                           VerticalAlignment="Center" />
@@ -57,18 +68,20 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition MinWidth="250"
-                                  MaxWidth="400"/>
+                                  MaxWidth="400"
+                                  Width="240"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <local:GeometryDetailsView Tag="{Binding ElementName=geometryView}"/>
+            <local:GeometryDetailsView Tag="{Binding ElementName=geometryView}"
+                                       Margin="0,0,5,0"/>
             <GridSplitter HorizontalAlignment="Right"
                           Width="5"
-                          VerticalAlignment="Stretch"/>
+                          Background="{StaticResource Editor.BackgroundBrush1}"/>
             <local:GeometryView DataContext="{Binding MeshRenderer}"
                                 Grid.Column="1"
                                 x:Name="geometryView" />
             <StackPanel Grid.Column="1"
-                        Margin="5"
+                        Margin="5,5,0,0"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Left"
                         IsHitTestVisible="False">

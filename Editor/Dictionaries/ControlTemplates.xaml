@@ -51,10 +51,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type RepeatButton}">
-                    <Border x:Name="border"
-                            Margin="1"
-                            CornerRadius="2"
-                            Background="{StaticResource Editor.BackgroundBrush2}">
+                    <Border x:Name="border" Margin="1" CornerRadius="2" Background="{StaticResource Editor.BackgroundBrush2}">
                         <Path x:Name="triangle"
                               HorizontalAlignment="Center"
                               VerticalAlignment="Center"
@@ -300,9 +297,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ComboBoxItem}">
-                    <Border x:Name="border"
-                            Background="{TemplateBinding Background}"
-                            SnapsToDevicePixels="True">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
                         <ContentPresenter HorizontalAlignment="Stretch"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                           Margin="4,2"/>
@@ -392,9 +387,7 @@
                             <Setter Property="Visibility" TargetName="PART_textBlock" Value="Collapsed"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Value, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
-                            <Setter Property="Foreground"
-                                    TargetName="PART_textBlock"
-                                    Value="{StaticResource Editor.DisabledFontBrush}"/>
+                            <Setter Property="Foreground" TargetName="PART_textBlock" Value="{StaticResource Editor.DisabledFontBrush}"/>
                             <Setter Property="Text" TargetName="PART_textBlock" Value="---"/>
                             <Setter Property="Cursor" Value="No"/>
                             <Setter Property="ToolTip" TargetName="PART_textBlock" Value="Mixed values"/>
@@ -427,7 +420,8 @@
                         <Grid x:Name="grid" MinWidth="20">
                             <TextBlock x:Name="PART_textBlock"
                                        Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
-                                       HorizontalAlignment="Center">
+                                       HorizontalAlignment="Stretch"
+                                       TextAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="{x:Type TextBlock}">
                                         <Style.Triggers>
@@ -451,9 +445,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="BorderBrush"
-                                    TargetName="border"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" TargetName="grid" Value="0.5"/>
@@ -462,9 +454,7 @@
                             <Setter Property="Visibility" TargetName="PART_textBlock" Value="Collapsed"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Value, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
-                            <Setter Property="Background"
-                                    TargetName="PART_textBlock"
-                                    Value="{StaticResource Editor.DisabledFontBrush}"/>
+                            <Setter Property="Background" TargetName="PART_textBlock" Value="{StaticResource Editor.DisabledFontBrush}"/>
                             <Setter Property="ToolTip" TargetName="PART_textBlock" Value="Mixed values"/>
                             <Setter Property="MinWidth" TargetName="PART_textBlock" Value="20"/>
                         </DataTrigger>
@@ -482,13 +472,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:VectorBox}">
                     <ControlTemplate.Resources>
-                        <Style TargetType="{x:Type controls:NumberBox}"
-                               BasedOn="{StaticResource {x:Type controls:NumberBox}}">
+                        <Style TargetType="{x:Type controls:NumberBox}" BasedOn="{StaticResource {x:Type controls:NumberBox}}">
                             <Setter Property="MinWidth" Value="20"/>
                             <Setter Property="ToolTipService.InitialShowDelay" Value="3000"/>
                             <Setter Property="ToolTipService.BetweenShowDelay" Value="1000"/>
-                            <Setter Property="Multiplier"
-                                    Value="{Binding Multiplier, RelativeSource={RelativeSource TemplatedParent}}"/>
+                            <Setter Property="Multiplier" Value="{Binding Multiplier, RelativeSource={RelativeSource TemplatedParent}}"/>
                         </Style>
                     </ControlTemplate.Resources>
                     <Grid x:Name="grid">
@@ -504,10 +492,7 @@
                             <RowDefinition x:Name="rowDefinition2"/>
                             <RowDefinition x:Name="rowDefinition3"/>
                         </Grid.RowDefinitions>
-                        <Border x:Name="nbX"
-                                CornerRadius="3"
-                                Background="{StaticResource Editor.BackgroundBrush1}"
-                                Margin="2,0,2,0">
+                        <Border x:Name="nbX" CornerRadius="3" Background="{StaticResource Editor.BackgroundBrush1}"  Margin="2,0,2,0">
                             <Grid VerticalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -525,10 +510,7 @@
                                                     Grid.Column="1"/>
                             </Grid>
                         </Border>
-                        <Border x:Name="nbY"
-                                CornerRadius="3"
-                                Background="{StaticResource Editor.BackgroundBrush1}"
-                                Margin="2,0,2,0">
+                        <Border x:Name="nbY" CornerRadius="3" Background="{StaticResource Editor.BackgroundBrush1}"  Margin="2,0,2,0">
                             <Grid VerticalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -546,10 +528,7 @@
                                                     Grid.Column="1"/>
                             </Grid>
                         </Border>
-                        <Border x:Name="nbZ"
-                                CornerRadius="3"
-                                Background="{StaticResource Editor.BackgroundBrush1}"
-                                Margin="2,0,2,0">
+                        <Border x:Name="nbZ" CornerRadius="3" Background="{StaticResource Editor.BackgroundBrush1}" Margin="2,0,2,0">
                             <Grid VerticalAlignment="Center">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -567,8 +546,7 @@
                                                     Grid.Column="1"/>
                             </Grid>
                         </Border>
-                        <Border x:Name="nbAlpha"
-                                CornerRadius="3"
+                        <Border x:Name="nbAlpha" CornerRadius="3"
                                 Background="{StaticResource Editor.BackgroundBrush1}"
                                 Margin="2,0,2,0"
                                 Visibility="Collapsed">
@@ -599,8 +577,7 @@
                             <Setter Property="Width" TargetName="columnDefinition2" Value="Auto"/>
                             <Setter Property="Width" TargetName="columnDefinition3" Value="Auto"/>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}"
-                                     Value="Horizontal">
+                        <DataTrigger Binding="{Binding Orientation, RelativeSource={RelativeSource Self}}" Value="Horizontal">
                             <Setter Property="Grid.Column" TargetName="nbX" Value="0"/>
                             <Setter Property="Grid.Column" TargetName="nbY" Value="1"/>
                             <Setter Property="Grid.Column" TargetName="nbZ" Value="2"/>
@@ -664,14 +641,10 @@
                                 <Condition Property="Selector.IsSelectionActive" Value="False"/>
                                 <Condition Property="IsSelected" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </MultiTrigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource Editor.SelectBrush}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Editor.SelectBrush}"/>
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -691,9 +664,7 @@
                                 <Condition Property="Selector.IsSelectionActive" Value="False"/>
                                 <Condition Property="IsSelected" Value="False"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="border"
@@ -753,9 +724,7 @@
         </Setter>
         <Setter Property="Effect">
             <Setter.Value>
-                <DropShadowEffect Opacity=".6"
-                                  BlurRadius="15"
-                                  ShadowDepth="2"/>
+                <DropShadowEffect Opacity=".6" BlurRadius="15" ShadowDepth="2"/>
             </Setter.Value>
         </Setter>
     </Style>
@@ -769,22 +738,25 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type CheckBox}">
-                    <Grid>
-                        <Border x:Name="border"
-                                Width="16"
-                                Height="16"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="2"
-                                CornerRadius="3"/>
-                        <Path x:Name="CheckMark"
-                              Data="M2.8,8 L6.2,11.6 L13.2,4.4"
-                              Stroke="{TemplateBinding Foreground}"
-                              StrokeThickness="2"
-                              Visibility="Collapsed"
-                              HorizontalAlignment="Left"
-                              VerticalAlignment="Top"/>
-                    </Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Grid>
+                            <Border x:Name="border"
+                                    Width="16"
+                                    Height="16"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="2"
+                                    CornerRadius="3"/>
+                            <Path x:Name="CheckMark"
+                                  Data="M2.8,8 L6.2,11.6 L13.2,4.4"
+                                  Stroke="{TemplateBinding Foreground}"
+                                  StrokeThickness="2"
+                                  Visibility="Collapsed"
+                                  HorizontalAlignment="Left"
+                                  VerticalAlignment="Top"/>
+                        </Grid>
+                        <ContentPresenter Margin="4,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                    </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
@@ -794,20 +766,14 @@
                             <Setter Property="Data" TargetName="CheckMark" Value="M2,8 L14,8"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource Editor.BackgroundBrush5}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Editor.BackgroundBrush5}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border"
-                                    Property="Background"
-                                    Value="{StaticResource Editor.BackgroundBrush5}"/>
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Editor.BackgroundBrush5}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource Editor.DisabledFontBrush}"/>
-                            <Setter TargetName="border"
-                                    Property="BorderBrush"
-                                    Value="{StaticResource Editor.BackgroundBrush2}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush2}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -826,7 +792,7 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Padding" Value="0,3"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
@@ -845,12 +811,15 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background"
-                                    TargetName="border"
-                                    Value="{StaticResource Editor.BackgroundBrush5}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.BackgroundBrush5}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect Opacity=".6" BlurRadius="15" ShadowDepth="2"/>
             </Setter.Value>
         </Setter>
     </Style>
@@ -877,14 +846,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background"
-                                    TargetName="border"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background"
-                                    TargetName="border"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}"/>
@@ -929,14 +894,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background"
-                                    TargetName="border"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.BackgroundBrush4}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background"
-                                    TargetName="border"
-                                    Value="{StaticResource Editor.BackgroundBrush4}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.BackgroundBrush4}"/>
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -977,9 +938,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background"
-                                    TargetName="border"
-                                    Value="#FFD633"/>
+                            <Setter Property="Background" TargetName="border" Value="#FFD633"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.DisabledFontBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -987,12 +949,14 @@
         </Setter>
         <Setter Property="Effect">
             <Setter.Value>
-                <DropShadowEffect Color="{StaticResource Editor.Lightning}"
-                                  Opacity=".7"
-                                  BlurRadius="15"
-                                  ShadowDepth="2"/>
+                <DropShadowEffect Color="{StaticResource Editor.Lightning}" Opacity=".7" BlurRadius="15"  ShadowDepth="2"/>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Effect" Value="{x:Null}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
     <Style x:Key="IconButton" TargetType="{x:Type Button}">
         <Setter Property="Background" Value="Transparent"/>
@@ -1011,9 +975,7 @@
                             Height="{TemplateBinding Height}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          RecognizesAccessKey="True"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -1037,9 +999,7 @@
                             Height="{TemplateBinding Height}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          RecognizesAccessKey="True"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -1068,9 +1028,7 @@
                             Height="{TemplateBinding Height}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-                        <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          RecognizesAccessKey="True"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -1134,12 +1092,8 @@
                                 <Button x:Name="BtnClose" Click="BtnClose_Click" Margin="3,3,0,0">
                                     <Button.Content>
                                         <Grid>
-                                            <Path Data="M1,2.5L 8,9.5"
-                                                  Margin="0"
-                                                  Stroke="{StaticResource Editor.RedBrush}"/>
-                                            <Path Data="M1,9.5L 8,2.5"
-                                                  Margin="0"
-                                                  Stroke="{StaticResource Editor.RedBrush}"/>
+                                            <Path Data="M1,2.5L 8,9.5" Margin="0"  Stroke="{StaticResource Editor.RedBrush}"/>
+                                            <Path Data="M1,9.5L 8,2.5" Margin="0" Stroke="{StaticResource Editor.RedBrush}"/>
                                         </Grid>
                                     </Button.Content>
                                 </Button>
@@ -1220,12 +1174,8 @@
                                 <Button x:Name="BtnClose" Click="BtnClose_Click" Margin="3,3,0,0">
                                     <Button.Content>
                                         <Grid>
-                                            <Path Data="M1,2.5L 8,9.5"
-                                                  Margin="0"
-                                                  Stroke="{StaticResource Editor.RedBrush}"/>
-                                            <Path Data="M1,9.5L 8,2.5"
-                                                  Margin="0"
-                                                  Stroke="{StaticResource Editor.RedBrush}"/>
+                                            <Path Data="M1,2.5L 8,9.5" Margin="0" Stroke="{StaticResource Editor.RedBrush}"/>
+                                            <Path Data="M1,9.5L 8,2.5" Margin="0" Stroke="{StaticResource Editor.RedBrush}"/>
                                         </Grid>
                                     </Button.Content>
                                 </Button>
@@ -1956,10 +1906,6 @@
               Canvas.Left="0"
               Stroke="{StaticResource Editor.LightningBrush}"
               StrokeThickness="0.2"/>
-        <Rectangle Fill="Transparent"
-                   Stroke="{StaticResource Editor.LightningBrush}"
-                   StrokeThickness="0.3"
-                   Width="100"
-                   Height="100"/>
+        <Rectangle Fill="Transparent" Stroke="{StaticResource Editor.LightningBrush}" StrokeThickness="0.3" Width="100" Height="100"/>
     </Canvas>
 </ResourceDictionary>

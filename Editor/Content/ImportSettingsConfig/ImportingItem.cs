@@ -96,7 +96,7 @@ namespace Editor.Content.ImportSettingsConfig
             {
                 _stopwatch = new();
                 _timer = new();
-                _timer.Interval = TimeSpan.FromMicroseconds(100);
+                _timer.Interval = TimeSpan.FromMilliseconds(100);
                 _timer.Tick += UpdateTimer;
                 _timer.Start();
             });

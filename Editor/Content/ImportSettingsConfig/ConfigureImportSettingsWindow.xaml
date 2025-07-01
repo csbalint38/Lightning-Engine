@@ -8,10 +8,11 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type={x:Type local:ConfigureImportSettings}}"
         Title="Configure Import Settings"
+        Style="{StaticResource LightningWindowStyle}"
         WindowStartupLocation="CenterOwner"
         UseLayoutRounding="True"
-        Height="400"
-        Width="600">
+        Height="768"
+        Width="1280">
     <Grid>
         <TabControl Background="Transparent"
                     BorderThickness="0"
@@ -20,16 +21,7 @@
             <TabItem Header="Geometry"
                      MinWidth="96"
                      Tag="{x:Static enums:AssetType.MESH}">
-                <local:ConfigureGeometryImportSettingsView RenderTransformOrigin="0.5,0.5">
-                    <local:ConfigureGeometryImportSettingsView.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform/>
-                            <SkewTransform AngleY="0.108"/>
-                            <RotateTransform/>
-                            <TranslateTransform Y="0.56"/>
-                        </TransformGroup>
-                    </local:ConfigureGeometryImportSettingsView.RenderTransform>
-                </local:ConfigureGeometryImportSettingsView>
+                <local:ConfigureGeometryImportSettingsView/>
             </TabItem>
             <TabItem Header="Texture"
                      MinWidth="96"

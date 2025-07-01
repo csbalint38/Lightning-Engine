@@ -17,17 +17,21 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
         <TextBlock Text="{Binding FileInfo.Name, StringFormat='Destination folder for {0}:'}"
+                   Foreground="{StaticResource Editor.FontBrush}"
                    TextTrimming="CharacterEllipsis"
                    d:Text="placeholder"
                    Margin="0,0,0,5"/>
         <Border BorderThickness="1"
                 CornerRadius="3"
-                Grid.Row="1">
+                Grid.Row="1"
+                BorderBrush="{StaticResource Editor.FontBrush}">
             <DockPanel Margin="5">
                 <Button Content="Browse..."
                         DockPanel.Dock="Right"
+                        Style="{StaticResource FlatButton}"
                         Click="Button_Click"/>
                 <TextBlock Text="{Binding DestinationFolder, Converter={StaticResource contentSubfolderConverter}}"
+                           Foreground="{StaticResource Editor.FontBrush}"
                            TextTrimming="CharacterEllipsis"
                            d:Text="/Models/TreeModels"/>
             </DockPanel>

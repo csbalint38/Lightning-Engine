@@ -6,26 +6,36 @@
              xmlns:local="clr-namespace:Editor.Content.ImportSettingsConfig"
              xmlns:content="clr-namespace:Editor.Content"
              mc:Ignorable="d"
+             Background="{StaticResource Editor.BackgroundBrush3}"
+             Padding="5"
              d:DataContext="{d:DesignInstance Type={x:Type content:GeometryImportSettings}}"
              d:DesignHeight="450" d:DesignWidth="800">
-    <UniformGrid Rows="7" VerticalAlignment="Top">
-        <DockPanel VerticalAlignment="Center">
+    <UserControl.Resources>
+        <Style TargetType="{x:Type TextBlock}"
+               x:Key="{x:Type TextBlock}"
+               BasedOn="{StaticResource LightTextBlockStyle}"/>
+    </UserControl.Resources>
+    <UniformGrid Rows="7"
+                 VerticalAlignment="Top">
+        <DockPanel VerticalAlignment="Center" Margin="0,2">
             <TextBlock Text="Normals" Width="150"/>
             <ComboBox x:Name="CBNormal"
-                      SelectedIndex="{Binding CalculateNormals}">
+                      SelectedIndex="{Binding CalculateNormals}"
+                      Style="{StaticResource ComboBoxFlatStyle}">
                 <ComboBoxItem Content="Import"/>
                 <ComboBoxItem Content="Calculate"/>
             </ComboBox>
         </DockPanel>
-        <DockPanel VerticalAlignment="Center">
+        <DockPanel VerticalAlignment="Center" Margin="0,2">
             <TextBlock Text="Tangents" Width="150"/>
             <ComboBox x:Name="CBTangent"
-                      SelectedIndex="{Binding CalculateTangents}">
+                      SelectedIndex="{Binding CalculateTangents}"
+                      Style="{StaticResource ComboBoxFlatStyle}">
                 <ComboBoxItem Content="Import"/>
                 <ComboBoxItem Content="Calculate Mikk TSpace"/>
             </ComboBox>
         </DockPanel>
-        <DockPanel VerticalAlignment="Center">
+        <DockPanel VerticalAlignment="Center" Margin="0,2">
             <TextBlock Text="Smoothing Angle" Width="150"/>
             <Slider Minimum="0"
                     Maximum="180"
@@ -74,4 +84,9 @@
                       d:IsChecked="False"/>
         </DockPanel>
     </UniformGrid>
+    <UserControl.Effect>
+        <DropShadowEffect Opacity=".6"
+                          BlurRadius="15"
+                          ShadowDepth="2"/>
+    </UserControl.Effect>
 </UserControl>

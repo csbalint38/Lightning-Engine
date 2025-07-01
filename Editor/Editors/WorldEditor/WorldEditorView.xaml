@@ -72,7 +72,7 @@
                 <MenuItem Header="Open Project"
                           Command="ApplicationCommands.Open"/>
                 <Separator/>
-                <MenuItem Header="SaveProject"
+                <MenuItem Header="Save Project"
                           Command="{Binding SaveCommand}"/>
                 <Separator/>
                 <MenuItem Header="Exit"
@@ -263,7 +263,7 @@
                     Style="{StaticResource IconButtonWithHover}"
                     Margin="3"
                     IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}"
-                    ToolTip="New Script"
+                    ToolTip="New primitive mesh"
                     ToolTipService.InitialShowDelay="1000">
                 <materialDesign:PackIcon Kind="CubeOutline"
                                          Width="16"
@@ -271,13 +271,15 @@
                                          Margin="3"/>
             </Button>
             <Button x:Name="BtnImport"
-                    Click="BtnImport_Click">
-                <StackPanel>
-                    <materialDesign:PackIcon Kind="Import"
-                                             Width="24"
-                                             Height="24"
-                                             Margin="5,0,5,0"/>
-                </StackPanel>
+                    Click="BtnImport_Click"
+                    Style="{StaticResource IconButtonWithHover}"
+                    Margin="3"
+                    ToolTip="Import"
+                    ToolTipService.InitialShowDelay="1000">
+                <materialDesign:PackIcon Kind="Import"
+                                         Width="16"
+                                         Height="16"
+                                         Margin="3"/>
             </Button>
         </StackPanel>
         <Grid Grid.Row="2">
