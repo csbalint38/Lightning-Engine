@@ -86,7 +86,7 @@ namespace Editor.DLLs
                     using var diffuseData = textureData.Clone(texture.ImportSettings);
 
                     var diffuseResult = Task.Run(() => PrefilterDiffuseIBL(diffuseData));
-                    var specularResult = Task.Run(() => PrefilterSpecularIBL(diffuseData));
+                    var specularResult = Task.Run(() => PrefilterSpecularIBL(textureData));
 
                     diffuseIBLCubemap = texture.IBLPair ?? new();
 

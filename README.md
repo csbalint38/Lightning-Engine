@@ -7,28 +7,32 @@
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 99 | 14,932 |
-| C# | 187 |  13,178 |
-| XAML | 36 | 7,251 |
+| C++ | 99 | 14,940 |
+| C# | 187 |  13,191 |
+| XAML | 36 | 7,282 |
 | HLSL | 15 |  1,892 |
 | XML | 18 | 1,657 |
 | Python | 8 | 277 |
-| Markdown | 3 | 257 |
+| Markdown | 3 | 259 |
 ... +1 others (less than 100 lines)
+
+424
 
 ## Requirements
 
 ### Minimum
 **CPU:** Intel Pentium III 1000 MHz / AMD Athlon 64\
 **Storage:** 1 GB available space\
-**RAM:** 1 GB**OS:** Windows 10\
+**RAM:** 1 GB\
+**OS:** Windows 10\
 **GPU:** Integrated with 300 MB memory\
 **DirectX:** DirectX 12
 
 ### Recommended
 **CPU:** Intel Pentium M 755 / AMD Athlon 64\
 **Storage:** 2GB SSD\
-**RAM:** 2 GB**OS:** Windows 10 Home\
+**RAM:** 2 GB\
+**OS:** Windows 10 Home\
 **GPU:** NVidia GeForce GT 420\
 **DirectX:** DirectX 12
 
@@ -52,22 +56,22 @@ E.g. expecting better/faster... result, broken convenience features, typos, UX/U
 E.g. feature suggestions, documentation issues
 
 ## Public headers
-`Engine/EngineAPI/Camera.h`
-`Engine/EngineAPI/GameEntity.h`
-`Engine/EngineAPI/GeometryComponent.h`
-`Engine/EngineAPI/Input.h`
-`Engine/EngineAPI/Light.h`
-`Engine/EngineAPI/ScriptComponent.h`
-`Engine/EngineAPI/TransformComponent.h`
-`Engine/Common/CommonHeaders.h`
-`Engine/Common/PrimitiveTypes.h`
-`Engine/Common/Id.h`
-`Engine/Utilities/Math.h`
-`Engine/Utilities/MathTypes.h`
-`Engine/Utilities/Utilities.h`
-`Engine/Utilities/Vector.h`
-`Engine/Components/ComponentsCommonHeader.h`
+`Engine/EngineAPI/Camera.h`\
+`Engine/EngineAPI/GameEntity.h`\
+`Engine/EngineAPI/GeometryComponent.h`\
+`Engine/EngineAPI/Input.h`\
+`Engine/EngineAPI/Light.h`\
+`Engine/EngineAPI/ScriptComponent.h`\
+`Engine/EngineAPI/TransformComponent.h`\
+`Engine/Common/CommonHeaders.h`\
+`Engine/Common/PrimitiveTypes.h`\
+`Engine/Common/Id.h`\
+`Engine/Utilities/Math.h`\
+`Engine/Utilities/MathTypes.h`\
+`Engine/Utilities/Utilities.h`\
+`Engine/Utilities/Vector.h`\
+`Engine/Components/ComponentsCommonHeader.h`\
 
-## Copiright
+## Copyright
 
 *This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2008 Autodesk, Inc. All rights, reserved.*

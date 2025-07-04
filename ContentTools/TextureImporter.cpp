@@ -1,7 +1,7 @@
 #include "ToolsCommon.h"
 #include "Content/ContentToEngine.h"
 #include "Utilities/IOStream.h"
-#include <directXTex.h>
+#include <DirectXTex.h>
 #include <dxgi1_6.h>
 
 using namespace DirectX;
@@ -631,7 +631,7 @@ namespace lightning::tools {
 
 			constexpr u32 sample_count{ 1024 };
 
-			if (run_on_gpu([&](ID3D11Device* device) {
+			if (!run_on_gpu([&](ID3D11Device* device) {
 				hr = filter_type == IBLFilter::DIFFUSE ? prefilter_diffuse(device, cubemaps, sample_count, cubemaps) : prefilter_specular(device, cubemaps, sample_count, cubemaps);
 
 				return SUCCEEDED(hr);

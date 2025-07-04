@@ -17,9 +17,15 @@
         <converters:EnumDescriptionConverter x:Key="enumDescriptionConverter"/>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter"/>
          <Style x:Key="{x:Type TextBlock}"  
-               TargetType="{x:Type TextBlock}">  
-            <Setter Property="VerticalAlignment"  
-                    Value="Center"/>  
+               TargetType="{x:Type TextBlock}"
+               BasedOn="{StaticResource LightTextBlockStyle}">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled"
+                         Value="False">
+                    <Setter Property="Foreground"
+                            Value="{StaticResource Editor.DisabledFontBrush}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <ObjectDataProvider x:Key="bcFormatEnumDataSource"  
                             MethodName="GetValues"  
@@ -50,24 +56,27 @@
                    Margin="0,5"  
                    Orientation="Horizontal">  
             <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=0}"  
+                         Foreground="{StaticResource Editor.FontBrush}"
                          Margin="0,1,20,2"  
                          Content="1D"  
                          GroupName="Dimension"/>  
             <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=1}"  
+                         Foreground="{StaticResource Editor.FontBrush}"
                          Margin="0,1,20,2"  
                          Content="2D"  
                          d:IsChecked="True"  
                          GroupName="Dimension"/>  
             <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=2}"  
+                         Foreground="{StaticResource Editor.FontBrush}"
                          Margin="0,1,20,2"  
                          Content="3D"  
                          GroupName="Dimension"/>
             <RadioButton IsChecked="{Binding Dimension, Converter={StaticResource textureDimensionToBoolConverter}, ConverterParameter=3}"  
+                         Foreground="{StaticResource Editor.FontBrush}"
                          Margin="0,1,20,2"  
                          Content="Cubemap"  
                          GroupName="Dimension"/>
-            <StackPanel Orientation="Horizontal" 
-                        d:Visibility="Visible">
+            <StackPanel d:Visibility="Visible">
                 <StackPanel.Style>
                     <Style TargetType="{x:Type StackPanel}">
                         <Setter Property="IsEnabled"
@@ -81,7 +90,8 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,0,0,5">
                     <StackPanel.Style>
                         <Style TargetType="{x:Type StackPanel}">
                             <Style.Triggers>
@@ -100,7 +110,8 @@
                              Padding="0"
                              d:Text="1024"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal"
+                            Margin="0,0,0,5">
                     <TextBlock Text="Mirror Cubemap"
                                Width="100"/>
                     <CheckBox IsChecked="{Binding MirrorCubemap}"/>
@@ -168,6 +179,7 @@
         <Grid Grid.Row="3" Grid.Column="1">
             <TextBlock Text="{Binding OutputFormat, Converter={StaticResource enumDescriptionConverter}}"/>
             <ComboBox ItemsSource="{Binding Source={StaticResource bcFormatEnumDataSource}, Converter={StaticResource enumDescriptionConverter}}"
+                      Style="{StaticResource ComboBoxFlatStyle}"
                       x:Name="CBFormat"
                       VerticalAlignment="Center"
                       SelectedIndex="{Binding FormatIndex}"
@@ -181,7 +193,8 @@
                    x:Name="TBAlphaThreshold"
                    d:Visibility="Visible">
             <TextBlock.Style>
-                <Style TargetType="{x:Type TextBlock}">
+                <Style TargetType="{x:Type TextBlock}"
+                       BasedOn="{StaticResource LightTextBlockStyle}">
                     <Setter Property="Visibility"
                             Value="Collapsed"/>
                     <Style.Triggers>

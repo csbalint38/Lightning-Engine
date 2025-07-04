@@ -58,8 +58,8 @@ namespace lightning::tools {
 		void sample_cube_face(const Image& env_map, const Image& cube_face, u32 face_index, bool mirror) {
 			assert(cube_face.width == cube_face.height);
 
-			const f32 inv_width{ 1.f / (f32)cube_face.height };
-			const f32 inv_height{ 1.f / (f32)cube_face.width };
+			const f32 inv_width{ 1.f / (f32)cube_face.width };
+			const f32 inv_height{ 1.f / (f32)cube_face.height };
 			const u32 row_pitch{ (u32)cube_face.rowPitch };
 			const u32 env_width{ (u32)env_map.width - 1 };
 			const u32 env_height{ (u32)env_map.height - 1 };
@@ -167,7 +167,7 @@ namespace lightning::tools {
 				return hr;
 			}
 
-			for (u32 img_idx{ 0 }; img_idx < mip_levels; ++img_idx) {
+			for (u32 img_idx{ 0 }; img_idx < array_size; ++img_idx) {
 				for (u32 mip{ 0 }; mip < mip_levels; ++mip) {
 					D3D11_MAPPED_SUBRESOURCE mapped_resource{};
 					const u32 resource_idx{ mip + (img_idx * mip_levels) };
@@ -434,8 +434,7 @@ namespace lightning::tools {
 			{
 				const u32 image_count{ (u32)cubemaps.GetImageCount() };
 				const Image* images{ cubemaps.GetImages() };
-				util::vector<D3D11_SUBRESOURCE_DATA> input_data(image_count);
-
+				util::vector<D3D11_SUBRESOURCE_DATA> input_data(image_count);;
 				for (u32 i{ 0 }; i < image_count; ++i) {
 					input_data[i].pSysMem = images[i].pixels;
 					input_data[i].SysMemPitch = (u32)images[i].rowPitch;
@@ -453,6 +452,15 @@ namespace lightning::tools {
 			desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
 			desc.MiscFlags = 0;
 			hr = device->CreateTexture2D(&desc, nullptr, cubemaps_out.GetAddressOf());
+
+			if (FAILED(hr)) {
+				return hr;
+			}
+
+			desc.BindFlags = 0;
+			desc.Usage = D3D11_USAGE_STAGING;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+			hr = device->CreateTexture2D(&desc, nullptr, cubemaps_cpu.GetAddressOf());
 
 			if (FAILED(hr)) {
 				return hr;

@@ -14,8 +14,11 @@
         <util:EnumDescriptionConverter x:Key="enumDescriptionConverter"/>
         <util:TextureSizeToStringConverter x:Key="textureSizeToStringConverter"/>
         <util:BoolToYesNoConverter x:Key="boolToYesNoConverter"/>
+        <util:DataSizeToStringConverter x:Key="dataSizeToStringConverter"/>
+        <Style TargetType="{x:Type TextBlock}"
+               BasedOn="{StaticResource LightTextBlockStyle}"/>
     </UserControl.Resources>
-    <Grid>
+    <Grid Background="{StaticResource Editor.BackgroundBrush2}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -23,11 +26,13 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Margin="5">
             <StackPanel.Resources>
-                <Style TargetType="{x:Type TextBlock}">
-                    <Setter Property="Margin" Value="5"/>
+                <Style TargetType="{x:Type TextBlock}"
+                       BasedOn="{StaticResource LightTextBlockStyle}">
+                    <Setter Property="Margin"
+                            Value="5"/>
                 </Style>
             </StackPanel.Resources>
-            <StackPanel>
+            <StackPanel Width="100">
                 <TextBlock Text="Name"/>
                 <TextBlock Text="Dimension"/>
                 <TextBlock Text="Size"/>
@@ -69,10 +74,10 @@
                         </Style>
                     </StackPanel.Style>
                     <TextBlock d:Text="32 MB"
-                               Text="{Binding DataSize}"/>
+                               Text="{Binding DataSize, Converter={StaticResource dataSizeToStringConverter}}"/>
                     <TextBlock Text="("/>
                     <TextBlock d:Text="4 MB"
-                               Text="{Binding SelectedSlice.RawContent.LongLength}"/>
+                               Text="{Binding SelectedSlice.RawContent.LongLength, Converter={StaticResource dataSizeToStringConverter}}"/>
                     <TextBlock Text=")"/>
                 </StackPanel>
                 <TextBlock d:Text="12"
@@ -83,11 +88,11 @@
                            Text="{Binding Texture.IsHDR, Converter={StaticResource boolToYesNoConverter}}"/>
             </StackPanel>
         </StackPanel>
-        <Rectangle Fill="Purple"
+        <Rectangle Fill="{StaticResource Editor.BackgroundBrush3}"
                    Height="20"
                    Grid.Row="1"
                    VerticalAlignment="Top"
-                   Margin="0,3,0,0"/>
+                   Margin="0,3,0,3"/>
         <Expander IsEnabled="True" Grid.Row="1">
             <Expander.Header>
                 <TextBlock Text="Import Settings"

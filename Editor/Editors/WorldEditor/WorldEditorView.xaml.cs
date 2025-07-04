@@ -2,6 +2,7 @@
 using Editor.Content.ContentBrowser;
 using Editor.GameCode;
 using Editor.GameProject;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -77,5 +78,17 @@ namespace Editor.Editors
 
         private void BtnImport_Click(object sender, RoutedEventArgs e) =>
             contentBrowserView.OpenImportSettingsConfigurator();
+
+        private void BtnBugReport_Click(object sender, RoutedEventArgs e)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName =
+                    "https://docs.google.com/forms/d/e/1FAIpQLSeRvHm2lCkyRihm-OmrU0Iclv_iSVMvrasasV-anfdNa-hMGA/viewform?usp=header",
+                UseShellExecute = true,
+            };
+
+            Process.Start(psi);
+        }
     }
 }

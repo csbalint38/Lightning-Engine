@@ -54,7 +54,7 @@ float3 get_sample_direction_equirectangular(uint face, float x, float y)
         { y, x, 1.f }, // y+ bottom
         { -y, x, -1.f }, // y- top
         { 1.f, x, -y }, // z+ front
-        { -1.f, -x, y }, // z- back
+        { -1.f, -x, -y }, // z- back
     };
     
     return normalize(direction[face]);
