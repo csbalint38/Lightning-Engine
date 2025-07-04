@@ -15,9 +15,9 @@ namespace lightning::transform {
 	}
 
 	void calculate_transform_matrices(id::id_type index) {
-		assert(positions.size() >= index);
-		assert(rotations.size() >= index);
-		assert(scales.size() >= index);
+		assert(positions.size() > index);
+		assert(rotations.size() > index);
+		assert(scales.size() > index);
 
 		using namespace DirectX;
 		XMVECTOR r{ XMLoadFloat4(&rotations[index]) };

@@ -71,25 +71,32 @@ namespace Editor.Components
             };
         }
 
+        public static int? GetMixedValue<T>(List<T> objects, Func<T, int> getProperty)
+        {
+            var value = getProperty(objects.First());
+
+            return objects.Skip(1).Any(x => value != getProperty(x)) ? null : value;
+        }
+
         public static float? GetMixedValue<T>(List<T> objects, Func<T, float> getProperty)
         {
             var value = getProperty(objects.First());
 
-            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? (float?)null : value;
+            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? null : value;
         }
 
         public static bool? GetMixedValue<T>(List<T> objects, Func<T, bool> getProperty)
         {
             var value = getProperty(objects.First());
 
-            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? (bool?)null : value;
+            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? null : value;
         }
 
         public static string? GetMixedValue<T>(List<T> objects, Func<T, string> getProperty)
         {
             var value = getProperty(objects.First());
 
-            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? (string?)null : value;
+            return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? null : value;
         }
 
         public void Refresh()

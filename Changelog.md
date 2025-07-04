@@ -6,6 +6,9 @@
  - Custom Save File Dialog
  - Upgraded visuals for Configure Geometry Import Settings
 
+ ## Editor
+ - Geometry Component in Editor
+
 # v0.3.4-beta - 2025.6.24.
 
 ## UI

@@ -12,9 +12,10 @@ namespace Editor.Components
     [DataContract]
     [KnownType(typeof(Transform))]
     [KnownType(typeof(Script))]
+    [KnownType(typeof(Geometry))]
     public class Entity : ViewModelBase
     {
-        private int _entityId = Id.InvalidId;
+        private IdType _entityId = Id.InvalidId;
         private bool _isActive;
         private string _name;
         private bool _isEnabled = true;
@@ -22,10 +23,10 @@ namespace Editor.Components
         [DataMember(Name = nameof(Components))]
         private readonly ObservableCollection<Component> _components = [];
 
-        public int EntityId
+        public IdType EntityId
         {
             get => _entityId;
-            set
+            private set
             {
                 if (_entityId != value)
                 {
@@ -46,6 +47,8 @@ namespace Editor.Components
 
                     if (_isActive)
                     {
+                        _components.ToList().ForEach(x => x.Load());
+
                         EntityId = EngineAPI.CreateGameEntity(this);
 
                         Debug.Assert(Id.IsValid(EntityId));
@@ -53,6 +56,9 @@ namespace Editor.Components
                     else if (Id.IsValid(EntityId))
                     {
                         EngineAPI.RemoveGameEntity(this);
+
+                        _components.ToList().ForEach(x => x.Unload());
+
                         EntityId = Id.InvalidId;
                     }
 
@@ -122,9 +128,11 @@ namespace Editor.Components
 
             if (!Components.Any(x => x.GetType() == component.GetType()))
             {
+                var wasActive = IsActive;
+
                 IsActive = false;
                 _components.Add(component);
-                IsActive = true;
+                IsActive = wasActive;
 
                 return true;
             }

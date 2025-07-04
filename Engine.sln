@@ -21,8 +21,6 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SamplingVisualization", "Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Editor", "Editor\Editor.csproj", "{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EditorLauncher", "EditorLauncher\EditorLauncher.vcxproj", "{0ECF7770-2ABA-4D0E-A95E-9B3CABFC1795}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -67,10 +65,6 @@ Global
 		{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}.Release|x64.ActiveCfg = ReleaseEditor|x64
 		{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}.ReleaseEditor|x64.ActiveCfg = ReleaseEditor|x64
 		{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}.ReleaseEditor|x64.Build.0 = ReleaseEditor|x64
-		{0ECF7770-2ABA-4D0E-A95E-9B3CABFC1795}.Debug|x64.ActiveCfg = DebugEditor|x64
-		{0ECF7770-2ABA-4D0E-A95E-9B3CABFC1795}.DebugEditor|x64.ActiveCfg = DebugEditor|x64
-		{0ECF7770-2ABA-4D0E-A95E-9B3CABFC1795}.Release|x64.ActiveCfg = ReleaseEditor|x64
-		{0ECF7770-2ABA-4D0E-A95E-9B3CABFC1795}.ReleaseEditor|x64.ActiveCfg = ReleaseEditor|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

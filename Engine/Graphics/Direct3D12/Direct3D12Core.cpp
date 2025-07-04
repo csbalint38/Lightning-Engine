@@ -1,3 +1,5 @@
+#define INITGUID
+
 #include "Direct3D12Core.h"
 #include "Direct3D12Surface.h"
 #include "Direct3D12Shaders.h"
@@ -9,9 +11,6 @@
 #include "Direct3D12LightCulling.h"
 #include "Direct3D12Camera.h"
 #include "Shaders/ShaderTypes.h"
-
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 615; }
-extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = u8".\\D3D12\\"; }
 
 using namespace Microsoft::WRL;
 
@@ -141,8 +140,14 @@ namespace lightning::graphics::direct3d12::core {
 				u32 _frame_index{ 0 };
 		};
 
+		constexpr UINT d3d12_sdk_version = 615;
+		constexpr const char* d3d12_sdk_path = ".\\D3D12\\";
+		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
+
 		using surface_collection = util::free_list<D3D12Surface>;
 
+		ID3D12SDKConfiguration1* d3d12_sdk_config{ nullptr };
+		ID3D12DeviceFactory* d3d12_device_factory{ nullptr };
 		id3d12_device* main_device{ nullptr };
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
@@ -159,8 +164,6 @@ namespace lightning::graphics::direct3d12::core {
 		u32 deferred_release_flag[FRAME_BUFFER_COUNT]{};
 		std::mutex deferred_releases_mutex{};
 
-		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
-
 		bool failed_init() {
 			shutdown();
 			return false;
@@ -169,7 +172,7 @@ namespace lightning::graphics::direct3d12::core {
 		IDXGIAdapter4* determine_main_adapter() {
 			IDXGIAdapter4* adapter{ nullptr };
 			for (u32 i{ 0 }; dxgi_factory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
-				if (SUCCEEDED(D3D12CreateDevice(adapter, minimum_feature_level, __uuidof(ID3D12Device), nullptr))) {
+				if (SUCCEEDED(d3d12_device_factory->CreateDevice(adapter, minimum_feature_level, __uuidof(ID3D12Device), nullptr))) {
 					return adapter;
 				}
 				release(adapter);
@@ -190,7 +193,7 @@ namespace lightning::graphics::direct3d12::core {
 			feature_level_info.pFeatureLevelsRequested = feature_levels;
 
 			ComPtr<ID3D12Device> device;
-			DXCall(D3D12CreateDevice(adapter, minimum_feature_level, IID_PPV_ARGS(&device)));
+			DXCall(d3d12_device_factory->CreateDevice(adapter, minimum_feature_level, IID_PPV_ARGS(&device)));
 			DXCall(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &feature_level_info, sizeof(feature_level_info)));
 
 			return feature_level_info.MaxSupportedFeatureLevel;
@@ -261,12 +264,22 @@ namespace lightning::graphics::direct3d12::core {
 	bool initialize() {
 		if (main_device) shutdown();
 
+		HRESULT hr{ S_OK };
+
+		DXCall(hr = D3D12GetInterface(CLSID_D3D12SDKConfiguration, IID_PPV_ARGS(&d3d12_sdk_config)));
+
+		if (FAILED(hr))return failed_init();
+
+		DXCall(hr = d3d12_sdk_config->CreateDeviceFactory(d3d12_sdk_version, d3d12_sdk_path, IID_PPV_ARGS(&d3d12_device_factory)));
+
+		if (FAILED(hr))return failed_init();
+
 		u32 dxgi_factory_flags{ 0 };
 
 		#ifdef _DEBUG 
 		{
 			ComPtr<ID3D12Debug6> debug_interface;
-			if SUCCEEDED((D3D12GetDebugInterface(IID_PPV_ARGS(&debug_interface)))) {
+			if (SUCCEEDED(d3d12_device_factory->GetConfigurationInterface(CLSID_D3D12Debug, IID_PPV_ARGS(&debug_interface)))) {
 				debug_interface->EnableDebugLayer();
 				#if 0
 				#pragma message("WARNING: GPU based validation is enabled. This will considerably slow down the renderer!")
@@ -280,7 +293,6 @@ namespace lightning::graphics::direct3d12::core {
 		}
 		#endif
 
-		HRESULT hr{ S_OK };
 		DXCall(hr = CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
 
 		if (FAILED(hr)) return failed_init();
@@ -294,7 +306,7 @@ namespace lightning::graphics::direct3d12::core {
 
 		if (max_feature_level < minimum_feature_level) return failed_init();
 
-		DXCall(hr = D3D12CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
+		DXCall(hr = d3d12_device_factory->CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
 		if (FAILED(hr)) return failed_init();
 
 		#ifdef _DEBUG
@@ -386,6 +398,8 @@ namespace lightning::graphics::direct3d12::core {
 		#endif
 
 		release(main_device);
+		release(d3d12_device_factory);
+		release(d3d12_sdk_config);
 	}
 
 	id3d12_device* const device() { return main_device; }

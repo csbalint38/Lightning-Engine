@@ -19,5 +19,7 @@ namespace Editor.Components
 
         public abstract IMSComponent GetMultiselectComponents(MSEntityBase entity);
         public abstract void WriteToBinary(BinaryWriter bw);
+        public virtual void Load() { }
+        public virtual void Unload() { }
     }
 }
