@@ -155,7 +155,7 @@
                                 <TextBlock Text="{Binding FileInfo.LastWriteTime}"
                                            Grid.Row="1"
                                            Grid.ColumnSpan="2"/>
-                                <TextBlock Text="{Binding FileInfo.Length}"
+                                <TextBlock Text="{Binding FileInfo.Length, Converter={StaticResource dataSizeToStringConverter}}"
                                            Grid.Row="2"
                                            Grid.ColumnSpan="2"/>
                                 <Button x:Name="BtnRemove"

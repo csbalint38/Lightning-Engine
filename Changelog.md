@@ -4,7 +4,7 @@
  - Content Browser list view
  - Content Browser tile view
  - Custom Save File Dialog
- - Upgraded visuals for Configure Geometry Import Settings
+ - Upgraded visuals for Configure Geometry Import Settings, Texture ImportSettings and Texture Editor
 
  ## Editor
  - Geometry Component in Editor

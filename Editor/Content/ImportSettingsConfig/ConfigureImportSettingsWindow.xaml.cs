@@ -36,6 +36,7 @@ namespace Editor.Content.ImportSettingsConfig
             ImportingItemCollection.Clear(AssetType.MATERIAL);
             ImportingItemCollection.Clear(AssetType.MESH);
             ImportingItemCollection.Clear(AssetType.SKELETON);
+            ImportingItemCollection.Clear(AssetType.TEXTURE);
         }
 
         internal static void AddDroppedFiles(ConfigureImportSettings dataContext, ListBox listBox, DragEventArgs e)

@@ -75,7 +75,7 @@ namespace Editor.Content.ImportSettingsConfig
             MoveSelection(sender, (target, selection) => target.MoveUp(selection));
 
         private void BtnMoveDown_Click(object sender, RoutedEventArgs e) =>
-            MoveSelection(sender, (target, selection) => target.MoveUp(selection));
+            MoveSelection(sender, (target, selection) => target.MoveDown(selection));
 
         private void MoveSelection(object sender, Action<TextureProxy, List<TextureProxy>> action)
         {

@@ -61,7 +61,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"/>
+                <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}, StringFormat='{}{0}. '}"/>
                 <TextBlock Text="{Binding FileInfo.Name}"
                            Foreground="{StaticResource Editor.LightningBrush}"
                            TextTrimming="CharacterEllipsis"
@@ -70,7 +70,7 @@
                 <TextBlock Text="{Binding FileInfo.LastWriteTime}"
                            Grid.Row="1"
                            Grid.ColumnSpan="2"/>
-                <TextBlock Text="{Binding FileInfo.Length}"
+                <TextBlock Text="{Binding FileInfo.Length, Converter={StaticResource dataSizeToStringConverter}}"
                            Grid.Row="2"
                            Grid.ColumnSpan="2"/>
             </Grid>
@@ -166,29 +166,81 @@
                                   ToolTipService.InitialShowDelay="500"
                                   Background="Transparent">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition/>
                                     <RowDefinition/>
                                     <RowDefinition/>
+                                    <RowDefinition/>
                                 </Grid.RowDefinitions>
-                                <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}, StringFormat='{}{0}. '}"/>
+                                <Border Background="{StaticResource Editor.GreenBrush}"
+                                        Width="5"
+                                        Margin="0,0,5,0"
+                                        x:Name="BrdHasImages"
+                                        Grid.Row="0"
+                                        Grid.RowSpan="4">
+                                    <Border.Style>
+                                        <Style TargetType="{x:Type Border}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Sources.Count}"
+                                                             Value="1">
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>    
+                                </Border>
+                                <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}, StringFormat='{}{0}. '}"
+                                           Grid.Column="1"/>
                                 <TextBlock Text="{Binding FileInfo.Name}"
+                                           Foreground="{StaticResource Editor.LightningBrush}"
                                            TextTrimming="CharacterEllipsis"
                                            Margin="0,0,20,0"
-                                           Grid.Column="1"/>
+                                           Grid.Column="2"/>
                                 <TextBlock Text="{Binding FileInfo.LastWriteTime}"
                                            Grid.Row="1"
+                                           Grid.Column="1"
                                            Grid.ColumnSpan="2"/>
-                                <TextBlock Text="{Binding FileInfo.Length}"
+                                <TextBlock Text="{Binding FileInfo.Length, Converter={StaticResource dataSizeToStringConverter}}"
                                            Grid.Row="2"
+                                           Grid.Column="1"
                                            Grid.ColumnSpan="2"/>
+                                <Expander Visibility="{Binding Path=Visibility, ElementName=BrdHasImages}"
+                                          Focusable="False"
+                                          Margin="0,5,0,0"
+                                          Grid.Row="3"
+                                          Grid.Column="2"
+                                          Grid.ColumnSpan="2">
+                                    <Expander.Header>
+                                        <TextBlock Text="SOURCE IMAGES"
+                                                   FontWeight="Bold"
+                                                   Style="{StaticResource LightTextBlockStyle}"/>
+                                    </Expander.Header>
+                                    <ItemsControl ItemsSource="{Binding Sources}"
+                                                  Margin="23,5,0,10">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding FileInfo.Name}"
+                                                           Foreground="{StaticResource Editor.LightningBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,0,20,0"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
                                 <Button x:Name="BtnRemove"
                                         Click="BtnRemove_Click"
                                         Background="Transparent"
-                                        Grid.Column="1"
+                                        Grid.Column="2"
                                         Visibility="Collapsed"
                                         Style="{StaticResource removeButtonStyle}">
                                     <Button.Content>
@@ -341,20 +393,23 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel VerticalAlignment="Top">
                         <TextBlock Text="SOURCE IMAGES"
+                                   Foreground="{StaticResource Editor.FontBrush}"
                                    FontWeight="Bold"
-                                   Margin="-2,3,0,10">
+                                   Margin="2,3,0,10">
                             <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="90"/>
+                                <RotateTransform Angle="-90"/>
                             </TextBlock.LayoutTransform>
                         </TextBlock>
                         <Button Margin="0,0,5,5"
                                 Padding="0"
+                                Width="15"
                                 x:Name="BtnAddImageSource"
                                 Click="BtnAddImageSource_Click"
                                 ToolTip="Add selected images to image source list."
                                 Focusable="False">
                             <Button.Style>
-                                <Style TargetType="{x:Type Button}">
+                                <Style TargetType="{x:Type Button}"
+                                       BasedOn="{StaticResource IconButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBTexture}"
                                                      Value="1">
@@ -365,20 +420,22 @@
                                 </Style>
                             </Button.Style>
                             <Button.Content>
-                                <TextBlock Text="-->"/>
+                                <materialDesign:PackIcon Kind="ChevronRight"/>
                             </Button.Content>
                         </Button>
                         <Button Margin="0,0,5,5"
                                 Padding="0"
+                                Width="15"
                                 x:Name="BtnRemoveImageSource"
                                 Click="BtnRemoveImageSource_Click"
                                 ToolTip="Remove selected images from image source list."
                                 Focusable="False">
                             <Button.Style>
-                                <Style TargetType="{x:Type Button}">
+                                <Style TargetType="{x:Type Button}"
+                                       BasedOn="{StaticResource IconButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
-                                                     Value="1">
+                                                     Value="0">
                                             <Setter Property="IsEnabled"
                                                     Value="False"/>
                                         </DataTrigger>
@@ -386,41 +443,22 @@
                                 </Style>
                             </Button.Style>
                             <Button.Content>
-                                <TextBlock Text="&lt;--"/>
+                                <materialDesign:PackIcon Kind="ChevronLeft"/>
                             </Button.Content>
                         </Button>
                         <RepeatButton Margin="0,0,5,5"
                                       Padding="0"
+                                      Width="15"
                                       x:Name="BtnMoveUp"
                                       Click="BtnMoveUp_Click"
                                       ToolTip="Move up selected image sources."
                                       Focusable="False">
                             <RepeatButton.Style>
-                                <Style TargetType="{x:Type RepeatButton}">
+                                <Style TargetType="{x:Type RepeatButton}"
+                                       BasedOn="{StaticResource RepeatIconButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
-                                                 Value="1">
-                                            <Setter Property="IsEnabled"
-                                                Value="False"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </RepeatButton.Style>
-                            <RepeatButton.Content>
-                                <TextBlock Text="Up"/>
-                            </RepeatButton.Content>
-                        </RepeatButton>
-                        <RepeatButton Margin="0,0,5,5"
-                                      Padding="0"
-                                      x:Name="BtnMoveDown"
-                                      Click="BtnMoveDown_Click"
-                                      ToolTip="Move down selected image sources."
-                                      Focusable="False">
-                            <RepeatButton.Style>
-                                <Style TargetType="{x:Type RepeatButton}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
-                                                     Value="1">
+                                                     Value="0">
                                             <Setter Property="IsEnabled"
                                                     Value="False"/>
                                         </DataTrigger>
@@ -428,7 +466,30 @@
                                 </Style>
                             </RepeatButton.Style>
                             <RepeatButton.Content>
-                                <TextBlock Text="Down"/>
+                                <materialDesign:PackIcon Kind="ChevronUp"/>
+                            </RepeatButton.Content>
+                        </RepeatButton>
+                        <RepeatButton Margin="0,0,5,5"
+                                      Padding="0"
+                                      Width="15"
+                                      x:Name="BtnMoveDown"
+                                      Click="BtnMoveDown_Click"
+                                      ToolTip="Move down selected image sources."
+                                      Focusable="False">
+                            <RepeatButton.Style>
+                                <Style TargetType="{x:Type RepeatButton}"
+                                       BasedOn="{StaticResource RepeatIconButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Path=SelectedItems.Count, ElementName=LBImageSources}"
+                                                     Value="0">
+                                            <Setter Property="IsEnabled"
+                                                    Value="False"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </RepeatButton.Style>
+                            <RepeatButton.Content>
+                                <materialDesign:PackIcon Kind="ChevronDown"/>
                             </RepeatButton.Content>
                         </RepeatButton>
                     </StackPanel>

@@ -8,8 +8,10 @@
              xmlns:enum="clr-namespace:Editor.Common.Enums"
              xmlns:content="clr-namespace:Editor.Content.ImportSettingsConfig"
              mc:Ignorable="d"
+             Height="550"
              d:DataContext="{d:DesignInstance Type=local:TextureEditor}"
-             d:DesignHeight="1080" d:DesignWidth="400">
+             d:DesignHeight="550"
+             d:DesignWidth="400">
     <UserControl.Resources>
         <util:EnumDescriptionConverter x:Key="enumDescriptionConverter"/>
         <util:TextureSizeToStringConverter x:Key="textureSizeToStringConverter"/>
@@ -88,17 +90,15 @@
                            Text="{Binding Texture.IsHDR, Converter={StaticResource boolToYesNoConverter}}"/>
             </StackPanel>
         </StackPanel>
-        <Rectangle Fill="{StaticResource Editor.BackgroundBrush3}"
-                   Height="20"
-                   Grid.Row="1"
-                   VerticalAlignment="Top"
-                   Margin="0,3,0,3"/>
-        <Expander IsEnabled="True" Grid.Row="1">
+        <Expander IsEnabled="True"
+                  Background="{StaticResource Editor.BackgroundBrush3}"
+                  Grid.Row="1"
+                  Margin="5">
             <Expander.Header>
                 <TextBlock Text="Import Settings"
                            FontWeight="Bold"/>
             </Expander.Header>
-            <StackPanel Margin="5">
+            <StackPanel>
                 <StackPanel.Style>
                     <Style TargetType="{x:Type StackPanel}">
                         <Setter Property="IsEnabled"
@@ -117,20 +117,43 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <content:TextureImportSettingsView DataContext="{Binding ImportSettings}"/>
+                <content:TextureImportSettingsView DataContext="{Binding ImportSettings}"
+                                                   Background="{StaticResource Editor.BackgroundBrush4}"/>
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Center"
-                            Margin="0,25,0,0">
-                    <Button Content="Reimport"
-                            Width="96"
+                            Margin="0,25,0,25">
+                    <Button Grid.Row="0"
+                            Padding="16,4,16,4"
+                            VerticalAlignment="Center"
+                            Focusable="False"
+                            HorizontalAlignment="Center"
                             Margin="0,0,25,0"
-                            Command="{Binding ReimportCommand}"/>
-                    <Button Content="Save"
-                            Width="96"
+                            Command="{Binding ReimportCommand}"
+                            Style="{StaticResource RoundedFlatButton}">
+                        <Button.Content>
+                            <TextBlock Text="Reimport"
+                                       FontWeight="DemiBold"/>
+                        </Button.Content>
+                    </Button>
+                    <Button Grid.Row="0"
+                            Padding="16,4,16,4"
+                            VerticalAlignment="Center"
+                            Focusable="False"
+                            HorizontalAlignment="Center"
                             Command="{Binding SaveCommand}"
-                            IsEnabled="{Binding CanSaveChanges}"/>
+                            Style="{StaticResource AccentButton}">
+                        <Button.Content>
+                            <TextBlock Text="Save"
+                                        FontWeight="DemiBold"/>
+                        </Button.Content>
+                    </Button>
                 </StackPanel>
             </StackPanel>
+            <Expander.Effect>
+                <DropShadowEffect Opacity=".6"
+                                  BlurRadius="15"
+                                  ShadowDepth="2"/>
+            </Expander.Effect>
         </Expander>
     </Grid>
 </UserControl>

@@ -45,11 +45,21 @@
             </Style>
         </DockPanel.Style>
         <Border Height="32"
+                Background="{StaticResource Editor.BackgroundBrush2}"
+                Margin="0,0,0,1"
                 VerticalAlignment="Top"
                 DockPanel.Dock="Top">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10"
+                                  Opacity="0.3"
+                                  ShadowDepth="0"/>
+            </Border.Effect>
             <StackPanel Orientation="Horizontal"
                         Margin="5,2">
                 <Button Margin="0,0,2,0"
+                        Height="20"
+                        Padding="2,0,2,0"
+                        Style="{StaticResource FlatButton}"
                         VerticalAlignment="Stretch"
                         Content="All"
                         Command="{Binding SetAllChannelsCommand}"/>
@@ -293,6 +303,7 @@
             </Grid.ColumnDefinitions>
             <local:TextureDetailView Margin="0,0,5,0"/>
             <GridSplitter Width="5"
+                          Background="{StaticResource Editor.BackgroundBrush1}"
                           HorizontalAlignment="Right"
                           VerticalAlignment="Stretch"/>
             <local:TextureView x:Name="textureView"
