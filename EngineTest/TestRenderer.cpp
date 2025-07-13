@@ -15,6 +15,7 @@
 #include <filesystem>
 #include <fstream>
 
+#ifndef OPENGL
 #if TEST_RENDERER
 	using namespace lightning;
 
@@ -312,4 +313,5 @@
 	}
 
 	void EngineTest::shutdown() { test_shutdown(); }
+#endif
 #endif

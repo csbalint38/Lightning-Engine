@@ -53,6 +53,9 @@
     <ClInclude Include="Graphics\Direct3D12\Direct3D12Upload.h" />
     <ClInclude Include="Graphics\Direct3D12\Shaders\ShaderTypes.h" />
     <ClInclude Include="Graphics\GraphicsPlatformInterface.h" />
+    <ClInclude Include="Graphics\OpenGL\OpenGLCommonHeaders.h" />
+    <ClInclude Include="Graphics\OpenGL\OpenGLCore.h" />
+    <ClInclude Include="Graphics\OpenGL\OpenGLInterface.h" />
     <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Input\Input.h" />
     <ClInclude Include="Input\InputWin32.h" />
@@ -89,6 +92,8 @@
     <ClCompile Include="Graphics\Direct3D12\Direct3D12Shaders.cpp" />
     <ClCompile Include="Graphics\Direct3D12\Direct3D12Surface.cpp" />
     <ClCompile Include="Graphics\Direct3D12\Direct3D12Upload.cpp" />
+    <ClCompile Include="Graphics\OpenGL\OpenGLCore.cpp" />
+    <ClCompile Include="Graphics\OpenGL\OpenGLInterface.cpp" />
     <ClCompile Include="Graphics\Renderer.cpp" />
     <ClCompile Include="Input\Input.cpp" />
     <ClCompile Include="Input\InputWin32.cpp" />
@@ -162,7 +167,7 @@
       </PrecompiledHeaderFile>
       <CallingConvention>FastCall</CallingConvention>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common;$(SolutionDir)packages\glew-2.1.0\include;$(SolutionDir)packages\GLFW\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -174,6 +179,9 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)\packages\glew-2.1.0\lib\Release\x64\;$(SolutionDir)\packages\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
     <ClCompile>
@@ -186,7 +194,7 @@
       </PrecompiledHeaderFile>
       <CallingConvention>FastCall</CallingConvention>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common;$(SolutionDir)packages\glew-2.1.0\include;$(SolutionDir)packages\GLFW\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -198,6 +206,9 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)\packages\glew-2.1.0\lib\Release\x64\;$(SolutionDir)\packages\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -211,7 +222,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CallingConvention>FastCall</CallingConvention>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common;$(SolutionDir)packages\glew-2.1.0\include;$(SolutionDir)packages\GLFW\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -228,6 +239,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)\packages\glew-2.1.0\lib\Release\x64\;$(SolutionDir)\packages\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">
     <ClCompile>
@@ -241,7 +255,7 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <CallingConvention>FastCall</CallingConvention>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Common;$(SolutionDir)packages\glew-2.1.0\include;$(SolutionDir)packages\GLFW\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>false</ExceptionHandling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -258,6 +272,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(SolutionDir)\packages\glew-2.1.0\lib\Release\x64\;$(SolutionDir)\packages\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

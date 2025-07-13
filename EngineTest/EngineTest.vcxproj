@@ -87,7 +87,8 @@ xcopy /Y /D $(SolutionDir)packages\DirectXShaderCompiler\bin\x64\dxil.dll $(OutD
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RenderItem.cpp" />
     <ClCompile Include="Scripts.cpp" />
-    <ClCompile Include="TestRendere.cpp" />
+    <ClCompile Include="TestRenderer.cpp" />
+    <ClCompile Include="TestRendererOpenGL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Test.h" />

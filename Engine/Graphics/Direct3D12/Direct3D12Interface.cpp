@@ -1,6 +1,6 @@
 #include "CommonHeaders.h"
 #include "Direct3D12Interface.h"
-#include "Direct3d12Core.h"
+#include "Direct3D12Core.h"
 #include "Direct3D12Content.h"
 #include "Direct3D12Light.h"
 #include "Direct3D12Camera.h"
