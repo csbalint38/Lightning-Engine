@@ -6,7 +6,7 @@ namespace lightning::graphics::opengl::core {
     }
 
     bool initialize() {
-        // Determine wihich adapter (i.e. graphics card) to use.
+        // Determine which adapter (i.e. graphics card) to use.
         // determine what is the maximum feature level that is supported
         // Create virtual adapter.
         return true;
