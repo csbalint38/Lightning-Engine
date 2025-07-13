@@ -1,4 +1,4 @@
-// This file will be "merged" with generic TestRenderer.cpp after the OpenGL implementation cautches up with DirectX12.
+// This file will be "merged" with generic TestRenderer.cpp after the OpenGL implementation catches up with DirectX12.
 
 #include "../Platform/PlatformTypes.h"
 #include "../Platform/Platform.h"
