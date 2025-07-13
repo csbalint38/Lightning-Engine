@@ -9,11 +9,11 @@
 | :--- | ---: | ---: |
 | C++ | 98 | 14,884 |
 | C# | 192 |  13,467 |
-| XAML | 36 | 7,412 |
+| XAML | 36 | 7,456 |
 | HLSL | 15 |  1,892 |
 | XML | 17 | 1,542 |
 | Python | 8 | 277 |
-| Markdown | 3 | 264 |
+| Markdown | 3 | 267 |
 ... +1 others (less than 100 lines)
 
 ## Requirements

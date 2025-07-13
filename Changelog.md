@@ -1,10 +1,15 @@
-# v0.3.5-beta - 2025.7.8
+# v0..3.6-beta - 2025.7.22.
+
+## UI
+ - Improved Texture Editor
+
+# v0.3.5-beta - 2025.7.8.
 
 ## UI 
  - Content Browser list view
  - Content Browser tile view
  - Custom Save File Dialog
- - Upgraded visuals for Configure Geometry Import Settings, Texture ImportSettings and Texture Editor
+ - Upgraded visuals for Configure Geometry Import Settings, Texture Import Settings and Texture Editor
 
  ## Editor
  - Geometry Component in Editor

@@ -28,6 +28,43 @@
     </UserControl.CommandBindings>
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter"/>
+        <Style TargetType="{x:Type ToggleButton}"
+               BasedOn="{StaticResource FlatButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="border"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Background="{TemplateBinding Background}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="contentPresenter"
+                                              Focusable="False"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="border" Value="{StaticResource Editor.BackgroundBrush5}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Opacity"
+                                        TargetName="contentPresenter"
+                                        Value=".2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Opacity=".6" BlurRadius="15" ShadowDepth="2"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <UserControl.DataContext>
         <local:TextureEditor/>
@@ -69,32 +106,30 @@
                               Command="{Binding SetChannelCommand}"
                               IsChecked="{Binding IsRedChannelSet, Mode=OneWay}"
                               CommandParameter="R">
-                    <Rectangle Width="8"
-                               Fill="Red"
-                               IsHitTestVisible="False"
-                               Margin="0,0,3,0"/>
+                   <Rectangle Width="8"
+                              Fill="{StaticResource Editor.RedBrush}"
+                              IsHitTestVisible="False"/>
                 </ToggleButton>
                 <ToggleButton Margin="0,0,2,0"
                               VerticalAlignment="Stretch"
                               VerticalContentAlignment="Stretch"
                               Command="{Binding SetChannelCommand}"
-                              CommandParameter="G"
-                              IsChecked="{Binding IsGreenChannelSet, Mode=OneWay}">
+                              IsChecked="{Binding IsGreenChannelSet, Mode=OneWay}"
+                              d:IsChecked="False"
+                              CommandParameter="G">
                     <Rectangle Width="8"
-                               Fill="Green"
-                               IsHitTestVisible="False"
-                               Margin="0,0,3,0"/>
+                               Fill="{StaticResource Editor.GreenBrush}"
+                               IsHitTestVisible="False"/>
                 </ToggleButton>
                 <ToggleButton Margin="0,0,2,0"
                               VerticalAlignment="Stretch"
                               VerticalContentAlignment="Stretch"
                               Command="{Binding SetChannelCommand}"
-                              CommandParameter="B"
-                              IsChecked="{Binding IsBlueChannelSet, Mode=OneWay}">
+                              IsChecked="{Binding IsBlueChannelSet, Mode=OneWay}"
+                              CommandParameter="B">
                     <Rectangle Width="8"
-                               Fill="Blue"
-                               IsHitTestVisible="False"
-                               Margin="0,0,3,0"/>
+                               Fill="{StaticResource Editor.BlueBrush}"
+                               IsHitTestVisible="False"/>
                 </ToggleButton>
                 <ToggleButton Margin="0,0,2,0"
                               VerticalAlignment="Stretch"
@@ -103,11 +138,11 @@
                               CommandParameter="A"
                               IsChecked="{Binding IsAlphaChannelSet, Mode=OneWay}"
                               Visibility="{Binding Texture.HasAlpha, Converter={StaticResource booleanToVisibilityConverter}}"
+                              d:IsChecked="False"
                               d:Visibility="Visible">
                     <Rectangle Width="8"
-                               Fill="Transparent"
-                               IsHitTestVisible="False"
-                               Margin="0,0,3,0"/>
+                               Fill="{StaticResource Editor.FontBrush}"
+                               IsHitTestVisible="False"/>
                 </ToggleButton>
                 <ToggleButton Content="Normal"
                               Padding="5"
@@ -118,7 +153,8 @@
                               IsChecked="{Binding Texture.IsNormalMap, Mode=OneWay}"
                               d:Visibility="Visible">
                     <ToggleButton.Style>
-                        <Style TargetType="{x:Type ToggleButton}">
+                        <Style TargetType="{x:Type ToggleButton}"
+                               BasedOn="{StaticResource FlatButton}">
                             <Setter Property="IsEnabled"
                                     Value="False"/>
                             <Setter Property="Visibility"
@@ -141,7 +177,8 @@
                               IsChecked="{Binding ViewAsCubemap}"
                               d:Visibility="Visible">
                     <ToggleButton.Style>
-                        <Style TargetType="{x:Type ToggleButton}">
+                        <Style TargetType="{x:Type ToggleButton}"
+                               BasedOn="{StaticResource FlatButton}">
                             <Setter Property="IsEnabled"
                                     Value="False"/>
                             <Setter Property="Visibility"
@@ -166,7 +203,8 @@
                         x:Name="BtnIBLPair"
                         Click="BtnIBLPair_Click">
                     <Button.Style>
-                        <Style TargetType="{x:Type Button}">
+                        <Style TargetType="{x:Type Button}"
+                               BasedOn="{StaticResource FlatButton}">
                             <Setter Property="IsEnabled"
                                     Value="True"/>
                             <Setter Property="Visibility"
@@ -192,6 +230,8 @@
                 </Button>
                 <TextBlock Margin="5,0"
                            Text="Layer:"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource Editor.FontBrush}"
                            Visibility="{Binding Path=Visibility, ElementName=SldArray}" />
                 <Slider x:Name="SldArray"
                         Width="200"
@@ -226,6 +266,8 @@
                     </Slider.Style>
                 </Slider>
                 <TextBlock Margin="5,0"
+                           Foreground="{StaticResource Editor.FontBrush}"
+                           VerticalAlignment="Center"
                            Text="Depth:"
                            Visibility="{Binding Path=Visibility, ElementName=SldDepth}" />
                 <Slider x:Name="SldDepth"
@@ -259,6 +301,8 @@
                     </Slider.Style>
                 </Slider>
                 <TextBlock Margin="5,0"
+                           VerticalAlignment="Center"
+                           Foreground="{StaticResource Editor.FontBrush}"
                            Text="Mip:"
                            Visibility="{Binding Path=Visibility, ElementName=SldMip}" />
                 <Slider x:Name="SldMip"

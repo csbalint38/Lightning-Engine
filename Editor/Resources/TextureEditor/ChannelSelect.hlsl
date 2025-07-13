@@ -13,7 +13,7 @@ float4 main(float2 uv : TEXCOORD) : COLOR
     {
         const float3 inv_mask = 1.f - Channels.rgb;
         const float3 mask = c.rgb * Channels.rgb;
-        const float3 color = mask.rgb + (mask.gbr * inv_mask.brg * inv_mask.gbr) * inv_mask.rgb;
+        const float3 color = mask.rgb + (mask.gbr * inv_mask.brg + mask.brg * inv_mask.gbr) * inv_mask.rgb;
         
         return float4(color, (stride == 4 && any(Channels.a)) ? c.a : 1.f);
     }
