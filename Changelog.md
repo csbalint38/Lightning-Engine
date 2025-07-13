@@ -5,6 +5,7 @@
 
  ## Lightning+
   - Opening Linux window using XLib
+  - Initialize OpenGL
 
 # v0.3.5-beta - 2025.7.8.
 
