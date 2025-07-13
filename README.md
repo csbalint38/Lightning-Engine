@@ -7,13 +7,13 @@
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 98 | 14,884 |
+| C++ | 100 | 15,287 |
 | C# | 192 |  13,467 |
 | XAML | 36 | 7,456 |
 | HLSL | 15 |  1,892 |
-| XML | 17 | 1,542 |
+| XML | 17 | 1,544 |
 | Python | 8 | 277 |
-| Markdown | 3 | 267 |
+| Markdown | 3 | 271 |
 ... +1 others (less than 100 lines)
 
 ## Requirements
@@ -35,6 +35,7 @@
 **DirectX:** DirectX 12
 
 ## Lightning+
+ - Linux (Experimental)
 
 ## Bug Types
 

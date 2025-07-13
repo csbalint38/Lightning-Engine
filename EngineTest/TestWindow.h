@@ -8,6 +8,7 @@ using namespace lightning;
 
 platform::Window _windows[4];
 
+#ifdef _WIN64
 LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	switch (msg) {
 		case WM_DESTROY: {
@@ -33,32 +34,4 @@ LRESULT win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	}
 	return DefWindowProcW(hwnd, msg, wparam, lparam);
 }
-
-class EngineTest : Test {
-	public:
-		bool initialize() override {
-
-			platform::WindowInitInfo info[]{
-				{&win_proc, nullptr, L"TestWindow1", 100, 100, 800, 800},
-				{&win_proc, nullptr, L"TestWindow2", 150, 150, 400, 800},
-				{&win_proc, nullptr, L"TestWindow3", 200, 200, 800, 400},
-				{&win_proc, nullptr, L"TestWindow4", 250, 250, 400, 400}
-			};
-			static_assert(_countof(_windows) == _countof(info));
-
-			for (u32 i{ 0 }; i < _countof(_windows); ++i) {
-				_windows[i] = platform::create_window(&info[i]);
-			}
-			return true;
-		}
-
-		void run() override {
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		}
-
-		void shutdown() override {
-			for (u32 i{ 0 }; i < _countof(_windows); ++i) {
-				platform::remove_window(_windows[i].get_id());
-			}
-		}
-};
+#endif

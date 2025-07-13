@@ -3,6 +3,9 @@
 ## UI
  - Improved Texture Editor
 
+ ## Lightning+
+  - Opening Linux window using XLib
+
 # v0.3.5-beta - 2025.7.8.
 
 ## UI 

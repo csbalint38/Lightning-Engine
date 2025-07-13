@@ -1,10 +1,9 @@
+#ifdef _WIN64
 #include "Platform.h"
 #include "PlatformTypes.h"
 #include "Input/InputWin32.h"
 
 namespace lightning::platform {
-	#ifdef _WIN64
-
 	namespace {
 
 		struct WindowInfo {

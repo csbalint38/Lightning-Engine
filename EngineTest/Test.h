@@ -9,13 +9,21 @@
 
 class Test {
 	public:
+		#ifdef _WIN64
 		virtual bool initialize() = 0;
 		virtual void run() = 0;
+		#elif __linux__
+		virtual bool initialize(void* disp) = 0;
+		virtual void run(void* disp) = 0;
+		#endif
 		virtual void shutdown() = 0;
 };
 
-#if _WIN64
+#ifdef _WIN64
 #include <Windows.h>
+#else
+#include <iostream>
+#endif
 
 class TimeIt {
 	public:
@@ -35,11 +43,19 @@ class TimeIt {
 			_dt_avg = _us_avg;
 
 			if (std::chrono::duration_cast<std::chrono::seconds>(clock::now() - _seconds).count() >= 1) {
+				#ifdef _WIN64
 				OutputDebugStringA("Avg. frame (ms): ");
 				OutputDebugStringA(std::to_string(_us_avg * 0.001f).c_str());
 				OutputDebugStringA((" " + std::to_string(_counter)).c_str());
 				OutputDebugStringA(" fps");
 				OutputDebugStringA("\n");
+				#else
+				std::cout << "Avg. frame (ms): ";
+				std::cout << std::to_string(_us_avg).c_str();
+				std::cout << (" " + std::to_string(_counter)).c_str();
+				std::cout << " fps" << std::endl;
+				#endif
+
 				_us_avg = 0.f;
 				_counter = 1;
 				_seconds = clock::now();
@@ -54,4 +70,3 @@ class TimeIt {
 		timestamp _start;
 		timestamp _seconds{ clock::now() };
 };
-#endif

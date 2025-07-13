@@ -24,5 +24,8 @@ namespace lightning::platform {
 			u32 width() const;
 			u32 height() const;
 			bool is_closed() const;
+			#ifdef __linux__
+			void close();
+			#endif
 	};
 }

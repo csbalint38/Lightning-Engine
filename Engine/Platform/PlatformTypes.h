@@ -23,5 +23,23 @@ namespace lightning::platform {
 		s32 height{ 1080 };
 	};
 }
+#endif
 
+#ifdef __linux__
+#include <X11/Xlib.h>
+#include <stdlib.h>
+
+namespace lightning::platform {
+	using window_handle = Window*;
+
+	struct WindowInitInfo {
+		void* callback { nullptr };
+		window_handle parent { nullptr };
+		const wchar_t* caption { nullptr };
+		s32 left { 0 };
+		s32 top { 0 };
+		s32 width { 1920 };
+		s32 height { 1080 };
+	};
+}
 #endif
