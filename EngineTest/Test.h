@@ -4,17 +4,17 @@
 #include <string>
 
 #define TEST_ENTITY_COMPONENTS 0
-#define TEST_WINDOW 1
-#define TEST_RENDERER 0
+#define TEST_WINDOW 0
+#define TEST_RENDERER 1
 
 class Test {
 	public:
-		#ifdef _WIN_64
+		#ifdef _WIN64
 		virtual bool initialize() = 0;
 		virtual void run() = 0;
 		#elif __linux__
-		virtual bool Initialize(void* disp) = 0;
-		virtual void Run(void* disp) = 0;
+		virtual bool initialize(void* disp) = 0;
+		virtual void run(void* disp) = 0;
 		#endif
 		virtual void shutdown() = 0;
 };

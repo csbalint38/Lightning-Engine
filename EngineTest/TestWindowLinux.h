@@ -21,7 +21,7 @@ enum KeyState {
 
 class EngineTest : public Test {
     public:
-        bool inititalize(void* disp) override {
+        bool initialize(void* disp) override {
             platform::WindwInitInfo info[]{
                 {nullptr, nullptr, L"TestWindow1", 100, 100, 800, 800},
                 {nullptr, nullptr, L"TestWindow2", 150, 150, 400, 800},
@@ -55,8 +55,8 @@ class EngineTest : public Test {
                     XConfigureEvent xce{ xev.xconfigure };
                     
                     for(u32 i{ 0 }; i< _countof(_windows); ++i) {
-                        if(*((Window*)_windows[i].handle()) == xenv.xany.window) {
-                            if((u32)xce.width != windows[i].width() || (u32)xce.height != _windows[i].height()) {
+                        if(*((Window*)_windows[i].handle()) == xev.xany.window) {
+                            if((u32)xce.width != _windows[i].width() || (u32)xce.height != _windows[i].height()) {
 									_windows[i].resize((u32)xce.width, (u32)xce.height);
 								}
 							}
@@ -86,7 +86,7 @@ class EngineTest : public Test {
 								close.xclient.type = ClientMessage;
 								close.xclient.serial = window;
 								close.xclient.send_event = true;
-								close.xclient.message_type = XinternAtom(display, "QUIT_MSG", false);
+								close.xclient.message_type = XInternAtom(display, "QUIT_MSG", false);
 								close.xclient.format = 32;
 								close.xclient.window = 0;
 								close.xclient.data.l[0] = XInternAtom(display, "QUIT_MSG", false);

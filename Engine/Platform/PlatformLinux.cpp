@@ -17,13 +17,13 @@ namespace lightning::platform {
 
 		util::free_list<WindowInfo> windows;
 
-		windowInfo& get_from_id (window_id) {
+		WindowInfo& get_from_id (window_id) {
 			assert(windows[id].wnd);
 
 			return windows[id];
 		}
 
-		void resize window(window_id id, u32 width, u32 height) {
+		void resize_window(window_id id, u32 width, u32 height) {
 			WindowInfo& info { get_from_id(id) };
 
 			info.width = width;
@@ -51,7 +51,7 @@ namespace lightning::platform {
 					xev.xclient.data.l[1] = fullscreen;
 					xev.xclient.data.l[2] = 0;
 
-					XSendEvent(info.display, DefaultRootWindoe(info.display), false, SubstructureNotifyMask | SubstructureRedirectMask, &xev);
+					XSendEvent(info.display, DefaultRootWindow(info.display), false, SubstructureNotifyMask | SubstructureRedirectMask, &xev);
 				}
 				else {
 					XEvent xev;
@@ -75,7 +75,7 @@ namespace lightning::platform {
 			return get_from_id(id).is_fullscreen;
 		}
 
-		window_handle get_window_handle(window_id, id) {
+		window_handle get_window_handle(window_id id) {
 			return &get_from_id(id).wnd;
 		}
 
@@ -83,7 +83,7 @@ namespace lightning::platform {
 			return get_from_id(id).display;
 		}
 
-		void set_window_caption(window_id id, cont wchar_t* caption) {
+		void set_window_caption(window_id id, const wchar_t* caption) {
 			WindowInfo& info { get_from_id(id) };
 			size_t out_size = (sizeof(caption) * sizeof(wchar_t)) + 1;
 			char title[out_size];
@@ -111,7 +111,7 @@ namespace lightning::platform {
 	Window create_window(const WindowInitInfo* const init_info, void* disp) {
 		Display* display{ (Display*)disp };
 		
-		window_handle parent{ init_infi ? init_info->parent : &(DefaultRootWindow(display)) };
+		window_handle parent{ init_info ? init_info->parent : &(DefaultRootWindow(display)) };
 
 		if(parent == nullptr) {
 			parent = &(DefaultRootWindow(display));
