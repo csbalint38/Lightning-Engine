@@ -13,6 +13,13 @@ namespace Editor.Content
         public static AssetInfo BRDFIntegrationLUT { get; private set; }
         public static AssetInfo DefaultGeometry { get; private set; }
         public static AssetInfo DefaultMaterial { get; private set; }
+        public static AssetInfo DefaultTexture { get; private set; }
+        public static List<AssetInfo> DefaultAssetsList => [
+            BRDFIntegrationLUT,
+            DefaultGeometry,
+            DefaultMaterial,
+            DefaultTexture
+        ];
 
         /// <summary>
         /// Generate default assets if necessary
@@ -35,9 +42,12 @@ namespace Editor.Content
 
             if (!File.Exists(materialFileName)) CreateDefaultMaterial(materialFileName);
 
+            var textureFileName = $@"{defaultAssetsPath}DefaultTexture.asset";
+
             BRDFIntegrationLUT = Asset.GetAssetInfo(brdfLUTFileName);
             DefaultGeometry = Asset.GetAssetInfo(cubeFileName);
             DefaultMaterial = Asset.GetAssetInfo(materialFileName);
+            DefaultTexture = Asset.GetAssetInfo(textureFileName);
         }
 
         private static void ComputeBRDFIntegrationLUT(string file)

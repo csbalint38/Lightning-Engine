@@ -7,7 +7,7 @@ namespace Editor.Content.ContentBrowser
 {
     static class ContentInfoCache
     {
-        private static readonly object _lock = new();
+        private static readonly Lock _lock = new();
         private static readonly Dictionary<string, ContentInfo> _contentInfoCache = [];
 
         private static string _cacheFilePath = string.Empty;

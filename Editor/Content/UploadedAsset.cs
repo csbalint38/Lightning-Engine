@@ -7,6 +7,7 @@ namespace Editor.Content
 {
     public class UploadedAsset
     {
+        private static readonly Lock _lock = new();
         private static readonly Dictionary<Guid, UploadedAsset> _uploadedAssets = [];
 
         private List<UploadedAsset> _referencedAssets = [];
@@ -24,23 +25,26 @@ namespace Editor.Content
 
             var key = assetInfo.Guid;
 
-            if (_uploadedAssets.TryGetValue(key, out var value))
+            lock (_lock)
             {
-                ++value.ReferenceCount;
-                value._referencedAssets.ForEach(x => ++x.ReferenceCount);
-            }
-            else
-            {
-                var uploadedAsset = UploadAssetToEngine(assetInfo, asset);
-
-                Debug.Assert(Id.IsValid(uploadedAsset.ContentId));
-
-                if (Id.IsValid(uploadedAsset.ContentId)) _uploadedAssets[key] = uploadedAsset;
+                if (_uploadedAssets.TryGetValue(key, out var value))
+                {
+                    ++value.ReferenceCount;
+                    value._referencedAssets.ForEach(x => ++x.ReferenceCount);
+                }
                 else
                 {
-                    Logger.LogAsync(LogLevel.ERROR, $"Failed to upload asset {assetInfo.FileName} to engine.");
+                    var uploadedAsset = UploadAssetToEngine(assetInfo, asset);
 
-                    return null;
+                    Debug.Assert(Id.IsValid(uploadedAsset.ContentId));
+
+                    if (Id.IsValid(uploadedAsset.ContentId)) _uploadedAssets[key] = uploadedAsset;
+                    else
+                    {
+                        Logger.LogAsync(LogLevel.ERROR, $"Failed to upload asset {assetInfo.FileName} to engine.");
+
+                        return null;
+                    }
                 }
             }
 
@@ -51,16 +55,20 @@ namespace Editor.Content
 
         public static void RemoveFromScene(UploadedAsset uploadedAsset)
         {
-            Debug.Assert(uploadedAsset is not null && _uploadedAssets.ContainsKey(uploadedAsset.AssetInfo.Guid));
-
-            uploadedAsset._referencedAssets.ForEach(RemoveFromScene);
-            --uploadedAsset.ReferenceCount;
-
-            if (uploadedAsset.ReferenceCount == 0)
+            lock (_lock)
             {
-                UnloadAssetFromEngine(uploadedAsset);
-                _uploadedAssets.Remove(uploadedAsset.AssetInfo.Guid);
-                uploadedAsset.ContentId = Id.InvalidId;
+
+                Debug.Assert(uploadedAsset is not null && _uploadedAssets.ContainsKey(uploadedAsset.AssetInfo.Guid));
+
+                uploadedAsset._referencedAssets.ForEach(RemoveFromScene);
+                --uploadedAsset.ReferenceCount;
+
+                if (uploadedAsset.ReferenceCount == 0)
+                {
+                    UnloadAssetFromEngine(uploadedAsset);
+                    _uploadedAssets.Remove(uploadedAsset.AssetInfo.Guid);
+                    uploadedAsset.ContentId = Id.InvalidId;
+                }
             }
         }
 
@@ -68,7 +76,10 @@ namespace Editor.Content
         {
             Debug.Assert(id != Guid.Empty);
 
-            return _uploadedAssets.TryGetValue(id, out var uploadedAsset) ? uploadedAsset.ContentId : Id.InvalidId;
+            lock (_lock)
+            {
+                return _uploadedAssets.TryGetValue(id, out var uploadedAsset) ? uploadedAsset.ContentId : Id.InvalidId;
+            }
         }
 
         private static UploadedAsset UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)

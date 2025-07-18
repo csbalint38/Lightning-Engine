@@ -14,8 +14,9 @@ namespace Editor.Content
 {
     public class Geometry : Asset
     {
+        private static readonly Lock _lock = new();
+
         private readonly List<LODGroup> _lodGroups = [];
-        private readonly object _lock = new();
 
         public static AssetInfo Default = DefaultAssets.DefaultGeometry;
 

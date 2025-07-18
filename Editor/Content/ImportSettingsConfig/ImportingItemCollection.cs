@@ -7,7 +7,7 @@ namespace Editor.Content.ImportSettingsConfig
 {
     static class ImportingItemCollection
     {
-        private static readonly object _lock = new();
+        private static readonly Lock _lock = new();
 
         private static AssetType _itemFilter = AssetType.MESH;
         private static ObservableCollection<ImportingItem> _importingItems;

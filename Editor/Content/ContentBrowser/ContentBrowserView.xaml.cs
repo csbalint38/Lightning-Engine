@@ -512,13 +512,13 @@ namespace Editor.Content
                 if (i >= 0) SPPath.Children.Add(new System.Windows.Shapes.Path());
             }
 
-            _addCurrentDirectory:
-                SPPath.Children.Add(new TextBlock()
-                {
-                    Text = $"{Path.GetFileName(Path.TrimEndingDirectorySeparator(vm.SelectedFolder))}",
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = Brushes.White
-                });
+        _addCurrentDirectory:
+            SPPath.Children.Add(new TextBlock()
+            {
+                Text = $"{Path.GetFileName(Path.TrimEndingDirectorySeparator(vm.SelectedFolder))}",
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = Brushes.White
+            });
         }
 
         private void OnPathStack_Button_Click(object sender, RoutedEventArgs e)

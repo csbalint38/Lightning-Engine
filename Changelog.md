@@ -1,11 +1,14 @@
 # v0..3.6-beta - 2025.7.22.
 
-## UI
- - Improved Texture Editor
-
  ## Lightning+
   - Opening Linux window using XLib
   - Initialize OpenGL
+
+## UI
+ - Improved Texture Editor
+
+## Editor
+ - Geometry Component serialization
 
 # v0.3.5-beta - 2025.7.8.
 

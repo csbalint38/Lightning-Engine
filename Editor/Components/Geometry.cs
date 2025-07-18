@@ -120,7 +120,7 @@ namespace Editor.Components
 
             Debug.Assert(_geometry is not null && Id.IsValid(_geometry.ContentId));
 
-            if(_geometry?.Metadata is GeometryMetadata metadata && Id.IsValid(_geometry.ContentId))
+            if (_geometry?.Metadata is GeometryMetadata metadata && Id.IsValid(_geometry.ContentId))
             {
                 var index = 0;
 

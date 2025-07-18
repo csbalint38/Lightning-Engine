@@ -13,7 +13,7 @@ namespace Editor.GameCode
         private static readonly string _progId = "VisualStudio.DTE.17.0";
         private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
         private static readonly ManualResetEventSlim _resetEvent = new(false);
-        private static readonly object _lock = new();
+        private static readonly Lock _lock = new();
         private static EnvDTE80.DTE2 _vsInstance = null;
 
         public static bool BuildSucceeded { get; private set; }

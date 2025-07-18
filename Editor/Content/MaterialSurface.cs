@@ -1,10 +1,12 @@
 ﻿using Editor.Common;
 using Editor.Utilities;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Windows.Media;
 
 namespace Editor.Content
 {
+    [DataContract]
     public class MaterialSurface : ViewModelBase
     {
         private Color _baseColor = Color.FromScRgb(1f, .7f, .7f, .7f);
@@ -13,6 +15,7 @@ namespace Editor.Content
         private float _roughness = .9f;
         private float _emissiveIntensity = 1f;
 
+        [DataMember]
         public Color BaseColor
         {
             get => _baseColor;
@@ -26,6 +29,7 @@ namespace Editor.Content
             }
         }
 
+        [DataMember]
         public Color EmissiveColor
         {
             get => _emissiveColor;
@@ -39,6 +43,7 @@ namespace Editor.Content
             }
         }
 
+        [DataMember]
         public float Metallic
         {
             get => _metallic;
@@ -52,6 +57,7 @@ namespace Editor.Content
             }
         }
 
+        [DataMember]
         public float Roughness
         {
             get => _roughness;
@@ -65,6 +71,7 @@ namespace Editor.Content
             }
         }
 
+        [DataMember]
         public float EmissiveIntensity
         {
             get => _emissiveIntensity;
@@ -106,13 +113,13 @@ namespace Editor.Content
             writer.Write(_roughness);
         }
 
-        public MaterialSurface Clone() => new()
+        public void CopyTo(MaterialSurface dest)
         {
-            BaseColor = BaseColor,
-            EmissiveColor = EmissiveColor,
-            EmissiveIntensity = EmissiveIntensity,
-            Metallic = Metallic,
-            Roughness = Roughness,
-        };
+            dest.BaseColor = BaseColor;
+            dest.EmissiveColor = EmissiveColor;
+            dest.EmissiveIntensity = EmissiveIntensity;
+            dest.Metallic = Metallic;
+            dest.Roughness = Roughness;
+        }
     }
 }

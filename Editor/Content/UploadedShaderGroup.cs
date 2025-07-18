@@ -6,6 +6,7 @@ namespace Editor.Content
 {
     internal sealed class UploadedShaderGroup
     {
+        private static readonly Lock _lock = new();
         private static readonly Dictionary<string, UploadedShaderGroup> _uploadedShaders = [];
         private static readonly Dictionary<IdType, UploadedShaderGroup> _uploadedShaderIds = [];
 
@@ -19,66 +20,72 @@ namespace Editor.Content
                 shaderGroup.ByteCode.Any(x => x.Length == 0) ||
                 shaderGroup.Hash.Any(x => x.Length == 0)) return null;
 
-            var combinedHashes = shaderGroup.Hash.SelectMany(x => x).ToArray();
-
-            if (Id.IsValid(shaderGroup.ContentId) &&
-                _uploadedShaderIds.TryGetValue(shaderGroup.ContentId, out var uploadedShader)
-            )
+            lock (_lock)
             {
-                if (uploadedShader.CombinedHashes.SequenceEqual(combinedHashes))
+                var combinedHashes = shaderGroup.Hash.SelectMany(x => x).ToArray();
+
+                if (Id.IsValid(shaderGroup.ContentId) &&
+                    _uploadedShaderIds.TryGetValue(shaderGroup.ContentId, out var uploadedShader)
+                )
                 {
-                    ++uploadedShader.ReferenceCount;
+                    if (uploadedShader.CombinedHashes.SequenceEqual(combinedHashes))
+                    {
+                        ++uploadedShader.ReferenceCount;
 
-                    return uploadedShader;
+                        return uploadedShader;
+                    }
+                    else UnloadFromEngine(uploadedShader.ContentId);
                 }
-                else UnloadFromEngine(uploadedShader.ContentId);
+                else Debug.Assert(!Id.IsValid(shaderGroup.ContentId));
+
+                var hashString = Convert.ToBase64String(combinedHashes);
+
+                if (_uploadedShaders.TryGetValue(hashString, out var identicalShader))
+                {
+                    ++identicalShader.ReferenceCount;
+
+                    return identicalShader;
+                }
+
+                var newUploadedShader = new UploadedShaderGroup()
+                {
+                    ContentId = EngineAPI.AddShaderGroup(shaderGroup),
+                    CombinedHashes = combinedHashes,
+                    ReferenceCount = 1
+                };
+
+                Debug.Assert(Id.IsValid(newUploadedShader.ContentId));
+
+                _uploadedShaders.Add(hashString, newUploadedShader);
+                _uploadedShaderIds.Add(newUploadedShader.ContentId, newUploadedShader);
+
+                return newUploadedShader;
             }
-            else Debug.Assert(!Id.IsValid(shaderGroup.ContentId));
-
-            var hashString = Convert.ToBase64String(combinedHashes);
-
-            if (_uploadedShaders.TryGetValue(hashString, out var identicalShader))
-            {
-                ++identicalShader.ReferenceCount;
-
-                return identicalShader;
-            }
-
-            var newUploadedShader = new UploadedShaderGroup()
-            {
-                ContentId = EngineAPI.AddShaderGroup(shaderGroup),
-                CombinedHashes = combinedHashes,
-                ReferenceCount = 1
-            };
-
-            Debug.Assert(Id.IsValid(newUploadedShader.ContentId));
-
-            _uploadedShaders.Add(hashString, newUploadedShader);
-            _uploadedShaderIds.Add(newUploadedShader.ContentId, newUploadedShader);
-
-            return newUploadedShader;
         }
 
         public static void UnloadFromEngine(IdType id)
         {
-            Debug.Assert(Id.IsValid(id) && _uploadedShaderIds.ContainsKey(id));
-
-            if (Id.IsValid(id) && _uploadedShaderIds.TryGetValue(id, out var uploadedShader))
+            lock (_lock)
             {
-                Debug.Assert(uploadedShader.ReferenceCount > 0);
+                Debug.Assert(Id.IsValid(id) && _uploadedShaderIds.ContainsKey(id));
 
-                --uploadedShader.ReferenceCount;
-
-                if (uploadedShader.ReferenceCount == 0)
+                if (Id.IsValid(id) && _uploadedShaderIds.TryGetValue(id, out var uploadedShader))
                 {
-                    EngineAPI.RemoveShaderGroup(uploadedShader.ContentId);
+                    Debug.Assert(uploadedShader.ReferenceCount > 0);
 
-                    var hashString = Convert.ToBase64String(uploadedShader.CombinedHashes);
+                    --uploadedShader.ReferenceCount;
 
-                    Debug.Assert(_uploadedShaders.ContainsKey(hashString));
+                    if (uploadedShader.ReferenceCount == 0)
+                    {
+                        EngineAPI.RemoveShaderGroup(uploadedShader.ContentId);
 
-                    _uploadedShaders.Remove(hashString);
-                    _uploadedShaderIds.Remove(uploadedShader.ContentId);
+                        var hashString = Convert.ToBase64String(uploadedShader.CombinedHashes);
+
+                        Debug.Assert(_uploadedShaders.ContainsKey(hashString));
+
+                        _uploadedShaders.Remove(hashString);
+                        _uploadedShaderIds.Remove(uploadedShader.ContentId);
+                    }
                 }
             }
         }

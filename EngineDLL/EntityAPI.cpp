@@ -4,6 +4,7 @@
 #include "Components/Entity.h"
 #include "Components/Transform.h"
 #include "Components/Script.h"
+#include "Components/Geometry.h"
 
 using namespace lightning;
 
@@ -40,9 +41,26 @@ namespace {
 		}
 	};
 
+	struct GeometryComponentDescriptor {
+		id::id_type geometry_content_id;
+		u32 material_count;
+		id::id_type* material_ids;
+
+		geometry::InitInfo to_init_info() {
+			geometry::InitInfo info{};
+
+			info.geometry_content_id = geometry_content_id;
+			info.material_count = material_count;
+			info.material_ids = material_ids;
+
+			return info;
+		}
+	};
+
 	struct EntityDescriptor {
 		TransformComponentDescriptor transform;
 		ScriptComponentDescriptor script;
+		GeometryComponentDescriptor geometry;
 	};
 
 	game_entity::Entity entity_from_id(id::id_type id) {
@@ -55,9 +73,11 @@ EDITOR_INTERFACE id::id_type create_game_entity(EntityDescriptor* entity) {
 	EntityDescriptor& desc{ *entity };
 	transform::InitInfo transform_info{ desc.transform.to_init_info() };
 	script::InitInfo script_info{ desc.script.to_init_info() };
+	geometry::InitInfo geometry_info{ desc.geometry.to_init_info() };
 	game_entity::EntityInfo entity_info{
 		&transform_info,
 		&script_info,
+		id::is_valid(desc.geometry.geometry_content_id) ? &geometry_info : nullptr,
 	};
 
 	return game_entity::create(entity_info).get_id();

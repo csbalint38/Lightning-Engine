@@ -80,7 +80,7 @@ namespace Editor.GameProject
 
             try
             {
-                var templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @".\Resources\ProjectTemplates\");
+                var templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Resources\ProjectTemplates\");
                 var templateFiles = Directory.GetFiles(templatesPath, "template.xml", SearchOption.AllDirectories);
                 Debug.Assert(templateFiles.Length != 0);
 

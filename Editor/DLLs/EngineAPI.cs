@@ -12,6 +12,8 @@ namespace Editor.DLLs
 {
     static class EngineAPI
     {
+        private static readonly Lock _lock = new();
+
         private const string _engineDll = "EngineDLL.dll";
 
         [DllImport(_engineDll, EntryPoint = "create_game_entity")]
@@ -94,12 +96,30 @@ namespace Editor.DLLs
                     }
                 }
             }
+            {
+                var c = entity.GetComponent<Components.Geometry>();
 
-            var id = CreateGameEntity(desc);
-            return id;
+                if (c is not null)
+                {
+                    Debug.Assert(c.Materials.Count > 0);
+
+                    desc.Geometry = new(c);
+                }
+            }
+
+            lock (_lock)
+            {
+                return CreateGameEntity(desc);
+            }
         }
 
-        public static void RemoveGameEntity(Entity entity) => RemoveGameEntity(entity.EntityId);
+        public static void RemoveGameEntity(Entity entity)
+        {
+            lock (_lock)
+            {
+                RemoveGameEntity(entity.EntityId);
+            }
+        }
 
         public static IdType AddShaderGroup(ShaderGroup shaderGroup)
         {

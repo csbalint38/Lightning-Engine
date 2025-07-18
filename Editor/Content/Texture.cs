@@ -24,6 +24,7 @@ namespace Editor.Content
         public static int MaxMipLevels => 14;
         public static int MaxArraySize => 2048;
         public static int Max3DSize => 2048;
+        public static AssetInfo Default => DefaultAssets.DefaultTexture;
 
         public TextureImportSettings ImportSettings { get; } = new();
 
@@ -236,7 +237,7 @@ namespace Editor.Content
                 FullPath = file;
 
                 // TEMP
-                PackForEngine();
+                // PackForEngine();
                 // TEMP
 
                 return true;
@@ -302,10 +303,10 @@ namespace Editor.Content
             Debug.Assert(data?.Length > 0);
 
             // TEMP
-            using (var fs = new FileStream(@"..\..\x64\texture.tex", FileMode.Create))
+            /*using (var fs = new FileStream(@"..\..\x64\texture.lngasset", FileMode.Create))
             {
                 fs.Write(data, 0, data.Length);
-            }
+            }*/
             // TEMP
 
             return data;

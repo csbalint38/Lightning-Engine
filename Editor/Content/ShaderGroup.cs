@@ -7,6 +7,8 @@ namespace Editor.Content
 {
     public class ShaderGroup
     {
+        private UploadedShaderGroup _uploadedShader;
+
         public static readonly int HashSize = 16;
 
         public ShaderType Type { get; set; }
@@ -106,6 +108,7 @@ namespace Editor.Content
 
             if (uploadedShader is null || !Id.IsValid(uploadedShader.ContentId)) return Id.InvalidId;
 
+            _uploadedShader = uploadedShader;
             ContentId = uploadedShader.ContentId;
 
             return ContentId;
@@ -113,11 +116,14 @@ namespace Editor.Content
 
         public void UnloadFromEngine()
         {
-            if (Id.IsValid(ContentId))
-            {
-                UploadedShaderGroup.UnloadFromEngine(ContentId);
+            Debug.Assert(Id.IsValid(ContentId) && _uploadedShader is not null);
 
+            UploadedShaderGroup.UnloadFromEngine(ContentId);
+
+            if (_uploadedShader.ReferenceCount == 0)
+            {
                 ContentId = Id.InvalidId;
+                _uploadedShader = null;
             }
         }
 

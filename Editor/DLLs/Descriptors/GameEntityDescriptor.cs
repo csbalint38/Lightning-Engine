@@ -7,5 +7,6 @@ namespace Editor.DLLs.Descriptors
     {
         public TransformComponentDescriptor Transform = new();
         public ScriptComponentDescriptor Script = new();
+        public GeometryComponent Geometry = new();
     }
 }

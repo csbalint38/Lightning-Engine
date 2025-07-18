@@ -2,15 +2,20 @@
 using Editor.Common.Enums;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace Editor.Content
 {
+    [DataContract]
     abstract public class Asset : ViewModelBase
     {
         private string _fullPath;
 
         public const string AssetFileExtension = ".lngasset";
-        public AssetType Type { get; }
+
+        [DataMember]
+        public AssetType Type { get; private set; }
+
         public byte[] Icon { get; protected set; }
         public Guid Guid { get; protected set; } = Guid.NewGuid();
         public DateTime ImportDate { get; protected set; }
@@ -38,9 +43,18 @@ namespace Editor.Content
         public abstract byte[] PackForEngine();
         public virtual List<AssetInfo> GetReferencedAssets() => [];
 
+        protected Asset(AssetType type)
+        {
+            Debug.Assert(type != AssetType.UNKNOWN);
+
+            Type = type;
+        }
+
+        public static AssetInfo? TryGetAssetInfo(string file) => AssetRegistry.GetAssetInfo(file) ?? GetAssetInfo(file);
+
         public static AssetInfo GetAssetInfo(string file)
         {
-            Debug.Assert(File.Exists(file) && Path.GetExtension(file) == AssetFileExtension);
+            if (!File.Exists(file) || Path.GetExtension(file) != AssetFileExtension) return null;
 
             try
             {
@@ -104,13 +118,6 @@ namespace Editor.Content
             Icon = info.Icon;
         }
 
-        public Asset(AssetType type)
-        {
-            Debug.Assert(type != AssetType.UNKNOWN);
-
-            Type = type;
-        }
-
         private static AssetInfo GetAssetInfo(BinaryReader reader)
         {
             reader.BaseStream.Position = 0;
@@ -129,10 +136,5 @@ namespace Editor.Content
 
             return info;
         }
-
-        public static AssetInfo? TryGetAssetInfo(string file) =>
-            File.Exists(file) && Path.GetExtension(file) == AssetFileExtension
-                ? AssetRegistry.GetAssetInfo(file) ?? GetAssetInfo(file)
-                : null;
     }
 }
