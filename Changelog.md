@@ -1,4 +1,8 @@
-# v0..3.6-beta - 2025.7.22.
+# v0.3.7-beta - 2025.8.5.
+  ## Extras
+   - CI workflow for release
+
+# v0.3.6-beta - 2025.7.22.
 
  ## Lightning+
   - Opening Linux window using XLib

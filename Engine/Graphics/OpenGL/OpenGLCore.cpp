@@ -2,7 +2,6 @@
 
 namespace lightning::graphics::opengl::core {
     namespace {
-        GLFWwindow* window;
     }
 
     bool initialize() {

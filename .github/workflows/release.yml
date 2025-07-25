@@ -1,0 +1,190 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: windows-latest
+    env:
+      SOLUTION_FILE: Engine.sln
+      ENGINE_LIB: Engine/Engine.vcxproj
+      EDITOR: Editor/Editor.csproj
+      PUBLIC_HEADERS_PATH: Engine
+      DIST_DIR: dist
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Cache MikkTSpace
+        id: cache-mikktspace
+        uses: actions/cache@v3
+        with:
+          path: packages/MikkTSpace
+          key: mikktspace-${{ runner.os }}-${{ hashFiles('packages/MikkTSpace/**/*') }}
+          restore-keys: mikktspace-${{ runner.os }}-
+
+      - name: Add MikkTSpace
+        if: steps.cache-mikktspace.outputs.cache-hit != 'true'
+        run: git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/mmikk/MikkTSpace.git packages/MikkTSpace
+
+      - name: Cache FBX SDK
+        id: cache-fbx
+        uses: actions/cache@v3
+        with:
+          path: "packages/FBX SDK"
+          key: fbx-sdk-${{ runner.os }}-${{ hashFiles('packages/FBX SDK/**/*') }}
+          restore-keys: fbx-sdk-${{ runner.os }}-
+
+      - name: Download and extract FBX SDK
+        if: steps.cache-fbx.outputs.cache-hit != 'true'
+        # Replace the URL with a S3 url.
+        run: |
+          $url = 'https://drive.usercontent.google.com/download?id=1dIRXQ8U8Pjk46p5yAZy8NV-UPtT0utZu&export=download&authuser=0&confirm=t&uuid=780e7af0-71a7-40cb-92a4-da1f27aaf7a7&at=AN8xHop1oRwI7kHy5S5dObJuMOLc%3A1753290243197'
+          $zip = 'FBX SDK.zip'
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath 'packages/FBX SDK'
+
+      - name: Cache NuGet packages
+        id: cache-nuget
+        uses: actions/cache@v3
+        with:
+          path: C:\Users\runneradmin\.nuget\packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.sln') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+        with:
+          nuget-version: 'latest'
+
+      - name: Restore NuGet packages
+        run: nuget restore ${{ env.SOLUTION_FILE }}
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-version: 'latest'
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+      
+      - name: Clean up previous builds
+        shell: pwsh
+        run: Remove-Item -Path ${{ env.DIST_DIR }} -Recurse -Force -ErrorAction Ignore
+
+      - name: Restore .NET packages
+        run: dotnet restore ${{ env.EDITOR }}
+
+      - name: Publish Editor self-contained
+        shell: bash
+        run: |
+          dotnet publish ${{ env.EDITOR }} \
+          --configuration ReleaseEditor \
+          --runtime win-x64 \
+          --self-contained true \
+          --output ${{ env.DIST_DIR }} \
+          -p:PublishSingleFile=true \
+          -p:SatelliteResourceLanguages=en-US
+
+      - name: Build Solution in ReleaseEditor
+        run: msbuild ${{ env.SOLUTION_FILE }} /p:Configuration=ReleaseEditor /p:Platform=x64 /m
+
+      - name: Copy Engine binaries into dist
+        shell: pwsh
+        run: |
+          $src = "x64\ReleaseEditor"
+          $dst = "${{ env.DIST_DIR }}"
+          Copy-Item "$src\dxcompiler.dll" -Destination $dst -Force
+          Copy-Item "$src\dxil.dll" -Destination $dst -Force
+          Copy-Item "$src\ContentTools.dll" -Destination $dst -Force
+          Copy-Item "$src\EngineDLL.dll" -Destination $dst -Force
+          Copy-Item "$src\EngineDLL.lib" -Destination $dst -Force
+          Copy-Item "$src\Engine.lib" -Destination $dst -Force
+          Copy-Item "$src\D3D12" -Destination $dst -Recurse -Force
+
+      - name: Build Engine.lib in all configurations
+        shell: pwsh
+        run: |
+          $configs = 'ReleaseEditor', 'DebugEditor', 'Release', 'Debug'
+          foreach ($cfg in $configs) {
+            Write-Host "-> Building Engine.lib in configuration $cfg"
+            msbuild ${{ env.ENGINE_LIB }} /p:Configuration=$cfg /p:Platform=x64 /m
+          }
+          New-Item -ItemType Directory -Path ${{ env.DIST_DIR }}\Engine\x64 -Force | Out-Null
+          $configs = 'ReleaseEditor', 'DebugEditor', 'Release', 'Debug'
+          foreach ($cfg in $configs) {
+            $src = "Engine\x64\$cfg\Engine.lib"
+            $dest = "${{ env.DIST_DIR }}\Engine\x64\$cfg"
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+            Copy-Item $src $dest -Force
+            if ($cfg -in 'Debug', 'DebugEditor') {
+              Copy-Item "Engine\x64\$cfg\Engine.pdb" $dest -Force}
+          }
+        
+      - name: Copy Public Headers and Engine Shaders
+        shell: pwsh
+        run: |
+          robocopy ${{ env.PUBLIC_HEADERS_PATH }} ${{ env.DIST_DIR }}\Engine *.h *.hlsl *.hlsli /E
+          $result = $LASTEXITCODE
+          if ($result -ge 8) {
+            Write-Error "Robocopy failed with exit code $result"
+            exit $result
+          } else {
+            Write-Host "Robocopy succeeded with exit code $result"
+            exit 0
+          }
+      
+      - name: Copy over meta files
+        shell: pwsh
+        run: |
+          $metaFiles = 'Changelog.md', 'LICENCE.txt', 'README.md'
+          foreach ($file in $metaFiles) {
+            Copy-Item -Path $file -Destination ${{ env.DIST_DIR }} -Force
+          }
+
+      - name: Get InformationalVersion
+        id: get-version
+        shell: pwsh
+        run: |
+          [xml]$proj = Get-Content ${{ env.EDITOR }}
+          $node = $proj.SelectSingleNode("//InformationalVersion")
+          $version = $node.InnerText.Trim()
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "INFO_VERSION=$version"
+
+      - name: Get Release notes 
+        id: get-release-notes
+        shell: bash
+        run: |
+          version="${{ steps.get-version.outputs.INFO_VERSION }}"
+          sed -n '0,/^# v/!d; /^# v/p; :a; n; /^# v/q; p; ba' Changelog.md > release-notes.md
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat release-notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+
+      - name: Zip distribution directory
+        shell: pwsh
+        run: |
+          $zipFile = "lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}.zip"
+          Compress-Archive -Path ${{ env.DIST_DIR }}\* -DestinationPath $zipFile -Force
+
+      - name: Create GitHub Release
+        id: create-release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}
+          name: v${{ steps.get-version.outputs.INFO_VERSION }}
+          body: ${{ steps.get-release-notes.outputs.body }}
+          draft: false
+          prerelease: true
+          files: lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}.zip

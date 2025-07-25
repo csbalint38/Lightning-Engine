@@ -184,7 +184,12 @@ namespace Editor.GameProject
             File.WriteAllText(Path.GetFullPath(Path.Combine(projectPath, $"{_0}.sln")), solution);
 
             _2 = engineApiPath;
+
+            #if DEBUG
             var _3 = "$(LIGHTNING_ENGINE)";
+            #else
+            var _3 = "$(LIGHTNING_ENGINE)Engine";
+            #endif
 
             var project = File.ReadAllText(Path.Combine(template.TemplatePath, "ProjectTemplate.xml"));
             project = string.Format(project, _0, _1, _2, _3);
