@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+	 xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Fragment>
+	<Property Id="WixShellExecTarget"
+			  Value="https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&amp;channel=Release&amp;version=VS2022&amp;source=VSLandingPage&amp;cid=1033&amp;passive=false"/>
+	<CustomAction Id="LaunchVSWebsite"
+				  BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+				  DllEntry="WixShellExec"
+				  Execute="immediate"
+				  Return="ignore"/>
+	<UI>
+	  <DialogRef Id="CancelDlg"/>
+	  <Dialog Id="VS2022Dlg" Width="370" Height="270" Title="Visual Studio Installation">
+	    <Control Id="BannerBitmap"
+				 Type="Bitmap"
+				 X="0"
+				 Y="0"
+				 Width="370"
+				 Height="44"
+				 TabSkip="no"
+			     Text="!(loc.BrowseDlgBannerBitmap)" />
+		<Control Id="VSNotFound"
+				 Type="Text"
+				 X="15"
+				 Y="5"
+				 Width="260"
+				 Height="40"
+				 Transparent="yes"
+				 Text="Visual Studio 2022 and C++ workload is required to use Lightning Engine!"/>
+	    <Control Id="WarningText"
+				 Type="Text"
+				 X="15"
+				 Y="50"
+				 Width="340"
+				 Height="60"
+				 Transparent="yes"
+				 NoPrefix="yes"
+				 Text="Visual Studio 2022 with C++ worload was not found. Install it manually or click the Install button below to download VSInstaller. Make sure 'Desktop Development with C++' is enabled."/>
+		<Control Id="VisistWebsite"
+				 Type="PushButton"
+				 X="15"
+				 Y="75"
+				 Width="150"
+				 Height="17"
+				 Text="Install">
+	      <Publish Event="DoAction" Value="LaunchVSWebsite" />
+		</Control>
+		<Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
+		<Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)" >
+		  <Publish Event="SpawnDialog" Value="CancelDlg" />
+		</Control>
+	  </Dialog>
+    </UI>
+  </Fragment>
+</Wix>

@@ -1,0 +1,19 @@
+﻿<!--
+This file contains the declaration of all the localizable strings.
+-->
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+
+  <String Id="DowngradeError" Value="A newer version of Lightning Engine is already installed." />
+  <String Id="ProductName" Value="Lightning Engine (x64)" />
+  <String Id="Name" Value="Lightning Engine" />
+  <String Id="LCID" Value="1033" />
+  <String Id="Manufacturer" Value="Cséfalvay Bálint"/>
+  <String Id="Description"
+		  Value="Lightning Engine is a 3D game engine designed for creating games and other 3D applications."/>
+  <String Id="Keyworlds"
+		  Value="3D engine,game engine,Lightning Engine,rendering,real-time graphics,game development"/>
+  <String Id="Comments"
+		  Value="Lightning Engine is currently under development. This version is a beta version available only for limited user number."/>
+  <String Id="ShortcutsDlgTitle" Value="Installation Options"/>
+  <String Id="ShortcutsDlgDescription" Value="Select additional installation options."/>
+</WixLocalization>

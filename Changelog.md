@@ -1,6 +1,11 @@
 # v0.3.7-beta - 2025.8.5.
+  ## Editor
+   - Icon
+
   ## Extras
    - CI workflow for release
+   - Changed LICENCE format
+   - Installer
 
 # v0.3.6-beta - 2025.7.22.
 

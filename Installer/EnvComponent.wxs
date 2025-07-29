@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+	 xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Fragment>
+	<Component Id="EnvComponent" Condition="ADD_TO_ENV = 1" Guid="{CA0E834E-9E63-4831-A061-F3E7BF4F6149}">
+      <Environment Id="LightningEngineEnv"
+				   Name="LIGHTNING_ENGINE"
+				   Value="[INSTALLFOLDER]"
+				   Action="set"
+				   Part="all"
+				   System="no"
+				   Permanent="yes"/>
+    </Component>
+  </Fragment>
+</Wix>

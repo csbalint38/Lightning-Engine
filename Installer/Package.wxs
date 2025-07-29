@@ -1,0 +1,43 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+	 xmlns:vs="http://wixtoolset.org/schemas/v4/wxs/vs">
+  <!-- This should change whenever version is increased -->
+  <?define ProductCode = "{193D89EE-B0B9-4F67-A0FD-3F28F2CFFF28}"?>
+  <?define UpgradeCode = "{0A4AE611-A289-4376-A4A6-6FBE922EF9BA}"?>
+  <Package Id="lightning_engine"
+           ProductCode="$(var.ProductCode)"
+           Name="!(loc.ProductName)"
+           Language="!(loc.LCID)"
+           Manufacturer="!(loc.Manufacturer)"
+           Version="$(var.Version)"
+           UpgradeCode="$(var.UpgradeCode)"
+           InstallerVersion="200"
+           Compressed="yes"
+           Scope="perMachine">
+    <SummaryInformation Description="!(loc.Description)"
+                        Keywords="!(loc.Keyworlds)"
+                        Comments="!(loc.Comments)"
+                        Manufacturer="!(loc.Manufacturer)"/>
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+    <MediaTemplate EmbedCab="yes"/>
+	<vs:FindVisualStudio />
+	<PropertyRef Id="VS2022_ROOT_FOLDER" />
+	<PropertyRef Id="VS2022_IDE_VC_PROJECTSYSTEM_INSTALLED" />
+    <Icon Id="icon.ico" SourceFile="$(var.Editor.ProjectDir)Resources\Icon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico"/>
+    <Property Id="ARPURLINFOABOUT" Value="www.example.com"/>
+	<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/>
+	<ui:WixUI Id="LightningInstallerUI"/>
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.ProjectDir)Assets\Background.bmp"/>
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.ProjectDir)Assets\Banner.bmp"/>
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)Assets\LICENCE.rtf"/>
+    <Feature Id="Product" Title="LightningEngineInstaller" Level="1">
+      <ComponentGroupRef Id="ProductComponent" />
+	  <ComponentRef Id="DesktopShortcut" />
+	  <ComponentRef Id="StartMenuIcon" />
+	  <ComponentRef Id="EnvComponent" />
+	  <ComponentRef Id="InstallfolderWriteAccess"/>
+    </Feature>
+  </Package>
+</Wix>

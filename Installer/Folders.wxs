@@ -1,0 +1,54 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+	 xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="LightningEngine">
+	    <Component Id="InstallfolderWriteAccess" Guid="{10DF4344-0E73-46F9-8F93-505412FAEB67}">
+		  <CreateFolder>
+		    <util:PermissionEx User="Users" GenericAll="yes" />
+		  </CreateFolder>
+		  <RegistryValue Root="HKLM"
+						 Key="Software\Lightning"
+						 Name="InstallFolderAcl"
+						 Type="integer"
+						 Value="1"
+						 KeyPath="yes" />
+		</Component>
+      </Directory>
+    </StandardDirectory>
+	<StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="{06CB61C5-AC95-4E6B-BD3B-6BA846EF8F4D}" Condition="CREATE_DESKTOP_SHORTCUT">
+	    <RegistryValue Root="HKCU"
+					   Key="Software\Lightning"
+					   Name="DesktopShortcut"
+					   Type="string"
+					   Value="yes"
+					   KeyPath="yes"/>
+	    <Shortcut Id="EngineDesktopShortcut"
+				  Name="!(loc.Name)"
+				  Icon="icon.ico"
+				  IconIndex="0"
+				  Description="Start !(loc.Name)"
+				  Target="[INSTALLFOLDER]Editor.exe"
+				  WorkingDirectory="INSTALLFOLDER"/>
+	    <RemoveFolder Id="RemoveDesktopShortcut" On="uninstall" />
+	  </Component>
+    </StandardDirectory>
+	<StandardDirectory Id="ProgramMenuFolder">
+	  <Component Id="StartMenuIcon" Guid="{EAD21826-AE9F-4E87-B4E1-C865EDC40E05}" Condition="STARTMENU_ICON">
+		<RegistryValue Root="HKCU"
+					   Key="Software\Lightning"
+					   Name="StartMenuShortcut"
+					   Type="string"
+					   Value="yes"
+					   KeyPath="yes"/>
+	    <Shortcut Id="StartMenuShortcut"
+				  Name="Lightning Engine"
+				  Description="Start Lightning Engine"
+				  Target="[INSTALLFOLDER]Editor.exe"
+				  WorkingDirectory="INSTALLFOLDER"/>
+	    <RemoveFolder Id="CleanUpStartMenu" On="uninstall"/>
+	  </Component>
+	</StandardDirectory>
+  </Fragment>
+</Wix>

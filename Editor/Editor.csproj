@@ -10,9 +10,10 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.5-beta</InformationalVersion>
-	<FileVersion>0.3.5.0</FileVersion>
-	<AssemblyVersion>0.3.5.0</AssemblyVersion>
+	<InformationalVersion>0.3.7-beta</InformationalVersion>
+	<FileVersion>0.3.7.0</FileVersion>
+	<AssemblyVersion>0.3.7.0</AssemblyVersion>
+	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
@@ -41,6 +42,7 @@
     <Content Include="Resources\CodeTemplates\h.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Resources\Icon.ico" />
     <Resource Include="Resources\CubeTexture.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>

@@ -21,6 +21,13 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SamplingVisualization", "Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Editor", "Editor\Editor.csproj", "{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}"
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Installer", "Installer\Installer.wixproj", "{F004909B-22D3-43AB-8F97-129591709B87}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22081D25-8133-45D4-B608-20E2660F768B} = {22081D25-8133-45D4-B608-20E2660F768B}
+		{5549FF72-CBD9-4548-BC1A-EC700D68347E} = {5549FF72-CBD9-4548-BC1A-EC700D68347E}
+		{F0FC42B1-5F51-4081-8211-6F359F00C717} = {F0FC42B1-5F51-4081-8211-6F359F00C717}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -65,6 +72,13 @@ Global
 		{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}.Release|x64.ActiveCfg = ReleaseEditor|x64
 		{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}.ReleaseEditor|x64.ActiveCfg = ReleaseEditor|x64
 		{106F8671-C0B1-412D-A52C-A1F9F8C69DD1}.ReleaseEditor|x64.Build.0 = ReleaseEditor|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.Debug|x64.ActiveCfg = Debug|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.Debug|x64.Build.0 = Debug|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.DebugEditor|x64.ActiveCfg = Debug|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.DebugEditor|x64.Build.0 = Debug|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.Release|x64.ActiveCfg = Release|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.Release|x64.Build.0 = Release|x64
+		{F004909B-22D3-43AB-8F97-129591709B87}.ReleaseEditor|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,46 @@
+﻿<Project Sdk="WixToolset.Sdk/6.0.1">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
+    <DefineConstants>Debug</DefineConstants>
+    <Configurations>DebugEditor;ReleaseEditor</Configurations>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputName>Lightning$(MSBuildProjectName)</OutputName>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PublishedDir Condition="'$(CI)' != 'true'">$(SolutionDir)$(Platform)\$(Configuration)Editor</PublishedDir>
+  </PropertyGroup>
+  <PropertyGroup>
+  	<Version Condition="'$(Version)'==''"/>
+  	<DefineConstants>$(DefineConstants);Version=$(Version)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Heat" Version="6.0.1" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.1" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.1" />
+    <PackageReference Include="WixToolset.VisualStudio.wixext" Version="6.0.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Editor\Editor.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\LICENCE.rtf" />
+  </ItemGroup>
+  <ItemGroup>
+    <BindPath Include="$(PublishedDir)">
+      <BindName>PublishedDir</BindName>
+    </BindPath>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Banner.bmp" />
+  </ItemGroup>
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(CI)' != 'true'">
+    <GetAssemblyIdentity AssemblyFiles="$(PublishedDir)\Editor.dll">
+      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+    </GetAssemblyIdentity>
+    <PropertyGroup>
+      <DefineConstants>Version=%(AssemblyVersion.Version)</DefineConstants>
+    </PropertyGroup>
+    <Message Importance="High" Text="Version -&gt; %(AssemblyVersion.Version)" />
+  </Target>
+</Project>

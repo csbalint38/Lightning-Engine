@@ -9,7 +9,7 @@ namespace Editor.Utilities.Converters
         {
             "B",
             "kB",
-            "MG",
+            "MB",
             "GB",
             "TB",
             "PB",
