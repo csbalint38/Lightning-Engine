@@ -19,7 +19,8 @@ namespace Editor.GameProject
         private void BtnCreate_Click(object sender, RoutedEventArgs e)
         {
             var vm = DataContext as NewProject;
-            var projectPath = vm.CreateProject(LbTemplates.SelectedItem as ProjectTemplate);
+            var selectedTemplate = LbTemplates.SelectedItem as ProjectTemplate;
+            var projectPath = vm!.CreateProject(selectedTemplate!);
             bool dialogResult = false;
             var win = Window.GetWindow(this);
 
@@ -30,7 +31,9 @@ namespace Editor.GameProject
                 var project = OpenProject.Open(new ProjectData()
                 {
                     ProjectName = vm.ProjectName,
-                    ProjectPath = projectPath
+                    ProjectPath = projectPath,
+                    Icon = selectedTemplate!.Icon,
+                    Screenshot = selectedTemplate!.Screenshot,
                 });
 
                 win.DataContext = project;
