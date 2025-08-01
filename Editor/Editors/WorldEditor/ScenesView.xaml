@@ -35,6 +35,7 @@
             </Button.Content>
         </Button>
         <ScrollViewer Grid.Row="1"
+                      x:Name="SVEntities"
                       HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto"
                       Background="{StaticResource Editor.BackgroundBrush3}"
@@ -47,7 +48,8 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Expander IsExpanded="{Binding IsActive, Mode=OneWay}">
+                        <Expander IsExpanded="{Binding IsActive, Mode=OneWay}"
+                                  PreviewMouseWheel="Expander_PreviewMouseWheel">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Name}"

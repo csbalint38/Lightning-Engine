@@ -3,6 +3,7 @@ using Editor.GameProject;
 using Editor.Utilities;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Editor.Editors
 {
@@ -62,6 +63,17 @@ namespace Editor.Editors
                 msEntity = new MSEntity(newSelection);
             }
             EntityView.Instance.DataContext = msEntity;
+        }
+
+        private void Expander_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+
+            SVEntities.RaiseEvent(new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = UIElement.MouseWheelEvent,
+                Source = sender,
+            });
         }
     }
 }
