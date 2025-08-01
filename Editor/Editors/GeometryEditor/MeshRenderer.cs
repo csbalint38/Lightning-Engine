@@ -2,6 +2,7 @@
 using Editor.Common.Enums;
 using Editor.Content;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -13,6 +14,9 @@ namespace Editor.Editors
     // This is also temporary.
     public class MeshRenderer : ViewModelBase
     {
+        private readonly int _totalPositionCount = 0;
+        private readonly int _totalIndicesCount = 0;
+
         private Vector3D _cameraDirection = new(0, 0, -10);
         private Point3D _cameraPosition = new(0, 0, 10);
         private Point3D _cameraTarget = new(0, 0, 0);
@@ -20,6 +24,8 @@ namespace Editor.Editors
         private Color _skyLight = (Color)ColorConverter.ConvertFromString("#FF111B30");
         private Color _groundLight = (Color)ColorConverter.ConvertFromString("#FF3F2F1E");
         private Color _ambientLight = (Color)ColorConverter.ConvertFromString("#FF3B3B3B");
+        private int _displayPositionCount = 0;
+        private int _displayIndiciesCount = 0;
 
         public ObservableCollection<MeshRendererVertexData> Meshes { get; } = [];
 
@@ -113,6 +119,34 @@ namespace Editor.Editors
                 {
                     _ambientLight = value;
                     OnPropertyChanged(nameof(AmbientLight));
+                }
+            }
+        }
+        public Point3D OffsetCameraPosition =>
+            new(CameraPosition.X + CameraTraget.X, CameraPosition.Y + CameraTraget.Y, CameraPosition.Z + CameraTraget.Z);
+
+        public int DisplayPositionCount
+        {
+            get => _displayPositionCount;
+            private set
+            {
+                if (_displayPositionCount != value)
+                {
+                    _displayPositionCount = value;
+                    OnPropertyChanged(nameof(DisplayPositionCount));
+                }
+            }
+        }
+
+        public int DisplayIndiciesCount
+        {
+            get => _displayIndiciesCount;
+            private set
+            {
+                if (_displayIndiciesCount != value)
+                {
+                    _displayIndiciesCount = value;
+                    OnPropertyChanged(nameof(DisplayIndiciesCount));
                 }
             }
         }
@@ -217,7 +251,12 @@ namespace Editor.Editors
                 vertexData.Normals.Freeze();
                 vertexData.UVs.Freeze();
                 vertexData.Indices.Freeze();
+                vertexData.PropertyChanged += OnMeshPropertyChanged;
+
                 Meshes.Add(vertexData);
+
+                _totalPositionCount += vertexData.Positions.Count;
+                _totalIndicesCount += vertexData.Indices.Count;
             }
 
             if (old is not null)
@@ -246,9 +285,31 @@ namespace Editor.Editors
                 CameraTraget = new Point3D(minX + width * 0.5, minY + height * 0.5, minZ + depth * 0.5);
             }
 
+            DisplayPositionCount = _totalPositionCount;
+            DisplayIndiciesCount = _totalIndicesCount;
         }
 
-        public Point3D OffsetCameraPosition =>
-            new(CameraPosition.X + CameraTraget.X, CameraPosition.Y + CameraTraget.Y, CameraPosition.Z + CameraTraget.Z);
+        private void OnMeshPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            var m = sender as MeshRendererVertexData;
+
+            bool isActiveChanged =
+                (e.PropertyName == nameof(m.IsHighlighted) && m!.IsHighlighted) ||
+                (e.PropertyName == nameof(m.IsIsolated) && m!.IsIsolated);
+
+            if (isActiveChanged)
+            {
+                DisplayPositionCount = m!.Positions.Count;
+                DisplayIndiciesCount = m!.Indices.Count;
+
+                return;
+            }
+
+            if (Meshes.All(x => !x.IsHighlighted && !x.IsIsolated))
+            {
+                DisplayPositionCount = _totalIndicesCount;
+                DisplayIndiciesCount = _totalIndicesCount;
+            }
+        }
     }
 }

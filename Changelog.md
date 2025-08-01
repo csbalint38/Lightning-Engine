@@ -1,11 +1,12 @@
 # v0.3.7-beta - 2025.8.5.
-  ## Editor
-   - Icon
-
-  ## Extras
+  ## General
    - CI workflow for release
    - Changed LICENCE format
    - Installer
+
+  ## Editor
+   - Icon
+   - Fixed the issue where only the first submeshes index and vertex count was displayes in the MeshRenderer
 
 # v0.3.6-beta - 2025.7.22.
 

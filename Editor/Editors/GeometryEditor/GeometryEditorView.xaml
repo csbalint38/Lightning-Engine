@@ -95,9 +95,9 @@
                                Foreground="{StaticResource Editor.BlueBrush}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="{Binding MeshRenderer.Meshes[0].Positions.Count}"
+                    <TextBlock Text="{Binding MeshRenderer.DisplayPositionCount}"
                                Foreground="{StaticResource Editor.LightningBrush}"/>
-                    <TextBlock Text="{Binding MeshRenderer.Meshes[0].Indices.Count}"
+                    <TextBlock Text="{Binding MeshRenderer.DisplayIndiciesCount}"
                                Margin="10,0"
                                Foreground="{StaticResource Editor.LightningBrush}"/>
                 </StackPanel>

@@ -7,8 +7,14 @@ namespace Editor.Editors
     // This is a temporary class.
     public class MeshRendererVertexData : ViewModelBase
     {
-        private Brush _specular = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialSpecularColor));
-        private Brush _diffuse = new SolidColorBrush((Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialDiffuseColor));
+        private Brush _specular = new SolidColorBrush(
+            (Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialSpecularColor)
+        );
+
+        private Brush _diffuse = new SolidColorBrush(
+            (Color)ColorConverter.ConvertFromString(Constants.DefaultMaterialDiffuseColor)
+        );
+
         private bool _isHighlighted;
         private bool _isIsolated;
 
