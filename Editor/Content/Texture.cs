@@ -379,7 +379,7 @@ namespace Editor.Content
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                Logger.LogAsync(LogLevel.ERROR, $"Failde to save texture to {file}");
+                Logger.LogAsync(LogLevel.ERROR, $"Failed to save texture to {file}");
 
                 return [];
             }

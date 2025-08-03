@@ -188,7 +188,7 @@ namespace lightning::graphics {
 			MESH,
 
 			count
-		};;
+		};
 	};
 
 	struct MaterialType {
@@ -219,7 +219,7 @@ namespace lightning::graphics {
 		MaterialSurface surface;
 		MaterialType::Type type;
 		u32 texture_count;
-		id::id_type shader_ids[ShaderType::Type::count]{ id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id };
+		id::id_type shader_ids[ShaderType::count]{ id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id, id::invalid_id };
 	};
 
 	struct PrimitiveTopology {

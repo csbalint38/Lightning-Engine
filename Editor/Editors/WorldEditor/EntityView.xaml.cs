@@ -1,5 +1,6 @@
 ﻿using Editor.Common.Enums;
 using Editor.Components;
+using Editor.Content;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.Windows;
@@ -33,6 +34,7 @@ namespace Editor.Editors
                 }
             };
         }
+
         private Action GetRenameAction()
         {
             var vm = DataContext as MSEntity;
@@ -41,7 +43,7 @@ namespace Editor.Editors
             return new Action(() =>
             {
                 selection.ForEach(item => item.entity.Name = item.Name);
-                (DataContext as MSEntity).Refresh();
+                MSEntityBase.CurrentSelection.Refresh();
             });
         }
 
@@ -53,7 +55,7 @@ namespace Editor.Editors
             return new Action(() =>
             {
                 selection.ForEach(item => item.entity.IsEnabled = item.IsEnabled);
-                (DataContext as MSEntity).Refresh();
+                MSEntityBase.CurrentSelection.Refresh();
             });
         }
 
@@ -99,9 +101,6 @@ namespace Editor.Editors
             ));
         }
 
-        private void MIScriptComponent_Click(object sender, RoutedEventArgs e) =>
-            AddComponent(ComponentType.SCRIPT, (sender as MenuItem).Header.ToString());
-
         private void TgbAddComponent_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             var menu = FindResource("addComponentMenu") as ContextMenu;
@@ -110,7 +109,7 @@ namespace Editor.Editors
             btn.IsChecked = true;
             menu.Placement = PlacementMode.Bottom;
             menu.PlacementTarget = btn;
-            menu.MinWidth = btn.ActualWidth;
+            menu.MinWidth = btn.ActualWidth + 5.0;
             menu.IsOpen = true;
         }
 
@@ -146,5 +145,11 @@ namespace Editor.Editors
                 ));
             }
         }
+
+        private void MIScriptComponent_Click(object sender, RoutedEventArgs e) =>
+            AddComponent(ComponentType.SCRIPT, (sender as MenuItem).Header.ToString());
+
+        private void MIGeometryComponent_Click(object sender, RoutedEventArgs e) =>
+            AddComponent(ComponentType.GEOMETRY, DefaultAssets.DefaultGeometry);
     }
 }

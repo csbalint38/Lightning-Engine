@@ -1,4 +1,5 @@
 ﻿using Editor.Common.Enums;
+using Editor.Content;
 using System.Diagnostics;
 
 namespace Editor.Components
@@ -10,8 +11,9 @@ namespace Editor.Components
             (entity, data) => new Transform(entity),
             (entity, data) => new Script(entity)
             {
-                Name = (string)data,
-            }
+                Name = (string)data
+            },
+            (entity, data) => new Geometry(entity, (AssetInfo)data),
         ];
 
         public static Func<Entity, object, Component> GetCreationFunction(ComponentType componentType)
@@ -26,6 +28,7 @@ namespace Editor.Components
             {
                 Transform _ => ComponentType.TRANSFORM,
                 Script _ => ComponentType.SCRIPT,
+                Geometry _ => ComponentType.GEOMETRY,
                 _ => throw new ArgumentException("Unknown component type")
             };
     }

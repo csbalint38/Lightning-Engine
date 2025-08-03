@@ -175,7 +175,7 @@ namespace lightning::graphics::direct3d12::content {
 						sizeof(ShaderFlags::Flags) +								// shader flags
 						sizeof(id::id_type) +										// root signature id
 						sizeof(u32) +												// texture count
-						sizeof(MaterialSurface) +										// PBR material properties
+						sizeof(MaterialSurface) +									// PBR material properties
 						sizeof(id::id_type) * shader_count +						// shader ids
 						(sizeof(id::id_type) + sizeof(u32)) * info.texture_count	// texture ids and descriptor indicies 
 					};
@@ -353,10 +353,10 @@ namespace lightning::graphics::direct3d12::content {
 				}
 
 				stream.vs = shaders[ShaderType::VERTEX];
+				stream.ps = shaders[ShaderType::PIXEL];
 				stream.ds = shaders[ShaderType::DOMAIN];
 				stream.hs = shaders[ShaderType::HULL];
 				stream.gs = shaders[ShaderType::GEOMETRY];
-				stream.ps = shaders[ShaderType::PIXEL];
 				stream.cs = shaders[ShaderType::COMPUTE];
 				stream.as = shaders[ShaderType::AMPLIFICATION];
 				stream.ms = shaders[ShaderType::MESH];

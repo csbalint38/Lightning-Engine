@@ -8,6 +8,23 @@
                     xmlns:enums="clr-namespace:Editor.Common.Enums">
     <sys:Double x:Key="AssetIconWidth">90</sys:Double>
     <converters:HeightToCornerRadiusConverter x:Key="heightToCornerRadiusConverter"/>
+    <StackPanel x:Key="MultivalueTextBlock" Opacity="0.7">
+        <StackPanel.RenderTransform>
+            <TransformGroup>
+                <SkewTransform AngleX="-10"/>
+                <RotateTransform Angle="-10"/>
+            </TransformGroup>
+        </StackPanel.RenderTransform>
+        <TextBlock Text="MULTI"
+                   Width="32"
+                   Foreground="{StaticResource Editor.LightningBrush}"
+                   FontFamily="Bahnschrift condensed" />
+        <TextBlock Text="VALUE"
+                   Width="32"
+                   Foreground="{StaticResource Editor.LightningBrush}"
+                   FontFamily="Bahnschrift condensed"
+                   Margin="0,-4"/>
+    </StackPanel>
     <Style x:Key="FocusVisual">
         <Setter Property="Control.Template">
             <Setter.Value>
@@ -354,6 +371,7 @@
     </Style>
     <Style TargetType="{x:Type controls:NumberBox}" x:Key="{x:Type controls:NumberBox}">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type controls:NumberBox}">
@@ -1067,6 +1085,50 @@
                 <Setter Property="Foreground" Value="{StaticResource Editor.DisabledFontBrush}"/>
                 <Setter Property="IsHitTestVisible" Value="True"/>
             </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="DropBorderStyle" TargetType="{x:Type Border}">
+        <Setter Property="BorderBrush" Value="{StaticResource Editor.BackgroundBrush5}"/>
+        <Setter Property="AllowDrop" Value="True"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="Width" Value="{StaticResource AssetIconWidth}"/>
+        <Setter Property="Height" Value="{StaticResource AssetIconWidth}"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource Editor.SelectBrush}"/>
+            </Trigger>
+            <EventTrigger RoutedEvent="PreviewDragEnter">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                        From="{StaticResource Editor.Background5}"
+                                        To="{StaticResource Editor.Green}"
+                                        Duration="0:0:0"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="PreviewDragLeave">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                        From="{StaticResource Editor.Green}"
+                                        To="{StaticResource Editor.Background5}"
+                                        Duration="0:0:0"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+            <EventTrigger RoutedEvent="Drop">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <ColorAnimation Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"
+                                        From="{StaticResource Editor.Green}"
+                                        To="{StaticResource Editor.Background5}"
+                                        Duration="0:0:0"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
         </Style.Triggers>
     </Style>
     <Style x:Key="LightningWindowStyle" TargetType="{x:Type Window}">
@@ -1935,6 +1997,34 @@
               Canvas.Left="0"
               Stroke="{StaticResource Editor.LightningBrush}"
               StrokeThickness="0.2"/>
-        <Rectangle Fill="Transparent" Stroke="{StaticResource Editor.LightningBrush}" StrokeThickness="0.3" Width="100" Height="100"/>
+        <Rectangle Fill="Transparent"
+                   Stroke="{StaticResource Editor.LightningBrush}"
+                   StrokeThickness="0.3"
+                   Width="100"
+                   Height="100"/>
     </Canvas>
+    <Style TargetType="{x:Type controls:ComponentView}" x:Key="{x:Type controls:ComponentView}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:ComponentView}">
+                    <Expander IsExpanded="True" x:Name="expander" Background="{StaticResource Editor.BackgroundBrush3}">
+                        <Expander.Style>
+                            <Style TargetType="{x:Type Expander}">
+                                <Setter Property="Foreground" Value="{StaticResource Editor.FontBrush}" />
+                            </Style>
+                        </Expander.Style>
+                        <Expander.Header>
+                            <TextBlock FontWeight="Bold"
+                                       Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Expander.Header>
+                        <ContentPresenter Margin="5" />
+                        <Expander.Effect>
+                            <DropShadowEffect Opacity=".6" BlurRadius="15" ShadowDepth="2"/>
+                        </Expander.Effect>
+                    </Expander>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

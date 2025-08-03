@@ -5,9 +5,9 @@ namespace Editor.Editors
     /// <summary>
     /// Interaction logic for ScriptView.xaml
     /// </summary>
-    public partial class ScriptView : UserControl
+    public partial class ScriptComponentView : UserControl
     {
-        public ScriptView()
+        public ScriptComponentView()
         {
             InitializeComponent();
         }

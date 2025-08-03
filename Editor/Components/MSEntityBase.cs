@@ -11,6 +11,8 @@ namespace Editor.Components
         private string? _name;
         private readonly ObservableCollection<IMSComponent> _components = [];
 
+        public static MSEntityBase CurrentSelection { get; private set; }
+
         public bool? IsEnabled
         {
             get => _isEnabled;
@@ -40,6 +42,20 @@ namespace Editor.Components
         public ReadOnlyObservableCollection<IMSComponent> Components { get; }
         public List<Entity> SelectedEntities { get; }
 
+        public MSEntityBase(List<Entity> entities)
+        {
+            Debug.Assert(entities?.Count != 0);
+
+            CurrentSelection = this;
+            Components = new ReadOnlyObservableCollection<IMSComponent>(_components);
+            SelectedEntities = entities;
+
+            PropertyChanged += (s, e) =>
+            {
+                if (_enableUpdates) UpdateEntities(e.PropertyName);
+            };
+        }
+
         protected virtual bool UpdateEntities(string propertyName)
         {
             switch (propertyName)
@@ -57,18 +73,6 @@ namespace Editor.Components
             Name = GetMixedValue(SelectedEntities, new Func<Entity, string>(x => x.Name));
 
             return true;
-        }
-
-        public MSEntityBase(List<Entity> entities)
-        {
-            Debug.Assert(entities?.Count != 0);
-            Components = new ReadOnlyObservableCollection<IMSComponent>(_components);
-            SelectedEntities = entities;
-
-            PropertyChanged += (s, e) =>
-            {
-                if (_enableUpdates) UpdateEntities(e.PropertyName);
-            };
         }
 
         public static int? GetMixedValue<T>(List<T> objects, Func<T, int> getProperty)

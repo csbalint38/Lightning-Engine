@@ -102,7 +102,7 @@ namespace Editor.Content
             DataContext = null;
         }
 
-        private static IAssetEditor OpenAssetEditor(AssetInfo info)
+        internal static IAssetEditor OpenAssetEditor(AssetInfo info)
         {
             IAssetEditor editor = null;
 

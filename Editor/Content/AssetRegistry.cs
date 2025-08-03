@@ -1,97 +1,124 @@
-﻿using Editor.Content.ContentBrowser;
+﻿using Editor.Common.Enums;
+using Editor.Content.ContentBrowser;
 using Editor.Content.ContentBrowser.Descriptors;
 using Editor.Utilities;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 
-namespace Editor.Content
+namespace Editor.Content;
+static class AssetRegistry
 {
-    static class AssetRegistry
+    private static readonly Lock _lock = new();
+    private static readonly Dictionary<string, AssetInfo> _assetFileDict = [];
+    private static readonly Dictionary<Guid, AssetInfo> _assetGuidDict = [];
+    private static readonly ObservableCollection<AssetInfo> _assets = [];
+
+    private static string _cachePath = string.Empty;
+
+    public static ReadOnlyObservableCollection<AssetInfo> Assets { get; } = new(_assets);
+
+    public static AssetInfo GetAssetInfo(string file)
     {
-        private static readonly Dictionary<string, AssetInfo> _assetFileDict = [];
-        private static readonly Dictionary<Guid, AssetInfo> _assetGuidDict = [];
-        private static readonly ObservableCollection<AssetInfo> _assets = [];
-
-        public static AssetInfo GetAssetInfo(string file) => _assetFileDict.ContainsKey(file) ? _assetFileDict[file] : null;
-        public static AssetInfo GetAssetInfo(Guid guid) => _assetGuidDict.ContainsKey(guid) ? _assetGuidDict[guid] : null;
-
-        public static ReadOnlyObservableCollection<AssetInfo> Assets { get; } = new(_assets);
-
-        public static void Reset(string contentFolder)
+        lock (_lock)
         {
-            ContentWatcher.ContentModified -= OnContentModified;
+            return _assetFileDict.TryGetValue(file, out var value) ? value : null;
+        }
+    }
 
-            _assetFileDict.Clear();
-            _assetGuidDict.Clear();
-            _assets.Clear();
+    public static AssetInfo GetAssetInfo(Guid guid)
+    {
+        lock (_lock)
+        {
+            return _assetGuidDict.TryGetValue(guid, out var value) ? value : null;
+        }
+    }
 
-            Debug.Assert(Directory.Exists(contentFolder));
+    public static void Reset(string contentFolder, string projectPath)
+    {
+        ContentWatcher.ContentModified -= OnContentModified;
 
+        Debug.Assert(!string.IsNullOrEmpty(projectPath) && Directory.Exists(projectPath));
+
+        _cachePath = $@"{projectPath}.Lightning\AssetInfoCache.lngcache";
+
+        LoadCacheFile();
+
+        Debug.Assert(!string.IsNullOrEmpty(contentFolder) && Directory.Exists(contentFolder));
+
+        lock (_lock)
+        {
             RegisterAllAssets(contentFolder);
 
-            ContentWatcher.ContentModified += OnContentModified;
+            DefaultAssets.DefaultAssetsList.ForEach(x => RegisterAsset(x.FullPath, x));
         }
 
-        private static void RegisterAllAssets(string path)
-        {
-            Debug.Assert(Directory.Exists(path));
+        ContentWatcher.ContentModified += OnContentModified;
+    }
 
-            foreach (var entry in Directory.GetFileSystemEntries(path))
-            {
-                if (ContentHelper.IsDirectory(entry)) RegisterAllAssets(entry);
-                else RegisterAsset(entry);
-            }
+    public static void Save() => SaveCacheFile();
+
+    private static void RegisterAllAssets(string path)
+    {
+        Debug.Assert(Directory.Exists(path));
+
+        foreach (var entry in Directory.GetFileSystemEntries(path))
+        {
+            if (ContentHelper.IsDirectory(entry)) RegisterAllAssets(entry);
+            else RegisterAsset(entry);
         }
+    }
 
-        private static void RegisterAsset(string file)
+    private static void RegisterAsset(string file, AssetInfo info = null)
+    {
+        Debug.Assert(File.Exists(file));
+
+        try
         {
-            Debug.Assert(File.Exists(file));
+            var fileInfo = new FileInfo(file);
+            var isNew = !_assetFileDict.ContainsKey(file);
 
-            try
+            if (isNew || _assetFileDict[file].RegisterTime.IsOlder(fileInfo.LastWriteTime))
             {
-                var fileInfo = new FileInfo(file);
-                var isNew = !_assetFileDict.ContainsKey(file);
+                info ??= Asset.GetAssetInfo(file);
 
-                if (isNew || _assetFileDict[file].RegisterTime.IsOlder(fileInfo.LastWriteTime))
+                Debug.Assert(info is not null);
+
+                info.RegisterTime = DateTime.Now;
+
+                if (!isNew && _assetFileDict[file].Guid != info.Guid)
                 {
-                    var info = Asset.GetAssetInfo(file);
+                    _assetGuidDict.Remove(_assetFileDict[file].Guid);
+                }
 
-                    Debug.Assert(info is not null);
+                _assetFileDict[file] = info;
+                _assetGuidDict[info.Guid] = info;
 
-                    info.RegisterTime = DateTime.Now;
+                if (isNew)
+                {
+                    Debug.Assert(!_assets.Contains(info));
 
-                    if (!isNew && _assetFileDict[file].Guid != info.Guid)
-                    {
-                        _assetGuidDict.Remove(_assetFileDict[file].Guid);
-                    }
+                    _assets.Add(info);
+                }
+                else
+                {
+                    var oldInfo = _assets.FirstOrDefault(x => x.FullPath == info.FullPath);
 
-                    _assetFileDict[file] = info;
-                    _assetGuidDict[info.Guid] = info;
+                    Debug.Assert(oldInfo is not null);
 
-                    if (isNew)
-                    {
-                        Debug.Assert(!_assets.Contains(info));
-
-                        _assets.Add(info);
-                    }
-                    else
-                    {
-                        var oldInfo = _assets.FirstOrDefault(x => x.FullPath == info.FullPath);
-
-                        Debug.Assert(oldInfo is not null);
-
-                        _assets[_assets.IndexOf(oldInfo)] = info;
-                    }
+                    _assets[_assets.IndexOf(oldInfo)] = info;
                 }
             }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
         }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+        }
+    }
 
-        private static void OnContentModified(object sender, ContentModifiedEventArgs e)
+    private static void OnContentModified(object sender, ContentModifiedEventArgs e)
+    {
+        lock (_lock)
         {
             if (ContentHelper.IsDirectory(e.FullPath))
             {
@@ -104,21 +131,106 @@ namespace Editor.Content
 
             _assets.Where(x => !File.Exists(x.FullPath)).ToList().ForEach(x => UnregisterAsset(x.FullPath));
         }
+    }
 
-        private static void UnregisterAsset(string file)
+    private static void UnregisterAsset(string file)
+    {
+        if (_assetFileDict.TryGetValue(file, out var info))
         {
-            if (_assetFileDict.ContainsKey(file))
+            _assets.Remove(info);
+            _assetFileDict.Remove(file);
+
+            if (_assetGuidDict.TryGetValue(info.Guid, out var value) && !File.Exists(value.FullPath))
             {
-                var info = _assetFileDict[file];
+                _assetGuidDict.Remove(info.Guid);
+            }
+        }
+    }
 
-                _assets.Remove(info);
-                _assetFileDict.Remove(file);
+    private static void SaveCacheFile()
+    {
+        try
+        {
+            List<AssetInfo> assets = [];
 
-                if (_assetGuidDict.ContainsKey(info.Guid) && !File.Exists(_assetGuidDict[info.Guid].FullPath))
+            lock (_lock)
+            {
+                assets = [.. _assets];
+            }
+
+            using var writer = new BinaryWriter(File.Open(_cachePath, FileMode.Create, FileAccess.Write));
+
+            writer.Write(assets.Count);
+
+            foreach (var info in assets)
+            {
+                writer.Write((int)info.Type);
+                writer.Write(info.Icon.Length);
+                writer.Write(info.Icon);
+                writer.Write(info.FullPath);
+                writer.Write(info.RegisterTime.ToBinary());
+                writer.Write(info.ImportDate.ToBinary());
+                writer.Write(info.Guid.ToString());
+
+                var hashSize = info.Hash?.Length ?? 0;
+
+                if (hashSize > 0) writer.Write(info.Hash);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Logger.LogAsync(LogLevel.WARNING, "Failed to write Asset Registry cache file.");
+            File.Delete(_cachePath);
+        }
+    }
+
+    private static void LoadCacheFile()
+    {
+        if (!File.Exists(_cachePath)) return;
+
+        try
+        {
+            lock (_lock)
+            {
+                _assetFileDict.Clear();
+                _assetGuidDict.Clear();
+                _assets.Clear();
+
+                using var reader = new BinaryReader(File.Open(_cachePath, FileMode.Open, FileAccess.Read));
+                var numEntities = reader.ReadInt32();
+
+                for (int i = 0; i < numEntities; i++)
                 {
-                    _assetGuidDict.Remove(info.Guid);
+                    var info = new AssetInfo();
+
+                    info.Type = (AssetType)reader.ReadInt32();
+
+                    var IconSize = reader.ReadInt32();
+
+                    info.Icon = reader.ReadBytes(IconSize);
+                    info.FullPath = reader.ReadString();
+                    info.RegisterTime = DateTime.FromBinary(reader.ReadInt64());
+                    info.ImportDate = DateTime.FromBinary(reader.ReadInt64());
+                    info.Guid = new(reader.ReadString());
+
+                    var hashSize = reader.ReadInt32();
+
+                    info.Hash = (hashSize > 0) ? reader.ReadBytes(hashSize) : null;
+
+                    if (File.Exists(info.FullPath))
+                    {
+                        _assetFileDict[info.FullPath] = info;
+                        _assetGuidDict[info.Guid] = info;
+                        _assets.Add(info);
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Logger.LogAsync(LogLevel.WARNING, "Failed to read Asset Registry cache file.");
         }
     }
 }

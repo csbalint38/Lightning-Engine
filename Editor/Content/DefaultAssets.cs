@@ -42,7 +42,7 @@ namespace Editor.Content
 
             if (!File.Exists(materialFileName)) CreateDefaultMaterial(materialFileName);
 
-            var textureFileName = $@"{defaultAssetsPath}DefaultTexture.asset";
+            var textureFileName = $@"{defaultAssetsPath}DefaultTexture{Asset.AssetFileExtension}";
 
             BRDFIntegrationLUT = Asset.GetAssetInfo(brdfLUTFileName);
             DefaultGeometry = Asset.GetAssetInfo(cubeFileName);

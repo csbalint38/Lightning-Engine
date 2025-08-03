@@ -137,7 +137,7 @@ namespace Editor.DLLs
 
             Marshal.Copy(packageData, 0, data.Data, data.DataSize);
 
-            return AddShaderGroup(shaderGroup);
+            return AddShaderGroup(data);
         }
 
         public static void CompileShader(ShaderGroup shaderGroup)

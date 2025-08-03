@@ -6,21 +6,26 @@
              xmlns:local="clr-namespace:Editor.Editors"
              xmlns:vm="clr-namespace:Editor.Components"
              xmlns:util="clr-namespace:Editor.Utilities"
+             xmlns:converters="clr-namespace:Editor.Utilities.Converters"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance Type=vm:MSEntity, IsDesignTimeCreatable=True}"
+             d:DataContext="{d:DesignInstance Type=vm:MSEntity}"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <util:NullableBoolToBool x:Key="nullableBoolToBool"/>
+        <converters:NullableBoolToBoolConverter x:Key="nullableBoolToBool"/>
         <DataTemplate DataType="{x:Type vm:MSTransform}">
-            <local:TransformView/>
+            <local:TransformComponentView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:MSScript}">
-            <local:ScriptView/>
+            <local:ScriptComponentView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MSGeometry}">
+            <local:GeometryComponentView/>
         </DataTemplate>
         <ContextMenu x:Key="addComponentMenu"
                      IsOpen="{Binding Path=IsChecked, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ToggleButton}}}">
-            <MenuItem Header="Geometry"/>
+            <MenuItem Header="Geometry"
+                      Click="MIGeometryComponent_Click"/>
             <MenuItem Header="Physics">
                 <MenuItem Header="Rigidbody"/>
             </MenuItem>

@@ -1,6 +1,7 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
 using Editor.Components;
+using Editor.Content;
 using Editor.DLLs;
 using Editor.GameCode;
 using Editor.Utilities;
@@ -111,6 +112,7 @@ namespace Editor.GameProject
             UnloadGameCodeDLL();
 
             Task.Run(VisualStudio.CloseVisualStudio);
+            AssetRegistry.Save();
 
             UndoRedo.Reset();
             DeleteTempFolder();

@@ -5,20 +5,9 @@ namespace Editor.Utilities.Converters
 {
     public class DataSizeToStringConverter : IValueConverter
     {
-        private static readonly string[] _sizeSuffixes =
-        {
-            "B",
-            "kB",
-            "MB",
-            "GB",
-            "TB",
-            "PB",
-            "EB",
-            "ZB",
-            "YB"
-        };
+        private static readonly string[] _sizeSuffixes = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
-        static string SizeSuffix(long value, int decimalPlaces = 1)
+        private static string SizeSuffix(long value, int decimalPlaces = 1)
         {
             if (value <= 0 || decimalPlaces < 0) return string.Empty;
 

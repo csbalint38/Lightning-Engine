@@ -62,7 +62,9 @@ namespace {
 
 		if (texture_count) {
 			id::id_type* const texture_ids{ (id::id_type* const)blob.position() };
-			*reinterpret_cast<id::id_type**>(const_cast<u8*>(blob.position())) = texture_ids;
+			// *reinterpret_cast<id::id_type**>(const_cast<u8*>(blob.position())) = texture_ids;
+			blob.skip(sizeof(id::id_type) * texture_count);
+			*((id::id_type**)blob.position()) = texture_ids;
 		}
 
 		return (u8*)blob.position();
