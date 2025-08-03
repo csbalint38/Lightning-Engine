@@ -4,11 +4,14 @@
    - Changed LICENCE format
    - Installer
 
+  ## UI
+    - Fixed the issue where only the first submeshes index and vertex count was displayes in the MeshRenderer
+    - Fixet the issue where Icon and Screenshot was not displayed when opening an existing project after creating a new one
+    - Fixed SceneView scrolling
+
   ## Editor
    - Icon
-   - Fixed the issue where only the first submeshes index and vertex count was displayes in the MeshRenderer
-   - Fixet the issue where Icon and Screenshot was not displayed when opening an existing project after creating a new one
-   - Fixed SceneView scrolling
+   - Geometry Component View
 
 # v0.3.6-beta - 2025.7.22.
 
