@@ -8,6 +8,7 @@
     - Fixed the issue where only the first submeshes index and vertex count was displayes in the MeshRenderer
     - Fixet the issue where Icon and Screenshot was not displayed when opening an existing project after creating a new one
     - Fixed SceneView scrolling
+    - Fixed MainWindow not getting keyboard focus back after renaming an Entity
 
   ## Editor
    - Icon

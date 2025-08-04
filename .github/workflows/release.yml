@@ -145,7 +145,7 @@ jobs:
       - name: Copy over meta files
         shell: pwsh
         run: |
-          $metaFiles = 'Changelog.md', 'LICENCE.txt', 'README.md'
+          $metaFiles = 'Changelog.md', 'LICENCE.md', 'README.md'
           foreach ($file in $metaFiles) {
             Copy-Item -Path $file -Destination ${{ env.DIST_DIR }} -Force
           }
