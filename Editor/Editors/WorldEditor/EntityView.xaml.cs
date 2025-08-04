@@ -81,6 +81,8 @@ namespace Editor.Editors
             }
 
             _undoAction = null;
+
+            (sender as UIElement)?.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
         }
 
         private void ChBIsEnabled_Click(object sender, RoutedEventArgs e)

@@ -62,7 +62,10 @@ namespace Editor.Common.Controls
 
         static NumberBox()
         {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(NumberBox), new FrameworkPropertyMetadata(typeof(NumberBox)));
+            DefaultStyleKeyProperty.OverrideMetadata(
+                typeof(NumberBox),
+                new FrameworkPropertyMetadata(typeof(NumberBox))
+            );
         }
 
         public override void OnApplyTemplate()
