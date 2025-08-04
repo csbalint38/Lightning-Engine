@@ -1,23 +1,24 @@
 # v0.3.7-beta - 2025.8.5.
-  ## General
-   - CI workflow for release
-   - Changed LICENCE format
-   - Installer
+## General
+ - CI workflow for release
+ - Changed LICENCE format
+ - Installer
 
-  ## UI
-    - Fixed the issue where only the first submeshes index and vertex count was displayes in the MeshRenderer
-    - Fixet the issue where Icon and Screenshot was not displayed when opening an existing project after creating a new one
-    - Fixed SceneView scrolling
+## UI
+ - Fixed the issue where only the first submeshes index and vertex count was displayes in the MeshRenderer
+ - Fixet the issue where Icon and Screenshot was not displayed when opening an existing project after creating a new one
+ - Fixed SceneView scrolling
+ - Fixed MainWindow not getting keyboard focus back after renaming an Entity
 
-  ## Editor
-   - Icon
-   - Geometry Component View
+## Editor
+ - Icon
+ - Geometry Component View
 
 # v0.3.6-beta - 2025.7.22.
 
- ## Lightning+
-  - Opening Linux window using XLib
-  - Initialize OpenGL
+## Lightning+
+ - Opening Linux window using XLib
+ - Initialize OpenGL
 
 ## UI
  - Improved Texture Editor

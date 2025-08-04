@@ -1,7 +1,7 @@
 #pragma once
 #include "Test.h"
 
-#define OPENGL
+// #define OPENGL
 
 class EngineTest : public Test {
 	public:

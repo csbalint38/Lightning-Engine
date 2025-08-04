@@ -145,7 +145,7 @@ jobs:
       - name: Copy over meta files
         shell: pwsh
         run: |
-          $metaFiles = 'Changelog.md', 'LICENCE.txt', 'README.md'
+          $metaFiles = 'Changelog.md', 'LICENCE.md', 'README.md'
           foreach ($file in $metaFiles) {
             Copy-Item -Path $file -Destination ${{ env.DIST_DIR }} -Force
           }
@@ -199,7 +199,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}
+          tag_name: v${{ steps.get-version.outputs.INFO_VERSION }}
           name: v${{ steps.get-version.outputs.INFO_VERSION }}
           body: ${{ steps.get-release-notes.outputs.body }}
           draft: false
