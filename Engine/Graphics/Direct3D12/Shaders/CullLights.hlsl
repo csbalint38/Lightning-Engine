@@ -17,6 +17,9 @@ ConstantBuffer<LightCullingDispatchParameters> shader_params : register(b1, spac
 StructuredBuffer<Frustum> frustums : register(t0, space0);
 StructuredBuffer<LightCullingLightInfo> lights : register(t1, space0);
 StructuredBuffer<Sphere> bounding_spheres : register(t2, space0);
+#ifndef SHADER_MODEL_6_6
+Texture2D<float> depth_buffer : register(t3, space0);
+#endif
 
 RWStructuredBuffer<uint> light_index_counter : register(u0, space0);
 RWStructuredBuffer<uint2> light_grid_opaque : register(u1, space0);
@@ -60,8 +63,12 @@ void cull_lights_cs(ComputeShaderInput cs_in)
     // z-component of v_view_space
     //
     // v_view_space = -D / (depth + C)
-    
-    const float depth = Texture2D( ResourceDescriptorHeap[shader_params.depth_buffer_srv_index])[cs_in.dispatch_thread_id.xy].r;
+    #ifndef SHADER_MODEL_6_6
+    int2 coord = cs_in.dispatch_thread_id.xy;
+    float depth = depth_buffer.Load(int3(coord, 0));
+    #else
+    const float depth = Texture2D(ResourceDescriptorHeap[shader_params.depth_buffer_srv_index])[cs_in.dispatch_thread_id.xy].r;
+    #endif
     const float c = global_data.projection._m22;
     const float d = global_data.projection._m23;
     const uint grid_index = cs_in.group_id.x + (cs_in.group_id.y * shader_params.num_thread_groups.x);
@@ -83,10 +90,17 @@ void cull_lights_cs(ComputeShaderInput cs_in)
     }
 
     // DEPTH MIN/MAX
-        GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrierWithGroupSync();
 
     if (depth != 0)
     {
+        #ifndef SHADER_MODEL_6_6
+        float z_vs = d / (depth + c);
+        uint z_u = asuint(z_vs);
+        
+        InterlockedMin(_min_depth_vs, z_u);
+        InterlockedMax(_max_depth_vs, z_u);
+        #else
         const float depth_min = WaveActiveMax(depth);
         const float depth_max = WaveActiveMin(depth);
 
@@ -97,6 +111,7 @@ void cull_lights_cs(ComputeShaderInput cs_in)
             InterlockedMin(_min_depth_vs, z_min);
             InterlockedMax(_max_depth_vs, z_max);
         }
+        #endif
     }
 
     // LIGHT CULLING

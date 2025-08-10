@@ -1,3 +1,8 @@
+## v0.3.8-beta - 2025.8.19
+
+## Engine
+ - Added backward compatibility for Shader Model 6_0
+
 # v0.3.7-beta - 2025.8.5.
 ## General
  - CI workflow for release

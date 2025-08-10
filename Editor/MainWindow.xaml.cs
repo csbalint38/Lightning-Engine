@@ -29,17 +29,13 @@ public partial class MainWindow : Window
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnMainWindowLoaded;
-
+        
         DefaultAssets.GenerateDefaultAssets();
         GetEnginePath();
 
         var initResult = EngineAPI.InitializeEngine();
-
-        if (initResult == EngineInitError.SUCCEEDED)
-        {
-            OpenProjectBrowserDialog();
-        }
-        else
+        
+        if (initResult != EngineInitError.SUCCEEDED)
         {
             MessageBox.Show(
                 $"{initResult.GetDescription()}",
@@ -50,6 +46,8 @@ public partial class MainWindow : Window
 
             Application.Current.Shutdown();
         }
+
+        OpenProjectBrowserDialog();
     }
 
     private void OnMainWindowClosing(object sender, CancelEventArgs e)

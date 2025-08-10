@@ -46,6 +46,7 @@ struct Surface
 
 struct VertexElement
 {
+    #ifdef SHADER_MODEL_6_6
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
     uint color_t_sign;
     uint16_t2 normal;
@@ -62,6 +63,23 @@ struct VertexElement
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE_COLOR
     #endif
+    #else
+    #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
+    uint color_t_sign;
+    uint normal_packed;
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
+    uint color_t_sign;
+    uint normal_packed;
+    uint tangent_packed;
+    float2 uv;
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_COLOR
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_COLOR
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE_COLOR
+    #endif
+    #endif
 };
 
 const static float inv_intervals = 2.f / ((1 << 16) - 1);
@@ -76,6 +94,10 @@ StructuredBuffer<DirectionalLightParameters> directional_lights : register(t3, s
 StructuredBuffer<LightParameters> cullable_lights : register(t4, space0);
 StructuredBuffer<uint2> light_grid : register(t5, space0);
 StructuredBuffer<uint> light_index_list : register(t6, space0);
+#ifndef SHADER_MODEL_6_6
+Texture2D<float4> tex_2d[] : register(t7, space0);
+TextureCube<float4> tex_cube[] : register(t0, space1);
+#endif
 
 SamplerState point_sampler : register(s0, space0);
 SamplerState linear_sampler : register(s1, space0);
@@ -90,7 +112,12 @@ VertexOut main_vs(in uint vertex_index : SV_VertexID)
 
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
     VertexElement element = elements[vertex_index];
+    #ifdef SHADER_MODEL_6_6
     float2 n_xy = element.normal * inv_intervals - 1.f;
+    #else
+    uint2 n_xy_packed = unpack2x16(element.normal_packed);
+    float2 n_xy = float2(n_xy_packed) * inv_intervals - 1.f;
+    #endif
     uint signs = element.color_t_sign >> 24;
     float n_sign = float((signs & 0x04) >> 1) - 1.f;
     float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
@@ -100,17 +127,26 @@ VertexOut main_vs(in uint vertex_index : SV_VertexID)
     vs_out.world_normal = mul(float4(normal, 0.f), per_object_buffer.inv_world).xyz;
     vs_out.world_tangent = 0.f;
     vs_out.uv = 0.f;
+
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
     VertexElement element = elements[vertex_index];
     uint signs = element.color_t_sign >> 24;
     float n_sign = float((signs & 0x04) >> 1) - 1.f;
     float t_sign = float(signs & 0x02) - 1.f;
     float h_sign = float((signs & 0x01) << 1) - 1.f;
-    float2 n_xy = element.normal * inv_intervals - 1.f;
-    float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
-    float2 t_xy = element.tangent * inv_intervals - 1.f;
-    float3 tangent = float3(t_xy, sqrt(saturate(1.f - dot(t_xy, t_xy))) * t_sign);
     
+    #ifdef SHADER_MODEL_6_6
+    float2 n_xy = element.normal * inv_intervals - 1.f;
+    float2 t_xy = element.tangent * inv_intervals - 1.f;
+    #else
+    uint2 n_xy_packed = unpack2x16(element.normal_packed);
+    uint2 t_xy_packed = unpack2x16(element.tangent_packed);
+    float2 n_xy = float2(n_xy_packed) * inv_intervals - 1.f;
+    float2 t_xy = float2(t_xy_packed) * inv_intervals - 1.f;
+    #endif
+    float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
+    float3 tangent = float3(t_xy, sqrt(saturate(1.f - dot(t_xy, t_xy))) * t_sign);
+
     tangent = tangent - normal * dot(normal, tangent);
     
     vs_out.homogenous_position = mul(per_object_buffer.world_view_projection, position);
@@ -118,6 +154,7 @@ VertexOut main_vs(in uint vertex_index : SV_VertexID)
     vs_out.world_normal = normalize(mul(normal, (float3x3)per_object_buffer.inv_world));
     vs_out.world_tangent = float4(normalize(mul(tangent, (float3x3)per_object_buffer.inv_world)), h_sign);
     vs_out.uv = element.uv;
+    
     #else
     #undef ELEMENTS_TYPE
     vs_out.homogenous_position = mul(per_object_buffer.world_view_projection, position);
@@ -126,12 +163,13 @@ VertexOut main_vs(in uint vertex_index : SV_VertexID)
     vs_out.world_tangent = 0.f;
     vs_out.uv = 0.f;
     #endif
-    
+
     return vs_out;
 }
 
 #define TILE_SIZE 32
 
+#ifdef SHADER_MODEL_6_6
 float4 sample(uint index, SamplerState s, float2 uv)
 {
     return Texture2D(ResourceDescriptorHeap[index]).Sample(s, uv);
@@ -151,6 +189,27 @@ float4 sample_cube(uint index, SamplerState s, float3 n, float mip)
 {
     return TextureCube(ResourceDescriptorHeap[index]).SampleLevel(s, n, mip);
 }
+#else
+float4 sample(uint index, SamplerState s, float2 uv)
+{
+    return tex_2d[index].Sample(s, uv);
+}
+
+float4 sample(uint index, SamplerState s, float2 uv, float mip)
+{
+    return tex_2d[index].SampleLevel(s, uv, mip);
+}
+
+float4 sample_cube(uint index, SamplerState s, float3 n)
+{
+    return tex_cube[index].Sample(s, n);
+}
+
+float4 sample_cube(uint index, SamplerState s, float3 n, float mip)
+{
+    return tex_cube[index].SampleLevel(s, n, mip);
+}
+#endif
 
 float3 Cook_Torrence_BRDF(Surface s, float3 l)
 {
