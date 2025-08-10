@@ -39,6 +39,7 @@ namespace lightning::graphics::direct3d12::core {
 	}
 
 	 [[nodiscard]] id3d12_device* const device();
+	 [[nodiscard]] D3D_SHADER_MODEL const shader_model();
 	 [[nodiscard]] DescriptorHeap& rtv_heap();
 	 [[nodiscard]] DescriptorHeap& dsv_heap();
 	 [[nodiscard]] DescriptorHeap& srv_heap();

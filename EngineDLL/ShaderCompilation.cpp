@@ -2,8 +2,9 @@
 
 #include <wrl.h>
 #include <dxcapi.h>
-#include <d3d12shader.h>
+#include <d3d12.h>
 
+#include "Graphics/Direct3D12/Direct3D12Core.h"
 #include "Graphics/Renderer.h"
 #include "Content/ContentToEngine.h"
 #include "Utilities/IOStream.h"
@@ -38,6 +39,8 @@ if(FAILED(x)) {								\
 
 namespace {
 	constexpr const char* shaders_source_path{ "../../Engine/Graphics/Direct3D12/Shaders/" };
+
+	D3D_SHADER_MODEL _max_shader_model{ D3D_SHADER_MODEL_NONE };
 
 	struct EngineShader {
 		enum Id : u32 {
@@ -80,6 +83,45 @@ namespace {
 		return { s.begin(), s.end() };
 	}
 
+	D3D_SHADER_MODEL get_max_shader_model() {
+		D3D_SHADER_MODEL max_supported{ D3D_SHADER_MODEL_6_6 };
+
+		ComPtr<IDXGIFactory7> factory{ nullptr };
+		DXCall(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
+
+		ComPtr<ID3D12Device> device{ nullptr };
+		ComPtr<IDXGIAdapter4> adapter{ nullptr };
+		
+		for (u32 i{ 0 }; factory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
+			if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device)))) break;
+		}
+
+		static const D3D_SHADER_MODEL shader_models[] = {
+				D3D_SHADER_MODEL_6_6,
+				D3D_SHADER_MODEL_6_5,
+				D3D_SHADER_MODEL_6_4,
+				D3D_SHADER_MODEL_6_3,
+				D3D_SHADER_MODEL_6_2,
+				D3D_SHADER_MODEL_6_1,
+				D3D_SHADER_MODEL_6_0,
+				D3D_SHADER_MODEL_5_1,
+		};
+
+		for (D3D_SHADER_MODEL sm : shader_models) {
+			D3D12_FEATURE_DATA_SHADER_MODEL shader_model_info{ sm };
+			HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model_info, sizeof(shader_model_info));
+
+			if (SUCCEEDED(hr)) {
+				max_supported = shader_model_info.HighestShaderModel;
+
+				break;
+			}
+			else continue;
+		}
+
+		return max_supported;
+	}
+
 	static_assert(_countof(engine_shader_files) == EngineShader::count);
 
 	struct DxcCompiledShader {
@@ -90,164 +132,183 @@ namespace {
 	};
 
 	class ShaderCompiler {
-	public:
-		ShaderCompiler() {
+		public:
+			ShaderCompiler() {
 
-			HRESULT hr{ S_OK };
-			DXCall(hr = DxcCreateInstance2(nullptr, CLSID_DxcCompiler, IID_PPV_ARGS(&_compiler)));
-			if (FAILED(hr)) return;
-			DXCall(hr = DxcCreateInstance2(nullptr, CLSID_DxcUtils, IID_PPV_ARGS(&_utils)));
-			if (FAILED(hr)) return;
-			DXCall(hr = _utils->CreateDefaultIncludeHandler(&_include_handler));
-			if (FAILED(hr)) return;
-		}
+				HRESULT hr{ S_OK };
+				DXCall(hr = DxcCreateInstance2(nullptr, CLSID_DxcCompiler, IID_PPV_ARGS(&_compiler)));
+				if (FAILED(hr)) return;
+				DXCall(hr = DxcCreateInstance2(nullptr, CLSID_DxcUtils, IID_PPV_ARGS(&_utils)));
+				if (FAILED(hr)) return;
+				DXCall(hr = _utils->CreateDefaultIncludeHandler(&_include_handler));
+				if (FAILED(hr)) return;
 
-		DISABLE_COPY_AND_MOVE(ShaderCompiler);
-
-		DxcCompiledShader compile(u8* data, u32 data_size, graphics::ShaderType::Type type, const char* function, util::vector<std::wstring>& extra_args) {
-			assert(_compiler && _utils && _include_handler);
-			assert(data && data_size && function);
-			assert(type < graphics::ShaderType::count);
-
-			HRESULT hr{ S_OK };
-
-			ComPtr<IDxcBlobEncoding> source_blob{ nullptr };
-			DXCall(hr = _utils->CreateBlob(data, data_size, 0, &source_blob));
-
-			if (FAILED(hr)) return {};
-
-			assert(source_blob && source_blob->GetBufferSize());
-
-			ShaderFileInfo info{};
-			info.function = function;
-			info.type = type;
-
-			OutputDebugStringA("Compiling");
-			OutputDebugStringA(function);
-			OutputDebugStringA("\n");
-
-			return compile(source_blob.Get(), get_args(info, extra_args));
-		}
-
-		DxcCompiledShader compile(ShaderFileInfo info, std::filesystem::path full_path, util::vector<std::wstring>& extra_args) {
-			assert(_compiler && _utils && _include_handler);
-			HRESULT hr{ S_OK };
-
-			ComPtr<IDxcBlobEncoding> source_blob{ nullptr };
-			DXCall(hr = _utils->LoadFile(full_path.c_str(), nullptr, &source_blob));
-			if (FAILED(hr)) return {};
-			assert(source_blob && source_blob->GetBufferSize());
-
-			OutputDebugStringA("Compiling ");
-			OutputDebugStringA(info.file_name);
-			OutputDebugStringA(": ");
-			OutputDebugStringA(info.function);
-			OutputDebugStringA("\n");
-
-			return compile(source_blob.Get(), get_args(info, extra_args));
-		}
-
-		DxcCompiledShader compile(IDxcBlobEncoding* source_blob, util::vector<std::wstring> compiler_args) {
-			DxcBuffer buffer{};
-			buffer.Encoding = DXC_CP_ACP;
-			buffer.Ptr = source_blob->GetBufferPointer();
-			buffer.Size = source_blob->GetBufferSize();
-
-			util::vector<LPCWSTR> args;
-			for (const auto& arg : compiler_args) {
-				args.emplace_back(arg.c_str());
+				if (_max_shader_model == D3D_SHADER_MODEL_NONE) {
+					_max_shader_model = get_max_shader_model();
+				}
 			}
 
-			HRESULT hr{ S_OK };
-			ComPtr<IDxcResult> results{ nullptr };
-			DXCall(hr = _compiler->Compile(&buffer, args.data(), (u32)args.size(), _include_handler.Get(), IID_PPV_ARGS(&results)));
-			if (FAILED(hr)) return {};
+			DISABLE_COPY_AND_MOVE(ShaderCompiler);
 
-			ComPtr<IDxcBlobUtf8> errors{ nullptr };
-			DXCall(hr = results->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
-			if (FAILED(hr)) return {};
+			DxcCompiledShader compile(u8* data, u32 data_size, graphics::ShaderType::Type type, const char* function,	util::vector<std::wstring>& extra_args) {
+				assert(_compiler && _utils && _include_handler);
+				assert(data && data_size && function);
+				assert(type < graphics::ShaderType::count);
 
-			if (errors && errors->GetStringLength()) {
-				OutputDebugStringA("\nShader compilation error: ");
-				OutputDebugStringA(errors->GetStringPointer());
-			}
-			else {
-				OutputDebugStringA(" [ Succeeded ] ");
-			}
-			OutputDebugStringA("\n");
+				HRESULT hr{ S_OK };
 
-			HRESULT status{ S_OK };
-			DXCall(hr = results->GetStatus(&status));
-			if (FAILED(hr) || FAILED(status)) return {};
+				ComPtr<IDxcBlobEncoding> source_blob{ nullptr };
+				DXCall(hr = _utils->CreateBlob(data, data_size, 0, &source_blob));
 
-			ComPtr<IDxcBlob> hash{ nullptr };
-			DXCall(hr = results->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr));
-			if (FAILED(hr)) return {};
-			DxcShaderHash* const hash_buffer{ (DxcShaderHash* const)hash->GetBufferPointer() };
-			assert(!(hash_buffer->Flags & DXC_HASHFLAG_INCLUDES_SOURCE));
-			OutputDebugStringA("Shader hash: ");
-			for (u32 i{ 0 }; i < _countof(hash_buffer->HashDigest); ++i) {
-				char hash_bytes[3]{};
-				sprintf_s(hash_bytes, "%02x", (u32)hash_buffer->HashDigest[i]);
-				OutputDebugStringA(hash_bytes);
-				OutputDebugStringA(" ");
-			}
-			OutputDebugStringA("\n");
+				if (FAILED(hr)) return {};
 
-			ComPtr<IDxcBlob> shader{ nullptr };
-			DXCall(hr = results->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shader), nullptr));
-			if (FAILED(hr)) return {};
+				assert(source_blob && source_blob->GetBufferSize());
 
-			buffer.Ptr = shader->GetBufferPointer();
-			buffer.Size = shader->GetBufferSize();
+				ShaderFileInfo info{};
+				info.function = function;
+				info.type = type;
 
-			ComPtr<IDxcResult> disasm_results{ nullptr };
-			DXCall(hr = _compiler->Disassemble(&buffer, IID_PPV_ARGS(&disasm_results)));
-			
-			ComPtr<IDxcBlobUtf8> disassembly{ nullptr };
-			DXCall(hr = disasm_results->GetOutput(DXC_OUT_DISASSEMBLY, IID_PPV_ARGS(&disassembly), nullptr));
+				OutputDebugStringA("Compiling ");
+				OutputDebugStringA(function);
+				OutputDebugStringA("\n");
 
-			DxcCompiledShader result{shader.Detach(), errors.Detach(), disassembly.Detach() };
-			memcpy(&result.hash.HashDigest[0], &hash_buffer->HashDigest[0], _countof(hash_buffer->HashDigest));
-
-			return result;
-		}
-
-	private:
-		constexpr static const char* _profile_strings[]{ "vs_6_6", "hs_6_6", "ds_6_6", "gs_6_6", "ps_6_6", "cs_6_6", "as_6_6", "ms_6_6" };
-		static_assert(_countof(_profile_strings) == graphics::ShaderType::count);
-
-		ComPtr<IDxcCompiler3> _compiler{ nullptr };
-		ComPtr<IDxcUtils> _utils{ nullptr };
-		ComPtr<IDxcIncludeHandler> _include_handler{ nullptr };
-
-		util::vector<std::wstring> get_args(const ShaderFileInfo& info, util::vector<std::wstring>& extra_args) {
-			util::vector<std::wstring> args{};
-			if (info.file_name) args.emplace_back(to_wstring(info.file_name));
-			args.emplace_back(L"-E");
-			args.emplace_back(to_wstring(info.function));
-			args.emplace_back(L"-T");
-			args.emplace_back(to_wstring(_profile_strings[(u32)info.type]));
-			args.emplace_back(L"-I");
-			args.emplace_back(to_wstring(shaders_source_path));
-			args.emplace_back(L"-enable-16bit-types");
-			args.emplace_back(DXC_ARG_ALL_RESOURCES_BOUND);
-			#if _DEBUG
-			args.emplace_back(DXC_ARG_DEBUG);
-			args.emplace_back(DXC_ARG_SKIP_OPTIMIZATIONS);
-			#else
-			args.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
-			#endif
-			args.emplace_back(DXC_ARG_WARNINGS_ARE_ERRORS);
-			args.emplace_back(L"-Qstrip_reflect");
-			args.emplace_back(L"-Qstrip_debug");
-
-			for (const auto& arg : extra_args) {
-				args.emplace_back(arg.c_str());
+				return compile(source_blob.Get(), get_args(info, extra_args));
 			}
 
-			return args;
-		}
+			DxcCompiledShader compile(ShaderFileInfo info, std::filesystem::path full_path, util::vector<std::wstring>&		extra_args) {
+				assert(_compiler && _utils && _include_handler);
+				HRESULT hr{ S_OK };
+
+				ComPtr<IDxcBlobEncoding> source_blob{ nullptr };
+				DXCall(hr = _utils->LoadFile(full_path.c_str(), nullptr, &source_blob));
+				if (FAILED(hr)) return {};
+				assert(source_blob && source_blob->GetBufferSize());
+
+				OutputDebugStringA("Compiling ");
+				OutputDebugStringA(info.file_name);
+				OutputDebugStringA(": ");
+				OutputDebugStringA(info.function);
+				OutputDebugStringA("\n");
+				OutputDebugStringA("Using ");
+				OutputDebugStringA(_max_shader_model >= D3D_SHADER_MODEL_6_6 ? "Shader Model 6_6" : "Shader Model 6_0");
+				OutputDebugStringA("\n");
+
+				return compile(source_blob.Get(), get_args(info, extra_args));
+			}
+
+			DxcCompiledShader compile(IDxcBlobEncoding* source_blob, util::vector<std::wstring> compiler_args) {
+				DxcBuffer buffer{};
+				buffer.Encoding = DXC_CP_ACP;
+				buffer.Ptr = source_blob->GetBufferPointer();
+				buffer.Size = source_blob->GetBufferSize();
+
+				util::vector<LPCWSTR> args;
+				for (const auto& arg : compiler_args) {
+					args.emplace_back(arg.c_str());
+				}
+
+				HRESULT hr{ S_OK };
+				ComPtr<IDxcResult> results{ nullptr };
+				DXCall(hr = _compiler->Compile(&buffer, args.data(), (u32)args.size(), _include_handler.Get(), IID_PPV_ARGS (&results)));
+				if (FAILED(hr)) return {};
+
+				ComPtr<IDxcBlobUtf8> errors{ nullptr };
+				DXCall(hr = results->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
+				if (FAILED(hr)) return {};
+
+				if (errors && errors->GetStringLength()) {
+					OutputDebugStringA("\nShader compilation error: ");
+					OutputDebugStringA(errors->GetStringPointer());
+				}
+				else {
+					OutputDebugStringA(" [ Succeeded ] ");
+				}
+				OutputDebugStringA("\n");
+
+				HRESULT status{ S_OK };
+				DXCall(hr = results->GetStatus(&status));
+				if (FAILED(hr) || FAILED(status)) return {};
+
+				ComPtr<IDxcBlob> hash{ nullptr };
+				DXCall(hr = results->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr));
+				if (FAILED(hr)) return {};
+				DxcShaderHash* const hash_buffer{ (DxcShaderHash* const)hash->GetBufferPointer() };
+				assert(!(hash_buffer->Flags & DXC_HASHFLAG_INCLUDES_SOURCE));
+				OutputDebugStringA("Shader hash: ");
+				for (u32 i{ 0 }; i < _countof(hash_buffer->HashDigest); ++i) {
+					char hash_bytes[3]{};
+					sprintf_s(hash_bytes, "%02x", (u32)hash_buffer->HashDigest[i]);
+					OutputDebugStringA(hash_bytes);
+					OutputDebugStringA(" ");
+				}
+				OutputDebugStringA("\n");
+
+				ComPtr<IDxcBlob> shader{ nullptr };
+				DXCall(hr = results->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shader), nullptr));
+				if (FAILED(hr)) return {};
+
+				buffer.Ptr = shader->GetBufferPointer();
+				buffer.Size = shader->GetBufferSize();
+
+				ComPtr<IDxcResult> disasm_results{ nullptr };
+				DXCall(hr = _compiler->Disassemble(&buffer, IID_PPV_ARGS(&disasm_results)));
+				
+				ComPtr<IDxcBlobUtf8> disassembly{ nullptr };
+				DXCall(hr = disasm_results->GetOutput(DXC_OUT_DISASSEMBLY, IID_PPV_ARGS(&disassembly), nullptr));
+
+				DxcCompiledShader result{shader.Detach(), errors.Detach(), disassembly.Detach() };
+				memcpy(&result.hash.HashDigest[0], &hash_buffer->HashDigest[0], _countof(hash_buffer->HashDigest));
+
+				return result;
+			}
+
+		private:
+			constexpr static const char* _profile_strings_6_6[]{ "vs_6_6", "hs_6_6", "ds_6_6", "gs_6_6", "ps_6_6", "cs_6_6",	"as_6_6", "ms_6_6" };
+			constexpr static const char* _profile_strings_6_0[]{ "vs_6_0", "hs_6_0", "ds_6_0", "gs_6_0", "ps_6_0", "cs_6_0", "as_6_0", "ms_6_0" };
+
+			static_assert(_countof(_profile_strings_6_6) == graphics::ShaderType::count);
+			static_assert(_countof(_profile_strings_6_0) == graphics::ShaderType::count);
+
+			ComPtr<IDxcCompiler3> _compiler{ nullptr };
+			ComPtr<IDxcUtils> _utils{ nullptr };
+			ComPtr<IDxcIncludeHandler> _include_handler{ nullptr };
+			D3D_SHADER_MODEL _max_shader_model{ };
+
+			util::vector<std::wstring> get_args(const ShaderFileInfo& info, util::vector<std::wstring>& extra_args) {
+				util::vector<std::wstring> args{};
+				if (info.file_name) args.emplace_back(to_wstring(info.file_name));
+				args.emplace_back(L"-E");
+				args.emplace_back(to_wstring(info.function));
+				args.emplace_back(L"-T");
+				if (_max_shader_model >= D3D_SHADER_MODEL_6_6) {
+					args.emplace_back(to_wstring(_profile_strings_6_6[(u32)info.type]));
+					args.emplace_back(L"-enable-16bit-types");
+					args.emplace_back(L"-D");
+					args.emplace_back(L"SHADER_MODEL_6_6");
+				} else {
+					args.emplace_back(to_wstring(_profile_strings_6_0[(u32)info.type]));
+					args.emplace_back(L"-D");
+					args.emplace_back(L"SHADER_MODEL_6_0");
+				}
+				args.emplace_back(L"-I");
+				args.emplace_back(to_wstring(shaders_source_path));
+				args.emplace_back(DXC_ARG_ALL_RESOURCES_BOUND);
+				#if _DEBUG
+				args.emplace_back(DXC_ARG_DEBUG);
+				args.emplace_back(DXC_ARG_SKIP_OPTIMIZATIONS);
+				#else
+				args.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
+				#endif
+				args.emplace_back(DXC_ARG_WARNINGS_ARE_ERRORS);
+				args.emplace_back(L"-Qstrip_reflect");
+				args.emplace_back(L"-Qstrip_debug");
+
+				for (const auto& arg : extra_args) {
+					args.emplace_back(arg.c_str());
+				}
+
+				return args;
+			}
 	};
 
 	decltype(auto) get_engine_shaders_path() {

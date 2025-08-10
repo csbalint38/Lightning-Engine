@@ -291,7 +291,7 @@
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		const f32 dt{ timer.dt_avg() };
 		script::update(dt);
-		//test_lights(dt);
+		// test_lights(dt);
 		for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
 			if (_surfaces[i].surface.surface.is_valid()) {
 

@@ -43,6 +43,7 @@ struct Surface
 
 struct VertexElement
 {
+    #ifdef SHADER_MODEL_6_6
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
     uint color_t_sign;
     uint16_t2 normal;
@@ -58,6 +59,23 @@ struct VertexElement
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE
     #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE_COLOR
     #endif
+    #else
+    #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
+    uint color_t_sign;
+    uint normal_packed;
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL_TEXTURE
+    uint color_t_sign;
+    uint normal_packed;
+    uint tangent_packed;
+    float2 uv;
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_COLOR
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_COLOR
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE
+    #elif ELEMENTS_TYPE == ELEMENTS_TYPE_SKELETAL_NORMAL_TEXTURE_COLOR
+    #endif
+    #endif
 };
 
 const static float inv_intervals = 2.f / ((1 << 16) - 1);
@@ -72,10 +90,18 @@ StructuredBuffer<DirectionalLightParameters> directional_lights : register(t3, s
 StructuredBuffer<LightParameters> cullable_lights : register(t4, space0);
 StructuredBuffer<uint2> light_grid : register(t5, space0);
 StructuredBuffer<uint> light_index_list : register(t6, space0);
+#ifndef SHADER_MODEL_6_6
+Texture2D<float4> tex_2d[] : register(t7, space0);
+TextureCube<float4> tex_cube[] : register(t0, space1);
+#endif
 
 SamplerState point_sampler : register(s0, space0);
 SamplerState linear_sampler : register(s1, space0);
 SamplerState anisotropic_sampler : register(s2, space0);
+
+#ifndef SHADER_MODEL_6_6
+uint2 unpack2x16(uint v) { return uint2(v & 0xFFFFu, v >> 16); }
+#endif
 
 VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     VertexOut vs_out;
@@ -85,7 +111,12 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     
     #if ELEMENTS_TYPE == ELEMENTS_TYPE_STATIC_NORMAL
     VertexElement element = elements[vertex_idx];
+    #ifdef SHADER_MODEL_6_6
     float2 n_xy = element.normal * inv_intervals - 1.f;
+    #else
+    uint2 n_xy_packed = unpack2x16(element.normal_packed);
+    float2 n_xy = float2(n_xy_packed) * inv_intervals - 1.f;
+    #endif
     uint signs = element.color_t_sign >> 24;
     float n_sign = float((signs & 0x04) >> 1) - 1.f;
     float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
@@ -103,11 +134,18 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
     float t_sign = float(signs & 0x02) - 1.f;
     float h_sign = float((signs & 0x01) << 1) - 1.f;
     
+    #ifdef SHADER_MODEL_6_6
     float2 n_xy = element.normal * inv_intervals - 1.f;
-    float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
-    
     float2 t_xy = element.tangent * inv_intervals - 1.f;
+    #else
+    uint2 n_xy_packed = unpack2x16(element.normal_packed);
+    uint2 t_xy_packed = unpack2x16(element.tangent_packed);
+    float2 n_xy = float2(n_xy_packed) * inv_intervals - 1.f;
+    float2 t_xy = float2(t_xy_packed) * inv_intervals - 1.f;
+    #endif
+    float3 normal = float3(n_xy, sqrt(saturate(1.f - dot(n_xy, n_xy))) * n_sign);
     float3 tangent = float3(t_xy, sqrt(saturate(1.f - dot(t_xy, t_xy))) * t_sign);
+
     tangent = tangent - normal * dot(normal, tangent);
     
     vs_out.homogeneous_position = mul(per_object_buffer.world_view_projection, position);
@@ -134,6 +172,7 @@ VertexOut test_shader_vs(in uint vertex_idx : SV_VertexID) {
 #define USE_BURLEY_BRDF 1       // Turn on to achive more precise lighting
 // If both USE_PHONG and USE_BURLEY_BRDF is off, the shader uses physic-based Lambert shading
 
+#ifdef SHADER_MODEL_6_6
 float4 sample(uint index, SamplerState s, float2 uv)
 {
     return Texture2D(ResourceDescriptorHeap[index]).Sample(s, uv);
@@ -153,6 +192,27 @@ float4 SampleCube(uint index, SamplerState s, float3 n, float mip)
 {
     return TextureCube(ResourceDescriptorHeap[index]).SampleLevel(s, n, mip);
 }
+#else
+float4 sample(uint index, SamplerState s, float2 uv)
+{
+    return tex_2d[index].Sample(s, uv);
+}
+
+float4 Sample(uint index, SamplerState s, float2 uv, float mip)
+{
+    return tex_2d[index].SampleLevel(s, uv, mip);
+}
+
+float4 SampleCube(uint index, SamplerState s, float3 n)
+{
+    return tex_cube[index].Sample(s, n);
+}
+
+float4 SampleCube(uint index, SamplerState s, float3 n, float mip)
+{
+    return tex_cube[index].SampleLevel(s, n, mip);
+}
+#endif
 
 float3 PhongBRDF(float3 n, float3 l, float3 v, float3 diffuse_color, float3 specular_color, float shininess)
 {
@@ -400,7 +460,7 @@ PixelOut test_shader_ps(in VertexOut ps_in) {
     
     #endif
     
-        PixelOut ps_out;
+    PixelOut ps_out;
     ps_out.color = float4(color * s.ambient_occlusion + s.emissive_color * s.emissive_intensity, 1.f);
 
     return ps_out;

@@ -126,14 +126,24 @@ namespace lightning::graphics::direct3d12::content {
 					parameters[params::LIGHT_GRID].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 5);
 					parameters[params::LIGHT_INDEX_LIST].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 6);
 
+					if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
+						d3dx::D3D12DescriptorRange texture_range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 7, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+						d3dx::D3D12DescriptorRange texture_cube_range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, UINT_MAX, 0, 1, D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE);
+
+						parameters[params::TEXTURE].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &texture_range, 1);
+						parameters[params::TEXTURE_CUBE].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &texture_cube_range, 1);
+					}
+
 					const D3D12_STATIC_SAMPLER_DESC samplers[]{
 						d3dx::static_sampler(d3dx::sampler_state.static_point, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL),
 						d3dx::static_sampler(d3dx::sampler_state.static_linear, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL),
 						d3dx::static_sampler(d3dx::sampler_state.static_anisotropic, 2, 0, D3D12_SHADER_VISIBILITY_PIXEL),
 					};
 
+					u32 param_count = core::shader_model() >= D3D_SHADER_MODEL_6_6 ? params::TEXTURE : params::count;
+
 					root_signature = d3dx::D3D12RootSignatureDesc {
-						&parameters[0], _countof(parameters), get_root_signature_flags(flags),
+						&parameters[0], param_count, get_root_signature_flags(flags),
 						&samplers[0], _countof(samplers)
 					}.create();
 

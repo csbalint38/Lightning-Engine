@@ -18,6 +18,7 @@ namespace lightning::graphics::direct3d12::delight {
 				BOUNDING_SPHERES,
 				LIGHT_GRID_OPAQUE,
 				LIGHT_INDEX_LIST_OPAQUE,
+				DEPTH_BUFFER,
 
 				count
 			};
@@ -59,10 +60,18 @@ namespace lightning::graphics::direct3d12::delight {
 			parameters[param::FRUSTUMS_IN].as_srv(D3D12_SHADER_VISIBILITY_ALL, 0);
 			parameters[param::CULLING_INFO].as_srv(D3D12_SHADER_VISIBILITY_ALL, 1);
 			parameters[param::BOUNDING_SPHERES].as_srv(D3D12_SHADER_VISIBILITY_ALL, 2);
+
+			if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
+                d3dx::D3D12DescriptorRange depth_range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+				parameters[param::DEPTH_BUFFER].as_descriptor_table(D3D12_SHADER_VISIBILITY_ALL, &depth_range, 1);
+			}
+
 			parameters[param::LIGHT_GRID_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 1);
 			parameters[param::LIGHT_INDEX_LIST_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 3);
 
-			light_culling_root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters) }.create();
+			u32 param_count = core::shader_model() >= D3D_SHADER_MODEL_6_6 ? param::DEPTH_BUFFER : param::count;
+
+			light_culling_root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], param_count }.create();
 			NAME_D3D12_OBJECT(light_culling_root_signature, L"Light Culling Root Signature");
 
 			return light_culling_root_signature != nullptr;
@@ -235,6 +244,18 @@ namespace lightning::graphics::direct3d12::delight {
 		cmd_list->SetComputeRootSignature(light_culling_root_signature);
 		cmd_list->SetPipelineState(light_culling_pso);
 		using param = LightCullingRootParameter;
+
+		if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
+			barriers.add(gpass::depth_buffer().resource(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			barriers.apply(cmd_list);
+
+			ID3D12DescriptorHeap* heaps[]{{ core::srv_heap().heap() }};
+			cmd_list->SetDescriptorHeaps(1, heaps);
+
+			const DescriptorHandle depth_srv{ gpass::depth_buffer().srv() };
+			cmd_list->SetComputeRootDescriptorTable(param::DEPTH_BUFFER, depth_srv.gpu);
+		}
+
 		cmd_list->SetComputeRootConstantBufferView(param::GLOBAL_SHADER_DATA, info.global_shader_data);
 		cmd_list->SetComputeRootConstantBufferView(param::CONSTANTS, cbuffer.gpu_address(buffer));
 		cmd_list->SetComputeRootUnorderedAccessView(param::FRUSTUMS_OUT_OR_INDEX_COUNTER, culler.light_index_counter.gpu_address());
@@ -245,6 +266,11 @@ namespace lightning::graphics::direct3d12::delight {
 		cmd_list->SetComputeRootUnorderedAccessView(param::LIGHT_INDEX_LIST_OPAQUE, culler.light_index_list_opaque_buffer);
 
 		cmd_list->Dispatch(params.num_thread_groups.x, params.num_thread_groups.y, 1);
+
+		if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
+			barriers.add(gpass::depth_buffer().resource(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			barriers.apply(cmd_list);
+		}
 
 		barriers.add(culler.light_grid_and_index_list.buffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}

@@ -59,8 +59,7 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>xcopy /Y /D $(SolutionDir)packages\DirectXShaderCompiler\bin\x64\dxcompiler.dll $(OutDir)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -78,8 +77,7 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
-      <Command>xcopy /Y /D $(SolutionDir)packages\DirectXShaderCompiler\bin\x64\dxcompiler.dll $(OutDir)
-xcopy /Y /D $(SolutionDir)packages\DirectXShaderCompiler\bin\x64\dxil.dll $(OutDir)</Command>
+      <Command>xcopy /Y /D $(SolutionDir)packages\DirectXShaderCompiler\bin\x64\dxcompiler.dll $(OutDir)</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

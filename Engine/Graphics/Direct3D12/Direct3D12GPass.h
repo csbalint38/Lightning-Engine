@@ -23,6 +23,9 @@ namespace lightning::graphics::direct3d12::gpass {
 			LIGHT_GRID,
 			LIGHT_INDEX_LIST,
 
+			TEXTURE,
+			TEXTURE_CUBE,
+
 			count
 		};
 	};
