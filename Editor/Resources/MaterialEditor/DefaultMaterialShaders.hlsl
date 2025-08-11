@@ -103,6 +103,13 @@ SamplerState point_sampler : register(s0, space0);
 SamplerState linear_sampler : register(s1, space0);
 SamplerState anisotropic_sampler : register(s2, space0);
 
+#ifndef SHADER_MODEL_6_6
+uint2 unpack2x16(uint v)
+{
+    return uint2(v & 0xFFFFu, v >> 16);
+}
+#endif
+
 VertexOut main_vs(in uint vertex_index : SV_VertexID)
 {
     VertexOut vs_out;
