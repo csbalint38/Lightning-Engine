@@ -37,7 +37,11 @@ if(FAILED(x)) {								\
 #endif
 
 namespace {
+	#ifdef _DEBUG
 	constexpr const char* shaders_source_path{ "../../Engine/Graphics/Direct3D12/Shaders/" };
+	#else
+	constexpr const char* shaders_source_path{ "Engine/Graphics/Direct3D12/Shaders/" };
+	#endif
 
 	struct EngineShader {
 		enum Id : u32 {
