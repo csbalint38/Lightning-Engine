@@ -40,8 +40,6 @@ if(FAILED(x)) {								\
 namespace {
 	constexpr const char* shaders_source_path{ "../../Engine/Graphics/Direct3D12/Shaders/" };
 
-	D3D_SHADER_MODEL _max_shader_model{ D3D_SHADER_MODEL_NONE };
-
 	struct EngineShader {
 		enum Id : u32 {
 			FULLSCREEN_TRIANGLE_VS = 0,
@@ -83,45 +81,6 @@ namespace {
 		return { s.begin(), s.end() };
 	}
 
-	D3D_SHADER_MODEL get_max_shader_model() {
-		D3D_SHADER_MODEL max_supported{ D3D_SHADER_MODEL_6_6 };
-
-		ComPtr<IDXGIFactory7> factory{ nullptr };
-		DXCall(CreateDXGIFactory2(0, IID_PPV_ARGS(&factory)));
-
-		ComPtr<ID3D12Device> device{ nullptr };
-		ComPtr<IDXGIAdapter4> adapter{ nullptr };
-		
-		for (u32 i{ 0 }; factory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&adapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
-			if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device)))) break;
-		}
-
-		static const D3D_SHADER_MODEL shader_models[] = {
-				D3D_SHADER_MODEL_6_6,
-				D3D_SHADER_MODEL_6_5,
-				D3D_SHADER_MODEL_6_4,
-				D3D_SHADER_MODEL_6_3,
-				D3D_SHADER_MODEL_6_2,
-				D3D_SHADER_MODEL_6_1,
-				D3D_SHADER_MODEL_6_0,
-				D3D_SHADER_MODEL_5_1,
-		};
-
-		for (D3D_SHADER_MODEL sm : shader_models) {
-			D3D12_FEATURE_DATA_SHADER_MODEL shader_model_info{ sm };
-			HRESULT hr = device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model_info, sizeof(shader_model_info));
-
-			if (SUCCEEDED(hr)) {
-				max_supported = shader_model_info.HighestShaderModel;
-
-				break;
-			}
-			else continue;
-		}
-
-		return max_supported;
-	}
-
 	static_assert(_countof(engine_shader_files) == EngineShader::count);
 
 	struct DxcCompiledShader {
@@ -143,9 +102,7 @@ namespace {
 				DXCall(hr = _utils->CreateDefaultIncludeHandler(&_include_handler));
 				if (FAILED(hr)) return;
 
-				if (_max_shader_model == D3D_SHADER_MODEL_NONE) {
-					_max_shader_model = get_max_shader_model();
-				}
+				_max_shader_model = D3D_SHADER_MODEL_6_6;
 			}
 
 			DISABLE_COPY_AND_MOVE(ShaderCompiler);
