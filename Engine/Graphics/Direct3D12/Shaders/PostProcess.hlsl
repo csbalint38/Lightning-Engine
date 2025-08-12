@@ -12,11 +12,6 @@ ConstantBuffer<GlobalShaderData> global_data : register(b0, space0);
 ConstantBuffer<ShaderConstants> shader_params : register(b1, space0);
 StructuredBuffer<Frustum> frustums : register(t0, space0);
 StructuredBuffer<uint2> light_grid_opaque : register(t1, space0);
-#ifndef SHADER_MODEL_6_6
-Texture2D<float4> gpass_main : register(t2, space0);
-Texture2D<float> gpass_depth : register(t3, space0);
-TextureCube<float4> sky_specular : register(t4, space0);
-#endif
 SamplerState point_sampler : register(s0, space0);
 SamplerState linear_sampler : register(s1, space0);
 
@@ -39,7 +34,6 @@ float4 heatmap(StructuredBuffer<uint2> buffer, float2 pos_xy, float blend)
     num_lights = num_point_lights + num_spot_lights;
     #endif
     
-    #ifdef SHADER_MODEL_6_6
     const float3 map_tex[] =
     {
         float3(0, 0, 0),
@@ -49,18 +43,6 @@ float4 heatmap(StructuredBuffer<uint2> buffer, float2 pos_xy, float blend)
         float3(1, 1, 0),
         float3(1, 0, 0),
     };
-    #else
-    const float3 map_tex[6] =
-    {
-        float3(0, 0, 0),
-        float3(0, 0, 1),
-        float3(0, 1, 1),
-        float3(0, 1, 0),
-        float3(1, 1, 0),
-        float3(1, 0, 0),
-    };
-    
-    #endif
     const uint map_tex_len = 5;
     const uint max_heat = 40;
     float l = saturate((float) num_lights / max_heat) * map_tex_len;
@@ -68,11 +50,9 @@ float4 heatmap(StructuredBuffer<uint2> buffer, float2 pos_xy, float blend)
     float3 b = map_tex[ceil(l)];
     float3 heatmap = lerp(a, b, l - floor(l));
 
-    #ifdef SHADER_MODEL_6_6
     Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
-    #endif
-    
     return float4(lerp(gpass_main[pos_xy].xyz, heatmap, blend), 1.f);
+
 }
 
 float4 post_process_ps(in noperspective float4 position : SV_Position, in noperspective float2 uv : TEXCOORD) : SV_Target0
@@ -133,23 +113,14 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
     return float4(gpass_main[position.xy].xyz, 1.f);
     
     #elif 1 // SCENE - USING_SKYBOX
-    #ifdef SHADER_MODEL_6_6
     Texture2D gpass_depth = ResourceDescriptorHeap[shader_params.gpass_depth_buffer_index];
     float depth = gpass_depth[position.xy].r;
-    #else
-    const uint2 ipos = (uint2)position.xy;
-    float depth = gpass_depth.Load(int3(ipos, 0)).r;
-    #endif
     
     if (depth > 0.f)
     {
-        #ifdef SHADER_MODEL_6_6
         Texture2D gpass_main = ResourceDescriptorHeap[shader_params.gpass_main_buffer_index];
         
         return gpass_main[position.xy];
-        #else
-        return gpass_main.Load(int3(ipos, 0));
-        #endif
     }
     else
     {
@@ -157,11 +128,7 @@ float4 post_process_ps(in noperspective float4 position : SV_Position, in nopers
         float3 view = mul(global_data.inverse_projection, clip).xyz;
         float3 direction = mul(view, (float3x3)global_data.view);
         
-        #ifdef SHADER_MODEL_6_6
         return TextureCube(ResourceDescriptorHeap[global_data.ambient_light.specular_srv_index]).SampleLevel(linear_sampler, direction, .1f) * global_data.ambient_light.intensity;
-        #else
-        return sky_specular.SampleLevel(linear_sampler, direction, .1f) * global_data.ambient_light.intensity;
-        #endif
     }
     #endif
 }

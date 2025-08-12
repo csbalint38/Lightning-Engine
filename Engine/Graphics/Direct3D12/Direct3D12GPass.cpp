@@ -360,17 +360,6 @@ namespace lightning::graphics::direct3d12::gpass {
 				cmd_list->SetGraphicsRootShaderResourceView(idx::CULLABLE_LIGHTS, light::cullable_light_buffer(frame_index));
 				cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_GRID, delight::light_grid_opaque(light_culling_id, frame_index));
 				cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_INDEX_LIST, delight::light_index_list_opaque(light_culling_id ,frame_index));
-
-				if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
-					ID3D12DescriptorHeap* heaps[]{ { core::srv_heap().heap() } };
-
-					cmd_list->SetDescriptorHeaps(1, heaps);
-
-					D3D12_GPU_DESCRIPTOR_HANDLE heap_start = core::srv_heap().heap()->GetGPUDescriptorHandleForHeapStart();
-
-					cmd_list->SetGraphicsRootDescriptorTable(idx::TEXTURE, heap_start);
-					cmd_list->SetGraphicsRootDescriptorTable(idx::TEXTURE_CUBE, heap_start);
-				}
 			}
 
 			if (current_pipeline_state != cache.gpass_pipeline_states[i]) {

@@ -149,7 +149,6 @@ namespace lightning::graphics::direct3d12::core {
 		ID3D12SDKConfiguration1* d3d12_sdk_config{ nullptr };
 		ID3D12DeviceFactory* d3d12_device_factory{ nullptr };
 		id3d12_device* main_device{ nullptr };
-		D3D_SHADER_MODEL max_shader_model;
 		IDXGIFactory7* dxgi_factory{ nullptr };
 		D3D12Command gfx_command;
 		surface_collection surfaces;
@@ -198,35 +197,6 @@ namespace lightning::graphics::direct3d12::core {
 			DXCall(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &feature_level_info, sizeof(feature_level_info)));
 
 			return feature_level_info.MaxSupportedFeatureLevel;
-		}
-
-		D3D_SHADER_MODEL get_max_shader_model() {
-			static const D3D_SHADER_MODEL shader_models[] = {
-				D3D_SHADER_MODEL_6_6,
-				D3D_SHADER_MODEL_6_5,
-				D3D_SHADER_MODEL_6_4,
-				D3D_SHADER_MODEL_6_3,
-				D3D_SHADER_MODEL_6_2,
-				D3D_SHADER_MODEL_6_1,
-				D3D_SHADER_MODEL_6_0,
-				D3D_SHADER_MODEL_5_1,
-			};
-
-			D3D_SHADER_MODEL max_supported{ D3D_SHADER_MODEL_5_1 };
-
-			for (D3D_SHADER_MODEL sm : shader_models) {
-				D3D12_FEATURE_DATA_SHADER_MODEL shader_model_info{ sm };
-				HRESULT hr = main_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model_info, sizeof(shader_model_info));
-				
-				if (SUCCEEDED(hr)) {
-					max_supported = shader_model_info.HighestShaderModel;
-
-					break;
-				}
-				else continue;
-			}
-
-			return max_supported;
 		}
 
 		void __declspec(noinline) process_deferred_releases(u32 frame_idx) {
@@ -339,8 +309,6 @@ namespace lightning::graphics::direct3d12::core {
 		DXCall(hr = d3d12_device_factory->CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
 		if (FAILED(hr)) return failed_init();
 
-		max_shader_model = get_max_shader_model();
-
 		#ifdef _DEBUG
 		{
 			ComPtr<ID3D12InfoQueue> info_queue;
@@ -435,7 +403,6 @@ namespace lightning::graphics::direct3d12::core {
 	}
 
 	id3d12_device* const device() { return main_device; }
-	D3D_SHADER_MODEL const shader_model() { return max_shader_model; }
 	DescriptorHeap& rtv_heap() { return rtv_desc_heap; }
 	DescriptorHeap& dsv_heap() { return dsv_desc_heap; }
 	DescriptorHeap& srv_heap() { return srv_desc_heap; }

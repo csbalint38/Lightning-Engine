@@ -4,8 +4,6 @@
 #include "Direct3D12Surface.h"
 #include "Direct3D12GPass.h"
 #include "Direct3D12LightCulling.h"
-#include "Direct3D12Light.h"
-#include "Shaders/ShaderTypes.h"
 
 namespace lightning::graphics::direct3d12::fx {
 	namespace {
@@ -18,10 +16,6 @@ namespace lightning::graphics::direct3d12::fx {
 				// TEMP
 				FRUSTUMS,
 				LIGHT_GRID_OPAQUE,
-
-				MAIN_SRV,
-				DEPTH_SRV,
-				AMBIENT_SRV,
 
 				count
 			};
@@ -40,26 +34,14 @@ namespace lightning::graphics::direct3d12::fx {
 			parameters[idx::FRUSTUMS].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 0);
 			parameters[idx::LIGHT_GRID_OPAQUE].as_srv(D3D12_SHADER_VISIBILITY_PIXEL, 1);
 
-			if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
-				d3dx::D3D12DescriptorRange main_range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2, 0);
-				d3dx::D3D12DescriptorRange depth_range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3, 0);
-				d3dx::D3D12DescriptorRange ambient_range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0);
-
-				parameters[idx::MAIN_SRV].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &main_range, 1);
-				parameters[idx::DEPTH_SRV].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &depth_range, 1);
-				parameters[idx::AMBIENT_SRV].as_descriptor_table(D3D12_SHADER_VISIBILITY_PIXEL, &ambient_range, 1);
-			}
-
 			const D3D12_STATIC_SAMPLER_DESC samplers[] = {
 				d3dx::static_sampler(d3dx::sampler_state.static_point, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL),
 				d3dx::static_sampler(d3dx::sampler_state.static_linear, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL),
 			};
 
-			u32 param_count = core::shader_model() >= D3D_SHADER_MODEL_6_6 ? idx::MAIN_SRV : idx::count;
-
 			d3dx::D3D12RootSignatureDesc root_signature{
 				&parameters[0],
-				param_count,
+				_countof(parameters),
 				d3dx::D3D12RootSignatureDesc::default_flags,
 				& samplers[0],
 				_countof(samplers)
@@ -90,15 +72,6 @@ namespace lightning::graphics::direct3d12::fx {
 
 			return fx_root_sig && fx_pso;
 		}
-
-		static inline D3D12_GPU_DESCRIPTOR_HANDLE srv_gpu_from_index(u32 index) {
-			D3D12_GPU_DESCRIPTOR_HANDLE gpu{ core::srv_heap().heap()->GetGPUDescriptorHandleForHeapStart() };
-			const UINT inc = core::device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-			gpu.ptr += static_cast<UINT64>(index) * inc;
-
-			return gpu;
-		}
 	}
 
 	bool initialize() {
@@ -119,27 +92,10 @@ namespace lightning::graphics::direct3d12::fx {
 
 		using idx = FXRootParamIndicies;
 		cmd_list->SetGraphicsRootConstantBufferView(idx::GLOBAL_SHADER_DATA, info.global_shader_data);
+		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::main_buffer().srv().index, 0);
+		cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::depth_buffer().srv().index, 1);
 		cmd_list->SetGraphicsRootShaderResourceView(idx::FRUSTUMS, delight::frustums(light_culling_id, frame_index));
 		cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_GRID_OPAQUE, delight::light_grid_opaque(light_culling_id, frame_index));
-
-		if (core::shader_model() < D3D_SHADER_MODEL_6_6) {
-			ID3D12DescriptorHeap* heaps[]{ { core::srv_heap().heap() } };
-			cmd_list->SetDescriptorHeaps(1, heaps);
-
-			const DescriptorHandle main_srv = gpass::main_buffer().srv();
-			const DescriptorHandle depth_srv = gpass::depth_buffer().srv();
-
-			const u32 ambient_idx = light::ambient_light(info.info->light_set_key).specular_srv_index;
-			const D3D12_GPU_DESCRIPTOR_HANDLE ambient_gpu = srv_gpu_from_index(ambient_idx);
-
-			cmd_list->SetGraphicsRootDescriptorTable(idx::MAIN_SRV, main_srv.gpu);
-			cmd_list->SetGraphicsRootDescriptorTable(idx::DEPTH_SRV, depth_srv.gpu);
-			cmd_list->SetGraphicsRootDescriptorTable(idx::AMBIENT_SRV, ambient_gpu);
-		}
-		else {
-			cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::main_buffer().srv().index, 0);
-			cmd_list->SetGraphicsRoot32BitConstant(idx::ROOT_CONSTANTS, gpass::depth_buffer().srv().index, 1);
-		}
 
 		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		
