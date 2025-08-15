@@ -1,23 +1,17 @@
 ﻿using Editor.Common.Enums;
-using Editor.GameProject;
 using Editor.Utilities;
+using Microsoft.VisualStudio.Imaging.Interop;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
 namespace Editor.GameCode
 {
-    static class VisualStudio
+    public class VisualStudio : ICodeEditor
     {
         private static readonly string _progId = "VisualStudio.DTE.17.0";
-        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
-        private static readonly ManualResetEventSlim _resetEvent = new(false);
         private static readonly Lock _lock = new();
         private static EnvDTE80.DTE2 _vsInstance = null;
-
-        public static bool BuildSucceeded { get; private set; }
-        public static bool BuildFinished { get; private set; }
 
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(uint reserved, out IRunningObjectTable rot);
@@ -25,9 +19,7 @@ namespace Editor.GameCode
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
 
-        public static string GetConfigurationName(BuildConfig config) => _buildConfigurationNames[(int)config];
-
-        public static void OpenVisualStudio(string solutionPath)
+        public void Initialize(string solutionPath)
         {
             lock (_lock)
             {
@@ -35,7 +27,15 @@ namespace Editor.GameCode
             }
         }
 
-        public static void CloseVisualStudio()
+        public void ShowWindow(string solution, string? file = null)
+        {
+            lock (_lock)
+            {
+                ShowWindowInternal(solution, file);
+            }
+        }
+
+        public void Close()
         {
             lock (_lock)
             {
@@ -43,15 +43,7 @@ namespace Editor.GameCode
             }
         }
 
-        public static bool AddFilesToSolution(string solution, string projectName, string[] files)
-        {
-            lock (_lock)
-            {
-                return AddFilesToSolutionInternal(solution, projectName, files);
-            }
-        }
-
-        public static bool IsDebugging()
+        public bool IsDebugging()
         {
             lock (_lock)
             {
@@ -59,27 +51,41 @@ namespace Editor.GameCode
             }
         }
 
-        public static void BuildSolution(Project project, BuildConfig buildConfig, bool showWindow = true)
+        public void Run(bool debug)
         {
             lock (_lock)
             {
-                BuildSolutionInternal(project, buildConfig, showWindow);
+                RunInternal(debug);
             }
         }
 
-        public static void Run(Project project, BuildConfig buildConfig, bool debug)
-        {
-            lock (_lock)
-            {
-                RunInternal(project, buildConfig, debug);
-            }
-        }
-
-        public static void Stop()
+        public void Stop()
         {
             lock (_lock)
             {
                 StopInternal();
+            }
+        }
+
+        private static void ShowWindowInternal(string solution, string? file = null)
+        {
+            OpenVisualStudioInternal(solution);
+
+            if (_vsInstance is not null)
+            {
+                CallOnSTAThread(() =>
+                {
+                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
+                    else _vsInstance.ExecuteCommand("File.SaveAll");
+
+                    if (file is not null)
+                    {
+                        _vsInstance.ItemOperations.OpenFile(file, EnvDTE.Constants.vsViewKindTextView).Visible = true;
+                    }
+
+                    _vsInstance.MainWindow.Activate();
+                    _vsInstance.MainWindow.Visible = true;
+                });
             }
         }
 
@@ -148,6 +154,8 @@ namespace Editor.GameCode
                     {
                         Type vsType = Type.GetTypeFromProgID(_progId, true);
                         _vsInstance = Activator.CreateInstance(vsType) as EnvDTE80.DTE2;
+
+                        _vsInstance?.Solution.Open(solutionPath);
                     }
                 }
             }
@@ -179,98 +187,6 @@ namespace Editor.GameCode
             });
         }
 
-        private static bool AddFilesToSolutionInternal(string solution, string projectName, string[] files)
-        {
-            OpenVisualStudioInternal(solution);
-
-            try
-            {
-                if (_vsInstance is not null)
-                {
-                    CallOnSTAThread(() =>
-                    {
-                        if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
-                        else _vsInstance.ExecuteCommand("File.SaveAll");
-
-                        foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
-                        {
-                            if (project.UniqueName.Contains(projectName))
-                            {
-                                foreach (var file in files)
-                                {
-                                    project.ProjectItems.AddFromFile(file);
-                                }
-                            }
-                        }
-
-                        var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
-
-                        if (!string.IsNullOrEmpty(cpp))
-                        {
-                            _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
-                        }
-
-                        _vsInstance.MainWindow.Activate();
-                        _vsInstance.MainWindow.Visible = true;
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                Debug.WriteLine("Failed to add files to Visual Studio Solution");
-
-                return false;
-            }
-
-            return true;
-        }
-
-        private static void BuildSolutionInternal(Project project, BuildConfig buildConfig, bool showWindow = true)
-        {
-            if (IsDebuggingInternal())
-            {
-                Logger.LogAsync(LogLevel.ERROR, "Visual Studio is currently running another process.");
-                return;
-            }
-
-            OpenVisualStudioInternal(project.Solution);
-            BuildFinished = BuildSucceeded = false;
-
-            CallOnSTAThread(() =>
-            {
-
-                _vsInstance.MainWindow.Visible = showWindow;
-
-                if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(project.Solution);
-
-                _vsInstance.Events.BuildEvents.OnBuildProjConfigBegin += OnBuildSolutionBegin;
-                _vsInstance.Events.BuildEvents.OnBuildProjConfigDone += OnBuildSolutionDone;
-            });
-
-            var configName = GetConfigurationName(buildConfig);
-
-            try
-            {
-                foreach (var pdb in Directory.GetFiles(Path.Combine($"{project.Path}", $@"x64\{configName}"), "*.pdb"))
-                {
-                    File.Delete(pdb);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-
-            CallOnSTAThread(() =>
-            {
-                _vsInstance.Solution.SolutionBuild.SolutionConfigurations.Item(configName).Activate();
-                _vsInstance.ExecuteCommand("Build.BuildSolution");
-                _resetEvent.Wait();
-                _resetEvent.Reset();
-            });
-        }
-
         private static bool IsDebuggingInternal()
         {
             bool result = false;
@@ -288,11 +204,16 @@ namespace Editor.GameCode
             return result;
         }
 
-        private static void RunInternal(Project project, BuildConfig buildConfig, bool debug)
+        private static void RunInternal(bool debug)
         {
             CallOnSTAThread(() =>
             {
-                if (_vsInstance is not null && !IsDebuggingInternal() && BuildSucceeded)
+                if (_vsInstance is not null && !_vsInstance.MainWindow.Visible)
+                {
+                    ShowWindowInternal(_vsInstance?.Solution.FullName ?? string.Empty);
+                }
+
+                if (_vsInstance is not null && !IsDebuggingInternal() && MSBuild.BuildSucceeded)
                 {
                     _vsInstance.ExecuteCommand(debug ? "Debug.Start" : "Debug.StartWithoutDebugging");
                 }
@@ -305,32 +226,6 @@ namespace Editor.GameCode
             {
                 if (_vsInstance is not null && IsDebuggingInternal()) _vsInstance.ExecuteCommand("Debug.StopDebugging");
             });
-        }
-
-        private static void OnBuildSolutionBegin(string project, string projectConfig, string platform, string solutionConfig)
-        {
-            if (BuildFinished) return;
-
-            Logger.LogAsync(LogLevel.INFO, $"Building {project}, {projectConfig}, {platform}, {solutionConfig}");
-        }
-
-        private static void OnBuildSolutionDone(
-            string project,
-            string projectConfig,
-            string platform,
-            string solutionConfig,
-            bool success
-        )
-        {
-            if (BuildFinished) return;
-
-            if (success) Logger.LogAsync(LogLevel.INFO, $"Building {projectConfig} configuration succeeded");
-            else Logger.LogAsync(LogLevel.ERROR, $"Building {projectConfig} configuration failed");
-
-            BuildFinished = true;
-            BuildSucceeded = success;
-
-            _resetEvent.Set();
         }
 
         private static void CallOnSTAThread(Action action)

@@ -185,11 +185,7 @@ namespace Editor.GameProject
 
             _2 = engineApiPath;
 
-#if DEBUG
-            var _3 = "$(LIGHTNING_ENGINE)";
-#else
-            var _3 = "$(LIGHTNING_ENGINE)Engine";
-#endif
+            var _3 = @"$(LIGHTNING_ENGINE)Engine\";
 
             var project = File.ReadAllText(Path.Combine(template.TemplatePath, "ProjectTemplate.xml"));
             project = string.Format(project, _0, _1, _2, _3);

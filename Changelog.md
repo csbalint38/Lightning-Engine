@@ -1,4 +1,10 @@
 # v0.3.8-beta - 2025.8.19.
+## Editor
+ - Fixed wrong tooltip labels under certain icons
+ - Added MSBuild support that will eventually replace VisualStudio dependency
+
+## Engine
+ - Fixed engine shaders path
 
 # v0.3.7-beta - 2025.8.5.
 ## General

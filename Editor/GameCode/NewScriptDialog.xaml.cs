@@ -118,8 +118,6 @@ namespace Editor.GameCode
 
         private static void CreateScript(string name, string path, string solution, string projectName)
         {
-            //Thread.Sleep(300000000);
-
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
 
             var cpp = Path.GetFullPath(Path.Combine(path, $"{name}.cpp"));
@@ -151,7 +149,8 @@ namespace Editor.GameCode
 
             string[] files = [cpp, h];
 
-            VisualStudio.AddFilesToSolution(solution, projectName, files);
+            MSBuild.AddFilesToSolution(solution, projectName, files);
+            ICodeEditor.Current.ShowWindow(solution, cpp);
         }
 
         private static string GetNamespaceFromProjectName()

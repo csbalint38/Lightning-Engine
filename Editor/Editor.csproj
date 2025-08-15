@@ -10,9 +10,9 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.7.2-beta</InformationalVersion>
-	<FileVersion>0.3.7.2</FileVersion>
-	<AssemblyVersion>0.3.7.2</AssemblyVersion>
+	<InformationalVersion>0.3.8-beta</InformationalVersion>
+	<FileVersion>0.3.8.0</FileVersion>
+	<AssemblyVersion>0.3.8.0</AssemblyVersion>
 	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -32,6 +32,7 @@
     <PackageReference Include="envdte" Version="17.13.40008" />
     <PackageReference Include="envdte80" Version="17.13.40008" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.2.1" />
+    <PackageReference Include="Microsoft.Build" Version="17.14.8" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
   </ItemGroup>
 	

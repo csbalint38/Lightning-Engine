@@ -133,17 +133,29 @@
                     Background="#80FFFFFF"
                     Height="22"
                     VerticalAlignment="Stretch"/>
-            <Button x:Name="BtnNewScript"
-                    Click="BtnNewScript_Click"
+            <Button x:Name="BtnOpenEditor"
+                    Click="BtnOpenEditor_Click"
                     Style="{StaticResource IconButtonWithHover}"
                     Margin="3"
                     IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}"
-                    ToolTip="New Script"
+                    ToolTip="Open Code Editor"
                     ToolTipService.InitialShowDelay="1000">
-                <materialDesign:PackIcon Kind="FilePlus"
+                <materialDesign:PackIcon Kind="CodeBlockBraces"
                                          Width="16"
                                          Height="16"
                                          Margin="3"/>
+            </Button>
+            <Button x:Name="BtnNewScript"
+                Click="BtnNewScript_Click"
+                Style="{StaticResource IconButtonWithHover}"
+                Margin="3"
+                IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}"
+                ToolTip="Open "
+                ToolTipService.InitialShowDelay="1000">
+                <materialDesign:PackIcon Kind="FilePlus"
+                              Width="16"
+                              Height="16"
+                              Margin="3"/>
             </Button>
             <Button x:Name="BtnBuild"
                     Command="{Binding BuildCommand}"
@@ -221,7 +233,7 @@
                 </Button.Style>
                 <Button.ToolTip>
                     <TextBlock TextWrapping="Wrap">
-                        Build<LineBreak/>F7<LineBreak/>Ctrl+Shift+B
+                        Start Without Debugging<LineBreak/>F5
                     </TextBlock>
                 </Button.ToolTip>
             </Button>
@@ -249,7 +261,7 @@
                 </Button.Style>
                 <Button.ToolTip>
                     <TextBlock TextWrapping="Wrap">
-                        Build<LineBreak/>F7<LineBreak/>Ctrl+Shift+B
+                       Stop<LineBreak/>Shift + F5
                     </TextBlock>
                 </Button.ToolTip>
             </Button>
@@ -262,7 +274,6 @@
                     Click="BtnPrimitiveMesh_Click"
                     Style="{StaticResource IconButtonWithHover}"
                     Margin="3"
-                    IsEnabled="{Binding Path=IsEnabled, ElementName=BtnBuild}"
                     ToolTip="New primitive mesh"
                     ToolTipService.InitialShowDelay="1000">
                 <materialDesign:PackIcon Kind="CubeOutline"

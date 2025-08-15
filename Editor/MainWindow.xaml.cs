@@ -2,6 +2,7 @@
 using Editor.Content;
 using Editor.Content.ContentBrowser;
 using Editor.DLLs;
+using Editor.GameCode;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.ComponentModel;
@@ -29,6 +30,8 @@ public partial class MainWindow : Window
     private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnMainWindowLoaded;
+
+        ICodeEditor.Current = new VisualStudio();
 
         DefaultAssets.GenerateDefaultAssets();
         GetEnginePath();

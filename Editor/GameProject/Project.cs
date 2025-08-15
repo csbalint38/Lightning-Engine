@@ -39,7 +39,10 @@ namespace Editor.GameProject
         public string TempFolder => $@"{Path}.Lightning\Temp\";
         public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
         public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
-        public BuildConfig DLLBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
+
+        public BuildConfig DLLBuildConfig =>
+            BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
+
         public ICommand AddSceneCommand { get; private set; }
         public ICommand RemoveSceneCommand { get; private set; }
         public ICommand UndoCommand { get; private set; }
@@ -111,7 +114,7 @@ namespace Editor.GameProject
         {
             UnloadGameCodeDLL();
 
-            Task.Run(VisualStudio.CloseVisualStudio);
+            Task.Run(ICodeEditor.Current.Close);
             AssetRegistry.Save();
 
             UndoRedo.Reset();
@@ -132,6 +135,7 @@ namespace Editor.GameProject
             Debug.Assert(ActiveScene is not null);
 
             await BuildGameCodeDLLAsync(false);
+            await Task.Run(() => ICodeEditor.Current.Initialize(Solution));
 
             SetCommands();
         }
@@ -161,20 +165,24 @@ namespace Editor.GameProject
             try
             {
                 UnloadGameCodeDLL();
-                await Task.Run(() => VisualStudio.BuildSolution(this, DLLBuildConfig, showWindow));
+                await Task.Run(() => MSBuild.BuildSolution(this, DLLBuildConfig));
 
-                if (VisualStudio.BuildSucceeded) LoadGameCodeDll();
+                if (MSBuild.BuildSucceeded) LoadGameCodeDll();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
                 throw;
             }
+            finally
+            {
+                Application.Current.Dispatcher.Invoke(CommandManager.InvalidateRequerySuggested);
+            }
         }
 
         private void LoadGameCodeDll()
         {
-            var configName = VisualStudio.GetConfigurationName(DLLBuildConfig);
+            var configName = MSBuild.GetConfigurationName(DLLBuildConfig);
             var dll = $@"{Path}x64\{configName}\{Name}.dll";
 
             AvailableScripts = [];
@@ -203,20 +211,20 @@ namespace Editor.GameProject
         {
             var config = StandaloneBuildConfig;
 
-            await Task.Run(() => VisualStudio.BuildSolution(this, config, debug));
+            await Task.Run(() => MSBuild.BuildSolution(this, config));
 
-            if (VisualStudio.BuildSucceeded)
+            if (MSBuild.BuildSucceeded)
             {
                 SaveToBinary();
-                await Task.Run(() => VisualStudio.Run(this, config, debug));
+                await Task.Run(() => ICodeEditor.Current.Run(debug));
             }
         }
 
-        private async Task StopGameAsync() => await Task.Run(() => VisualStudio.Stop());
+        private async Task StopGameAsync() => await Task.Run(() => ICodeEditor.Current.Stop());
 
         private void SaveToBinary()
         {
-            var config = VisualStudio.GetConfigurationName(StandaloneBuildConfig);
+            var config = MSBuild.GetConfigurationName(StandaloneBuildConfig);
             var bin = $@"{Path}x64\{config}\game.bin";
 
             using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
@@ -270,20 +278,23 @@ namespace Editor.GameProject
             SaveCommand = new RelayCommand<object>(x => Save(this));
             BuildCommand = new RelayCommand<bool>(
                 async x => await BuildGameCodeDLLAsync(x),
-                x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
+                x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
             );
 
             DebugStartCommand = new RelayCommand<object>(
                 async x => await RunGameAsync(true),
-                x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
+                x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
             );
 
             DebugStartWithoutDebuggingCommand = new RelayCommand<object>(
                 async x => await RunGameAsync(false),
-                x => !VisualStudio.IsDebugging() && VisualStudio.BuildFinished
+                x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
             );
 
-            DebugStopCommand = new RelayCommand<object>(async x => await StopGameAsync(), x => VisualStudio.IsDebugging());
+            DebugStopCommand = new RelayCommand<object>(
+                async x => await StopGameAsync(),
+                x => ICodeEditor.Current.IsDebugging()
+            );
 
             OnPropertyChanged(nameof(AddSceneCommand));
             OnPropertyChanged(nameof(RemoveSceneCommand));
