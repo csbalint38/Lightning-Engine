@@ -4,7 +4,8 @@
     {
         private static ICodeEditor? _current;
 
-        public static ICodeEditor Current {
+        public static ICodeEditor Current
+        {
             get => _current!;
             set => _current ??= value;
         }

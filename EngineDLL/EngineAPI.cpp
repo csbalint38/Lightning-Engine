@@ -209,6 +209,8 @@ EDITOR_INTERFACE u32 compile_shader(ShaderData* data) {
 		blob.skip(2 * sizeof(u64));
 		blob.read(&data->byte_code_error_assembly_hash[data->byte_code_size], data->errors_size + data->assembly_size);
 	}
+
+	return TRUE;
 }
 
 EDITOR_INTERFACE id::id_type create_resource(u8* data, content::AssetType::Type type) {

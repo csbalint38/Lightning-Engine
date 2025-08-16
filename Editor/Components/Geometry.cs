@@ -132,7 +132,7 @@ namespace Editor.Components
                         lod.Threshold,
                         [.. lod.Meshes.Select(mesh => new MeshWithMaterial(
                             mesh,
-                            index < _materials.Count ? Materials[index++] : CreateAndUploadAppliedMaterial(Material.Default)
+                            index < _materials.Count ? _materials[index++] : CreateAndUploadAppliedMaterial(Material.Default)
                         ))]
                     ))]
                 );

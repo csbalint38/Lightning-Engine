@@ -1,6 +1,5 @@
 ﻿using Editor.Common.Enums;
 using Editor.Utilities;
-using Microsoft.VisualStudio.Imaging.Interop;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;

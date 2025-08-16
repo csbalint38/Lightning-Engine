@@ -2,9 +2,11 @@
 ## Editor
  - Fixed wrong tooltip labels under certain icons
  - Added MSBuild support that will eventually replace VisualStudio dependency
+ - Extended Geometry Component
 
 ## Engine
  - Fixed engine shaders path
+ - Fixed shader compilation exit code
 
 # v0.3.7-beta - 2025.8.5.
 ## General

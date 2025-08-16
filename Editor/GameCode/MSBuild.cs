@@ -148,7 +148,7 @@ namespace Editor.GameCode
 
             if (string.IsNullOrEmpty(MSBuildPath)) MSBuildPath = FindMSBuild();
 
-            if(string.IsNullOrEmpty(MSBuildPath))
+            if (string.IsNullOrEmpty(MSBuildPath))
             {
                 Logger.LogAsync(LogLevel.ERROR, "Failed to locate MSBuild");
 
@@ -164,7 +164,8 @@ namespace Editor.GameCode
                     File.Delete(pdbFile);
                 }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Debug.WriteLine(ex.Message);
             }
 

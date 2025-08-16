@@ -10,8 +10,200 @@
              d:DataContext="{d:DesignInstance Type={x:Type vm:MSGeometry}}"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <Style TargetType="TextBlock"
+        <Style TargetType="{x:Type TextBox}"
                BasedOn="{StaticResource LightTextBlockStyle}" />
+        <DataTemplate DataType="{x:Type vm:MeshWithMaterial}">
+            <Border Margin="0,1,0,0"
+                    MinHeight="96"
+                    CornerRadius="5">
+                <Border.Resources>
+                    <Style TargetType="{x:Type TextBlock}"
+                           x:Key="{x:Type TextBlock}"
+                           BasedOn="{StaticResource LightTextBlockStyle}"/>
+                </Border.Resources>
+                <Border.Style>
+                    <Style TargetType="{x:Type Border}">
+                        <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush2}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter Property="Background"
+                                        Value="{StaticResource Editor.BackgroundBrush3}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <DockPanel>
+                    <Border Background="{StaticResource Editor.BackgroundBrush1}"
+                            Margin="1"
+                            CornerRadius="5"
+                            DockPanel.Dock="Top">
+                        <Border.Style>
+                            <Style TargetType="{x:Type Border}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding DataContext.Meshes.Count, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type StackPanel}}}"
+                                                 Value="1">
+                                        <Setter Property="Visibility"
+                                                Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Orientation="Horizontal"
+                                    Margin="5,2">
+                            <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource Mode=TemplatedParent}, StringFormat='{}{0}.'}"
+                                       Foreground="{StaticResource Editor.DisabledFontBrush}"/>
+                            <TextBlock Text="{Binding MeshInfo.Name}"
+                                       Margin="5,0,0,0"
+                                       FontStyle="Italic"
+                                       Foreground="{StaticResource Editor.DisabledFontBrush}"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="5">
+                            <Border CornerRadius="5"
+                                    BorderThickness="2"
+                                    BorderBrush="{StaticResource Editor.BackgroundBrush5}"
+                                    ClipToBounds="True"
+                                    Width="64"
+                                    Height="64">
+                                <Border.Background>
+                                    <VisualBrush Stretch="Fill">
+                                        <VisualBrush.Visual>
+                                            <Image Source="{Binding MeshInfo.Icon}"/>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Border.Background>
+                            </Border>
+                            <StackPanel Margin="10,0">
+                                <StackPanel.Resources>
+                                    <Style TargetType="{x:Type TextBlock}"
+                                           x:Key="{x:Type TextBlock}"
+                                           BasedOn="{StaticResource LightTextBlockStyle}">
+                                        <Setter Property="FontFamily"
+                                                Value="Consolas"/>
+                                        <Setter Property="Foreground"
+                                                Value="{StaticResource Editor.LightningBrush}"/>
+                                        <Setter Property="Opacity"
+                                                Value=".8"/>
+                                    </Style>
+                                </StackPanel.Resources>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Vertices:"
+                                               Foreground="{StaticResource Editor.FontBrush}"/>
+                                    <TextBlock Text="Indices:"
+                                               Grid.Row="1"
+                                              Foreground="{StaticResource Editor.FontBrush}"/>
+                                    <TextBlock Text="Triangles:"
+                                               Grid.Row="2"
+                                               Foreground="{StaticResource Editor.FontBrush}"/>
+                                    <TextBlock Text="Material:"
+                                               Grid.Row="3"
+                                               Foreground="{StaticResource Editor.FontBrush}"/>
+                                    <TextBlock Text="{Binding MeshInfo.VertexCount}"
+                                               Grid.Column="1"
+                                               Grid.Row="1"
+                                               d:Text="12345"/>
+                                    <TextBlock Text="{Binding MeshInfo.IndexCount}"
+                                               Grid.Column="1"
+                                               Grid.Row="2"
+                                               d:Text="2345"/>
+                                    <TextBlock Text="{Binding MeshInfo.TriangleCount}"
+                                               Grid.Column="1"
+                                               d:Text="34"/>
+                                    <TextBlock Text="{Binding Material.Name}"
+                                               Grid.Column="1"
+                                               Grid.Row="3"
+                                               d:Text="Default Material"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                        <Expander Margin="5"
+                                  Background="{StaticResource Editor.BackgroundBrush3}">
+                            <Expander.Header>
+                                <TextBlock Text="Applied Material"
+                                           Foreground="{StaticResource Editor.FontBrush}"
+                                           Opacity=".7"/>
+                            </Expander.Header>
+                            <Border Height="50"
+                                    Background="{StaticResource Editor.SecretBrush}">
+                                <TextBlock Text="APPLIED MATERIAL WILL BE THERE"
+                                           HorizontalAlignment="Center"/>
+                            </Border>
+                            <Expander.Effect>
+                                <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="2"/>
+                            </Expander.Effect>
+                        </Expander>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LODWithMaterials}">
+            <Grid Background="{StaticResource Editor.BackgroundBrush2}">
+                <Grid.Resources>
+                    <Style TargetType="{x:Type TextBlock}"
+                           x:Key="{x:Type TextBlock}"
+                           BasedOn="{StaticResource LightTextBlockStyle}"/>
+                </Grid.Resources>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="{x:Type StackPanel}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.GeometryWithMaterials.LODs.Count, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ContentControl}}}"
+                                             Value="1">
+                                    <Setter Property="Visibility"
+                                            Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="5">
+                        <TextBlock Text="Name"
+                                   Width="73"/>
+                        <TextBlock Text="{Binding Name}"
+                                   d:Text="CharacterModel"
+                                   Foreground="{StaticResource Editor.GreenBrush}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Margin="5,0,0,5">
+                        <TextBlock Text="Threshold"
+                                   Width="73"/>
+                        <TextBlock Text="{Binding Threshold}"
+                                   d:Text="12.34"
+                                   Foreground="{StaticResource Editor.GreenBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Meshes}"
+                              AlternationCount="{Binding Meshes.Count}"
+                              Grid.Row="1">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </Grid>
+        </DataTemplate>
     </UserControl.Resources>
     <controls:ComponentView Header="Geometry">
         <Grid>
@@ -23,7 +215,8 @@
             <StackPanel Orientation="Horizontal"
                         Margin="0,0,0,5">
                 <TextBlock Text="Name"
-                           Width="78"/>
+                           Width="78"
+                           Foreground="{StaticResource Editor.FontBrush}"/>
                 <TextBlock Text="{Binding GeometryWithMaterials.Name}"
                            d:Text="CharacterModel"
                            Foreground="{StaticResource Editor.LightningBrush}"
@@ -38,7 +231,7 @@
                         <Border x:Name="BrdGeometry"
                                 Style="{StaticResource DropBorderStyle}"
                                 HorizontalAlignment="Left"
-                                Drop="BrdGeometry_Drop"
+                                Drop="BrdGeometry_DropAsync"
                                 MouseLeftButtonDown="BrdGeometry_MouseLeftButtonDown">
                             <Border.Background>
                                 <ImageBrush ImageSource="{Binding GeometryWithMaterials.Icon}"/>
@@ -177,6 +370,54 @@
                     </Expander.Effect>
                 </Expander>
             </StackPanel>
+            <TabControl Background="Transparent"
+                        BorderThickness="0"
+                        SelectedIndex="0"
+                        Grid.Row="2"
+                        Margin="-2,10,-2,-2"
+                        ItemsSource="{Binding GeometryWithMaterials.LODs}"
+                        AlternationCount="{Binding GeometryWithMaterials.LODs.Count}"
+                        SelectionChanged="TabControl_SelectionChanged">
+                <TabControl.Style>
+                    <Style TargetType="{x:Type TabControl}">
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding GeometryWithMaterials.LODs.Count}"
+                                               Value="1"/>
+                                    <Condition Binding="{Binding GeometryWithMaterials.LODs[0].Meshes.Count}"
+                                               Value="1"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility"
+                                        Value="Collapsed"/>
+                            </MultiDataTrigger>
+                            <DataTrigger Binding="{Binding GeometryWithMaterials.LODs.Count}"
+                                         Value="1">
+                                <Setter Property="ItemContainerStyle">
+                                    <Setter.Value>
+                                        <Style TargetType="{x:Type TabItem}"
+                                               BasedOn="{StaticResource {x:Type TabItem}}">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed"/>
+                                        </Style>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TabControl.Style>
+                <TabControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType={x:Type TabItem}}, StringFormat='{}{0}'}"
+                                   MinWidth="18"/>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.Effect>
+                    <DropShadowEffect Opacity=".6"
+                                          BlurRadius="15"
+                                          ShadowDepth="2"/>
+                </TabControl.Effect>
+            </TabControl>
         </Grid>
     </controls:ComponentView>
 </UserControl>
