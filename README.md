@@ -1,5 +1,10 @@
 # Lightning Engine
 
+## Installation
+Download `Lightning Installer.msi` if you have *VisualStudio 2022* or *Visual Studio Build Tools* installed in your PC.
+Download `Lightning Setup.exe` if you want all dependencies to be installed for you.
+Download `lightning-engine-v?.?.?.zip` if you want to handle installation manually.
+
 ## FBX import settings
 - Forward:  -z
 - Up:        y

@@ -364,7 +364,7 @@ namespace lightning::graphics::direct3d12::core {
 		shaders::shutdown();
 
 		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) constant_buffers[i].release();
-
+		 
 		release(dxgi_factory);
 
 		rtv_desc_heap.process_deferred_free(0);

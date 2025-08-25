@@ -63,7 +63,6 @@ namespace Editor.GameCode
                 Path.Combine(pf, "Microsoft Visual Studio", "2022", "Professional", "MSBuild", "Current", "Bin", "MSBuild.exe"),
                 Path.Combine(pf, "Microsoft Visual Studio", "2022", "Enterprise", "MSBuild", "Current", "Bin", "MSBuild.exe"),
                 Path.Combine(pf, "Microsoft Visual Studio", "2022", "BuildTools", "MSBuild", "Current", "Bin", "MSBuild.exe"),
-                Path.Combine(pf, "LightningEngine", "BuildTools", "MSBuild", "Current", "Bin", "MSBuild.exe")
             };
 
             foreach (var path in candidates)
@@ -366,9 +365,9 @@ namespace Editor.GameCode
 
             var level = isError ? LogLevel.ERROR : isWarning ? LogLevel.WARNING : LogLevel.INFO;
 
-            Logger.LogAsync(level, $"[MSBUILD] {line}");
+            Logger.LogAsync(level, $"[MSBUILD] {line.Trim()}");
         }
 
-        private static void LogMSBuildStdErr(string line) => Logger.LogAsync(LogLevel.ERROR, $"[MSBUILD] {line}");
+        private static void LogMSBuildStdErr(string line) => Logger.LogAsync(LogLevel.ERROR, $"[MSBUILD] {line.Trim()}");
     }
 }

@@ -109,5 +109,6 @@ Patch dialog sequence:
         </UI>
 
         <UIRef Id="WixUI_Common" />
+		<UIRef Id="WixUI_ErrorProgressText" />
     </Fragment>
 </Wix>

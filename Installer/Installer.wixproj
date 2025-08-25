@@ -5,7 +5,7 @@
     <Platforms>x64</Platforms>
   </PropertyGroup>
   <PropertyGroup>
-    <OutputName>Lightning$(MSBuildProjectName)</OutputName>
+    <OutputName>Lightning $(MSBuildProjectName)</OutputName>
   </PropertyGroup>
   <PropertyGroup>
     <PublishedDir Condition="'$(CI)' != 'true'">$(SolutionDir)$(Platform)\$(Configuration)Editor</PublishedDir>

@@ -12,6 +12,8 @@ namespace Editor.GameCode
         private static readonly Lock _lock = new();
         private static EnvDTE80.DTE2 _vsInstance = null;
 
+        public bool CanDebug => true;
+
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(uint reserved, out IRunningObjectTable rot);
 

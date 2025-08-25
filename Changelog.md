@@ -1,3 +1,8 @@
+# v0.3.9-beta - 2025.9.3
+## General
+ - Fixed the Installer progress indicator, where placeholders were shown
+ - Bundled Installer that installs `MSBuild` alongside the Engine
+
 # v0.3.8-beta - 2025.8.19.
 ## Editor
  - Fixed wrong tooltip labels under certain icons

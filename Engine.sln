@@ -28,6 +28,11 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Installer", "Installer\Inst
 		{F0FC42B1-5F51-4081-8211-6F359F00C717} = {F0FC42B1-5F51-4081-8211-6F359F00C717}
 	EndProjectSection
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "Bundle", "Bundle\Bundle.wixproj", "{BAF0937B-2451-489C-A53D-17FBDBD51868}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F004909B-22D3-43AB-8F97-129591709B87} = {F004909B-22D3-43AB-8F97-129591709B87}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -78,6 +83,13 @@ Global
 		{F004909B-22D3-43AB-8F97-129591709B87}.Release|x64.ActiveCfg = Release|x64
 		{F004909B-22D3-43AB-8F97-129591709B87}.Release|x64.Build.0 = Release|x64
 		{F004909B-22D3-43AB-8F97-129591709B87}.ReleaseEditor|x64.ActiveCfg = Release|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.Debug|x64.ActiveCfg = Debug|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.Debug|x64.Build.0 = Debug|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.DebugEditor|x64.ActiveCfg = Debug|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.DebugEditor|x64.Build.0 = Debug|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.Release|x64.ActiveCfg = Release|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.Release|x64.Build.0 = Release|x64
+		{BAF0937B-2451-489C-A53D-17FBDBD51868}.ReleaseEditor|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

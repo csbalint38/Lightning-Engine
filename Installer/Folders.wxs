@@ -2,7 +2,7 @@
 	 xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Fragment>
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="LightningEngine">
+      <Directory Id="INSTALLFOLDER" Name="Lightning Engine">
 	    <Component Id="InstallfolderWriteAccess" Guid="{10DF4344-0E73-46F9-8F93-505412FAEB67}">
 		  <CreateFolder>
 		    <util:PermissionEx User="Users" GenericAll="yes" />

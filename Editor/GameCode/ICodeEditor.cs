@@ -2,6 +2,8 @@
 {
     public interface ICodeEditor
     {
+        public bool CanDebug { get; }
+
         private static ICodeEditor? _current;
 
         public static ICodeEditor Current
