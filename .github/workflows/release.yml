@@ -174,6 +174,13 @@ jobs:
         shell: pwsh
         run: msbuild Bundle/Bundle.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
 
+      - name: Restore Bundle packages
+        run: dotnet restore Installer/Installer.wixproj
+
+      - name: Build Bundle
+        shell: pwsh
+        run: msbuild Installer/Installer.wixproj /p:Configuration=ReleaseEditor /p:Platform=x64 /p:OutDir="$env:GITHUB_WORKSPACE\temp" /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
+
       - name: Get InformationalVersion
         id: get-version
         shell: pwsh
