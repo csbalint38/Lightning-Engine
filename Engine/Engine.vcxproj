@@ -65,6 +65,7 @@
     <ClInclude Include="Platform\Window.h" />
     <ClInclude Include="Utilities\FreeList.h" />
     <ClInclude Include="Utilities\IOStream.h" />
+    <ClInclude Include="Utilities\Logger.h" />
     <ClInclude Include="Utilities\Math.h" />
     <ClInclude Include="Utilities\MathTypes.h" />
     <ClInclude Include="Utilities\Utilities.h" />

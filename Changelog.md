@@ -1,3 +1,6 @@
+# v0.3.9.1-beta - 2025.9.4
+ - Verbose logging.
+
 # v0.3.10-beta - 2025.9.10.
 # Editor
  - Fixed saving and loading project that has Entities with Geometry component
