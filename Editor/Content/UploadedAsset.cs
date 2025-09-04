@@ -3,133 +3,132 @@ using Editor.DLLs;
 using Editor.Utilities;
 using System.Diagnostics;
 
-namespace Editor.Content
+namespace Editor.Content;
+
+public class UploadedAsset
 {
-    public class UploadedAsset
+    private static readonly Lock _lock = new();
+    private static readonly Dictionary<Guid, UploadedAsset> _uploadedAssets = [];
+
+    private List<UploadedAsset> _referencedAssets = [];
+
+    public IdType ContentId { get; private set; } = Id.InvalidId;
+    public int ReferenceCount { get; private set; }
+    public AssetInfo AssetInfo { get; private set; }
+    public AssetMetadata Metadata { get; private set; }
+
+    private UploadedAsset() { }
+
+    public static UploadedAsset AddToScene(AssetInfo assetInfo, Asset? asset = null)
     {
-        private static readonly Lock _lock = new();
-        private static readonly Dictionary<Guid, UploadedAsset> _uploadedAssets = [];
+        Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
 
-        private List<UploadedAsset> _referencedAssets = [];
+        var key = assetInfo.Guid;
 
-        public IdType ContentId { get; private set; } = Id.InvalidId;
-        public int ReferenceCount { get; private set; }
-        public AssetInfo AssetInfo { get; private set; }
-        public AssetMetadata Metadata { get; private set; }
-
-        private UploadedAsset() { }
-
-        public static UploadedAsset AddToScene(AssetInfo assetInfo, Asset? asset = null)
+        lock (_lock)
         {
-            Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
-
-            var key = assetInfo.Guid;
-
-            lock (_lock)
+            if (_uploadedAssets.TryGetValue(key, out var value))
             {
-                if (_uploadedAssets.TryGetValue(key, out var value))
-                {
-                    ++value.ReferenceCount;
-                    value._referencedAssets.ForEach(x => ++x.ReferenceCount);
-                }
+                ++value.ReferenceCount;
+                value._referencedAssets.ForEach(x => ++x.ReferenceCount);
+            }
+            else
+            {
+                var uploadedAsset = UploadAssetToEngine(assetInfo, asset);
+
+                Debug.Assert(Id.IsValid(uploadedAsset.ContentId));
+
+                if (Id.IsValid(uploadedAsset.ContentId)) _uploadedAssets[key] = uploadedAsset;
                 else
                 {
-                    var uploadedAsset = UploadAssetToEngine(assetInfo, asset);
+                    Logger.LogAsync(LogLevel.ERROR, $"Failed to upload asset {assetInfo.FileName} to engine.");
 
-                    Debug.Assert(Id.IsValid(uploadedAsset.ContentId));
-
-                    if (Id.IsValid(uploadedAsset.ContentId)) _uploadedAssets[key] = uploadedAsset;
-                    else
-                    {
-                        Logger.LogAsync(LogLevel.ERROR, $"Failed to upload asset {assetInfo.FileName} to engine.");
-
-                        return null;
-                    }
+                    return null;
                 }
             }
-
-            Debug.Assert(_uploadedAssets.ContainsKey(key));
-
-            return _uploadedAssets[key];
         }
 
-        public static void RemoveFromScene(UploadedAsset uploadedAsset)
+        Debug.Assert(_uploadedAssets.ContainsKey(key));
+
+        return _uploadedAssets[key];
+    }
+
+    public static void RemoveFromScene(UploadedAsset uploadedAsset)
+    {
+        lock (_lock)
         {
-            lock (_lock)
+
+            Debug.Assert(uploadedAsset is not null && _uploadedAssets.ContainsKey(uploadedAsset.AssetInfo.Guid));
+
+            uploadedAsset._referencedAssets.ForEach(RemoveFromScene);
+            --uploadedAsset.ReferenceCount;
+
+            if (uploadedAsset.ReferenceCount == 0)
             {
+                UnloadAssetFromEngine(uploadedAsset);
+                _uploadedAssets.Remove(uploadedAsset.AssetInfo.Guid);
+                uploadedAsset.ContentId = Id.InvalidId;
+            }
+        }
+    }
 
-                Debug.Assert(uploadedAsset is not null && _uploadedAssets.ContainsKey(uploadedAsset.AssetInfo.Guid));
+    public static IdType GetContentId(Guid id)
+    {
+        Debug.Assert(id != Guid.Empty);
 
-                uploadedAsset._referencedAssets.ForEach(RemoveFromScene);
-                --uploadedAsset.ReferenceCount;
+        lock (_lock)
+        {
+            return _uploadedAssets.TryGetValue(id, out var uploadedAsset) ? uploadedAsset.ContentId : Id.InvalidId;
+        }
+    }
 
-                if (uploadedAsset.ReferenceCount == 0)
+    private static UploadedAsset UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)
+    {
+        Debug.Assert(assetInfo is not null);
+
+        asset ??= assetInfo.Type switch
+        {
+            AssetType.ANIMATION => null,
+            AssetType.AUDIO => null,
+            AssetType.MATERIAL => null,
+            AssetType.MESH => new Geometry(assetInfo),
+            AssetType.SKELETON => null,
+            AssetType.TEXTURE => new Texture(assetInfo),
+            _ => null
+        };
+
+        Debug.Assert(asset is not null);
+
+        if (asset is not null)
+        {
+            Debug.Assert(asset.Guid == assetInfo.Guid);
+
+            var referencedAssets = new List<UploadedAsset>();
+
+            asset.GetReferencedAssets().ForEach(x => referencedAssets.Add(AddToScene(x)));
+
+            var data = asset.PackForEngine();
+
+            if (data?.Length > 0)
+            {
+                return new()
                 {
-                    UnloadAssetFromEngine(uploadedAsset);
-                    _uploadedAssets.Remove(uploadedAsset.AssetInfo.Guid);
-                    uploadedAsset.ContentId = Id.InvalidId;
-                }
+                    AssetInfo = assetInfo,
+                    Metadata = asset.GetMetadata(),
+                    ContentId = EngineAPI.CreateResource(data, assetInfo.Type),
+                    ReferenceCount = 1,
+                    _referencedAssets = referencedAssets
+                };
             }
         }
 
-        public static IdType GetContentId(Guid id)
-        {
-            Debug.Assert(id != Guid.Empty);
+        return null;
+    }
 
-            lock (_lock)
-            {
-                return _uploadedAssets.TryGetValue(id, out var uploadedAsset) ? uploadedAsset.ContentId : Id.InvalidId;
-            }
-        }
+    private static void UnloadAssetFromEngine(UploadedAsset uploadedAsset)
+    {
+        Debug.Assert(uploadedAsset?.AssetInfo is not null && Id.IsValid(uploadedAsset.ContentId));
 
-        private static UploadedAsset UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)
-        {
-            Debug.Assert(assetInfo is not null);
-
-            asset ??= assetInfo.Type switch
-            {
-                AssetType.ANIMATION => null,
-                AssetType.AUDIO => null,
-                AssetType.MATERIAL => null,
-                AssetType.MESH => new Geometry(assetInfo),
-                AssetType.SKELETON => null,
-                AssetType.TEXTURE => new Texture(assetInfo),
-                _ => null
-            };
-
-            Debug.Assert(asset is not null);
-
-            if (asset is not null)
-            {
-                Debug.Assert(asset.Guid == assetInfo.Guid);
-
-                var referencedAssets = new List<UploadedAsset>();
-
-                asset.GetReferencedAssets().ForEach(x => referencedAssets.Add(AddToScene(x)));
-
-                var data = asset.PackForEngine();
-
-                if (data?.Length > 0)
-                {
-                    return new()
-                    {
-                        AssetInfo = assetInfo,
-                        Metadata = asset.GetMetadata(),
-                        ContentId = EngineAPI.CreateResource(data, assetInfo.Type),
-                        ReferenceCount = 1,
-                        _referencedAssets = referencedAssets
-                    };
-                }
-            }
-
-            return null;
-        }
-
-        private static void UnloadAssetFromEngine(UploadedAsset uploadedAsset)
-        {
-            Debug.Assert(uploadedAsset?.AssetInfo is not null && Id.IsValid(uploadedAsset.ContentId));
-
-            EngineAPI.DestroyResource(uploadedAsset.ContentId, (int)uploadedAsset.AssetInfo.Type);
-        }
+        EngineAPI.DestroyResource(uploadedAsset.ContentId, (int)uploadedAsset.AssetInfo.Type);
     }
 }

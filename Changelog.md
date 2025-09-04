@@ -1,3 +1,7 @@
+# v0.3.10-beta - 2025.9.10.
+# Editor
+ - Fixed saving and loading project that has Entities with Geometry component
+
 # v0.3.9-beta - 2025.9.3
 ## General
  - Fixed the Installer progress indicator, where placeholders were shown

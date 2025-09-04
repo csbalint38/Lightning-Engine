@@ -35,6 +35,6 @@ namespace Editor.Content
             }
         }
 
-        public ObservableCollection<Mesh> Meshes { get; } = [];
+        public List<Mesh> Meshes { get; } = [];
     }
 }

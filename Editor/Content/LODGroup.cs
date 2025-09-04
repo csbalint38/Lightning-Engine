@@ -20,6 +20,6 @@ namespace Editor.Content
             }
         }
 
-        public ObservableCollection<MeshLOD> LODs { get; } = [];
+        public List<MeshLOD> LODs { get; } = [];
     }
 }

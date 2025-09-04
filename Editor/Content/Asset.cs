@@ -17,7 +17,10 @@ namespace Editor.Content
         public AssetType Type { get; private set; }
 
         public byte[] Icon { get; protected set; }
+
+        [DataMember]
         public Guid Guid { get; protected set; } = Guid.NewGuid();
+
         public DateTime ImportDate { get; protected set; }
         public byte[] Hash { get; protected set; }
         public string FileName => Path.GetFileNameWithoutExtension(FullPath);

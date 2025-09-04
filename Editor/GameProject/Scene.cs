@@ -6,115 +6,121 @@ using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Windows.Input;
 
-namespace Editor.GameProject
+namespace Editor.GameProject;
+
+[DataContract]
+public class Scene : ViewModelBase
 {
-    [DataContract]
-    public class Scene : ViewModelBase
+    private string _name;
+    private bool _isActive;
+
+    [DataMember(Name = nameof(Entities))]
+    private ObservableCollection<Entity> _entities = [];
+
+    [DataMember]
+    public Project Project { get; private set; }
+
+    [DataMember]
+    public string Name
     {
-        private string _name;
-        private bool _isActive;
-
-        [DataMember(Name = nameof(Entities))]
-        private ObservableCollection<Entity> _entities = [];
-
-        [DataMember]
-        public Project Project { get; private set; }
-
-        [DataMember]
-        public string Name
+        get => _name;
+        set
         {
-            get => _name;
-            set
+            if (_name != value)
             {
-                if (_name != value)
-                {
-                    _name = value;
-                    OnPropertyChanged(nameof(Name));
-                }
+                _name = value;
+                OnPropertyChanged(nameof(Name));
             }
         }
+    }
 
-        [DataMember]
-        public bool IsActive
+    [DataMember]
+    public bool IsActive
+    {
+        get => _isActive;
+        set
         {
-            get => _isActive;
-            set
+            if (_isActive != value)
             {
-                if (_isActive != value)
-                {
-                    _isActive = value;
-                    OnPropertyChanged(nameof(IsActive));
-                }
+                _isActive = value;
+
+                SetActiveGameEntities(_isActive);
+                OnPropertyChanged(nameof(IsActive));
             }
         }
+    }
 
-        public ReadOnlyObservableCollection<Entity> Entities { get; private set; }
+    public ReadOnlyObservableCollection<Entity> Entities { get; private set; }
 
-        public ICommand AddEntityCommand { get; private set; }
-        public ICommand RemoveEntityCommand { get; private set; }
+    public ICommand AddEntityCommand { get; private set; }
+    public ICommand RemoveEntityCommand { get; private set; }
 
-        public Scene(Project project, string name)
+    public Scene(Project project, string name)
+    {
+        Debug.Assert(project != null);
+
+        Project = project;
+        Name = name;
+
+        OnDeserialized(new StreamingContext());
+    }
+
+    [OnDeserialized]
+    private void OnDeserialized(StreamingContext context)
+    {
+        if (_entities is not null)
         {
-            Debug.Assert(project != null);
-
-            Project = project;
-            Name = name;
-
-            OnDeserialized(new StreamingContext());
+            Entities = new ReadOnlyObservableCollection<Entity>(_entities);
+            OnPropertyChanged(nameof(Entities));
         }
 
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext context)
+        foreach (var entity in _entities) entity.IsActive = IsActive;
+
+        AddEntityCommand = new RelayCommand<Entity>(x =>
         {
-            if (_entities is not null)
-            {
-                Entities = new ReadOnlyObservableCollection<Entity>(_entities);
-                OnPropertyChanged(nameof(Entities));
-            }
+            AddEntity(x);
+            var index = _entities.Count - 1;
 
-            foreach (var entity in _entities) entity.IsActive = IsActive;
+            Project.UndoRedo.Add(new UndoRedoAction(
+                $"Added {x.Name} to {Name}",
+                () => RemoveEntity(x),
+                () => AddEntity(x, index)
+            ));
+        });
 
-            AddEntityCommand = new RelayCommand<Entity>(x =>
-            {
-                AddEntity(x);
-                var index = _entities.Count - 1;
-
-                Project.UndoRedo.Add(new UndoRedoAction(
-                    $"Added {x.Name} to {Name}",
-                    () => RemoveEntity(x),
-                    () => AddEntity(x, index)
-                ));
-            });
-
-            RemoveEntityCommand = new RelayCommand<Entity>(x =>
-            {
-                var index = _entities.IndexOf(x);
-                RemoveEntity(x);
-
-                Project.UndoRedo.Add(new UndoRedoAction(
-                    $"Removed {x.Name}",
-                    () => AddEntity(x, index),
-                    () => RemoveEntity(x)
-                ));
-            });
-        }
-
-        private void AddEntity(Entity entity, int index = -1)
+        RemoveEntityCommand = new RelayCommand<Entity>(x =>
         {
-            Debug.Assert(!_entities.Contains(entity));
+            var index = _entities.IndexOf(x);
+            RemoveEntity(x);
 
-            entity.IsActive = IsActive;
+            Project.UndoRedo.Add(new UndoRedoAction(
+                $"Removed {x.Name}",
+                () => AddEntity(x, index),
+                () => RemoveEntity(x)
+            ));
+        });
+    }
 
-            if (index == -1) _entities.Add(entity);
-            else _entities.Insert(index, entity);
-        }
+    private void AddEntity(Entity entity, int index = -1)
+    {
+        Debug.Assert(!_entities.Contains(entity));
 
-        private void RemoveEntity(Entity entity)
-        {
-            Debug.Assert(_entities.Contains(entity));
+        entity.IsActive = IsActive;
 
-            entity.IsActive = false;
-            _entities.Remove(entity);
-        }
+        if (index == -1) _entities.Add(entity);
+        else _entities.Insert(index, entity);
+    }
+
+    private void RemoveEntity(Entity entity)
+    {
+        Debug.Assert(_entities.Contains(entity));
+
+        entity.IsActive = false;
+        _entities.Remove(entity);
+    }
+
+    private void SetActiveGameEntities(bool isActive)
+    {
+        foreach (var entity in _entities) entity.IsActive = isActive;
     }
 }

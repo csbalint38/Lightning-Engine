@@ -63,12 +63,15 @@ namespace lightning::tools {
 
 			if (lod.meshes.size()) {
 				lod.name = lod.meshes[0].name;
+
+				#if 0
 				Mesh combined_mesh{};
 
 				if (coalesce_meshes(lod, combined_mesh, _progression)) {
 					lod.meshes.clear();
 					lod.meshes.emplace_back(combined_mesh);
 				}
+				#endif
 
 				_scene->lod_groups.emplace_back(lod);
 			}

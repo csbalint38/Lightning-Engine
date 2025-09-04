@@ -174,6 +174,8 @@ static class AssetRegistry
 
                 var hashSize = info.Hash?.Length ?? 0;
 
+                writer.Write(hashSize);
+
                 if (hashSize > 0) writer.Write(info.Hash);
             }
         }

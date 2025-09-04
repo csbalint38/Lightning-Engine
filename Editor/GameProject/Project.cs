@@ -2,6 +2,7 @@
 using Editor.Common.Enums;
 using Editor.Components;
 using Editor.Content;
+using Editor.Content.ContentBrowser;
 using Editor.DLLs;
 using Editor.GameCode;
 using Editor.Utilities;
@@ -12,312 +13,340 @@ using System.Runtime.Serialization;
 using System.Windows;
 using System.Windows.Input;
 
-namespace Editor.GameProject
+namespace Editor.GameProject;
+
+[DataContract]
+public class Project : ViewModelBase
 {
-    [DataContract]
-    public class Project : ViewModelBase
+    [DataMember(Name = nameof(Scenes))]
+    private readonly ObservableCollection<Scene> _scenes = [];
+
+    private Scene _activeScene;
+    private int _buildConfig;
+    private string[] _availableScripts;
+
+    public static readonly string Extension = ".lng";
+    public static Project Current { get; private set; }
+    public static UndoRedo UndoRedo { get; } = new UndoRedo();
+
+    [DataMember]
+    public string Name { get; private set; } = "New Project";
+
+    [DataMember]
+    public string Path { get; private set; }
+    public string FullPath => $@"{Path}{Name}{Extension}";
+    public string Solution => $@"{Path}{Name}.sln";
+    public string ContentPath => $@"{Path}Assets\";
+    public string TempFolder => $@"{Path}.Lightning\Temp\";
+    public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
+    public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
+
+    public BuildConfig DLLBuildConfig =>
+        BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
+
+    public ICommand AddSceneCommand { get; private set; }
+    public ICommand RemoveSceneCommand { get; private set; }
+    public ICommand UndoCommand { get; private set; }
+    public ICommand RedoCommand { get; private set; }
+    public ICommand SaveCommand { get; private set; }
+    public ICommand BuildCommand { get; private set; }
+    public ICommand DebugStartCommand { get; private set; }
+    public ICommand DebugStartWithoutDebuggingCommand { get; private set; }
+    public ICommand DebugStopCommand { get; private set; }
+
+    public Scene ActiveScene
     {
-        [DataMember(Name = nameof(Scenes))]
-        private readonly ObservableCollection<Scene> _scenes = [];
-
-        private Scene _activeScene;
-        private int _buildConfig;
-        private string[] _availableScripts;
-
-        public static readonly string Extension = ".lng";
-        public static Project Current => Application.Current.MainWindow?.DataContext as Project;
-        public static UndoRedo UndoRedo { get; } = new UndoRedo();
-
-        [DataMember]
-        public string Name { get; private set; } = "New Project";
-
-        [DataMember]
-        public string Path { get; private set; }
-        public string FullPath => $@"{Path}{Name}{Extension}";
-        public string Solution => $@"{Path}{Name}.sln";
-        public string ContentPath => $@"{Path}Assets\";
-        public string TempFolder => $@"{Path}.Lightning\Temp\";
-        public ReadOnlyObservableCollection<Scene> Scenes { get; private set; }
-        public BuildConfig StandaloneBuildConfig => BuildConfiguration == 0 ? BuildConfig.DEBUG : BuildConfig.RELEASE;
-
-        public BuildConfig DLLBuildConfig =>
-            BuildConfiguration == 0 ? BuildConfig.DEBUG_EDITOR : BuildConfig.RELEASE_EDITOR;
-
-        public ICommand AddSceneCommand { get; private set; }
-        public ICommand RemoveSceneCommand { get; private set; }
-        public ICommand UndoCommand { get; private set; }
-        public ICommand RedoCommand { get; private set; }
-        public ICommand SaveCommand { get; private set; }
-        public ICommand BuildCommand { get; private set; }
-        public ICommand DebugStartCommand { get; private set; }
-        public ICommand DebugStartWithoutDebuggingCommand { get; private set; }
-        public ICommand DebugStopCommand { get; private set; }
-
-        public Scene ActiveScene
+        get => _activeScene;
+        set
         {
-            get => _activeScene;
-            set
+            if (_activeScene != value)
             {
-                if (_activeScene != value)
-                {
-                    _activeScene = value;
-                    OnPropertyChanged(nameof(ActiveScene));
-                }
+                _activeScene = value;
+                OnPropertyChanged(nameof(ActiveScene));
             }
         }
+    }
 
-        [DataMember]
-        public int BuildConfiguration
+    [DataMember]
+    public int BuildConfiguration
+    {
+        get => _buildConfig;
+        set
         {
-            get => _buildConfig;
-            set
+            if (_buildConfig != value)
             {
-                if (_buildConfig != value)
-                {
-                    _buildConfig = value;
-                    OnPropertyChanged(nameof(BuildConfiguration));
-                }
+                _buildConfig = value;
+                OnPropertyChanged(nameof(BuildConfiguration));
             }
         }
+    }
 
-        public string[] AvailableScripts
+    public string[] AvailableScripts
+    {
+        get => _availableScripts;
+        private set
         {
-            get => _availableScripts;
-            private set
+            if (_availableScripts != value)
             {
-                if (_availableScripts != value)
-                {
-                    _availableScripts = value;
-                    OnPropertyChanged(nameof(AvailableScripts));
-                }
+                _availableScripts = value;
+                OnPropertyChanged(nameof(AvailableScripts));
             }
         }
+    }
 
-        public static Project Load(string file)
+    public static Project Load(string file)
+    {
+        Debug.Assert(File.Exists(file));
+
+        var path = System.IO.Path.GetDirectoryName(file);
+
+        if (!path.EndsWith(System.IO.Path.DirectorySeparatorChar)) path += System.IO.Path.DirectorySeparatorChar;
+
+        ContentWatcher.Reset($@"{path}Assets\", path);
+
+        try
         {
-            Debug.Assert(File.Exists(file));
+            var project = Serializer.FromFile<Project>(file);
 
-            return Serializer.FromFile<Project>(file);
+            Debug.Assert(project is not null);
+
+            project.Path = path;
+            Current = project;
+
+            return project;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Logger.LogAsync(LogLevel.ERROR, $"Failed to load project from {file}");
+
+            if (Current is not null) ContentWatcher.Reset(Current.ContentPath, Current.Path);
+            
+            return Current;
+        }
+    }
+
+    public Project(string name, string path)
+    {
+        Name = name;
+        Path = path;
+
+        Debug.Assert(File.Exists((Path + Name + Extension).ToLower()));
+
+        OnDeserializedAsync(new StreamingContext());
+    }
+
+    public void Unload()
+    {
+        ActiveScene.IsActive = false;
+
+        UnloadGameCodeDLL();
+
+        Task.Run(ICodeEditor.Current.Close);
+        AssetRegistry.Save();
+
+        UndoRedo.Reset();
+        DeleteTempFolder();
+
+        Current = null;
+    }
+
+    [OnDeserialized]
+    private async void OnDeserializedAsync(StreamingContext context)
+    {
+        if (_scenes is not null)
+        {
+            Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
+            OnPropertyChanged(nameof(Scenes));
         }
 
-        public Project(string name, string path)
-        {
-            Name = name;
-            Path = path;
+        ActiveScene = _scenes.FirstOrDefault(x => x.IsActive);
 
-            Debug.Assert(File.Exists((Path + Name + Extension).ToLower()));
+        Debug.Assert(ActiveScene is not null);
 
-            OnDeserializedAsync(new StreamingContext());
-        }
+        SetCommands();
+        
+        await BuildGameCodeDLLAsync(false);
+        await Task.Run(() => ICodeEditor.Current.Initialize(Solution));
+    }
 
-        public void Unload()
+    private static void Save(Project project)
+    {
+        Serializer.ToFile(project, project.FullPath);
+        Logger.LogAsync(LogLevel.INFO, $"Project saved to {project.FullPath}");
+    }
+
+    private void AddScene(string sceneName)
+    {
+        Debug.Assert(!string.IsNullOrEmpty(sceneName.Trim()));
+
+        _scenes.Add(new Scene(this, sceneName));
+    }
+
+    private void RemoveScene(Scene scene)
+    {
+        Debug.Assert(_scenes.Contains(scene));
+
+        _scenes.Remove(scene);
+    }
+
+    private async Task BuildGameCodeDLLAsync(bool showWindow = true)
+    {
+        try
         {
             UnloadGameCodeDLL();
+            await Task.Run(() => MSBuild.BuildSolution(this, DLLBuildConfig));
 
-            Task.Run(ICodeEditor.Current.Close);
-            AssetRegistry.Save();
-
-            UndoRedo.Reset();
-            DeleteTempFolder();
+            if (MSBuild.BuildSucceeded) LoadGameCodeDll();
         }
-
-        [OnDeserialized]
-        private async void OnDeserializedAsync(StreamingContext context)
+        catch (Exception ex)
         {
-            if (_scenes is not null)
+            Debug.WriteLine(ex.Message);
+            throw;
+        }
+        finally
+        {
+            Application.Current.Dispatcher.Invoke(CommandManager.InvalidateRequerySuggested);
+        }
+    }
+
+    private void LoadGameCodeDll()
+    {
+        var configName = MSBuild.GetConfigurationName(DLLBuildConfig);
+        var dll = $@"{Path}x64\{configName}\{Name}.dll";
+
+        AvailableScripts = [];
+
+        if (File.Exists(dll) && EngineAPI.LoadGameCodeDll(dll) != 0)
+        {
+            AvailableScripts = EngineAPI.GetScriptNames();
+            ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = true);
+            Logger.LogAsync(LogLevel.INFO, "Game code DLL loaded successfully");
+        }
+        else
+        {
+            Logger.LogAsync(LogLevel.WARNING, "Failed to load game code DLL. Try to build the project first.");
+        }
+    }
+
+    private void UnloadGameCodeDLL()
+    {
+        ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = false);
+
+        if (EngineAPI.UnloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
+        AvailableScripts = [];
+    }
+
+    private async Task RunGameAsync(bool debug)
+    {
+        var config = StandaloneBuildConfig;
+
+        await Task.Run(() => MSBuild.BuildSolution(this, config));
+
+        if (MSBuild.BuildSucceeded)
+        {
+            SaveToBinary();
+            await Task.Run(() => ICodeEditor.Current.Run(debug));
+        }
+    }
+
+    private async Task StopGameAsync() => await Task.Run(() => ICodeEditor.Current.Stop());
+
+    private void SaveToBinary()
+    {
+        var config = MSBuild.GetConfigurationName(StandaloneBuildConfig);
+        var bin = $@"{Path}x64\{config}\game.bin";
+
+        using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
+        {
+            bw.Write(ActiveScene.Entities.Count);
+
+            foreach (var entity in ActiveScene.Entities)
             {
-                Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
-                OnPropertyChanged(nameof(Scenes));
-            }
+                bw.Write(0);
+                bw.Write(entity.Components.Count);
 
-            ActiveScene = _scenes.FirstOrDefault(x => x.IsActive);
-
-            Debug.Assert(ActiveScene is not null);
-
-            await BuildGameCodeDLLAsync(false);
-            await Task.Run(() => ICodeEditor.Current.Initialize(Solution));
-
-            SetCommands();
-        }
-
-        private static void Save(Project project)
-        {
-            Serializer.ToFile(project, project.FullPath);
-            Logger.LogAsync(LogLevel.INFO, $"Project saved to {project.FullPath}");
-        }
-
-        private void AddScene(string sceneName)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(sceneName.Trim()));
-
-            _scenes.Add(new Scene(this, sceneName));
-        }
-
-        private void RemoveScene(Scene scene)
-        {
-            Debug.Assert(_scenes.Contains(scene));
-
-            _scenes.Remove(scene);
-        }
-
-        private async Task BuildGameCodeDLLAsync(bool showWindow = true)
-        {
-            try
-            {
-                UnloadGameCodeDLL();
-                await Task.Run(() => MSBuild.BuildSolution(this, DLLBuildConfig));
-
-                if (MSBuild.BuildSucceeded) LoadGameCodeDll();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                throw;
-            }
-            finally
-            {
-                Application.Current.Dispatcher.Invoke(CommandManager.InvalidateRequerySuggested);
-            }
-        }
-
-        private void LoadGameCodeDll()
-        {
-            var configName = MSBuild.GetConfigurationName(DLLBuildConfig);
-            var dll = $@"{Path}x64\{configName}\{Name}.dll";
-
-            AvailableScripts = [];
-
-            if (File.Exists(dll) && EngineAPI.LoadGameCodeDll(dll) != 0)
-            {
-                AvailableScripts = EngineAPI.GetScriptNames();
-                ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = true);
-                Logger.LogAsync(LogLevel.INFO, "Game code DLL loaded successfully");
-            }
-            else
-            {
-                Logger.LogAsync(LogLevel.WARNING, "Failed to load game code DLL. Try to build the project first.");
-            }
-        }
-
-        private void UnloadGameCodeDLL()
-        {
-            ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = false);
-
-            if (EngineAPI.UnloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
-            AvailableScripts = [];
-        }
-
-        private async Task RunGameAsync(bool debug)
-        {
-            var config = StandaloneBuildConfig;
-
-            await Task.Run(() => MSBuild.BuildSolution(this, config));
-
-            if (MSBuild.BuildSucceeded)
-            {
-                SaveToBinary();
-                await Task.Run(() => ICodeEditor.Current.Run(debug));
-            }
-        }
-
-        private async Task StopGameAsync() => await Task.Run(() => ICodeEditor.Current.Stop());
-
-        private void SaveToBinary()
-        {
-            var config = MSBuild.GetConfigurationName(StandaloneBuildConfig);
-            var bin = $@"{Path}x64\{config}\game.bin";
-
-            using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
-            {
-                bw.Write(ActiveScene.Entities.Count);
-
-                foreach (var entity in ActiveScene.Entities)
+                foreach (var component in entity.Components)
                 {
-                    bw.Write(0);
-                    bw.Write(entity.Components.Count);
-
-                    foreach (var component in entity.Components)
-                    {
-                        bw.Write((int)component.ToEnumType());
-                        component.WriteToBinary(bw);
-                    }
+                    bw.Write((int)component.ToEnumType());
+                    component.WriteToBinary(bw);
                 }
             }
         }
+    }
 
-        private void SetCommands()
+    private void SetCommands()
+    {
+        AddSceneCommand = new RelayCommand<object>(x =>
         {
-            AddSceneCommand = new RelayCommand<object>(x =>
+            AddScene($"New Scene {_scenes.Count}");
+            var newScene = _scenes.Last();
+            var index = _scenes.Count - 1;
+            UndoRedo.Add(new UndoRedoAction(
+                $"Add {newScene.Name}",
+                () => RemoveScene(newScene),
+                () => _scenes.Insert(index, newScene)
+            ));
+        });
+
+        RemoveSceneCommand = new RelayCommand<Scene>(
+            x =>
             {
-                AddScene($"New Scene {_scenes.Count}");
-                var newScene = _scenes.Last();
-                var index = _scenes.Count - 1;
+                var sceneIndex = _scenes.IndexOf(x);
+                RemoveScene(x);
                 UndoRedo.Add(new UndoRedoAction(
-                    $"Add {newScene.Name}",
-                    () => RemoveScene(newScene),
-                    () => _scenes.Insert(index, newScene)
+                    $"Remove {x.Name}",
+                    () => _scenes.Insert(sceneIndex, x),
+                    () => RemoveScene(x)
                 ));
-            });
+            },
+            x => !x.IsActive
+        );
 
-            RemoveSceneCommand = new RelayCommand<Scene>(
-                x =>
-                {
-                    var sceneIndex = _scenes.IndexOf(x);
-                    RemoveScene(x);
-                    UndoRedo.Add(new UndoRedoAction(
-                        $"Remove {x.Name}",
-                        () => _scenes.Insert(sceneIndex, x),
-                        () => RemoveScene(x)
-                    ));
-                },
-                x => !x.IsActive
-            );
+        UndoCommand = new RelayCommand<object>(x => UndoRedo.Undo(), x => UndoRedo.UndoList.Any());
+        RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
+        SaveCommand = new RelayCommand<object>(x => Save(this));
+        BuildCommand = new RelayCommand<bool>(
+            async x => await BuildGameCodeDLLAsync(x),
+            x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
+        );
 
-            UndoCommand = new RelayCommand<object>(x => UndoRedo.Undo(), x => UndoRedo.UndoList.Any());
-            RedoCommand = new RelayCommand<object>(x => UndoRedo.Redo(), x => UndoRedo.RedoList.Any());
-            SaveCommand = new RelayCommand<object>(x => Save(this));
-            BuildCommand = new RelayCommand<bool>(
-                async x => await BuildGameCodeDLLAsync(x),
-                x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
-            );
+        DebugStartCommand = new RelayCommand<object>(
+            async x => await RunGameAsync(true),
+            x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
+        );
 
-            DebugStartCommand = new RelayCommand<object>(
-                async x => await RunGameAsync(true),
-                x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
-            );
+        DebugStartWithoutDebuggingCommand = new RelayCommand<object>(
+            async x => await RunGameAsync(false),
+            x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
+        );
 
-            DebugStartWithoutDebuggingCommand = new RelayCommand<object>(
-                async x => await RunGameAsync(false),
-                x => !ICodeEditor.Current.IsDebugging() && MSBuild.BuildFinished
-            );
+        DebugStopCommand = new RelayCommand<object>(
+            async x => await StopGameAsync(),
+            x => ICodeEditor.Current.IsDebugging()
+        );
 
-            DebugStopCommand = new RelayCommand<object>(
-                async x => await StopGameAsync(),
-                x => ICodeEditor.Current.IsDebugging()
-            );
+        OnPropertyChanged(nameof(AddSceneCommand));
+        OnPropertyChanged(nameof(RemoveSceneCommand));
+        OnPropertyChanged(nameof(UndoCommand));
+        OnPropertyChanged(nameof(RedoCommand));
+        OnPropertyChanged(nameof(SaveCommand));
+        OnPropertyChanged(nameof(BuildCommand));
+        OnPropertyChanged(nameof(DebugStartCommand));
+        OnPropertyChanged(nameof(DebugStartWithoutDebuggingCommand));
+        OnPropertyChanged(nameof(DebugStopCommand));
+    }
 
-            OnPropertyChanged(nameof(AddSceneCommand));
-            OnPropertyChanged(nameof(RemoveSceneCommand));
-            OnPropertyChanged(nameof(UndoCommand));
-            OnPropertyChanged(nameof(RedoCommand));
-            OnPropertyChanged(nameof(SaveCommand));
-            OnPropertyChanged(nameof(BuildCommand));
-            OnPropertyChanged(nameof(DebugStartCommand));
-            OnPropertyChanged(nameof(DebugStartWithoutDebuggingCommand));
-            OnPropertyChanged(nameof(DebugStopCommand));
-        }
-
-        private void DeleteTempFolder()
+    private void DeleteTempFolder()
+    {
+        if (Directory.Exists(TempFolder))
         {
-            if (Directory.Exists(TempFolder))
+            _ = new DirectoryInfo(TempFolder)
             {
-                _ = new DirectoryInfo(TempFolder)
-                {
-                    Attributes = FileAttributes.Normal,
-                };
+                Attributes = FileAttributes.Normal,
+            };
 
-                Directory.Delete(TempFolder, true);
-            }
+            Directory.Delete(TempFolder, true);
         }
     }
 }

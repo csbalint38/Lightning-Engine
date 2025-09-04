@@ -212,5 +212,5 @@ jobs:
           prerelease: true
           files: |
             lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}.zip
-            Bundle/bin/x64/Release-Editor/en-US/Lightning Setup.exe
-            Installer/bin/x64/Release-Editor/en-US/Lightning Installer.msi
+            Bundle/bin/x64/ReleaseEditor/en-US/Lightning Setup.exe
+            Installer/bin/x64/ReleaseEditor/en-US/Lightning Installer.msi
