@@ -172,7 +172,7 @@ jobs:
 
       - name: Build Bundle
         shell: pwsh
-        run: msbuild Bundle/Bundle.wixproj /p:Configuration=ReleaseEditor /p:Platform=x64 /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
+        run: msbuild Bundle/Bundle.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
 
       - name: Get InformationalVersion
         id: get-version
@@ -212,5 +212,5 @@ jobs:
           prerelease: true
           files: |
             lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}.zip
-            Bundle/bin/x64/ReleaseEditor/en-US/Lightning Setup.exe
-            Installer/bin/x64/ReleaseEditor/en-US/Lightning Installer.msi
+            Bundle/bin/x64/Release/Lightning Setup.exe
+            Installer/bin/x64/Release/en-US/Lightning Installer.msi

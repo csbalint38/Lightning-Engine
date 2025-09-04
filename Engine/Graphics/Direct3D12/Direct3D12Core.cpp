@@ -11,6 +11,7 @@
 #include "Direct3D12LightCulling.h"
 #include "Direct3D12Camera.h"
 #include "Shaders/ShaderTypes.h"
+#include "Utilities/Logger.h"
 
 using namespace Microsoft::WRL;
 
@@ -262,15 +263,22 @@ namespace lightning::graphics::direct3d12::core {
 	}
 
 	bool initialize() {
+		Logger::Get().Open(L"d3d12.log");
+		LOG_INFO("Engine initialize() started");
+
 		if (main_device) shutdown();
 
 		HRESULT hr{ S_OK };
 
 		DXCall(hr = D3D12GetInterface(CLSID_D3D12SDKConfiguration, IID_PPV_ARGS(&d3d12_sdk_config)));
 
+		CHECK_HR(hr, "D3D12GetInterface");
+
 		if (FAILED(hr))return failed_init();
 
 		DXCall(hr = d3d12_sdk_config->CreateDeviceFactory(d3d12_sdk_version, d3d12_sdk_path, IID_PPV_ARGS(&d3d12_device_factory)));
+
+		CHECK_HR(hr, "CreateDeviceFactory");
 
 		if (FAILED(hr))return failed_init();
 
@@ -295,18 +303,29 @@ namespace lightning::graphics::direct3d12::core {
 
 		DXCall(hr = CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
 
+		CHECK_HR(hr, "CreateDXGIFactory2");
+
 		if (FAILED(hr)) return failed_init();
 
 		ComPtr<IDXGIAdapter4> main_adapter;
 		main_adapter.Attach(determine_main_adapter());
+
+		if (!main_adapter) LOG_ERROR("No Direct3D12 compatible adapters found");
+
 		if (!main_adapter) return failed_init();
 
 		D3D_FEATURE_LEVEL max_feature_level{ get_max_feature_level(main_adapter.Get()) };
+
+		LOG_INFO("Max feature level: %d", max_feature_level);
+
 		assert(max_feature_level >= minimum_feature_level);
 
 		if (max_feature_level < minimum_feature_level) return failed_init();
 
 		DXCall(hr = d3d12_device_factory->CreateDevice(main_adapter.Get(), max_feature_level, IID_PPV_ARGS(&main_device)));
+
+		CHECK_HR(hr, "CreateDevice");
+
 		if (FAILED(hr)) return failed_init();
 
 		#ifdef _DEBUG
@@ -323,21 +342,39 @@ namespace lightning::graphics::direct3d12::core {
 		bool result{ true };
 
 		result &= rtv_desc_heap.initialize(512, false);
+		if (!result) LOG_ERROR("Failed to create RTV Descriptor Heap");
 		result &= dsv_desc_heap.initialize(512, false);
+		if (!result) LOG_ERROR("Failed to create DSV Descriptor Heap");
 		result &= srv_desc_heap.initialize(4096, true);
+		if (!result) LOG_ERROR("Failed to create SRV Descriptor Heap");
 		result &= uav_desc_heap.initialize(512, false);
+		if (!result) LOG_ERROR("Failed to create UAV Descriptor Heap");
+
 		if (!result) return failed_init();
 
 		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
 			new (&constant_buffers[i]) ConstantBuffer{ ConstantBuffer::get_default_init_info(1024 * 1024) };
-			NAME_D3D12_OBJECT_INDEXED(constant_buffers[i].buffer(), i, L"Global Constatnt Buffer");
+			NAME_D3D12_OBJECT_INDEXED(constant_buffers[i].buffer(), i, L"Global Constant Buffer");
+			if (!constant_buffers[i].buffer()) LOG_ERROR("Failed to create Constant Buffer");
 			if (!constant_buffers[i].buffer()) return failed_init();
 		}
 
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+		if (!gfx_command.command_queue()) LOG_ERROR("Failed to create GFX Command Queue");
+
 		if (!gfx_command.command_queue()) return failed_init();
 
+		if (!shaders::initialize()) LOG_ERROR("Failed to initialize shaders");
+		if (!gpass::initialize()) LOG_ERROR("Failed to initialize geometry pass");
+		if (!fx::initialize()) LOG_ERROR("Failed to initialize post-process");
+		if (!upload::initialize()) LOG_ERROR("Failed to initialize upload system");
+		if (!content::initialize()) LOG_ERROR("Failed to initialize content system");
+		if (!delight::initialize()) LOG_ERROR("Failed to initialize D3D12 Delight");
+
+		/*
 		if (!(shaders::initialize() && gpass::initialize() && fx::initialize() && upload::initialize() && content::initialize() && delight::initialize())) return failed_init();
+		*/
 
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");
