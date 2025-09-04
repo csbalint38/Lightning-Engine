@@ -1,6 +1,7 @@
 #include "Direct3D12Helpers.h"
 #include "Direct3D12Core.h"
 #include "Direct3D12Upload.h"
+#include "Utilities/Logger.h"
 
 namespace lightning::graphics::direct3d12::d3dx {
 
@@ -32,9 +33,13 @@ namespace lightning::graphics::direct3d12::d3dx {
 
 		DXCall(hr = device->QueryInterface(IID_PPV_ARGS(&device_config)));
 
+		CHECK_HR(hr, "QueryInterface(ID3D12DeviceConfiguration1)");
+
 		if (FAILED(hr)) return nullptr;
 
 		if (FAILED(hr = device_config->SerializeVersionedRootSignature(&versioned_desc, &signature_blob, &error_blob))) {
+			CHECK_HR(hr, "SerializeVersionedRootSignature");
+
 			DEBUG_OP(const char* error_msg{ error_blob ? (const char*)error_blob->GetBufferPointer() : "" });
 			DEBUG_OP(OutputDebugStringA(error_msg));
 			return nullptr;
@@ -42,6 +47,8 @@ namespace lightning::graphics::direct3d12::d3dx {
 
 		ID3D12RootSignature* signature{ nullptr };
 		DXCall(hr = device->CreateRootSignature(0, signature_blob->GetBufferPointer(), signature_blob->GetBufferSize(), IID_PPV_ARGS(&signature)));
+
+		CHECK_HR(hr, "CreateRootSignature");
 
 		if (FAILED(hr)) {
 			core::release(signature);
@@ -51,9 +58,14 @@ namespace lightning::graphics::direct3d12::d3dx {
 	}
 
 	ID3D12PipelineState* create_pipeline_state(D3D12_PIPELINE_STATE_STREAM_DESC desc) {
+		HRESULT hr{ S_OK };
+
 		assert(desc.pPipelineStateSubobjectStream && desc.SizeInBytes >= sizeof(void*));
 		ID3D12PipelineState* pso{ nullptr };
-		DXCall(core::device()->CreatePipelineState(&desc, IID_PPV_ARGS(&pso)));
+		DXCall(hr = core::device()->CreatePipelineState(&desc, IID_PPV_ARGS(&pso)));
+
+		CHECK_HR(hr, "CreatePipelineState");
+
 		assert(pso);
 		return pso;
 	}

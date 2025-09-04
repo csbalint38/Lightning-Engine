@@ -3,7 +3,7 @@
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
 	 xmlns:vs="http://wixtoolset.org/schemas/v4/wxs/vs">
   <!-- This should change whenever version is increased -->
-  <?define ProductCode = "{193D89EE-B0B9-4F67-A0FD-3F28F2CFFF28}"?>
+  <?define ProductCode = "{EDE3FE0D-DA56-459C-865B-21DE28D9402D}"?>
   <?define UpgradeCode = "{0A4AE611-A289-4376-A4A6-6FBE922EF9BA}"?>
   <Package Id="lightning_engine"
            ProductCode="$(var.ProductCode)"

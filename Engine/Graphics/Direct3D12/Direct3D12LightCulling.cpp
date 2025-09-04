@@ -5,6 +5,7 @@
 #include "Direct3D12Light.h"
 #include "Direct3D12Camera.h"
 #include "Direct3D12GPass.h"
+#include "Utilities/Logger.h"
 
 namespace lightning::graphics::direct3d12::delight {
 	namespace {
@@ -50,6 +51,7 @@ namespace lightning::graphics::direct3d12::delight {
 
 
 		bool create_root_signatures() {
+			LOG_INFO("Light Culling RootSignature creation started.");
 			assert(!light_culling_root_signature);
 			using param = LightCullingRootParameter;
 			d3dx::D3D12RootParameter parameters[param::count]{};
@@ -63,6 +65,7 @@ namespace lightning::graphics::direct3d12::delight {
 			parameters[param::LIGHT_INDEX_LIST_OPAQUE].as_uav(D3D12_SHADER_VISIBILITY_ALL, 3);
 
 			light_culling_root_signature = d3dx::D3D12RootSignatureDesc{ &parameters[0], _countof(parameters) }.create();
+			LOG_INFO("Light Culling RootSignature creation finished.");
 			NAME_D3D12_OBJECT(light_culling_root_signature, L"Light Culling Root Signature");
 
 			return light_culling_root_signature != nullptr;
@@ -70,6 +73,8 @@ namespace lightning::graphics::direct3d12::delight {
 
 		bool create_psos() {
 			{
+				LOG_INFO("Grid Frustum PSO creation started.");
+
 				assert(!grid_frustum_pso);
 
 				struct {
@@ -78,9 +83,12 @@ namespace lightning::graphics::direct3d12::delight {
 				} stream;
 
 				grid_frustum_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
+				LOG_INFO("Grid Frustum PSO creation finished.");
+
 				NAME_D3D12_OBJECT(grid_frustum_pso, L"Grid Frustums PSO");
 			}
 			{
+				LOG_INFO("Light Culling PSO creation started.");
 				assert(!light_culling_pso);
 
 				struct {
@@ -89,6 +97,7 @@ namespace lightning::graphics::direct3d12::delight {
 				} stream;
 
 				light_culling_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
+				LOG_INFO("Light Culling PSO creation finished.");
 				NAME_D3D12_OBJECT(light_culling_pso, L"Light Culling PSO");
 			}
 

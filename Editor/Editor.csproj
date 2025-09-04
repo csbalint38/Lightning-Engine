@@ -10,8 +10,8 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.9.1-beta</InformationalVersion>
-	<FileVersion>0.3.9.1</FileVersion>
+	<InformationalVersion>0.3.9.3-beta</InformationalVersion>
+	<FileVersion>0.3.9.3</FileVersion>
 	<AssemblyVersion>0.3.9</AssemblyVersion>
 	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
   </PropertyGroup>

@@ -17,6 +17,18 @@ using namespace Microsoft::WRL;
 
 namespace lightning::graphics::direct3d12::core {
 	namespace {
+		DWORD d3d12_msg_cookie = 0;
+
+		static void STDMETHODCALLTYPE d3d12_message_callback(D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity, D3D12_MESSAGE_ID id, LPCSTR pDescription, void*) {
+			const char* sev =
+				(severity == D3D12_MESSAGE_SEVERITY_CORRUPTION) ? "ERROR" :
+				(severity == D3D12_MESSAGE_SEVERITY_ERROR) ? "ERROR" :
+				(severity == D3D12_MESSAGE_SEVERITY_WARNING) ? "WARN" :
+				(severity == D3D12_MESSAGE_SEVERITY_INFO) ? "INFO" : "INFO";
+
+			LOG_ERROR("[d3d12][%s][%u] %s", sev, static_cast<unsigned>(id), pDescription);
+		}
+
 		class D3D12Command {
 			public:
 				D3D12Command() = default;
@@ -284,12 +296,12 @@ namespace lightning::graphics::direct3d12::core {
 
 		u32 dxgi_factory_flags{ 0 };
 
-		#ifdef _DEBUG 
+		//#ifdef _DEBUG 
 		{
 			ComPtr<ID3D12Debug6> debug_interface;
 			if (SUCCEEDED(d3d12_device_factory->GetConfigurationInterface(CLSID_D3D12Debug, IID_PPV_ARGS(&debug_interface)))) {
 				debug_interface->EnableDebugLayer();
-				#if 0
+				#if 1
 				#pragma message("WARNING: GPU based validation is enabled. This will considerably slow down the renderer!")
 				debug_interface->SetEnableGPUBasedValidation(1);
 				#endif	
@@ -299,7 +311,7 @@ namespace lightning::graphics::direct3d12::core {
 			}
 			dxgi_factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
-		#endif
+		// #endif
 
 		DXCall(hr = CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
 
@@ -326,18 +338,40 @@ namespace lightning::graphics::direct3d12::core {
 
 		CHECK_HR(hr, "CreateDevice");
 
-		if (FAILED(hr)) return failed_init();
-
-		#ifdef _DEBUG
+		ComPtr<ID3D12InfoQueue> info_queue;
+		if (SUCCEEDED(device()->QueryInterface(IID_PPV_ARGS(&info_queue))))
 		{
-			ComPtr<ID3D12InfoQueue> info_queue;
-			DXCall(main_device->QueryInterface(IID_PPV_ARGS(&info_queue)));
-
+			// Keep your existing SetBreakOnSeverity calls if you like.
 			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
 			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 			info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+
+			// Register the callback (InfoQueue1 adds this API)
+			ComPtr<ID3D12InfoQueue1> info_queue1;
+			if (SUCCEEDED(info_queue.As(&info_queue1)))
+			{
+				// D3D12_MESSAGE_CALLBACK_FLAG_NONE respects your filters;
+				// use D3D12_MESSAGE_CALLBACK_IGNORE_FILTERS to bypass them.
+				DXCall(info_queue1->RegisterMessageCallback(
+					d3d12_message_callback,
+					D3D12_MESSAGE_CALLBACK_FLAG_NONE,
+					nullptr,
+					&d3d12_msg_cookie));
+			}
 		}
-		#endif
+
+		if (FAILED(hr)) return failed_init();
+
+		//#ifdef _DEBUG
+		//{
+		//	ComPtr<ID3D12InfoQueue> info_queue;
+		//	DXCall(main_device->QueryInterface(IID_PPV_ARGS(&info_queue)));
+		//
+		//	info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+		//	info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+		//	info_queue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+		//}
+		//#endif
 
 		bool result{ true };
 
