@@ -44,13 +44,12 @@ struct Logger {
 };
 
 #define LOG_INFO(...) Logger::Get().Log("INFO", __VA_ARGS__)
-#define LOG_WARNING(...) Logger::Get().Log("WARNING", __VA__ARGS__)
+#define LOG_WARNING(...) Logger::Get().Log("WARNING", __VA_ARGS__)
 #define LOG_ERROR(...) Logger::Get().Log("ERROR", __VA_ARGS__)
 #define CHECK_HR(hr, what) do {									\
 	HRESULT _hr = (hr);											\
 	if (FAILED(_hr)) {											\
 		LOG_ERROR("%s failed: 0x%08X", what, (unsigned)_hr);	\
-		return _hr;												\
 	}															\
 	else {														\
 		LOG_INFO("%s OK", what);								\
