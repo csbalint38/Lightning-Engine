@@ -1,4 +1,7 @@
-﻿namespace Editor.GameCode
+﻿using Editor.Common.Enums;
+using Editor.GameProject;
+
+namespace Editor.GameCode
 {
     public interface ICodeEditor
     {
@@ -11,6 +14,13 @@
             get => _current!;
             set => _current ??= value;
         }
+
+        public static void SetCurrent(CodeEditor editor) => _current = editor switch
+        {
+            CodeEditor.VISUAL_STUDIO => new VisualStudio(),
+            CodeEditor.NOTEPAD => new Notepad(),
+            _ => new Notepad(),
+        };
 
         public void Initialize(string solution);
         public void ShowWindow(string solution, string? file = null);

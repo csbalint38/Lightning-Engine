@@ -1,7 +1,6 @@
 ﻿using Editor.Common.Enums;
-using Editor.Content;
 
-namespace Editor
+namespace Editor.Content
 {
     public class TextureMetadata : AssetMetadata
     {

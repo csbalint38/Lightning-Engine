@@ -125,8 +125,7 @@ jobs:
             $dest = "${{ env.DIST_DIR }}\Engine\x64\$cfg"
             New-Item -ItemType Directory -Path $dest -Force | Out-Null
             Copy-Item $src $dest -Force
-            if ($cfg -in 'Debug', 'DebugEditor') {
-              Copy-Item "Engine\x64\$cfg\Engine.pdb" $dest -Force}
+            Copy-Item "Engine\x64\$cfg\Engine.pdb" $dest -Force
           }
         
       - name: Copy Public Headers and Engine Shaders
