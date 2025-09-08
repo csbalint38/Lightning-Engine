@@ -4,7 +4,6 @@
 #include "Direct3D12Surface.h"
 #include "Direct3D12GPass.h"
 #include "Direct3D12LightCulling.h"
-#include "Utilities/Logger.h"
 
 namespace lightning::graphics::direct3d12::fx {
 	namespace {
@@ -26,8 +25,6 @@ namespace lightning::graphics::direct3d12::fx {
 		ID3D12PipelineState* fx_pso{ nullptr };
 
 		bool create_fx_pso_and_root_signature() {
-			LOG_INFO("FX RootSignature creation started.");
-
 			assert(!fx_root_sig && !fx_pso);
 
 			using idx = FXRootParamIndicies;
@@ -46,19 +43,14 @@ namespace lightning::graphics::direct3d12::fx {
 				&parameters[0],
 				_countof(parameters),
 				d3dx::D3D12RootSignatureDesc::default_flags,
-				& samplers[0],
+				&samplers[0],
 				_countof(samplers)
 			};
 
 			root_signature.Flags &= ~D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 			fx_root_sig = root_signature.create();
-
-			LOG_INFO("FX RootSignature creation finished.");
-
 			assert(fx_root_sig);
 			NAME_D3D12_OBJECT(fx_root_sig, L"Post-process FX Root Signature");
-
-			LOG_INFO("FX PSO creation started.");
 
 			struct {
 				d3dx::d3d12_pipeline_state_subobject_root_signature root_signature{ fx_root_sig };
@@ -76,9 +68,6 @@ namespace lightning::graphics::direct3d12::fx {
 			stream.render_target_formats = rtf_array;
 
 			fx_pso = d3dx::create_pipeline_state(&stream, sizeof(stream));
-
-			LOG_INFO("FX PSO creation finished.");
-
 			NAME_D3D12_OBJECT(fx_pso, L"Post-process FX Pipeline State Object");
 
 			return fx_root_sig && fx_pso;
@@ -86,7 +75,6 @@ namespace lightning::graphics::direct3d12::fx {
 	}
 
 	bool initialize() {
-		LOG_INFO("PostProcess initialize() started.");
 		return create_fx_pso_and_root_signature();
 	}
 
@@ -110,7 +98,7 @@ namespace lightning::graphics::direct3d12::fx {
 		cmd_list->SetGraphicsRootShaderResourceView(idx::LIGHT_GRID_OPAQUE, delight::light_grid_opaque(light_culling_id, frame_index));
 
 		cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		
+
 		cmd_list->OMSetRenderTargets(1, &target_rtv, 1, nullptr);
 		cmd_list->DrawInstanced(3, 1, 0, 0);
 	}
