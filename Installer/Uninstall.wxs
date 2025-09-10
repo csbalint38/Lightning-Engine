@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+	 xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Fragment>
+	<DirectoryRef Id="INSTALLFOLDER">
+	  <Directory Id="Resources" Name="Resources"/>
+	  <Directory Id="shaders" Name="shaders"/>
+	</DirectoryRef>
+  </Fragment>
+  <Fragment>
+    <Property Id="RESOURCES_PATH" Secure="yes"/>
+    <Property Id="SHADERS_PATH" Secure="yes"/>
+    <SetProperty Id="RESOURCES_PATH" Value="[INSTALLFOLDER]Resources" Before="CostInitialize"/>
+    <SetProperty Id="SHADERS_PATH" Value="[INSTALLFOLDER]shaders" Before="CostInitialize"/>
+    <ComponentGroup Id="Uninstall">
+      <Component Id="RemoveResources" Directory="Resources" Guid="{41D3DE6E-B941-433A-8E76-6CA49563CE8E}">
+        <CreateFolder/>
+    	<util:RemoveFolderEx On="uninstall"
+							 Property="RESOURCES_PATH"
+							 Condition='REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE'/>
+      </Component>
+      <Component Id="RemoveShaders" Directory="shaders" Guid="{A9AA3F70-1294-4D10-A641-7EA15642B0E9}">
+        <CreateFolder/>
+        <util:RemoveFolderEx On="uninstall"
+							 Property="SHADERS_PATH"
+							 Condition='REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE'/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

@@ -34,6 +34,7 @@
     <WixVariable Id="WixUILicenseRtf" Value="$(var.ProjectDir)Assets\LICENCE.rtf"/>
     <Feature Id="Product" Title="LightningEngineInstaller" Level="1">
       <ComponentGroupRef Id="ProductComponent" />
+	  <ComponentGroupRef Id="Uninstall" />
 	  <ComponentRef Id="DesktopShortcut" />
 	  <ComponentRef Id="StartMenuIcon" />
 	  <ComponentRef Id="EnvComponent" />

@@ -1,5 +1,8 @@
 # v0.3.10-beta - 2025.9.17.
-# Editor
+## General
+ - Uninstaller now deletes runtime generated files from the installation location leaving no junk behind.
+
+## Editor
  - Fixed saving and loading project that has Entities with Geometry component
  - Added Configuration Dialog with configureable MSBuild Path and Code Editor
 
