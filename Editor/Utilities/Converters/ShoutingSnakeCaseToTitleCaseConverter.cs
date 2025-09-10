@@ -7,7 +7,7 @@ namespace Editor.Utilities.Converters
     {
         public object Convert(object value, Type targetType, object parameters, CultureInfo culture)
         {
-            if(value is null) return string.Empty;
+            if (value is null) return string.Empty;
 
             var s = value.ToString() ?? string.Empty;
 

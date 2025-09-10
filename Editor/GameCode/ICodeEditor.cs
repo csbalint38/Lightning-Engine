@@ -1,5 +1,4 @@
 ﻿using Editor.Common.Enums;
-using Editor.GameProject;
 
 namespace Editor.GameCode
 {

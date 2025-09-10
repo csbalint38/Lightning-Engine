@@ -36,7 +36,8 @@ namespace Editor.GameCode
                             _spawnedProcess.Kill(entireProcessTree: true);
                         }
                     }
-                } catch { }
+                }
+                catch { }
                 finally
                 {
                     _spawnedProcess.Dispose();
@@ -140,13 +141,13 @@ namespace Editor.GameCode
 
             try
             {
-                if(!proc.HasExited)
+                if (!proc.HasExited)
                 {
-                    if(!proc.CloseMainWindow()) proc.Kill(entireProcessTree: true);
+                    if (!proc.CloseMainWindow()) proc.Kill(entireProcessTree: true);
                     else
                     {
                         proc.WaitForExit(2000);
-                        if(!proc.HasExited) proc.Kill(entireProcessTree: true);
+                        if (!proc.HasExited) proc.Kill(entireProcessTree: true);
                     }
                 }
             }

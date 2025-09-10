@@ -7,7 +7,9 @@
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:converters="clr-namespace:Editor.Utilities.Converters"
              xmlns:enums="clr-namespace:Editor.Common.Enums"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=local:CodeConfig}"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <ObjectDataProvider x:Key="CodeEditorValues"
@@ -18,19 +20,19 @@
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
         <converters:ShoutingSnakeCaseToTitleCaseConverter x:Key="snakeToTitle"/>
+        <converters:ValidationErrorConverter x:Key="validationErrorConverter"/>
     </UserControl.Resources>
-    <UserControl.DataContext>
-        <local:CodeConfig/>
-    </UserControl.DataContext>
     <Grid Background="{StaticResource Editor.BackgroundBrush2}"
           Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="160"/>
+            <ColumnDefinition Width="100"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="25"/>
         </Grid.ColumnDefinitions>
         <TextBlock Text="Code Editor"
                    Foreground="{StaticResource Editor.FontBrush}"
@@ -41,7 +43,7 @@
                   VerticalAlignment="Stretch"
                   Margin="5"
                   Style="{StaticResource ComboBoxFlatStyle}"
-                  ItemsSource="{Binding Source={StaticResource snakeToTitle}}"
+                  ItemsSource="{Binding Source={StaticResource CodeEditorValues}}"
                   SelectedItem="{Binding CodeEditor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             <ComboBox.ItemTemplate>
                 <DataTemplate>
@@ -49,5 +51,34 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
+        <TextBlock Grid.Row="1"
+                   Text="MSBuild Path"
+                   Foreground="{StaticResource Editor.FontBrush}"
+                   Margin="5"
+                   VerticalAlignment="Center"
+                   FontWeight="SemiBold"/>
+        <TextBox x:Name="TBMSBuild"
+                 Grid.Row="1"
+                 Grid.Column="1"
+                 Margin="5"
+                 VerticalAlignment="Center"
+                 Text="{Binding MSBuildPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}"/>
+        <materialDesign:PackIcon Kind="InfoOutline"
+                                 Width="20"
+                                 Height="20"
+                                 Grid.Row="1"
+                                 Grid.Column="2"
+                                 VerticalAlignment="Center"
+                                 HorizontalAlignment="Left"
+                                 Foreground="{StaticResource Editor.BlueBrush}"
+                                 ToolTip="The selected MSBuild instance must include C++ Build Tools."
+                                 ToolTipService.InitialShowDelay="0"/>
+
+        <TextBlock Grid.Row="2"
+                   Grid.Column="1"
+                   Margin="5,0,0,5"
+                   Text="{Binding ElementName=TBMSBuild, Path=(Validation.Errors), Converter={StaticResource validationErrorConverter}}"
+                   Foreground="{StaticResource Editor.RedBrush}">
+        </TextBlock>
     </Grid>
 </UserControl>

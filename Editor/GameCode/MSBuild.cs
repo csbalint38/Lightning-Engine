@@ -1,5 +1,4 @@
 ﻿using Editor.Common.Enums;
-using Editor.Config;
 using Editor.GameProject;
 using Editor.Utilities;
 using Microsoft.Build.Construction;
@@ -11,8 +10,14 @@ namespace Editor.GameCode
 {
     public static partial class MSBuild
     {
-        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
+        private static readonly string[] _buildConfigurationNames = [
+            "Debug",
+            "DebugEditor",
+            "Release",
+            "ReleaseEditor"
+        ];
 
+        public static string? MSBuildPath { get; set; }
         public static bool BuildSucceeded { get; private set; }
         public static bool BuildFinished { get; private set; }
 
@@ -126,12 +131,12 @@ namespace Editor.GameCode
                 return;
             }
 
-            if (string.IsNullOrEmpty(ConfigManager.Config.CodeConfig.MSBuildPath))
+            if (string.IsNullOrEmpty(MSBuildPath))
             {
-                ConfigManager.Config.CodeConfig.MSBuildPath = FindMSBuild();
+                MSBuildPath = FindMSBuild();
             }
 
-            if (string.IsNullOrEmpty(ConfigManager.Config.CodeConfig.MSBuildPath))
+            if (string.IsNullOrEmpty(MSBuildPath))
             {
                 Logger.LogAsync(LogLevel.ERROR, "Failed to locate MSBuild");
 
@@ -157,7 +162,7 @@ namespace Editor.GameCode
 
             OnBuildSolutionBegin(project.Name, configName);
 
-            var exit = RunProcess(ConfigManager.Config.CodeConfig.MSBuildPath, args, LogMSBuildStdOut, LogMSBuildStdErr);
+            var exit = RunProcess(MSBuildPath, args, LogMSBuildStdOut, LogMSBuildStdErr);
 
             OnBuildSolutionDone(configName, exit == 0);
         }
@@ -299,6 +304,7 @@ namespace Editor.GameCode
             Logger.LogAsync(level, $"[MSBUILD] {line.Trim()}");
         }
 
-        private static void LogMSBuildStdErr(string line) => Logger.LogAsync(LogLevel.ERROR, $"[MSBUILD] {line.Trim()}");
+        private static void LogMSBuildStdErr(string line) =>
+            Logger.LogAsync(LogLevel.ERROR, $"[MSBUILD] {line.Trim()}");
     }
 }

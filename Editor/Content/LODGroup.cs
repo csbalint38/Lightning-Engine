@@ -1,5 +1,4 @@
 ﻿using Editor.Common;
-using System.Collections.ObjectModel;
 
 namespace Editor.Content
 {
