@@ -1,4 +1,5 @@
-﻿using Editor.Content;
+﻿using Editor.Config;
+using Editor.Content;
 using Editor.Content.ContentBrowser;
 using Editor.GameCode;
 using Editor.GameProject;
@@ -93,5 +94,12 @@ namespace Editor.Editors
 
         private void BtnOpenEditor_Click(object sender, RoutedEventArgs e) =>
             ICodeEditor.Current.ShowWindow(Project.Current.Solution);
+
+        private void Options_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new ConfigSettingsDialog();
+
+            dialog.ShowDialog();
+        }
     }
 }

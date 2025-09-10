@@ -348,7 +348,7 @@ namespace lightning::graphics::direct3d12::core {
 		/*
 		if (!(shaders::initialize() && gpass::initialize() && fx::initialize() && upload::initialize() && content::initialize() && delight::initialize())) return failed_init();
 		*/
-
+	
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");
 		NAME_D3D12_OBJECT(dsv_desc_heap.heap(), L"DSV Descriptor Heap");

@@ -125,8 +125,7 @@ jobs:
             $dest = "${{ env.DIST_DIR }}\Engine\x64\$cfg"
             New-Item -ItemType Directory -Path $dest -Force | Out-Null
             Copy-Item $src $dest -Force
-            if ($cfg -in 'Debug', 'DebugEditor') {
-              Copy-Item "Engine\x64\$cfg\Engine.pdb" $dest -Force}
+            Copy-Item "Engine\x64\$cfg\Engine.pdb" $dest -Force
           }
         
       - name: Copy Public Headers and Engine Shaders
@@ -173,6 +172,13 @@ jobs:
       - name: Build Bundle
         shell: pwsh
         run: msbuild Bundle/Bundle.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
+
+      - name: Restore Bundle packages
+        run: dotnet restore Installer/Installer.wixproj
+
+      - name: Build Bundle
+        shell: pwsh
+        run: msbuild Installer/Installer.wixproj /p:Configuration=ReleaseEditor /p:Platform=x64 /p:OutDir="$env:GITHUB_WORKSPACE\temp" /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
 
       - name: Get InformationalVersion
         id: get-version

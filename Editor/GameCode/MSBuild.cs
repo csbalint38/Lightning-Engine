@@ -10,16 +10,14 @@ namespace Editor.GameCode
 {
     public static partial class MSBuild
     {
-        private static readonly string[] _buildConfigurationNames = ["Debug", "DebugEditor", "Release", "ReleaseEditor"];
+        private static readonly string[] _buildConfigurationNames = [
+            "Debug",
+            "DebugEditor",
+            "Release",
+            "ReleaseEditor"
+        ];
 
-        private static readonly string CachePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "LightningEngine",
-            "MSBuildCache.txt"
-        );
-
-        private static string? MSBuildPath;
-
+        public static string? MSBuildPath { get; set; }
         public static bool BuildSucceeded { get; private set; }
         public static bool BuildFinished { get; private set; }
 
@@ -27,8 +25,6 @@ namespace Editor.GameCode
 
         public static string? FindMSBuild()
         {
-            if (TryReadMSBuildCache(out var cached)) return cached;
-
             var vswhere = GetVswherePath();
 
             if (vswhere is not null)
@@ -45,12 +41,7 @@ namespace Editor.GameCode
                     {
                         var msbuildRoot = GetInstallRootFromMSBuildPath(msbuild);
 
-                        if (msbuildRoot is not null && HasCppToolset(msbuildRoot))
-                        {
-                            TryWriteMSBuildCache(msbuild);
-
-                            return msbuild;
-                        }
+                        if (msbuildRoot is not null && HasCppToolset(msbuildRoot)) return msbuild;
                     }
                 }
             }
@@ -71,12 +62,7 @@ namespace Editor.GameCode
 
                 var root = GetInstallRootFromMSBuildPath(path);
 
-                if (root is not null && HasCppToolset(root))
-                {
-                    TryWriteMSBuildCache(path);
-
-                    return path;
-                }
+                if (root is not null && HasCppToolset(root)) return path;
             }
 
             return null;
@@ -145,7 +131,10 @@ namespace Editor.GameCode
                 return;
             }
 
-            if (string.IsNullOrEmpty(MSBuildPath)) MSBuildPath = FindMSBuild();
+            if (string.IsNullOrEmpty(MSBuildPath))
+            {
+                MSBuildPath = FindMSBuild();
+            }
 
             if (string.IsNullOrEmpty(MSBuildPath))
             {
@@ -169,7 +158,7 @@ namespace Editor.GameCode
             }
 
             var args =
-                $"\"{project.Solution}\" /t:Build /m /nr:false /nologo /p:Configuration={configName};Platform=x64 /v:m /clp:Summary;ShowTimestamp;ForceNoAlign;DisableConsoleColor";
+                $"\"{project.Solution}\" /t:Build /m /nr:false /nologo /p:Configuration={configName};Platform=x64;PreferredToolArchitecture=x64 /v:m /clp:Summary;ShowTimestamp;ForceNoAlign;DisableConsoleColor";
 
             OnBuildSolutionBegin(project.Name, configName);
 
@@ -216,59 +205,6 @@ namespace Editor.GameCode
             catch
             {
                 return null;
-            }
-        }
-
-        private static void TryWriteMSBuildCache(string msbuildPath)
-        {
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(CachePath)!);
-                File.WriteAllText(CachePath, msbuildPath);
-            }
-            catch
-            {
-                Logger.LogAsync(LogLevel.WARNING, "Failed to write MSBuild cache.");
-            }
-        }
-
-        private static bool TryReadMSBuildCache(out string? msbuildPath)
-        {
-            msbuildPath = null;
-
-            try
-            {
-                if (!File.Exists(CachePath)) return false;
-
-                var cached = File.ReadAllText(CachePath).Trim();
-
-                if (string.IsNullOrEmpty(cached) || !File.Exists(cached))
-                {
-                    Logger.LogAsync(LogLevel.WARNING, "Failed to read MSBuild cache.");
-
-                    return false;
-                }
-
-                var root = GetInstallRootFromMSBuildPath(cached);
-
-                if (root is null || !HasCppToolset(root))
-                {
-                    File.Delete(CachePath);
-                    Logger.LogAsync(LogLevel.WARNING, "Cached MSBuild path does not have C++ toolset.");
-
-                    return false;
-                }
-
-                msbuildPath = cached;
-
-                return true;
-            }
-            catch
-            {
-                File.Delete(CachePath);
-                Logger.LogAsync(LogLevel.WARNING, "Failed to read MSBuild cache.");
-
-                return false;
             }
         }
 
@@ -368,6 +304,7 @@ namespace Editor.GameCode
             Logger.LogAsync(level, $"[MSBUILD] {line.Trim()}");
         }
 
-        private static void LogMSBuildStdErr(string line) => Logger.LogAsync(LogLevel.ERROR, $"[MSBUILD] {line.Trim()}");
+        private static void LogMSBuildStdErr(string line) =>
+            Logger.LogAsync(LogLevel.ERROR, $"[MSBUILD] {line.Trim()}");
     }
 }

@@ -121,7 +121,7 @@ public class Project : ViewModelBase
             Logger.LogAsync(LogLevel.ERROR, $"Failed to load project from {file}");
 
             if (Current is not null) ContentWatcher.Reset(Current.ContentPath, Current.Path);
-            
+
             return Current;
         }
     }
@@ -165,7 +165,7 @@ public class Project : ViewModelBase
         Debug.Assert(ActiveScene is not null);
 
         SetCommands();
-        
+
         await BuildGameCodeDLLAsync(false);
         await Task.Run(() => ICodeEditor.Current.Initialize(Solution));
     }

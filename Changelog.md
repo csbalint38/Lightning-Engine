@@ -1,9 +1,7 @@
-# v0.3.9.1-beta - 2025.9.4
- - Verbose logging.
-
-# v0.3.10-beta - 2025.9.10.
+# v0.3.10-beta - 2025.9.17.
 # Editor
  - Fixed saving and loading project that has Entities with Geometry component
+ - Added Configuration Dialog with configureable MSBuild Path and Code Editor
 
 # v0.3.9-beta - 2025.9.3
 ## General

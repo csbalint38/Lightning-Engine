@@ -1,8 +1,7 @@
 ﻿using Editor.Common.Enums;
+using Editor.Config;
 using Editor.Content;
-using Editor.Content.ContentBrowser;
 using Editor.DLLs;
-using Editor.GameCode;
 using Editor.GameProject;
 using Editor.Utilities;
 using System.ComponentModel;
@@ -31,8 +30,7 @@ public partial class MainWindow : Window
     {
         Loaded -= OnMainWindowLoaded;
 
-        ICodeEditor.Current = new VisualStudio();
-
+        ConfigManager.TryLoadConfig();
         DefaultAssets.GenerateDefaultAssets();
         GetEnginePath();
 
