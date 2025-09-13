@@ -5,34 +5,34 @@ namespace Editor.Common.Controls
 {
     internal class ListViewItemEx : ListViewItem
     {
-        private bool _defetSelection = false;
+        private bool _deferSelection = false;
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 1 && IsSealed) _defetSelection = true;
+            if (e.ClickCount == 1 && IsSelected) _deferSelection = true;
             else base.OnMouseLeftButtonDown(e);
         }
 
-        protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
+        protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
         {
-            if (_defetSelection)
+            if (_deferSelection)
             {
                 try
                 {
-                    base.OnPreviewMouseLeftButtonDown(e);
+                    base.OnMouseLeftButtonDown(e);
                 }
                 finally
                 {
-                    _defetSelection = false;
+                    _deferSelection = false;
                 }
             }
 
-            base.OnPreviewMouseLeftButtonUp(e);
+            base.OnMouseLeftButtonUp(e);
         }
 
         protected override void OnMouseLeave(MouseEventArgs e)
         {
-            _defetSelection = false;
+            _deferSelection = false;
 
             base.OnMouseLeave(e);
         }

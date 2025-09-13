@@ -14,6 +14,8 @@ public class Scene : ViewModelBase
     private string _name;
     private bool _isActive;
 
+    public ICommand RenameCommand { get; private set; }
+
     [DataMember(Name = nameof(Entities))]
     private ObservableCollection<Entity> _entities = [];
 
@@ -75,6 +77,16 @@ public class Scene : ViewModelBase
         }
 
         foreach (var entity in _entities) entity.IsActive = IsActive;
+
+        RenameCommand = new RelayCommand<string>(x =>
+        {
+            var oldName = _name;
+            Name = x;
+
+            Project.UndoRedo.Add(
+                new UndoRedoAction(nameof(Name), this, oldName, x, $"Rename secene '{oldName}' to '{x}'.")
+            );
+        }, x => x != _name);
 
         AddEntityCommand = new RelayCommand<Entity>(x =>
         {

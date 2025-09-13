@@ -1,7 +1,6 @@
 ﻿using Editor.Common;
 using Editor.Common.Enums;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Text.Json.Serialization;
 

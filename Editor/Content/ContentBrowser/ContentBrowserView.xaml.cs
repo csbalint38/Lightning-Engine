@@ -539,7 +539,24 @@ public partial class ContentBrowserView : UserControl, IDisposable
 
         var item = (e.OriginalSource as DependencyObject)?.FindVisualParent<ListViewItemEx>();
 
-        _startDrag = item is not null;
+        if (item is not null)
+        {
+            if (item.IsSelected)
+            {
+                e.Handled = true;
+                _startDrag = true;
+
+                (sender as ListView)?.Focus();
+
+                return;
+            }
+
+            _startDrag = true;
+        }
+        else
+        {
+            _startDrag = false;
+        }
     }
 
     private void ListViewEx_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => _startDrag = false;

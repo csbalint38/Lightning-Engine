@@ -49,14 +49,32 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Expander IsExpanded="{Binding IsActive, Mode=OneWay}"
-                                  PreviewMouseWheel="Expander_PreviewMouseWheel">
+                                  Foreground="{StaticResource Editor.FontBrush}">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Name}"
+                                    <Grid>
+                                        <TextBlock Text="{Binding Name}"
                                                Foreground="{StaticResource Editor.FontBrush}"
                                                FontWeight="Bold"
                                                SnapsToDevicePixels="True"
                                                VerticalAlignment="Center"/>
+                                        <TextBox x:Name="TBRename"
+                                                 Text="{Binding Name, UpdateSourceTrigger=Explicit}"
+                                                 Style="{StaticResource TextBoxStyleWithRename}"
+                                                 Tag="{Binding RenameCommand}"
+                                                 Visibility="Collapsed"/>
+                                    </Grid>
+                                    <Button x:Name="BtnRenameScene"
+                                            Click="BtnRenameScene_Click"
+                                            Margin="25,0,0,0"
+                                            Style="{StaticResource IconButton}"
+                                            Tag="{Binding ElementName=TBRename}">
+                                        <Button.Content>
+                                            <materialDesign:PackIcon Kind="RenameOutline"
+                                                                     Width="20"
+                                                                     Height="20"/>
+                                        </Button.Content>
+                                    </Button>
                                     <Button Command="{Binding DataContext.RemoveSceneCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource IconButton}"
@@ -82,13 +100,21 @@
                                 </StackPanel>
                             </Expander.Header>
                             <ListBox Name ="LbEntities"
+                                     Style="{StaticResource ListBoxNoScrollStyle}"
                                      ItemsSource="{Binding Entities}"
                                      IsEnabled="{Binding IsActive}"
                                      SelectionMode="Extended"
                                      Background="{StaticResource Editor.BackgroundBrush4}"
+                                     AllowDrop="True"
+                                     MinHeight="48"
+                                     HorizontalContentAlignment="Stretch"
+                                     HorizontalAlignment="Stretch"
                                      ScrollViewer.CanContentScroll="False"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                     SelectionChanged="LbEntities_SelectionChanged">
+                                     Loaded="LbEntities_Loaded"
+                                     KeyDown="LbEntities_KeyDown"
+                                     SelectionChanged="LbEntities_SelectionChanged"
+                                     Drop="LbEntities_Drop">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="{x:Type ListBoxItem}"
                                            BasedOn="{StaticResource {x:Type ListBoxItem}}">
@@ -108,6 +134,10 @@
                                                        FontSize="13"
                                                        FontWeight="DemiBold"
                                                        TextTrimming="CharacterEllipsis"/>
+                                            <TextBox Text="{Binding Name, UpdateSourceTrigger=Explicit}"
+                                                     Style="{StaticResource TextBoxStyleWithRename}"
+                                                     Padding="1,0,0,0"
+                                                     Visibility="Collapsed"/>
                                             <Button Grid.Column="1"
                                                     Command="{Binding ParentScene.RemoveEntityCommand}"
                                                     CommandParameter="{Binding}"

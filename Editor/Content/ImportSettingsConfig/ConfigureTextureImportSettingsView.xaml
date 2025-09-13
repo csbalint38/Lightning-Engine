@@ -23,31 +23,6 @@
             <Setter Property="Background"
                     Value="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource Self}, Converter={StaticResource alternationConverter}}"/>
         </Style>
-        <Style TargetType="{x:Type Button}"
-               BasedOn="{StaticResource FlatButton}"
-               x:Key="removeButtonStyle">
-            <Setter Property="Width" Value="20"/>
-            <Setter Property="Height" Value="14"/>
-            <Setter Property="Margin"
-                    Value="0,2,2,0"/>
-            <Setter Property="VerticalAlignment"
-                    Value="Top"/>
-            <Setter Property="SnapsToDevicePixels"
-                    Value="True"/>
-            <Setter Property="HorizontalAlignment"
-                    Value="Right"/>
-        </Style>
-        <Style TargetType="{x:Type Line}"
-               x:Key="RedLineStyle">
-            <Setter Property="Stroke"
-                    Value="{StaticResource Editor.RedBrush}"/>
-            <Setter Property="StrokeThickness"
-                    Value="2"/>
-            <Setter Property="StrokeStartLineCap"
-                    Value="Round"/>
-            <Setter Property="StrokeEndLineCap"
-                    Value="Round" />
-        </Style>
         <DataTemplate x:Key="imageSourceListBoxItemTemplate">
             <Grid ToolTip="{Binding FileInfo.DirectoryName}"
                   ToolTipService.InitialShowDelay="500"
@@ -168,7 +143,8 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition/>
@@ -238,24 +214,17 @@
                                     </ItemsControl>
                                 </Expander>
                                 <Button x:Name="BtnRemove"
+                                        Grid.Column="3"
+                                        Grid.RowSpan="2"
+                                        Margin="0,-8,3,0"
                                         Click="BtnRemove_Click"
-                                        Background="Transparent"
-                                        Grid.Column="2"
-                                        Visibility="Collapsed"
-                                        Style="{StaticResource removeButtonStyle}">
+                                        Style="{StaticResource IconButton}"
+                                        Focusable="False"
+                                        Visibility="Collapsed">
                                     <Button.Content>
-                                        <Grid>
-                                            <Line X1="1"
-                                                  X2="8"
-                                                  Y1="1.5"
-                                                  Y2="8.5"
-                                                  Style="{StaticResource RedLineStyle}"/>
-                                            <Line X1="1"
-                                                  X2="8"
-                                                  Y1="8.5"
-                                                  Y2="1.5"
-                                                  Style="{StaticResource RedLineStyle}"/>
-                                        </Grid>
+                                        <materialDesign:PackIcon Kind="CancelCircleOutline"
+                                                                 Width="20"
+                                                                 Height="20"/>
                                     </Button.Content>
                                 </Button>
                             </Grid>
