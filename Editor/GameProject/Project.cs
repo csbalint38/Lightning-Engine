@@ -141,11 +141,10 @@ public class Project : ViewModelBase
         ActiveScene.IsActive = false;
 
         UnloadGameCodeDLL();
-
         Task.Run(ICodeEditor.Current.Close);
         AssetRegistry.Save();
-
         UndoRedo.Reset();
+        Logger.ClearAsync();
         DeleteTempFolder();
 
         Current = null;

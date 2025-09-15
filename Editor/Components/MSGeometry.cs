@@ -1,44 +1,47 @@
-﻿namespace Editor.Components
-{
-    sealed class MSGeometry : MSComponent<Geometry>
-    {
-        private GeometryWithMaterials _geometryWithMaterials;
+﻿namespace Editor.Components;
 
-        public GeometryWithMaterials GeometryWithMaterials
+sealed class MSGeometry : MSComponent<Geometry>
+{
+    private GeometryWithMaterials? _geometryWithMaterials;
+
+    public GeometryWithMaterials? GeometryWithMaterials
+    {
+        get => _geometryWithMaterials;
+        private set
         {
-            get => _geometryWithMaterials;
-            private set
+            if (_geometryWithMaterials != value)
             {
-                if (_geometryWithMaterials != value)
-                {
-                    _geometryWithMaterials = value;
-                    OnPropertyChanged(nameof(GeometryWithMaterials));
-                }
+                _geometryWithMaterials = value;
+                OnPropertyChanged(nameof(GeometryWithMaterials));
             }
         }
+    }
 
-        public Guid GeometryGuid => _geometryWithMaterials is not null ? SelectedComponents.First().GeometryGuid : Guid.Empty;
+    public Guid GeometryGuid =>
+        _geometryWithMaterials is not null ? SelectedComponents.First().GeometryGuid : Guid.Empty;
 
-        public MSGeometry(MSEntityBase msEntity) : base(msEntity)
-        {
-            Refresh();
-        }
+    public MSGeometry(MSEntityBase msEntity) : base(msEntity)
+    {
+        Refresh();
+    }
 
-        public void SetGeometry(Guid guid)
-        {
-            SelectedComponents.ForEach(x => x.SetGeometry(guid));
-            Refresh();
-        }
+    public void SetGeometry(Guid guid)
+    {
+        SelectedComponents.ForEach(x => x.SetGeometry(guid));
+        Refresh();
+    }
 
-        protected override bool UpdateComponents(string propertyName) => false;
+    protected override bool UpdateComponents(string propertyName) => false;
 
-        protected override bool UpdateMSComponent()
-        {
-            var contentId = MSEntity.GetMixedValue(SelectedComponents, new Func<Geometry, IdType>(x => x.ContentId));
+    protected override bool UpdateMSComponent()
+    {
+        var contentId = MSEntity.GetMixedValue(
+            SelectedComponents,
+            new Func<Geometry, IdType>(x => x.ContentId)
+        );
 
-            GeometryWithMaterials = contentId.HasValue ? SelectedComponents.First().GeometryWithMaterials : null;
+        GeometryWithMaterials = contentId.HasValue ? SelectedComponents.First().GeometryWithMaterials : null;
 
-            return true;
-        }
+        return true;
     }
 }

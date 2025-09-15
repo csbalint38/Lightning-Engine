@@ -10,8 +10,8 @@ namespace Editor.Components
     [DataContract]
     public class Geometry : Component
     {
-        private GeometryWithMaterials _geometryWithMaterials;
-        private UploadedAsset _geometry;
+        private GeometryWithMaterials? _geometryWithMaterials;
+        private UploadedAsset? _geometry;
 
         [DataMember(Name = "Materials")]
         private List<AppliedMaterial> _materials = [];
@@ -19,7 +19,7 @@ namespace Editor.Components
         [DataMember(Name = "Geometry")]
         public Guid GeometryGuid { get; private set; }
 
-        public GeometryWithMaterials GeometryWithMaterials
+        public GeometryWithMaterials? GeometryWithMaterials
         {
             get => _geometryWithMaterials;
             private set

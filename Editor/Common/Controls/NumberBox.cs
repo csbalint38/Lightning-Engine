@@ -82,13 +82,11 @@ namespace Editor.Common.Controls
         }
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
-            (d as NumberBox).RaiseEvent(new RoutedEventArgs(ValueChangedEvent));
+            (d as NumberBox)?.RaiseEvent(new RoutedEventArgs(ValueChangedEvent));
 
         private void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
         {
-            var tb = sender as TextBlock;
-
-            tb.Visibility = Visibility.Collapsed;
+            if (sender is TextBlock tb) tb.Visibility = Visibility.Collapsed;
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)

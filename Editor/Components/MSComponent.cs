@@ -20,7 +20,7 @@ namespace Editor.Components
 
             PropertyChanged += (s, e) =>
             {
-                if (_enableUpdates) UpdateComponents(e.PropertyName);
+                if (_enableUpdates && e.PropertyName is not null) UpdateComponents(e.PropertyName);
             };
         }
 

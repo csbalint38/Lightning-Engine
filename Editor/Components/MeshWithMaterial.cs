@@ -7,7 +7,7 @@ namespace Editor.Components
 {
     public class MeshWithMaterial : ViewModelBase
     {
-        private AppliedMaterial _material;
+        private AppliedMaterial _material = null!;
 
         public MeshInfo MeshInfo { get; }
 

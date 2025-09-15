@@ -160,7 +160,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
         return newEditor.DataContext as IAssetEditor;
     }
 
-    private static void OpenImportSettingsConfigurator(string[] files, string selectedFolder, bool forceOpen = false)
+    private static void OpenImportSettingsConfigurator(string[]? files, string selectedFolder, bool forceOpen = false)
     {
         ConfigureImportSettings settingsConfigurator = null;
 
@@ -315,27 +315,6 @@ public partial class ContentBrowserView : UserControl, IDisposable
         ExecuteSelection(info);
     }
 
-    private IAssetEditor OpenEditorPanel<T>(AssetInfo info, string title) where T : FrameworkElement, new()
-    {
-        foreach (Window window in Application.Current.Windows)
-        {
-            if (window.Content is FrameworkElement content &&
-                content.DataContext is IAssetEditor editor &&
-                editor.CheckAssetGuid(info.Guid)
-            )
-            {
-                window.Activate();
-
-                return editor;
-            }
-        }
-
-        var newEditor = CreateEditorWindow<T>(title);
-        (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
-
-        return newEditor.DataContext as IAssetEditor;
-    }
-
     private bool TryEdit(ListView list, string path)
     {
         foreach (ContentInfo item in list.Items)
@@ -348,7 +327,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
                 list.SelectedItem = item;
                 list.SelectedIndex = list.Items.IndexOf(item);
 
-                TryEdit(listBoxItem, path);
+                TryEdit(listBoxItem);
 
                 return true;
             }
@@ -357,7 +336,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
         return false;
     }
 
-    private void TryEdit(ListBoxItem item, string path)
+    private void TryEdit(ListBoxItem item)
     {
         var textBox = item.FindVisualChild<TextBox>();
 
@@ -539,27 +518,11 @@ public partial class ContentBrowserView : UserControl, IDisposable
 
         var item = (e.OriginalSource as DependencyObject)?.FindVisualParent<ListViewItemEx>();
 
-        if (item is not null)
-        {
-            if (item.IsSelected)
-            {
-                e.Handled = true;
-                _startDrag = true;
-
-                (sender as ListView)?.Focus();
-
-                return;
-            }
-
-            _startDrag = true;
-        }
-        else
-        {
-            _startDrag = false;
-        }
+        _startDrag = item is not null;
     }
 
-    private void ListViewEx_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => _startDrag = false;
+    private void ListViewEx_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) =>
+        _startDrag = false;
 
     private void ListViewEx_MouseMove(object sender, MouseEventArgs e)
     {
@@ -568,7 +531,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
             var mousePosition = e.GetPosition(this);
             var diff = mousePosition - _clickPosition;
 
-            if (_startDrag && diff.LengthSquared > 100)
+            if (_startDrag && diff.LengthSquared > 100f)
             {
                 var files = new List<string>();
 

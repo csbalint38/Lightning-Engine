@@ -19,7 +19,7 @@ namespace Editor.Common
             _canExecute = canExecute;
         }
 
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke((T)parameter) ?? true;
-        public void Execute(object? parameter) => _execute((T)parameter);
+        public bool CanExecute(object? parameter) => _canExecute?.Invoke((T)parameter!) ?? true;
+        public void Execute(object? parameter) => _execute((T)parameter!);
     }
 }
