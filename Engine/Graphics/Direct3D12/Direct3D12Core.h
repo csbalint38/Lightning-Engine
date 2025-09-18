@@ -53,4 +53,5 @@ namespace lightning::graphics::direct3d12::core {
 	[[nodiscard]] u32 surface_width(surface_id id);
 	[[nodiscard]] u32 surface_height(surface_id id);
 	void render_surface(surface_id id, FrameInfo info);
+	void capture_surface(surface_id id, const wchar_t* path);
 }

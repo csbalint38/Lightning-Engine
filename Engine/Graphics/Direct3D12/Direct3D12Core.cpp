@@ -492,8 +492,17 @@ namespace lightning::graphics::direct3d12::core {
 
 		fx::post_process(cmd_list, frame_info, surface.rtv());
 
+		surfaces[id].record_capture(cmd_list);
+
 		d3dx::transition_resource(cmd_list, current_back_buffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 		gfx_command.end_frame(surface);
+
+		surfaces[id].finalize_capture(gfx_command.command_queue());
+	}
+
+	void capture_surface(surface_id id, const wchar_t* path) {
+		assert(id::is_valid(id));
+		surfaces[id].request_capture(path);
 	}
 }

@@ -18,6 +18,7 @@ namespace lightning::graphics::direct3d12 {
 		pi.surface.width = core::surface_width;
 		pi.surface.height = core::surface_height;
 		pi.surface.render = core::render_surface;
+		pi.surface.capture = core::capture_surface;
 
 		pi.light.create_light_set = light::create_light_set;
 		pi.light.remove_light_set = light::remove_light_set;

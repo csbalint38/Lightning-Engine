@@ -1,9 +1,9 @@
 # Lightning Engine
 
 ## Installation
-Download `Lightning Installer.msi` if you have *VisualStudio 2022* or *Visual Studio Build Tools* installed in your PC.
-Download `Lightning Setup.exe` if you want all dependencies to be installed for you.
-Download `lightning-engine-v?.?.?.zip` if you want to handle installation manually.
+Download `Lightning Installer.msi` if you have *VisualStudio 2022* or *Visual Studio Build Tools* installed in your PC.\
+Download `Lightning Setup.exe` if you want all dependencies to be installed for you.\
+Download `lightning-engine-v?.?.?.zip` if you want to handle installation manually.\
 
 ## FBX import settings
 - Forward:  -z
@@ -12,12 +12,12 @@ Download `lightning-engine-v?.?.?.zip` if you want to handle installation manual
 ## Languages
 | language | files | lines |
 | :--- | ---: | ---: |
-| C++ | 106 | 15,541 |
+| C++ | 107 | 15,772 |
 | C# | 207 |  15,128 |
 | XAML | 38 | 8,274 |
 | XML | 27 | 2,058 |
 | HLSL | 15 |  1,892 |
-| Markdown | 5 | 392 |
+| Markdown | 5 | 397 |
 | Python | 8 | 277 |
 | YAML | 1 | 223 |
 ... +2 others (less than 100 lines)

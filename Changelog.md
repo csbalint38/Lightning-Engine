@@ -1,3 +1,8 @@
+# v0.3.11-beta - 2025.10.1.
+
+## Engine
+ - Takeing screenshots
+
 # v0.3.10-beta - 2025.9.16.
 ## General
  - Uninstaller now deletes runtime generated files from the installation location leaving no junk behind.

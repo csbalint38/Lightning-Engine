@@ -15,6 +15,7 @@ namespace lightning::graphics {
 			u32(*width)(surface_id);
 			u32(*height)(surface_id);
 			void(*render)(surface_id, FrameInfo);
+			void(*capture)(surface_id, const wchar_t*);
 		} surface;
 
 		struct {

@@ -119,6 +119,24 @@
 					test_shutdown();
 					test_initialize();
 				}
+				else if (wparam == VK_F1) {
+					platform::Window win{ platform::window_id{ (id::id_type)GetWindowLongPtr(hwnd, GWLP_USERDATA) } };
+					
+					for (u32 i{ 0 }; i < _countof(_surfaces); ++i) {
+						if (win.get_id() == _surfaces[i].surface.window.get_id()) {
+							std::filesystem::create_directories(L"screenshots");
+
+							static u32 s_shot = 0;
+							wchar_t file_path[256];
+
+							swprintf_s(file_path, L"screenshots\\win%u_shot%u.png", i + 1, ++s_shot);
+
+							_surfaces[i].surface.surface.capture_to_png(file_path);
+
+							break;
+						}
+					}
+				}
 		}
 
 		if ((resized && GetKeyState(VK_LBUTTON) >= 0) || toggle_fullscreen) {

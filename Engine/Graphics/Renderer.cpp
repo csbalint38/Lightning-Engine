@@ -59,6 +59,11 @@ namespace lightning::graphics {
 		gfx.surface.render(_id, info);
 	}
 
+	void Surface::capture_to_png(const wchar_t* path) const {
+		assert(is_valid());
+		gfx.surface.capture(_id, path);
+	}
+
 	void create_light_set(u64 light_set_key) {
 		gfx.light.create_light_set(light_set_key);
 	}

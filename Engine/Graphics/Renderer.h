@@ -41,6 +41,7 @@ namespace lightning::graphics {
 			u32 width() const;
 			u32 height() const;
 			void render(FrameInfo info) const;
+			void capture_to_png(const wchar_t* path) const;
 	};
 
 	struct RenderSurface {
