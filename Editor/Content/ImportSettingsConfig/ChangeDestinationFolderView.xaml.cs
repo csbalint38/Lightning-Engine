@@ -17,12 +17,12 @@ namespace Editor.Content.ImportSettingsConfig
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            var proxy = (sender as Button).DataContext as AssetProxy;
-            var destinationFolder = proxy.DestinationFolder;
+            var proxy = ((Button)sender).DataContext as AssetProxy;
+            var destinationFolder = proxy!.DestinationFolder;
 
             if (Path.EndsInDirectorySeparator(destinationFolder))
             {
-                destinationFolder = Path.GetDirectoryName(destinationFolder);
+                destinationFolder = Path.GetDirectoryName(destinationFolder)!;
             }
 
             var dialog = new SelectFolderDialog(destinationFolder);

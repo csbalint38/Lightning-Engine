@@ -76,7 +76,7 @@ namespace Editor.Content.ContentBrowser
 
                     writer.Write(key);
                     writer.Write(info.DateModified.ToBinary());
-                    writer.Write(info.Icon.Length);
+                    writer.Write(info.Icon!.Length);
                     writer.Write(info.Icon);
                 }
 

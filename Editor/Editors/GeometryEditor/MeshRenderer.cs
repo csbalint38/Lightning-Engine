@@ -151,7 +151,7 @@ namespace Editor.Editors
             }
         }
 
-        public MeshRenderer(MeshLOD lod, MeshRenderer old)
+        public MeshRenderer(MeshLOD lod, MeshRenderer? old)
         {
             Debug.Assert(lod?.Meshes.Any() == true);
 

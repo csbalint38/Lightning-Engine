@@ -1,11 +1,10 @@
 ﻿using Editor.Common;
 
-namespace Editor.Content
-{
-    public class CodeMaterial : ViewModelBase
-    {
-        private readonly List<MaterialInput> _inputs;
+namespace Editor.Content;
 
-        public List<MaterialInput> GetInputs() => _inputs;
-    }
+public class CodeMaterial : ViewModelBase
+{
+    private readonly List<MaterialInput> _inputs = [];
+
+    public List<MaterialInput> GetInputs() => _inputs;
 }

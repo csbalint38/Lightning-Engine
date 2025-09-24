@@ -6,14 +6,14 @@ namespace Editor.Content.ImportSettingsConfig
 {
     public abstract class AssetProxy : ViewModelBase
     {
-        private string _destinationFolder;
+        private string? _destinationFolder;
 
         public FileInfo FileInfo { get; }
         public abstract IAssetImportSettings ImportSettings { get; }
 
         public string DestinationFolder
         {
-            get => _destinationFolder;
+            get => _destinationFolder!;
             set
             {
                 if (!Path.EndsInDirectorySeparator(value)) value += Path.DirectorySeparatorChar;

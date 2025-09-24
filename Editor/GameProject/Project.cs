@@ -94,13 +94,16 @@ public class Project : ViewModelBase
         }
     }
 
-    public static Project Load(string file)
+    public static Project? Load(string file)
     {
         Debug.Assert(File.Exists(file));
 
         var path = System.IO.Path.GetDirectoryName(file);
 
-        if (!path.EndsWith(System.IO.Path.DirectorySeparatorChar)) path += System.IO.Path.DirectorySeparatorChar;
+        if (!path!.EndsWith(System.IO.Path.DirectorySeparatorChar))
+        {
+            path += System.IO.Path.DirectorySeparatorChar;
+        }
 
         ContentWatcher.Reset($@"{path}Assets\", path);
 
@@ -159,7 +162,7 @@ public class Project : ViewModelBase
             OnPropertyChanged(nameof(Scenes));
         }
 
-        ActiveScene = _scenes.FirstOrDefault(x => x.IsActive);
+        ActiveScene = _scenes?.FirstOrDefault(x => x.IsActive)!;
 
         Debug.Assert(ActiveScene is not null);
 

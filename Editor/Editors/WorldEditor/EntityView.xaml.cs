@@ -18,7 +18,7 @@ namespace Editor.Editors
         public static EntityView Instance { get; private set; }
 
         private Action _undoAction;
-        private string _propertyName;
+        private string? _propertyName;
 
         public EntityView()
         {
@@ -28,9 +28,9 @@ namespace Editor.Editors
 
             DataContextChanged += (_, __) =>
             {
-                if (DataContext is not null)
+                if (DataContext is MSEntity)
                 {
-                    (DataContext as MSEntity).PropertyChanged += (s, e) => _propertyName = e.PropertyName;
+                    (DataContext as MSEntity)!.PropertyChanged += (s, e) => _propertyName = e.PropertyName;
                 }
             };
         }
@@ -113,7 +113,7 @@ namespace Editor.Editors
             menu.IsOpen = true;
         }
 
-        private void AddComponent(ComponentType type, object data)
+        private void AddComponent(ComponentType type, object? data)
         {
             var creationFunction = ComponentFactory.GetCreationFunction(type);
             var changedEntities = new List<(Entity entity, Component component)>();
@@ -147,7 +147,7 @@ namespace Editor.Editors
         }
 
         private void MIScriptComponent_Click(object sender, RoutedEventArgs e) =>
-            AddComponent(ComponentType.SCRIPT, (sender as MenuItem).Header.ToString());
+            AddComponent(ComponentType.SCRIPT, (sender as MenuItem)?.Header.ToString());
 
         private void MIGeometryComponent_Click(object sender, RoutedEventArgs e) =>
             AddComponent(ComponentType.GEOMETRY, DefaultAssets.DefaultGeometry);

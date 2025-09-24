@@ -88,7 +88,7 @@ namespace Editor.Content
             Assembly.AddRange(Enumerable.Range(0, count).Select(_ => reader.ReadString()));
         }
 
-        public byte[] PackForEngine()
+        public byte[]? PackForEngine()
         {
             if (Count == 0 || ByteCode.Any(x => x.Length == 0) || Hash.Any(x => x.Length == 0)) return null;
 
@@ -97,7 +97,7 @@ namespace Editor.Content
             PackForEngine(writer);
             writer.Flush();
 
-            return (writer.BaseStream as MemoryStream).ToArray();
+            return (writer.BaseStream as MemoryStream)?.ToArray();
         }
 
         public IdType UploadToEngine()

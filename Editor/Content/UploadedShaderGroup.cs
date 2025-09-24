@@ -14,7 +14,7 @@ namespace Editor.Content
         public byte[] CombinedHashes { get; private set; }
         public int ReferenceCount { get; private set; }
 
-        public static UploadedShaderGroup UploadToEngine(ShaderGroup shaderGroup)
+        public static UploadedShaderGroup? UploadToEngine(ShaderGroup shaderGroup)
         {
             if (shaderGroup.Count == 0 ||
                 shaderGroup.ByteCode.Any(x => x.Length == 0) ||

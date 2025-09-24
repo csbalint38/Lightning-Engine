@@ -122,7 +122,7 @@ namespace Editor.DLLs.Descriptors
             );
         }
 
-        public Slice GetIcon()
+        public Slice? GetIcon()
         {
             if (ImportSettings.Compress == 0) return null;
 

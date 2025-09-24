@@ -20,7 +20,7 @@ namespace Editor.Content
             from.ToBinary(writer);
             writer.Flush();
 
-            var bytes = (writer.BaseStream as MemoryStream).ToArray();
+            var bytes = ((MemoryStream)writer.BaseStream).ToArray();
 
             using BinaryReader reader = new(new MemoryStream(bytes));
 

@@ -50,7 +50,7 @@
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;CONTENTTOOLS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)Engine;$(SolutionDir)Engine\Common;$(SolutionDir)packages\FBX SDK\include;$(ProjectDir)$(PlatformTarget)\Compiled</AdditionalIncludeDirectories>
       <ConformanceMode>true</ConformanceMode>
       <SDLCheck>true</SDLCheck>
@@ -59,6 +59,8 @@
       <PrecompiledHeaderOutputFile>
       </PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
+      <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -96,7 +98,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\packages\MikkTSpace\mikktspace.c" />
+    <ClCompile Include="..\packages\MikkTSpace\mikktspace.c">
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+    </ClCompile>
     <ClCompile Include="ContentTools.cpp" />
     <ClCompile Include="EnvMapProcessing.cpp" />
     <ClCompile Include="FbxImporter.cpp" />

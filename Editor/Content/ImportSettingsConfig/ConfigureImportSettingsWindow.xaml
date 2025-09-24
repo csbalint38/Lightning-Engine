@@ -17,7 +17,7 @@
         <TabControl Background="Transparent"
                     BorderThickness="0"
                     x:Name="TCAssetTypes"
-                    SelectionChanged="TCAssetTypes_SelectionChanged_1">
+                    SelectionChanged="TCAssetTypes_SelectionChanged">
             <TabItem Header="Geometry"
                      MinWidth="96"
                      Tag="{x:Static enums:AssetType.MESH}">

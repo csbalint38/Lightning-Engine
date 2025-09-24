@@ -9,368 +9,396 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Editor.Editors
+namespace Editor.Editors;
+
+public class TextureEditor : ViewModelBase, IAssetEditor
 {
-    public class TextureEditor : ViewModelBase, IAssetEditor
+    private readonly List<List<List<BitmapSource>>> _sliceBitmaps = new();
+
+    private AssetEditorState _state;
+    private Texture _texture = new();
+    private SliceArray3D _slices;
+    private int _arrayIndex;
+    private int _mipIndex;
+    private int _depthIndex;
+    private bool _isRedChannelSet = true;
+    private bool _isGreenChannelSet = true;
+    private bool _isBlueChannelSet = true;
+    private bool _isAlphaChannelSet = true;
+    private bool _canSaveChanges;
+    private CubeMap _cubemap;
+    private bool _viewAsCupemap = true;
+    private Guid _assetGuid;
+
+    public Guid AssetGuid { get; private set; }
+    public TextureImportSettings ImportSettings { get; } = new();
+
+    public ICommand SetAllChannelsCommand { get; init; }
+    public ICommand SetChannelCommand { get; init; }
+    public ICommand RegenerateBitmapsCommand { get; init; }
+    public ICommand ReimportCommand { get; init; }
+    public ICommand SaveCommand { get; init; }
+
+    Asset IAssetEditor.Asset => Texture;
+
+    public BitmapSource? SelectedSliceBitmap =>
+        _sliceBitmaps
+            .ElementAtOrDefault(ArrayIndex)?
+            .ElementAtOrDefault(MipIndex)?
+            .ElementAtOrDefault(DepthIndex);
+
+    public Slice? SelectedSlice =>
+        Texture?.Slices?
+            .ElementAtOrDefault(ArrayIndex)?
+            .ElementAtOrDefault(MipIndex)?
+            .ElementAtOrDefault(DepthIndex);
+
+    public int MaxMipIndex =>
+        _sliceBitmaps.Any() && _sliceBitmaps.First().Any() ? _sliceBitmaps.First().Count - 1 : 0;
+
+    public int MaxArrayIndex => _sliceBitmaps.Any() ? _sliceBitmaps.Count - 1 : 0;
+    public int MaxDepthIndex =>
+        _sliceBitmaps.Any() && _sliceBitmaps.First().Any() && _sliceBitmaps.First().First().Any()
+            ? _sliceBitmaps.ElementAt(ArrayIndex).ElementAt(MipIndex).Count - 1
+            : 0;
+
+    public Color Channels => new()
     {
-        private readonly List<List<List<BitmapSource>>> _sliceBitmaps = new();
+        ScR = IsRedChannelSet ? 1f : 0f,
+        ScG = IsGreenChannelSet ? 1f : 0f,
+        ScB = IsBlueChannelSet ? 1f : 0f,
+        ScA = IsAlphaChannelSet ? 1f : 0f
+    };
 
-        private AssetEditorState _state;
-        private Texture _texture = new();
-        private SliceArray3D _slices;
-        private int _arrayIndex;
-        private int _mipIndex;
-        private int _depthIndex;
-        private bool _isRedChannelSet = true;
-        private bool _isGreenChannelSet = true;
-        private bool _isBlueChannelSet = true;
-        private bool _isAlphaChannelSet = true;
-        private bool _canSaveChanges;
-        private CubeMap _cubemap;
-        private bool _viewAsCupemap = true;
-        private Guid _assetGuid;
+    public float Stride => (float?)SelectedSliceBitmap?.Format.BitsPerPixel / 8 ?? 1f;
+    public long DataSize => Texture?.Slices?.Sum(x => x.Sum(y => y.Sum(z => z.RawContent.LongLength))) ?? 0;
 
-        public Guid AssetGuid { get; private set; }
-        public TextureImportSettings ImportSettings { get; } = new();
-
-        public ICommand SetAllChannelsCommand { get; init; }
-        public ICommand SetChannelCommand { get; init; }
-        public ICommand RegenerateBitmapsCommand { get; init; }
-        public ICommand ReimportCommand { get; init; }
-        public ICommand SaveCommand { get; init; }
-
-        Asset IAssetEditor.Asset => Texture;
-        public BitmapSource SelectedSliceBitmap =>
-            _sliceBitmaps.ElementAtOrDefault(ArrayIndex)?.ElementAtOrDefault(MipIndex)?.ElementAtOrDefault(DepthIndex);
-
-        public Slice SelectedSlice =>
-            Texture?.Slices?.ElementAtOrDefault(ArrayIndex)?.ElementAtOrDefault(MipIndex)?.ElementAtOrDefault(DepthIndex);
-
-        public int MaxMipIndex => _sliceBitmaps.Any() && _sliceBitmaps.First().Any() ? _sliceBitmaps.First().Count - 1 : 0;
-        public int MaxArrayIndex => _sliceBitmaps.Any() ? _sliceBitmaps.Count - 1 : 0;
-        public int MaxDepthIndex =>
-            _sliceBitmaps.Any() && _sliceBitmaps.First().Any() && _sliceBitmaps.First().First().Any() ?
-                _sliceBitmaps.ElementAtOrDefault(ArrayIndex).ElementAtOrDefault(MipIndex).Count - 1 :
-                0;
-
-        public Color Channels => new()
+    public AssetEditorState State
+    {
+        get => _state;
+        private set
         {
-            ScR = IsRedChannelSet ? 1f : 0f,
-            ScG = IsGreenChannelSet ? 1f : 0f,
-            ScB = IsBlueChannelSet ? 1f : 0f,
-            ScA = IsAlphaChannelSet ? 1f : 0f
-        };
-
-        public float Stride => (float?)SelectedSliceBitmap?.Format.BitsPerPixel / 8 ?? 1f;
-        public long DataSize => Texture?.Slices?.Sum(x => x.Sum(y => y.Sum(z => z.RawContent.LongLength))) ?? 0;
-
-        public AssetEditorState State
-        {
-            get => _state;
-            private set
+            if (_state != value)
             {
-                if (_state != value)
+                _state = value;
+                OnPropertyChanged(nameof(State));
+            }
+        }
+    }
+
+    public Texture Texture
+    {
+        get => _texture;
+        private set
+        {
+            if (_texture != value)
+            {
+                _texture = value;
+
+                if (Texture is not null)
                 {
-                    _state = value;
-                    OnPropertyChanged(nameof(State));
+                    IAssetImportSettings.CopyImportSettings(_texture.ImportSettings, ImportSettings);
                 }
-            }
-        }
 
-        public Texture Texture
-        {
-            get => _texture;
-            private set
-            {
-                if (_texture != value)
-                {
-                    _texture = value;
-
-                    if (Texture is not null)
-                    {
-                        IAssetImportSettings.CopyImportSettings(_texture.ImportSettings, ImportSettings);
-                    }
-
-                    OnPropertyChanged(nameof(Texture));
-                    SetSelectedBitmap();
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public int ArrayIndex
-        {
-            get => Math.Min(MaxArrayIndex, _arrayIndex);
-            set
-            {
-                value = Math.Min(value, MaxArrayIndex);
-                if (value != _arrayIndex)
-                {
-                    _arrayIndex = value;
-                    OnPropertyChanged(nameof(ArrayIndex));
-                    SetSelectedBitmap();
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public int MipIndex
-        {
-            get => Math.Min(MaxMipIndex, _mipIndex);
-            set
-            {
-                value = Math.Min(value, MaxMipIndex);
-                if (value != _mipIndex)
-                {
-                    _mipIndex = value;
-                    DepthIndex = _depthIndex;
-                    OnPropertyChanged(nameof(MipIndex));
-                    OnPropertyChanged(nameof(MaxDepthIndex));
-                    SetSelectedBitmap();
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public int DepthIndex
-        {
-            get => Math.Min(MaxDepthIndex, _depthIndex);
-            set
-            {
-                value = Math.Min(value, MaxDepthIndex);
-                if (value != _depthIndex)
-                {
-                    _depthIndex = value;
-                    OnPropertyChanged(nameof(DepthIndex));
-                    SetSelectedBitmap();
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public bool IsRedChannelSet
-        {
-            get => _isRedChannelSet;
-            set
-            {
-                if (value != _isRedChannelSet)
-                {
-                    _isRedChannelSet = value;
-                    OnPropertyChanged(nameof(IsRedChannelSet));
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public bool IsGreenChannelSet
-        {
-            get => _isGreenChannelSet;
-            set
-            {
-                if (value != _isGreenChannelSet)
-                {
-                    _isGreenChannelSet = value;
-                    OnPropertyChanged(nameof(IsGreenChannelSet));
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public bool IsBlueChannelSet
-        {
-            get => _isBlueChannelSet;
-            set
-            {
-                if (value != _isBlueChannelSet)
-                {
-                    _isBlueChannelSet = value;
-                    OnPropertyChanged(nameof(IsBlueChannelSet));
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public bool IsAlphaChannelSet
-        {
-            get => _isAlphaChannelSet;
-            set
-            {
-                if (value != _isAlphaChannelSet)
-                {
-                    _isAlphaChannelSet = value;
-                    OnPropertyChanged(nameof(IsAlphaChannelSet));
-                    SetImageChannels();
-                }
-            }
-        }
-
-        public bool CanSaveChanges
-        {
-            get => _canSaveChanges;
-            set
-            {
-                if (value != _canSaveChanges)
-                {
-                    _canSaveChanges = value;
-                    OnPropertyChanged(nameof(CanSaveChanges));
-                }
-            }
-        }
-
-        public CubeMap Cubemap
-        {
-            get => _cubemap;
-            set
-            {
-                if (value != _cubemap)
-                {
-                    _cubemap = value;
-                    OnPropertyChanged(nameof(Cubemap));
-                }
-            }
-        }
-
-        public bool ViewAsCubemap
-        {
-            get => _viewAsCupemap;
-            set
-            {
-                if (value != _viewAsCupemap)
-                {
-                    _viewAsCupemap = value;
-                    OnPropertyChanged(nameof(ViewAsCubemap));
-                }
-            }
-        }
-
-        public TextureEditor()
-        {
-            SetAllChannelsCommand = new RelayCommand<string>(OnSetAllChannelsCommand);
-            SetChannelCommand = new RelayCommand<string>(OnSetChannelCommand);
-            RegenerateBitmapsCommand = new RelayCommand<bool>(OnRegenerateBitmapsCommand);
-            ReimportCommand = new RelayCommand<object>(async x => await OnReimportCommandAsync(x));
-            SaveCommand = new RelayCommand<object>(async x => await OnSaveCommandAsync(x));
-        }
-
-        public async Task SetAssetAsync(Asset asset)
-        {
-            Debug.Assert(asset is Texture);
-
-            if (asset is Texture texture)
-            {
-                _assetGuid = texture.Guid;
-
-                await SetMipmapsAsync(texture);
-
-                Texture = texture;
-            }
-        }
-
-        public async Task SetAssetAsync(AssetInfo info)
-        {
-            try
-            {
-                _assetGuid = info.Guid;
-                Texture = null;
-
-                Debug.Assert(info is not null && File.Exists(info.FullPath));
-
-                var texture = new Texture();
-
-                State = AssetEditorState.LOADING;
-
-                await Task.Run(() =>
-                {
-                    texture.Load(info.FullPath);
-                });
-
-                await SetMipmapsAsync(texture);
-
-                Texture = texture;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Debug.WriteLine($"Failed to set texture for use in texture editor. File: {info.FullPath}");
-
-                Texture = new();
-            }
-            finally
-            {
-                State = AssetEditorState.DONE;
-            }
-        }
-
-        public bool CheckAssetGuid(Guid guid) =>
-            _assetGuid == guid || Texture?.Guid == guid || Texture?.IBLPair?.Guid == guid;
-
-        private async Task SetMipmapsAsync(Texture texture)
-        {
-            try
-            {
-                await Task.Run(() =>
-                {
-                    _slices = texture.ImportSettings.Compress ? ContentToolsAPI.Decompress(texture) : texture.Slices;
-                });
-
-                Debug.Assert(_slices?.Any() == true && _slices.First().Any());
-
-                GenerateSliceBitMaps(texture.IsNormalMap, texture.Format);
                 OnPropertyChanged(nameof(Texture));
-                OnPropertyChanged(nameof(DataSize));
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Debug.WriteLine($"Failed to load mipmaps from {texture.FileName}");
+                SetSelectedBitmap();
+                SetImageChannels();
             }
         }
+    }
 
-        private void GenerateSliceBitMaps(bool isNormalMap, DXGIFormat format)
+    public int ArrayIndex
+    {
+        get => Math.Min(MaxArrayIndex, _arrayIndex);
+        set
         {
-            _sliceBitmaps.Clear();
-            _cubemap = null;
-
-            foreach (var arraySlice in _slices)
+            value = Math.Min(value, MaxArrayIndex);
+            if (value != _arrayIndex)
             {
-                List<List<BitmapSource>> mipmapsBitmaps = new();
-
-                foreach (var mipLevel in arraySlice)
-                {
-                    List<BitmapSource> sliceBitmap = new();
-
-                    foreach (var slice in mipLevel)
-                    {
-                        var image = BitmapHelper.ImageFromSlice(slice, format, isNormalMap);
-
-                        Debug.Assert(image is not null);
-
-                        sliceBitmap.Add(image);
-                    }
-                    mipmapsBitmaps.Add(sliceBitmap);
-                }
-                _sliceBitmaps.Add(mipmapsBitmaps);
+                _arrayIndex = value;
+                OnPropertyChanged(nameof(ArrayIndex));
+                SetSelectedBitmap();
+                SetImageChannels();
             }
-
-            OnPropertyChanged(nameof(MaxMipIndex));
-            OnPropertyChanged(nameof(MaxArrayIndex));
-            OnPropertyChanged(nameof(MaxDepthIndex));
         }
+    }
 
-        private void SetSelectedBitmap()
+    public int MipIndex
+    {
+        get => Math.Min(MaxMipIndex, _mipIndex);
+        set
         {
-            SetCubeMap();
-            OnPropertyChanged(nameof(SelectedSliceBitmap));
-            OnPropertyChanged(nameof(SelectedSlice));
+            value = Math.Min(value, MaxMipIndex);
+            if (value != _mipIndex)
+            {
+                _mipIndex = value;
+                DepthIndex = _depthIndex;
+                OnPropertyChanged(nameof(MipIndex));
+                OnPropertyChanged(nameof(MaxDepthIndex));
+                SetSelectedBitmap();
+                SetImageChannels();
+            }
+        }
+    }
+
+    public int DepthIndex
+    {
+        get => Math.Min(MaxDepthIndex, _depthIndex);
+        set
+        {
+            value = Math.Min(value, MaxDepthIndex);
+            if (value != _depthIndex)
+            {
+                _depthIndex = value;
+                OnPropertyChanged(nameof(DepthIndex));
+                SetSelectedBitmap();
+                SetImageChannels();
+            }
+        }
+    }
+
+    public bool IsRedChannelSet
+    {
+        get => _isRedChannelSet;
+        set
+        {
+            if (value != _isRedChannelSet)
+            {
+                _isRedChannelSet = value;
+                OnPropertyChanged(nameof(IsRedChannelSet));
+                SetImageChannels();
+            }
+        }
+    }
+
+    public bool IsGreenChannelSet
+    {
+        get => _isGreenChannelSet;
+        set
+        {
+            if (value != _isGreenChannelSet)
+            {
+                _isGreenChannelSet = value;
+                OnPropertyChanged(nameof(IsGreenChannelSet));
+                SetImageChannels();
+            }
+        }
+    }
+
+    public bool IsBlueChannelSet
+    {
+        get => _isBlueChannelSet;
+        set
+        {
+            if (value != _isBlueChannelSet)
+            {
+                _isBlueChannelSet = value;
+                OnPropertyChanged(nameof(IsBlueChannelSet));
+                SetImageChannels();
+            }
+        }
+    }
+
+    public bool IsAlphaChannelSet
+    {
+        get => _isAlphaChannelSet;
+        set
+        {
+            if (value != _isAlphaChannelSet)
+            {
+                _isAlphaChannelSet = value;
+                OnPropertyChanged(nameof(IsAlphaChannelSet));
+                SetImageChannels();
+            }
+        }
+    }
+
+    public bool CanSaveChanges
+    {
+        get => _canSaveChanges;
+        set
+        {
+            if (value != _canSaveChanges)
+            {
+                _canSaveChanges = value;
+                OnPropertyChanged(nameof(CanSaveChanges));
+            }
+        }
+    }
+
+    public CubeMap Cubemap
+    {
+        get => _cubemap;
+        set
+        {
+            if (value != _cubemap)
+            {
+                _cubemap = value;
+                OnPropertyChanged(nameof(Cubemap));
+            }
+        }
+    }
+
+    public bool ViewAsCubemap
+    {
+        get => _viewAsCupemap;
+        set
+        {
+            if (value != _viewAsCupemap)
+            {
+                _viewAsCupemap = value;
+                OnPropertyChanged(nameof(ViewAsCubemap));
+            }
+        }
+    }
+
+    public TextureEditor()
+    {
+        SetAllChannelsCommand = new RelayCommand<string>(OnSetAllChannelsCommand);
+        SetChannelCommand = new RelayCommand<string>(OnSetChannelCommand);
+        RegenerateBitmapsCommand = new RelayCommand<bool>(OnRegenerateBitmapsCommand);
+        ReimportCommand = new RelayCommand<object>(async x => await OnReimportCommandAsync(x));
+        SaveCommand = new RelayCommand<object>(async x => await OnSaveCommandAsync(x));
+    }
+
+    public async Task SetAssetAsync(Asset asset)
+    {
+        Debug.Assert(asset is Texture);
+
+        if (asset is Texture texture)
+        {
+            _assetGuid = texture.Guid;
+
+            await SetMipmapsAsync(texture);
+
+            Texture = texture;
+        }
+    }
+
+    public async Task SetAssetAsync(AssetInfo info)
+    {
+        try
+        {
+            _assetGuid = info.Guid;
+            Texture = null;
+
+            Debug.Assert(info is not null && File.Exists(info.FullPath));
+
+            var texture = new Texture();
+
+            State = AssetEditorState.LOADING;
+
+            await Task.Run(() =>
+            {
+                texture.Load(info.FullPath);
+            });
+
+            await SetMipmapsAsync(texture);
+
+            Texture = texture;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Debug.WriteLine($"Failed to set texture for use in texture editor. File: {info.FullPath}");
+
+            Texture = new();
+        }
+        finally
+        {
+            State = AssetEditorState.DONE;
+        }
+    }
+
+    public bool CheckAssetGuid(Guid guid) =>
+        _assetGuid == guid || Texture?.Guid == guid || Texture?.IBLPair?.Guid == guid;
+
+    private async Task SetMipmapsAsync(Texture texture)
+    {
+        try
+        {
+            await Task.Run(() =>
+            {
+                _slices = texture.ImportSettings.Compress
+                    ? ContentToolsAPI.Decompress(texture)
+                    : texture.Slices;
+            });
+
+            Debug.Assert(_slices?.Any() == true && _slices.First().Any());
+
+            GenerateSliceBitMaps(texture.IsNormalMap, texture.Format);
+            OnPropertyChanged(nameof(Texture));
             OnPropertyChanged(nameof(DataSize));
         }
-
-        private void OnSetAllChannelsCommand(object obj)
+        catch (Exception ex)
         {
-            _isRedChannelSet = true;
-            _isGreenChannelSet = true;
-            _isBlueChannelSet = true;
-            _isAlphaChannelSet = true;
+            Debug.WriteLine(ex.Message);
+            Debug.WriteLine($"Failed to load mipmaps from {texture.FileName}");
+        }
+    }
+
+    private void GenerateSliceBitMaps(bool isNormalMap, DXGIFormat format)
+    {
+        _sliceBitmaps.Clear();
+        _cubemap = null;
+
+        foreach (var arraySlice in _slices)
+        {
+            List<List<BitmapSource>> mipmapsBitmaps = new();
+
+            foreach (var mipLevel in arraySlice)
+            {
+                List<BitmapSource> sliceBitmap = new();
+
+                foreach (var slice in mipLevel)
+                {
+                    var image = BitmapHelper.ImageFromSlice(slice, format, isNormalMap);
+
+                    Debug.Assert(image is not null);
+
+                    sliceBitmap.Add(image);
+                }
+                mipmapsBitmaps.Add(sliceBitmap);
+            }
+            _sliceBitmaps.Add(mipmapsBitmaps);
+        }
+
+        OnPropertyChanged(nameof(MaxMipIndex));
+        OnPropertyChanged(nameof(MaxArrayIndex));
+        OnPropertyChanged(nameof(MaxDepthIndex));
+    }
+
+    private void SetSelectedBitmap()
+    {
+        SetCubeMap();
+        OnPropertyChanged(nameof(SelectedSliceBitmap));
+        OnPropertyChanged(nameof(SelectedSlice));
+        OnPropertyChanged(nameof(DataSize));
+    }
+
+    private void OnSetAllChannelsCommand(object obj)
+    {
+        _isRedChannelSet = true;
+        _isGreenChannelSet = true;
+        _isBlueChannelSet = true;
+        _isAlphaChannelSet = true;
+
+        OnPropertyChanged(nameof(IsRedChannelSet));
+        OnPropertyChanged(nameof(IsGreenChannelSet));
+        OnPropertyChanged(nameof(IsBlueChannelSet));
+        OnPropertyChanged(nameof(IsAlphaChannelSet));
+
+        SetImageChannels();
+    }
+
+    private void OnSetChannelCommand(string obj)
+    {
+        if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            _isRedChannelSet = false;
+            _isGreenChannelSet = false;
+            _isBlueChannelSet = false;
+            _isAlphaChannelSet = false;
 
             OnPropertyChanged(nameof(IsRedChannelSet));
             OnPropertyChanged(nameof(IsGreenChannelSet));
@@ -380,137 +408,119 @@ namespace Editor.Editors
             SetImageChannels();
         }
 
-        private void OnSetChannelCommand(string obj)
+        switch (obj)
         {
-            if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-            {
-                _isRedChannelSet = false;
-                _isGreenChannelSet = false;
-                _isBlueChannelSet = false;
-                _isAlphaChannelSet = false;
-
-                OnPropertyChanged(nameof(IsRedChannelSet));
-                OnPropertyChanged(nameof(IsGreenChannelSet));
-                OnPropertyChanged(nameof(IsBlueChannelSet));
-                OnPropertyChanged(nameof(IsAlphaChannelSet));
-
-                SetImageChannels();
-            }
-
-            switch (obj)
-            {
-                case "R":
-                    IsRedChannelSet = !IsRedChannelSet;
-                    break;
-                case "G":
-                    IsGreenChannelSet = !IsGreenChannelSet;
-                    break;
-                case "B":
-                    IsBlueChannelSet = !IsBlueChannelSet;
-                    break;
-                case "A":
-                    IsAlphaChannelSet = !IsAlphaChannelSet;
-                    break;
-            }
+            case "R":
+                IsRedChannelSet = !IsRedChannelSet;
+                break;
+            case "G":
+                IsGreenChannelSet = !IsGreenChannelSet;
+                break;
+            case "B":
+                IsBlueChannelSet = !IsBlueChannelSet;
+                break;
+            case "A":
+                IsAlphaChannelSet = !IsAlphaChannelSet;
+                break;
         }
+    }
 
-        private void OnRegenerateBitmapsCommand(bool isNormal)
+    private void OnRegenerateBitmapsCommand(bool isNormal)
+    {
+        GenerateSliceBitMaps(isNormal, Texture?.Format ?? DXGIFormat.DXGI_FORMAT_UNKNOWN);
+        OnPropertyChanged(nameof(SelectedSliceBitmap));
+        SetImageChannels();
+    }
+
+    private void SetImageChannels()
+    {
+        OnPropertyChanged(nameof(Channels));
+        OnPropertyChanged(nameof(Stride));
+        OnPropertyChanged(nameof(DataSize));
+    }
+
+    private async Task OnReimportCommandAsync(object obj)
+    {
+        if (Texture is null) return;
+
+        TextureImportSettings settingsBackup = new();
+
+        IAssetImportSettings.CopyImportSettings(Texture.ImportSettings, settingsBackup);
+        IAssetImportSettings.CopyImportSettings(ImportSettings, Texture.ImportSettings);
+
+        State = AssetEditorState.IMPORTING;
+
+        bool result = false;
+
+        await Task.Run(() => result = Texture.Import(Texture.FullPath));
+
+        if (result)
         {
-            GenerateSliceBitMaps(isNormal, Texture?.Format ?? DXGIFormat.DXGI_FORMAT_UNKNOWN);
-            OnPropertyChanged(nameof(SelectedSliceBitmap));
+            State = AssetEditorState.LOADING;
+
+            await SetMipmapsAsync(Texture);
+
+            SetSelectedBitmap();
             SetImageChannels();
+
+            CanSaveChanges = true;
         }
+        else IAssetImportSettings.CopyImportSettings(settingsBackup, Texture.ImportSettings);
 
-        private void SetImageChannels()
+        State = AssetEditorState.DONE;
+    }
+
+    private async Task OnSaveCommandAsync(object obj)
+    {
+        if (!CanSaveChanges || Texture is null) return;
+
+        State = AssetEditorState.SAVING;
+        CanSaveChanges = false;
+
+        await Task.Run(() => Texture.SaveAsset());
+
+        State = AssetEditorState.DONE;
+    }
+
+    private void SetCubeMap()
+    {
+        if (Texture?.IsCubeMap != true) return;
+
+        var index = (ArrayIndex / 6) * 6;
+
+        if (Cubemap is null || index != Cubemap.ArrayIndex || MipIndex != Cubemap.MipIndex)
         {
-            OnPropertyChanged(nameof(Channels));
-            OnPropertyChanged(nameof(Stride));
-            OnPropertyChanged(nameof(DataSize));
-        }
+            Debug.Assert(index + 5 <= MaxArrayIndex);
 
-        private async Task OnReimportCommandAsync(object obj)
-        {
-            if (Texture is null) return;
-
-            TextureImportSettings settingsBackup = new();
-
-            IAssetImportSettings.CopyImportSettings(Texture.ImportSettings, settingsBackup);
-            IAssetImportSettings.CopyImportSettings(ImportSettings, Texture.ImportSettings);
-
-            State = AssetEditorState.IMPORTING;
-
-            bool result = false;
-
-            await Task.Run(() => result = Texture.Import(Texture.FullPath));
-
-            if (result)
+            Cubemap = new()
             {
-                State = AssetEditorState.LOADING;
-
-                await SetMipmapsAsync(Texture);
-
-                SetSelectedBitmap();
-                SetImageChannels();
-
-                CanSaveChanges = true;
-            }
-            else IAssetImportSettings.CopyImportSettings(settingsBackup, Texture.ImportSettings);
-
-            State = AssetEditorState.DONE;
-        }
-
-        private async Task OnSaveCommandAsync(object obj)
-        {
-            if (!CanSaveChanges || Texture is null) return;
-
-            State = AssetEditorState.SAVING;
-            CanSaveChanges = false;
-
-            await Task.Run(() => Texture.SaveAsset());
-
-            State = AssetEditorState.DONE;
-        }
-
-        private void SetCubeMap()
-        {
-            if (Texture?.IsCubeMap != true) return;
-
-            var index = (ArrayIndex / 6) * 6;
-
-            if (Cubemap is null || index != Cubemap.ArrayIndex || MipIndex != Cubemap.MipIndex)
-            {
-                Debug.Assert(index + 5 <= MaxArrayIndex);
-
-                Cubemap = new()
-                {
-                    ArrayIndex = index,
-                    MipIndex = MipIndex,
-                    PositiveX = _sliceBitmaps
-                                    .ElementAtOrDefault(index)?
-                                    .ElementAtOrDefault(MipIndex)?
-                                    .ElementAtOrDefault(DepthIndex),
-                    NegativeX = _sliceBitmaps
-                                    .ElementAtOrDefault(index + 1)?
-                                    .ElementAtOrDefault(MipIndex)?
-                                    .ElementAtOrDefault(DepthIndex),
-                    PositiveY = _sliceBitmaps
-                                    .ElementAtOrDefault(index + 2)?
-                                    .ElementAtOrDefault(MipIndex)?
-                                    .ElementAtOrDefault(DepthIndex),
-                    NegativeY = _sliceBitmaps
-                                    .ElementAtOrDefault(index + 3)?
-                                    .ElementAtOrDefault(MipIndex)?
-                                    .ElementAtOrDefault(DepthIndex),
-                    PositiveZ = _sliceBitmaps
-                                    .ElementAtOrDefault(index + 4)?
-                                    .ElementAtOrDefault(MipIndex)?
-                                    .ElementAtOrDefault(DepthIndex),
-                    NegativeZ = _sliceBitmaps
-                                    .ElementAtOrDefault(index + 5)?
-                                    .ElementAtOrDefault(MipIndex)?
-                                    .ElementAtOrDefault(DepthIndex)
-                };
-            }
+                ArrayIndex = index,
+                MipIndex = MipIndex,
+                PositiveX = _sliceBitmaps
+                                .ElementAtOrDefault(index)?
+                                .ElementAtOrDefault(MipIndex)?
+                                .ElementAtOrDefault(DepthIndex),
+                NegativeX = _sliceBitmaps
+                                .ElementAtOrDefault(index + 1)?
+                                .ElementAtOrDefault(MipIndex)?
+                                .ElementAtOrDefault(DepthIndex),
+                PositiveY = _sliceBitmaps
+                                .ElementAtOrDefault(index + 2)?
+                                .ElementAtOrDefault(MipIndex)?
+                                .ElementAtOrDefault(DepthIndex),
+                NegativeY = _sliceBitmaps
+                                .ElementAtOrDefault(index + 3)?
+                                .ElementAtOrDefault(MipIndex)?
+                                .ElementAtOrDefault(DepthIndex),
+                PositiveZ = _sliceBitmaps
+                                .ElementAtOrDefault(index + 4)?
+                                .ElementAtOrDefault(MipIndex)?
+                                .ElementAtOrDefault(DepthIndex),
+                NegativeZ = _sliceBitmaps
+                                .ElementAtOrDefault(index + 5)?
+                                .ElementAtOrDefault(MipIndex)?
+                                .ElementAtOrDefault(DepthIndex)
+            };
         }
     }
 }

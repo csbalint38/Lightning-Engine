@@ -19,7 +19,7 @@ public class UploadedAsset
 
     private UploadedAsset() { }
 
-    public static UploadedAsset AddToScene(AssetInfo assetInfo, Asset? asset = null)
+    public static UploadedAsset? AddToScene(AssetInfo assetInfo, Asset? asset = null)
     {
         Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
 
@@ -82,7 +82,7 @@ public class UploadedAsset
         }
     }
 
-    private static UploadedAsset UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)
+    private static UploadedAsset? UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)
     {
         Debug.Assert(assetInfo is not null);
 
@@ -105,7 +105,7 @@ public class UploadedAsset
 
             var referencedAssets = new List<UploadedAsset>();
 
-            asset.GetReferencedAssets().ForEach(x => referencedAssets.Add(AddToScene(x)));
+            asset.GetReferencedAssets().ForEach(x => referencedAssets.Add(AddToScene(x)!));
 
             var data = asset.PackForEngine();
 

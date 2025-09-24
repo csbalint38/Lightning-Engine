@@ -22,7 +22,7 @@ namespace Editor.Content;
 /// </summary>
 public partial class ContentBrowserView : UserControl, IDisposable
 {
-    private string _sortedProperty = nameof(ContentInfo.FileName);
+    private string? _sortedProperty = nameof(ContentInfo.FileName);
     private ListSortDirection _sortDirection;
     private Point _clickPosition;
     private bool _startDrag;
@@ -55,7 +55,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
         new PropertyMetadata(null)
     );
 
-    internal ContentInfo SelectedItem
+    internal ContentInfo? SelectedItem
     {
         get => (ContentInfo)GetValue(SelectedItemProperty);
         set => SetValue(SelectedItemProperty, value);
@@ -91,7 +91,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
     {
         var vm = DataContext as ContentBrowser.ContentBrowser;
 
-        OpenImportSettingsConfigurator(null, vm.SelectedFolder, true);
+        OpenImportSettingsConfigurator(null, vm?.SelectedFolder, true);
     }
 
     public void Dispose()
@@ -105,13 +105,13 @@ public partial class ContentBrowserView : UserControl, IDisposable
         DataContext = null;
     }
 
-    internal static IAssetEditor OpenAssetEditor(AssetInfo info)
+    internal static IAssetEditor? OpenAssetEditor(AssetInfo? info)
     {
-        IAssetEditor editor = null;
+        IAssetEditor? editor = null;
 
         try
         {
-            switch (info.Type)
+            switch (info?.Type)
             {
                 case AssetType.ANIMATION:
                     break;
@@ -155,14 +155,14 @@ public partial class ContentBrowserView : UserControl, IDisposable
         }
 
         var newEditor = CreateEditorWindow<T>(title);
-        (newEditor.DataContext as IAssetEditor).SetAssetAsync(info);
+        (newEditor.DataContext as IAssetEditor)?.SetAssetAsync(info);
 
-        return newEditor.DataContext as IAssetEditor;
+        return (newEditor.DataContext as IAssetEditor)!;
     }
 
-    private static void OpenImportSettingsConfigurator(string[]? files, string selectedFolder, bool forceOpen = false)
+    private static void OpenImportSettingsConfigurator(string[]? files, string? selectedFolder, bool forceOpen = false)
     {
-        ConfigureImportSettings settingsConfigurator = null;
+        ConfigureImportSettings? settingsConfigurator = null;
 
         foreach (Window win in Application.Current.Windows)
         {
@@ -236,7 +236,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
         }
     }
 
-    private void OnProjectChanged(object sender, DependencyPropertyChangedEventArgs e)
+    private void OnProjectChanged(object? sender, DependencyPropertyChangedEventArgs e)
     {
         (DataContext as ContentBrowser.ContentBrowser)?.Dispose();
         DataContext = null;
@@ -251,21 +251,18 @@ public partial class ContentBrowserView : UserControl, IDisposable
         }
     }
 
-    private void OnSelectedFolderChanged(object sender, PropertyChangedEventArgs e)
+    private void OnSelectedFolderChanged(object? sender, PropertyChangedEventArgs e)
     {
         var vm = sender as ContentBrowser.ContentBrowser;
 
-        if (e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm.SelectedFolder))
-        {
-            GeneratePathStackButtons();
-        }
+        if (e.PropertyName == nameof(vm.SelectedFolder) && !string.IsNullOrEmpty(vm?.SelectedFolder)) GeneratePathStackButtons();
     }
 
     private void BDrop_Drop(object sender, DragEventArgs e)
     {
         var vm = DataContext as ContentBrowser.ContentBrowser;
 
-        if (Directory.Exists(vm.SelectedFolder) && e.Data.GetDataPresent(DataFormats.FileDrop))
+        if (Directory.Exists(vm?.SelectedFolder) && e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             var files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
@@ -295,7 +292,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
 
         if (info.IsDirectory)
         {
-            var vm = DataContext as ContentBrowser.ContentBrowser;
+            var vm = (ContentBrowser.ContentBrowser)DataContext;
             vm.SelectedFolder = info.FullPath;
         }
         else if (FileAccess.HasFlag(FileAccess.Read))
@@ -311,8 +308,9 @@ public partial class ContentBrowserView : UserControl, IDisposable
 
     private void LVFolders_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        var info = (sender as FrameworkElement).DataContext as ContentInfo;
-        ExecuteSelection(info);
+        var info = ((FrameworkElement)sender).DataContext as ContentInfo;
+
+        ExecuteSelection(info!);
     }
 
     private bool TryEdit(ListView list, string path)
@@ -321,7 +319,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
         {
             if (item.FullPath == path)
             {
-                var listBoxItem = list.ItemContainerGenerator.ContainerFromItem(item) as ListBoxItem;
+                var listBoxItem = (ListBoxItem)list.ItemContainerGenerator.ContainerFromItem(item);
 
                 listBoxItem.IsSelected = true;
                 list.SelectedItem = item;
@@ -350,7 +348,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
     private async void MINewFolder_ClickAsync(object sender, RoutedEventArgs e)
     {
         var vm = DataContext as ContentBrowser.ContentBrowser;
-        var path = vm.SelectedFolder;
+        var path = vm?.SelectedFolder;
 
         if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
 
@@ -393,7 +391,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
     {
         if (sender == BDrop && e?.Effects != DragDropEffects.None)
         {
-            var point = e.GetPosition(BDrop);
+            var point = e!.GetPosition(BDrop);
             var result = VisualTreeHelper.HitTest(BDrop, point);
 
             if (result is not null) return;
@@ -421,7 +419,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
     private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
     {
         var column = sender as GridViewColumnHeader;
-        var sortBy = column.Tag.ToString();
+        var sortBy = column?.Tag.ToString();
 
         LVFolders.Items.SortDescriptions.Clear();
 
@@ -440,23 +438,23 @@ public partial class ContentBrowserView : UserControl, IDisposable
 
     private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        var info = (sender as FrameworkElement).DataContext as ContentInfo;
+        var info = ((FrameworkElement)sender).DataContext as ContentInfo;
 
-        ExecuteSelection(info);
+        ExecuteSelection(info!);
     }
 
     private void ListViewItem_KeyDown(object sender, KeyEventArgs e)
     {
-        var info = (sender as FrameworkElement).DataContext as ContentInfo;
+        var info = ((FrameworkElement)sender).DataContext as ContentInfo;
 
-        if (e.Key == Key.Enter) ExecuteSelection(info);
-        else if (e.Key == Key.F2) TryEdit(LVFolders, info.FullPath);
+        if (e.Key == Key.Enter) ExecuteSelection(info!);
+        else if (e.Key == Key.F2) TryEdit(LVFolders, info!.FullPath);
     }
 
     private void GeneratePathStackButtons()
     {
-        var vm = DataContext as ContentBrowser.ContentBrowser;
-        var path = Directory.GetParent(Path.TrimEndingDirectorySeparator(vm.SelectedFolder)).FullName;
+        var vm = (ContentBrowser.ContentBrowser)DataContext;
+        var path = Directory.GetParent(Path.TrimEndingDirectorySeparator(vm.SelectedFolder))?.FullName ?? string.Empty;
         var contentPath = Path.TrimEndingDirectorySeparator(vm.ContentFolder);
 
         SPPath.Children.RemoveRange(1, SPPath.Children.Count - 1);
@@ -509,7 +507,7 @@ public partial class ContentBrowserView : UserControl, IDisposable
     private void OnPathStack_Button_Click(object sender, RoutedEventArgs e)
     {
         var vm = DataContext as ContentBrowser.ContentBrowser;
-        vm.SelectedFolder = (sender as Button).DataContext as string;
+        vm!.SelectedFolder = ((sender as Button)!.DataContext as string)!;
     }
 
     private void ListViewEx_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

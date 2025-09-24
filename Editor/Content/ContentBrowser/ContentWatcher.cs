@@ -22,7 +22,7 @@ namespace Editor.Content.ContentBrowser
 
         private static int _fileWatcherEnableCounter = 0;
 
-        public static event EventHandler<ContentModifiedEventArgs> ContentModified;
+        public static event EventHandler<ContentModifiedEventArgs>? ContentModified;
 
         static ContentWatcher()
         {
@@ -66,7 +66,7 @@ namespace Editor.Content.ContentBrowser
         private static async void OnContentModifiedAsync(object sender, FileSystemEventArgs e) =>
             await Application.Current.Dispatcher.BeginInvoke(new Action(() => _refreshTimer.Trigger(e)));
 
-        private static void Refresh(object sender, DelayEventTimerArgs e)
+        private static void Refresh(object? sender, DelayEventTimerArgs e)
         {
             if (_fileWatcherEnableCounter > 0)
             {

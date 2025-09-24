@@ -18,13 +18,13 @@ namespace Editor.Content
         private int _mipLevels;
         private DXGIFormat _format;
         private bool _isSaving;
-        private Texture _iblPair;
+        private Texture? _iblPair;
         private bool _isPrefilteredIBL;
 
         public static int MaxMipLevels => 14;
         public static int MaxArraySize => 2048;
         public static int Max3DSize => 2048;
-        public static AssetInfo Default => DefaultAssets.DefaultTexture;
+        public static AssetInfo? Default => DefaultAssets.DefaultTexture;
 
         public TextureImportSettings ImportSettings { get; } = new();
 
@@ -114,7 +114,7 @@ namespace Editor.Content
             }
         }
 
-        public Texture IBLPair
+        public Texture? IBLPair
         {
             get => _iblPair;
             set
@@ -467,7 +467,7 @@ namespace Editor.Content
             return result;
         }
 
-        public bool SetData(SliceArray3D slices, Slice icon, Texture iblPair)
+        public bool SetData(SliceArray3D slices, Slice? icon, Texture? iblPair)
         {
             Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
 
@@ -486,7 +486,7 @@ namespace Editor.Content
             }
 
             Icon = BitmapHelper.CreateThumbnail(
-                BitmapHelper.ImageFromSlice(icon, Format, IsNormalMap),
+                BitmapHelper.ImageFromSlice(icon, Format, IsNormalMap)!,
                 ContentInfo.IconWidth,
                 ContentInfo.IconWidth
             );

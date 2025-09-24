@@ -19,14 +19,11 @@ namespace Editor.GameProject
             };
         }
 
-        private void BtnOpen_Click(object sender, RoutedEventArgs e)
-        {
-            OpenSelectedProject();
-        }
+        private void BtnOpen_Click(object sender, RoutedEventArgs e) => OpenSelectedProject();
 
         private void OpenSelectedProject()
         {
-            var project = OpenProject.Open(LbProjects.SelectedItem as ProjectData);
+            var project = OpenProject.Open((ProjectData)LbProjects.SelectedItem);
             bool dialogResult = false;
             var win = Window.GetWindow(this);
 

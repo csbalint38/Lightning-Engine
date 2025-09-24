@@ -68,7 +68,7 @@ namespace Editor.Content.ImportSettingsConfig
             }
         }
 
-        public static ImportingItem GetItem(Asset asset)
+        public static ImportingItem? GetItem(Asset asset)
         {
             lock (_lock)
             {
