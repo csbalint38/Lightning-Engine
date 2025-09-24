@@ -18,18 +18,18 @@ namespace Editor.DLLs.Descriptors
         public GeometryComponent(Geometry geometry)
         {
             GeometryContentId = geometry.ContentId;
-            MaterialCount = geometry.GeometryWithMaterials.LODs.Sum(x => x.Meshes.Count);
+            MaterialCount = geometry.GeometryWithMaterials?.LODs.Sum(x => x.Meshes.Count) ?? 0;
 
             Debug.Assert(MaterialCount == geometry.Materials.Count);
 
-            byte[] data = null;
+            byte[]? data = null;
 
             using (var writer = new BinaryWriter(new MemoryStream()))
             {
-                geometry.Materials.ForEach(material => writer.Write(material.UploadedAsset.ContentId));
+                geometry.Materials.ForEach(material => writer.Write(material.UploadedAsset!.ContentId));
                 writer.Flush();
 
-                data = (writer.BaseStream as MemoryStream).ToArray();
+                data = (writer.BaseStream as MemoryStream)?.ToArray();
             }
 
             Debug.Assert(data?.Length == geometry.Materials.Count * sizeof(IdType));

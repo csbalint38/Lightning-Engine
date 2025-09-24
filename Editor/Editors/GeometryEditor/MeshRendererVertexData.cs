@@ -18,6 +18,7 @@ namespace Editor.Editors
         private bool _isHighlighted;
         private bool _isIsolated;
 
+        public string? Name { get; set; }
         public Point3DCollection Positions { get; } = [];
         public Vector3DCollection Normals { get; } = [];
         public PointCollection UVs { get; } = [];
@@ -75,7 +76,5 @@ namespace Editor.Editors
                 }
             }
         }
-
-        public string Name { get; set; }
     }
 }

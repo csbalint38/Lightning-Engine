@@ -1,15 +1,11 @@
 ﻿using System.ComponentModel;
+using System.Reflection;
 
-namespace Editor.Utilities
+namespace Editor.Utilities;
+
+static class EnumExtension
 {
-    static class EnumExtension
-    {
-        public static string GetDescription(this Enum value) =>
-            (
-                value
-                    .GetType()
-                    .GetField(value.ToString())
-                    .GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[]
-            ).FirstOrDefault()?.Description ?? value.ToString();
-    }
+    public static string GetDescription(this Enum value) =>
+        value.GetType().GetField(value.ToString())?.GetCustomAttribute<DescriptionAttribute>()?.Description
+            ?? value.ToString();
 }

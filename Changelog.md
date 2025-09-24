@@ -1,7 +1,12 @@
 # v0.3.11-beta - 2025.10.1.
 
+## Editor
+ - Code cleanup (123)
+
 ## Engine
- - Takeing screenshots
+ - Taking screenshots
+ - Started migrating to C++ 20
+ - Code cleanup (215)
 
 # v0.3.10-beta - 2025.9.16.
 ## General
@@ -10,8 +15,8 @@
 ## Editor
  - Fixed saving and loading project that has Entities with Geometry component
  - Added Configuration Dialog with configureable MSBuild Path and Code Editor
- - SceneView improvements lik Scene renaming, drag-and-drop entity creation
- - Fixed 26 Warnings
+ - SceneView improvements like Scene renaming, drag-and-drop entity creation
+ - Code cleanup (26)
 
 # v0.3.9-beta - 2025.9.3
 ## General

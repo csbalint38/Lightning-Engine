@@ -5,7 +5,7 @@ namespace Editor.DLLs.Descriptors
     [StructLayout(LayoutKind.Sequential)]
     public class TextureImportSettings
     {
-        public string Sources;
+        public string? Sources;
         public int SourceCount;
         public int Dimension;
         public int MipLevels;

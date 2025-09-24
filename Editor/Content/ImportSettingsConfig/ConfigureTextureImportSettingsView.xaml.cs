@@ -2,90 +2,95 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Editor.Content.ImportSettingsConfig
+namespace Editor.Content.ImportSettingsConfig;
+
+/// <summary>
+/// Interaction logic for ConfigureTextureImportSettingsView.xaml
+/// </summary>
+public partial class ConfigureTextureImportSettingsView : UserControl
 {
-    /// <summary>
-    /// Interaction logic for ConfigureTextureImportSettingsView.xaml
-    /// </summary>
-    public partial class ConfigureTextureImportSettingsView : UserControl
+    public ConfigureTextureImportSettingsView()
     {
-        public ConfigureTextureImportSettingsView()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            var item = LBTexture.ItemContainerGenerator.ContainerFromIndex(LBTexture.SelectedIndex) as ListBoxItem;
-            item?.Focus();
-        }
+        var item = LBTexture.ItemContainerGenerator
+            .ContainerFromIndex(LBTexture.SelectedIndex) as ListBoxItem;
 
-        private void BtnImport_Click(object sender, RoutedEventArgs e) =>
-             ((sender as FrameworkElement).DataContext as TextureImportSettingsConfigurator).Import();
+        item?.Focus();
+    }
 
-        private void LBTexture_Drop(object sender, DragEventArgs e) =>
-            ConfigureImportSettingsWindow.AddDroppedFiles(DataContext as ConfigureImportSettings, sender as ListBox, e);
+    private void BtnImport_Click(object sender, RoutedEventArgs e) =>
+         (((FrameworkElement)sender).DataContext as TextureImportSettingsConfigurator)?.Import();
 
-        private void BtnRemove_Click(object sender, RoutedEventArgs e)
-        {
-            var vm = DataContext as ConfigureImportSettings;
-            vm.TextureImportSettingsConfigurator.RemoveFile((sender as FrameworkElement).DataContext as TextureProxy);
-        }
+    private void LBTexture_Drop(object sender, DragEventArgs e) =>
+        ConfigureImportSettingsWindow.AddDroppedFiles(
+            (ConfigureImportSettings)DataContext,
+            (ListBox)sender,
+            e
+        );
 
-        private void BtnApplyToSelection_Click(object sender, RoutedEventArgs e)
-        {
-            var settings = ((sender as FrameworkElement).DataContext as TextureProxy).ImportSettings;
-            var selection = LBTexture.SelectedItems;
+    private void BtnRemove_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = DataContext as ConfigureImportSettings;
+        vm?.TextureImportSettingsConfigurator.RemoveFile((((FrameworkElement)sender).DataContext as TextureProxy)!);
+    }
 
-            foreach (TextureProxy proxy in selection) proxy.CopySettings(settings);
-        }
+    private void BtnApplyToSelection_Click(object sender, RoutedEventArgs e)
+    {
+        var settings = ((TextureProxy)((FrameworkElement)sender).DataContext).ImportSettings;
+        var selection = LBTexture.SelectedItems;
 
-        private void BtnApplyToAll_Click(object sender, RoutedEventArgs e)
-        {
-            var settings = ((sender as FrameworkElement).DataContext as TextureProxy).ImportSettings;
-            var vm = DataContext as ConfigureImportSettings;
+        foreach (TextureProxy proxy in selection) proxy.CopySettings(settings);
+    }
 
-            foreach (var proxy in vm.TextureImportSettingsConfigurator.TextureProxies) proxy.CopySettings(settings);
-        }
+    private void BtnApplyToAll_Click(object sender, RoutedEventArgs e)
+    {
+        var settings = ((TextureProxy)((FrameworkElement)sender).DataContext).ImportSettings;
+        var vm = (ConfigureImportSettings)DataContext;
 
-        private void BtnClear_Click(object sender, RoutedEventArgs e) => ImportingItemCollection.Clear(AssetType.TEXTURE);
+        foreach (var proxy in vm.TextureImportSettingsConfigurator.TextureProxies) proxy.CopySettings(settings);
+    }
 
-        private void BtnAddImageSource_Click(object sender, RoutedEventArgs e)
-        {
-            var vm = (DataContext as ConfigureImportSettings).TextureImportSettingsConfigurator;
-            var target = (sender as FrameworkElement).DataContext as TextureProxy;
-            var items = LBTexture.SelectedItems;
-            var selection = new TextureProxy[items.Count];
+    private void BtnClear_Click(object sender, RoutedEventArgs e) => ImportingItemCollection.Clear(AssetType.TEXTURE);
 
-            items.CopyTo(selection, 0);
+    private void BtnAddImageSource_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = (DataContext as ConfigureImportSettings)?.TextureImportSettingsConfigurator;
+        var target = ((FrameworkElement)sender).DataContext as TextureProxy;
+        var items = LBTexture.SelectedItems;
+        var selection = new TextureProxy[items.Count];
 
-            foreach (TextureProxy proxy in selection) vm.MoveToTarget(proxy, target);
-        }
+        items.CopyTo(selection, 0);
 
-        private void BtnRemoveImageSource_Click(object sender, RoutedEventArgs e)
-        {
-            var vm = (DataContext as ConfigureImportSettings).TextureImportSettingsConfigurator;
-            var target = (sender as FrameworkElement).DataContext as TextureProxy;
-            var items = LBImageSources.SelectedItems;
-            var selection = new TextureProxy[items.Count];
+        foreach (TextureProxy proxy in selection) vm?.MoveToTarget(proxy, target!);
+    }
 
-            items.CopyTo(selection, 0);
+    private void BtnRemoveImageSource_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = (DataContext as ConfigureImportSettings)?.TextureImportSettingsConfigurator;
+        var target = ((FrameworkElement)sender).DataContext as TextureProxy;
+        var items = LBImageSources.SelectedItems;
+        var selection = new TextureProxy[items.Count];
 
-            foreach (TextureProxy proxy in selection) vm.MoveFromTarget(proxy, target);
-        }
+        items.CopyTo(selection, 0);
 
-        private void BtnMoveUp_Click(object sender, RoutedEventArgs e) =>
-            MoveSelection(sender, (target, selection) => target.MoveUp(selection));
+        foreach (TextureProxy proxy in selection) vm?.MoveFromTarget(proxy, target!);
+    }
 
-        private void BtnMoveDown_Click(object sender, RoutedEventArgs e) =>
-            MoveSelection(sender, (target, selection) => target.MoveDown(selection));
+    private void BtnMoveUp_Click(object sender, RoutedEventArgs e) =>
+        MoveSelection(sender, (target, selection) => target?.MoveUp(selection));
 
-        private void MoveSelection(object sender, Action<TextureProxy, List<TextureProxy>> action)
-        {
-            var target = (sender as FrameworkElement).DataContext as TextureProxy;
-            var items = LBImageSources.SelectedItems;
-            var selection = new List<TextureProxy>();
+    private void BtnMoveDown_Click(object sender, RoutedEventArgs e) =>
+        MoveSelection(sender, (target, selection) => target?.MoveDown(selection));
 
-            foreach (TextureProxy proxy in items) selection.Add(proxy);
+    private void MoveSelection(object sender, Action<TextureProxy?, List<TextureProxy>> action)
+    {
+        var target = ((FrameworkElement)sender).DataContext as TextureProxy;
+        var items = LBImageSources.SelectedItems;
+        var selection = new List<TextureProxy>();
 
-            action(target, selection);
-        }
+        foreach (TextureProxy proxy in items) selection.Add(proxy);
+
+        action(target, selection);
     }
 }

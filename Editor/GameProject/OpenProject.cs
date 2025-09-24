@@ -35,7 +35,7 @@ namespace Editor.GameProject
             }
         }
 
-        public static Project Open(ProjectData data)
+        public static Project? Open(ProjectData data)
         {
             ReadProjectData();
 

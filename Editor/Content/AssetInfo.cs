@@ -6,12 +6,12 @@ namespace Editor.Content
     public sealed class AssetInfo
     {
         public AssetType Type { get; set; }
-        public byte[] Icon { get; set; }
-        public string FullPath { get; set; }
-        public string FileName => Path.GetFileNameWithoutExtension(FullPath);
+        public byte[] Icon { get; set; } = [];
+        public string? FullPath { get; set; }
+        public string? FileName => Path.GetFileNameWithoutExtension(FullPath);
         public DateTime RegisterTime { get; set; }
         public DateTime ImportDate { get; set; }
         public Guid Guid { get; set; }
-        public byte[] Hash { get; set; }
+        public byte[]? Hash { get; set; }
     }
 }

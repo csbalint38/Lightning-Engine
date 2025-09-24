@@ -7,7 +7,7 @@ namespace Editor.Utilities.Converters
 {
     class ContentSubfolderConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var contentFolder = Project.Current.ContentPath;
 

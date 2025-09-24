@@ -32,7 +32,7 @@ namespace Editor.Utilities
 
         public void Disable() => _timer.IsEnabled = false;
 
-        private void OnTick(object sender, EventArgs e)
+        private void OnTick(object? sender, EventArgs e)
         {
             if ((DateTime.Now - _lastEventTime) < _delay) return;
 

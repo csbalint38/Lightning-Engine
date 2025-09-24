@@ -21,7 +21,7 @@ public class Geometry : Asset
 
     private readonly List<LODGroup> _lodGroups = [];
 
-    public static AssetInfo Default = DefaultAssets.DefaultGeometry;
+    public static AssetInfo? Default = DefaultAssets.DefaultGeometry;
 
     public GeometryImportSettings ImportSettings { get; } = new GeometryImportSettings();
 
@@ -81,7 +81,7 @@ public class Geometry : Asset
         }
     }
 
-    public LODGroup GetLodGroup(int lodGroup = 0)
+    public LODGroup? GetLodGroup(int lodGroup = 0)
     {
         Debug.Assert(lodGroup >= 0 && lodGroup < _lodGroups.Count);
 
@@ -114,7 +114,7 @@ public class Geometry : Asset
                     + AssetFileExtension;
 
                 Guid = TryGetAssetInfo(meshFileName) is AssetInfo info && info.Type == Type ? info.Guid : Guid.NewGuid();
-                byte[] data = null;
+                byte[]? data = null;
 
                 using (var writer = new BinaryWriter(new MemoryStream()))
                 {
@@ -130,7 +130,7 @@ public class Geometry : Asset
                     }
 
                     Hash = ContentHelper.ComputeHash([.. hashes]);
-                    data = (writer.BaseStream as MemoryStream).ToArray();
+                    data = (writer.BaseStream as MemoryStream)?.ToArray();
                     Icon = GenerateIcons(lodGroup.LODs[0])[0];
                 }
 
@@ -179,7 +179,7 @@ public class Geometry : Asset
 
         try
         {
-            byte[] data = null;
+            byte[]? data = null;
 
             using (var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read)))
             {
@@ -253,12 +253,12 @@ public class Geometry : Asset
     /// </returns>
     public override byte[] PackForEngine()
     {
-        byte[] data = null;
+        byte[]? data = null;
 
         using var writer = new BinaryWriter(new MemoryStream());
-        writer.Write(GetLodGroup().LODs.Count);
+        writer.Write(GetLodGroup()!.LODs.Count);
 
-        foreach (var lod in GetLodGroup().LODs)
+        foreach (var lod in GetLodGroup()!.LODs)
         {
             writer.Write(lod.LODThreshold);
             writer.Write(lod.Meshes.Count);
@@ -522,8 +522,8 @@ public class Geometry : Asset
 
         Debug.Assert(meshDataSize > 0);
 
-        var buffer = (writer.BaseStream as MemoryStream).ToArray();
-        hash = ContentHelper.ComputeHash(buffer, (int)meshDataBegin, (int)meshDataSize);
+        var buffer = (writer.BaseStream as MemoryStream)?.ToArray() ?? [];
+        hash = ContentHelper.ComputeHash(buffer, (int)meshDataBegin, (int)meshDataSize)!;
     }
 
     private MeshLOD BinaryToLOD(BinaryReader reader)

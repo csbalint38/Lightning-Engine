@@ -97,7 +97,7 @@ public partial class GeometryView : UserControl
         }
         else if (!_capturedLeft && _capturedRight)
         {
-            var vm = DataContext as MeshRenderer;
+            var vm = (MeshRenderer)DataContext;
             var cp = vm.CameraPosition;
             var yOffset = d.Y * 0.001 * Math.Sqrt(cp.X * cp.X + cp.Z * cp.Z);
 
@@ -132,7 +132,7 @@ public partial class GeometryView : UserControl
 
     private void MoveCamera(double dx, double dy, int dz)
     {
-        var vm = DataContext as MeshRenderer;
+        var vm = (MeshRenderer)DataContext;
         var v = new Vector3D(vm.CameraPosition.X, vm.CameraPosition.Y, vm.CameraPosition.Z);
         var r = v.Length;
         var theta = Math.Acos(v.Y / r);

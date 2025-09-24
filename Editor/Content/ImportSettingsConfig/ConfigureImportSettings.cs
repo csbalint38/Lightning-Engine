@@ -9,7 +9,7 @@ namespace Editor.Content.ImportSettingsConfig
 {
     public class ConfigureImportSettings : ViewModelBase
     {
-        public string LastDestinationFolder { get; private set; }
+        public string? LastDestinationFolder { get; private set; }
         public GeometryImportSettingsConfigurator GeometryImportSettingsConfigurator { get; } = new();
         public TextureImportSettingsConfigurator TextureImportSettingsConfigurator { get; } = new();
         public AudioImportSettingConfigurator AudioImportSettingsConfigurator { get; } = new();
@@ -19,13 +19,13 @@ namespace Editor.Content.ImportSettingsConfig
             TextureImportSettingsConfigurator.TextureProxies.Count +
             0; //AudioImportSettingsConfigurator.AudioProxies.Count;
 
-        public ConfigureImportSettings(string[] files, string destinationFolder)
+        public ConfigureImportSettings(string[] files, string? destinationFolder)
         {
             AddFiles(files, destinationFolder);
             LastDestinationFolder = destinationFolder;
         }
 
-        public ConfigureImportSettings(string destinationFolder)
+        public ConfigureImportSettings(string? destinationFolder)
         {
             Debug.Assert(!string.IsNullOrEmpty(destinationFolder) && Directory.Exists(destinationFolder));
 
@@ -43,7 +43,7 @@ namespace Editor.Content.ImportSettingsConfig
             //AudioImportSettingsConfigurator.Import();
         }
 
-        public void AddFiles(string[] files, string destinationFolder)
+        public void AddFiles(string[] files, string? destinationFolder)
         {
             Debug.Assert(files is not null);
             Debug.Assert(!string.IsNullOrEmpty(destinationFolder) && Directory.Exists(destinationFolder));

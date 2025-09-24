@@ -14,7 +14,12 @@ namespace Editor.Content
             if (!_inputs.Any(x => x.Name == input.Name)) _inputs.Add(input);
         }
 
-        public void RemoveInput(string name) => _inputs.Remove(_inputs.Find(x => x.Name == name));
+        public void RemoveInput(string name)
+        {
+            var input = _inputs.Find(x => x.Name == name);
+
+            if (input != null) _inputs.Remove(input);
+        }
 
         public void FromBinary(BinaryReader reader)
         {

@@ -2,6 +2,6 @@
 {
     public class MaterialMetadata : AssetMetadata
     {
-        public byte[] PackedData { get; init; }
+        public byte[]? PackedData { get; init; }
     }
 }

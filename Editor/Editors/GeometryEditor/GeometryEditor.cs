@@ -9,8 +9,8 @@ namespace Editor.Editors
 {
     public class GeometryEditor : ViewModelBase, IAssetEditor
     {
-        private Geometry _geometry;
-        private MeshRenderer _meshRenderer;
+        private Geometry? _geometry;
+        private MeshRenderer? _meshRenderer;
         private bool _autoLOD = true;
         private int _lodIndex;
         private AssetEditorState _state;
@@ -21,7 +21,7 @@ namespace Editor.Editors
 
         public Geometry Geometry
         {
-            get => _geometry;
+            get => _geometry!;
             private set
             {
                 if (_geometry != value)
@@ -50,7 +50,10 @@ namespace Editor.Editors
             get => _lodIndex;
             set
             {
-                var lods = Geometry.GetLodGroup().LODs;
+                var lods = Geometry.GetLodGroup()?.LODs;
+
+                if (lods is null || lods.Count == 0) return;
+
                 value = Math.Clamp(value, 0, lods.Count - 1);
                 if (_lodIndex != value)
                 {
@@ -63,7 +66,7 @@ namespace Editor.Editors
 
         public MeshRenderer MeshRenderer
         {
-            get => _meshRenderer;
+            get => _meshRenderer!;
             private set
             {
                 if (_meshRenderer != value)
@@ -71,11 +74,11 @@ namespace Editor.Editors
                     _meshRenderer = value;
                     OnPropertyChanged(nameof(MeshRenderer));
 
-                    var lods = Geometry.GetLodGroup().LODs;
-                    MaxLODIndex = (lods.Count > 0) ? lods.Count - 1 : 0;
+                    var lods = Geometry?.GetLodGroup()?.LODs;
+                    MaxLODIndex = (lods?.Count > 0) ? lods.Count - 1 : 0;
                     OnPropertyChanged(nameof(MaxLODIndex));
 
-                    if (lods.Count > 1)
+                    if (lods?.Count > 1)
                     {
                         MeshRenderer.PropertyChanged += (s, e) =>
                         {
@@ -107,21 +110,21 @@ namespace Editor.Editors
 
         public void SetAsset(Asset asset)
         {
-            Debug.Assert(asset is Content.Geometry);
+            Debug.Assert(asset is Geometry);
 
-            if (asset is Content.Geometry geometry)
+            if (asset is Geometry geometry)
             {
                 _assetGuid = asset.Guid;
                 Geometry = geometry;
-                var numLods = geometry.GetLodGroup().LODs.Count;
+                var numLods = geometry.GetLodGroup()?.LODs.Count;
 
                 if (LODIndex >= numLods)
                 {
-                    LODIndex = numLods - 1;
+                    LODIndex = numLods - 1 ?? 0;
                 }
                 else
                 {
-                    MeshRenderer = new MeshRenderer(Geometry.GetLodGroup().LODs[LODIndex], MeshRenderer);
+                    MeshRenderer = new MeshRenderer(Geometry.GetLodGroup()?.LODs[LODIndex], MeshRenderer);
                 }
             }
         }

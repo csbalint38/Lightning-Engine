@@ -333,6 +333,9 @@ namespace lightning::tools {
 		assert(data && info);
 		assert(info->type < PrimitiveMeshType::count);
 		Scene scene{};
+
+		if (info->type >= PrimitiveMeshType::count) [[unlikely]] return;
+
 		creators[info->type](scene, *info);
 
 		Progression progression{};

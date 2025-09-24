@@ -5,7 +5,7 @@ namespace Editor.Utilities
 {
     static class VisualExtensions
     {
-        public static T FindVisualParent<T>(this DependencyObject depObject) where T : DependencyObject
+        public static T? FindVisualParent<T>(this DependencyObject depObject) where T : DependencyObject
         {
             if (!(depObject is Visual)) return null;
 
@@ -21,7 +21,7 @@ namespace Editor.Utilities
             return null;
         }
 
-        public static T FindVisualChild<T>(this DependencyObject depObject) where T : DependencyObject
+        public static T? FindVisualChild<T>(this DependencyObject depObject) where T : DependencyObject
         {
             if (depObject is not Visual) return null;
 

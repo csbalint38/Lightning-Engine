@@ -14,7 +14,7 @@ namespace Editor.Content
         private MaterialType _materialType;
         private MaterialMode _materialMode;
 
-        public static AssetInfo Default => DefaultAssets.DefaultMaterial;
+        public static AssetInfo? Default => DefaultAssets.DefaultMaterial;
 
         public MaterialSurface MaterialSurface { get; } = new();
         public DefaultMaterialInputs DefaultMaterialInputs { get; } = new();
@@ -185,7 +185,7 @@ namespace Editor.Content
             return _shaders.TryAdd(shaderGroup.Type, shaderGroup);
         }
 
-        public ShaderGroup GetShaderGroup(ShaderType type)
+        public ShaderGroup? GetShaderGroup(ShaderType type)
         {
             _shaders.TryGetValue(type, out var shaderGroup);
 

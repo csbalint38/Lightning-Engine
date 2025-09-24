@@ -27,9 +27,9 @@ namespace Editor.Editors
 
         private async void BtnIBLPair_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var vm = DataContext as TextureEditor;
+            var vm = (TextureEditor)DataContext;
 
-            await vm.SetAssetAsync(vm.Texture.IBLPair);
+            await vm.SetAssetAsync(vm.Texture?.IBLPair);
         }
     }
 }

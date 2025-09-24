@@ -30,7 +30,7 @@ public partial class ControlTemplates : ResourceDictionary
 
     private void TextBox_KeyDown(object sender, KeyEventArgs e)
     {
-        var textBox = sender as TextBox;
+        var textBox = (TextBox)sender;
         var exp = textBox.GetBindingExpression(TextBox.TextProperty);
 
         if (exp is null) return;
@@ -71,7 +71,7 @@ public partial class ControlTemplates : ResourceDictionary
 
     private void TextBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        var textBox = sender as TextBox;
+        var textBox = (TextBox)sender;
 
         if (!textBox.IsVisible) return;
 
@@ -82,7 +82,7 @@ public partial class ControlTemplates : ResourceDictionary
 
     private void TextBoxWithRename_KeyDown(object sender, KeyEventArgs e)
     {
-        var textBox = sender as TextBox;
+        var textBox = (TextBox)sender;
         var exp = textBox.GetBindingExpression(TextBox.TextProperty);
 
         if (exp is null) return;
@@ -107,17 +107,17 @@ public partial class ControlTemplates : ResourceDictionary
 
     private void TextBox_GotFocus(object sender, RoutedEventArgs e)
     {
-        var textBox = sender as TextBox;
+        var textBox = (TextBox)sender;
         var exp = textBox.GetBindingExpression(TextBox.TextProperty);
 
         exp?.UpdateSource();
 
-        (sender as TextBox).SelectAll();
+        ((TextBox)sender).SelectAll();
     }
 
     private void TextBoxRename_LostFocus(object sender, RoutedEventArgs e)
     {
-        var textBox = sender as TextBox;
+        var textBox = (TextBox)sender;
 
         if (!textBox.IsVisible) return;
 

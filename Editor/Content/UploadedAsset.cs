@@ -14,12 +14,12 @@ public class UploadedAsset
 
     public IdType ContentId { get; private set; } = Id.InvalidId;
     public int ReferenceCount { get; private set; }
-    public AssetInfo AssetInfo { get; private set; }
-    public AssetMetadata Metadata { get; private set; }
+    public AssetInfo? AssetInfo { get; private set; }
+    public AssetMetadata? Metadata { get; private set; }
 
     private UploadedAsset() { }
 
-    public static UploadedAsset AddToScene(AssetInfo assetInfo, Asset? asset = null)
+    public static UploadedAsset? AddToScene(AssetInfo assetInfo, Asset? asset = null)
     {
         Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
 
@@ -34,7 +34,7 @@ public class UploadedAsset
             }
             else
             {
-                var uploadedAsset = UploadAssetToEngine(assetInfo, asset);
+                var uploadedAsset = UploadAssetToEngine(assetInfo, asset) ?? new();
 
                 Debug.Assert(Id.IsValid(uploadedAsset.ContentId));
 
@@ -58,7 +58,7 @@ public class UploadedAsset
         lock (_lock)
         {
 
-            Debug.Assert(uploadedAsset is not null && _uploadedAssets.ContainsKey(uploadedAsset.AssetInfo.Guid));
+            Debug.Assert(uploadedAsset is not null && _uploadedAssets.ContainsKey(uploadedAsset.AssetInfo!.Guid));
 
             uploadedAsset._referencedAssets.ForEach(RemoveFromScene);
             --uploadedAsset.ReferenceCount;
@@ -82,7 +82,7 @@ public class UploadedAsset
         }
     }
 
-    private static UploadedAsset UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)
+    private static UploadedAsset? UploadAssetToEngine(AssetInfo assetInfo, Asset? asset = null)
     {
         Debug.Assert(assetInfo is not null);
 
@@ -105,7 +105,7 @@ public class UploadedAsset
 
             var referencedAssets = new List<UploadedAsset>();
 
-            asset.GetReferencedAssets().ForEach(x => referencedAssets.Add(AddToScene(x)));
+            asset.GetReferencedAssets().ForEach(x => referencedAssets.Add(AddToScene(x)!));
 
             var data = asset.PackForEngine();
 

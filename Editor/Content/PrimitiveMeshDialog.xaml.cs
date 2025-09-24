@@ -46,9 +46,9 @@ namespace Editor.Content
                 var resource = Application.GetResourceStream(uri);
                 using var reader = new BinaryReader(resource.Stream);
                 var data = reader.ReadBytes((int)resource.Stream.Length);
-                var imageSource = (BitmapSource)new ImageSourceConverter().ConvertFrom(data);
+                var imageSource = new ImageSourceConverter().ConvertFrom(data) as BitmapSource;
 
-                imageSource.Freeze();
+                imageSource?.Freeze();
 
                 var brush = new ImageBrush(imageSource)
                 {
@@ -121,7 +121,7 @@ namespace Editor.Content
 
             ContentToolsAPI.CreatePrimitiveMesh(geometry, info);
 
-            (DataContext as GeometryEditor).SetAsset(geometry);
+            (DataContext as GeometryEditor)?.SetAsset(geometry);
             CBTexture_Click(CBTexture, null);
         }
 
@@ -147,13 +147,13 @@ namespace Editor.Content
             return Math.Max(result, min);
         }
 
-        private void CBTexture_Click(object sender, RoutedEventArgs e)
+        private void CBTexture_Click(object sender, RoutedEventArgs? e)
         {
             Brush brush = Brushes.White;
 
-            if ((sender as CheckBox).IsChecked == true) brush = _textures[(int)CbPrimitiveType.SelectedItem];
+            if (((CheckBox)sender).IsChecked == true) brush = _textures[(int)CbPrimitiveType.SelectedItem];
 
-            var vm = DataContext as GeometryEditor;
+            var vm = (GeometryEditor)DataContext;
 
             foreach (var mesh in vm.MeshRenderer.Meshes) mesh.Diffuse = brush;
         }
@@ -166,7 +166,7 @@ namespace Editor.Content
             {
                 Debug.Assert(!string.IsNullOrEmpty(dialog.SaveFilePath));
 
-                var asset = (DataContext as IAssetEditor).Asset;
+                var asset = ((IAssetEditor)DataContext).Asset;
 
                 Debug.Assert(asset is not null);
 

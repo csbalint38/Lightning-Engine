@@ -9,25 +9,25 @@ namespace Editor.Content
     [DataContract]
     abstract public class Asset : ViewModelBase
     {
-        private string _fullPath;
+        private string? _fullPath;
 
         public const string AssetFileExtension = ".lngasset";
 
         [DataMember]
         public AssetType Type { get; private set; }
 
-        public byte[] Icon { get; protected set; }
+        public byte[] Icon { get; protected set; } = [];
 
         [DataMember]
         public Guid Guid { get; protected set; } = Guid.NewGuid();
 
         public DateTime ImportDate { get; protected set; }
-        public byte[] Hash { get; protected set; }
+        public byte[]? Hash { get; protected set; }
         public string FileName => Path.GetFileNameWithoutExtension(FullPath);
 
         public string FullPath
         {
-            get => _fullPath;
+            get => _fullPath!;
             set
             {
                 if (_fullPath != value)
@@ -43,7 +43,7 @@ namespace Editor.Content
         public abstract IEnumerable<string> Save(string file);
         public abstract bool Import(string file);
         public abstract bool Load(string file);
-        public abstract byte[] PackForEngine();
+        public abstract byte[]? PackForEngine();
         public virtual List<AssetInfo> GetReferencedAssets() => [];
 
         protected Asset(AssetType type)
@@ -53,9 +53,10 @@ namespace Editor.Content
             Type = type;
         }
 
-        public static AssetInfo? TryGetAssetInfo(string file) => AssetRegistry.GetAssetInfo(file) ?? GetAssetInfo(file);
+        public static AssetInfo? TryGetAssetInfo(string file) =>
+            AssetRegistry.GetAssetInfo(file) ?? GetAssetInfo(file);
 
-        public static AssetInfo GetAssetInfo(string file)
+        public static AssetInfo? GetAssetInfo(string file)
         {
             if (!File.Exists(file) || Path.GetExtension(file) != AssetFileExtension) return null;
 

@@ -114,7 +114,7 @@ namespace lightning::tools {
 		util::vector<u32> indicies;
 
 		std::string name;
-		elements::ElementsType::Type elements_type;
+		elements::ElementsType::Type elements_type{ };
 		util::vector<u8> position_buffer;
 		util::vector<u8> element_buffer;
 		f32 lod_threshold{ -1.f };

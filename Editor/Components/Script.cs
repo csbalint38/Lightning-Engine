@@ -7,12 +7,12 @@ namespace Editor.Components
     [DataContract]
     class Script : Component
     {
-        private string _name;
+        private string? _name;
 
         [DataMember]
         public string Name
         {
-            get => _name;
+            get => _name!;
             set
             {
                 if (_name != value)
@@ -23,9 +23,7 @@ namespace Editor.Components
             }
         }
 
-        public Script(Entity owner) : base(owner)
-        {
-        }
+        public Script(Entity owner) : base(owner) { }
 
         public override IMSComponent GetMultiselectComponents(MSEntityBase entity) => new MSScript(entity);
 

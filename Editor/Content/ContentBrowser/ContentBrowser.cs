@@ -15,14 +15,14 @@ namespace Editor.Content.ContentBrowser
 
         private readonly ObservableCollection<ContentInfo> _folderContent = [];
 
-        private string _selectedFolder;
+        private string? _selectedFolder;
 
         public string ContentFolder { get; }
         public ReadOnlyObservableCollection<ContentInfo> FolderContent { get; }
 
         public string SelectedFolder
         {
-            get => _selectedFolder;
+            get => _selectedFolder!;
             set
             {
                 if (_selectedFolder != value)
@@ -79,14 +79,14 @@ namespace Editor.Content.ContentBrowser
             return folderContent;
         }
 
-        private void OnContentModified(object sender, ContentModifiedEventArgs e)
+        private void OnContentModified(object? sender, ContentModifiedEventArgs e)
         {
             if (Path.GetDirectoryName(e.FullPath) != SelectedFolder) return;
 
             _refreshTimer.Trigger();
         }
 
-        private void Refresh(object sender, DelayEventTimerArgs e) => _ = GetFolderContentAsync();
+        private void Refresh(object? sender, DelayEventTimerArgs e) => _ = GetFolderContentAsync();
 
         private async Task GetFolderContentAsync()
         {

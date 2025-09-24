@@ -7,208 +7,212 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Editor.DLLs
+namespace Editor.DLLs;
+
+static class ContentToolsAPI
 {
-    static class ContentToolsAPI
+    private const string _contentToolsDll = "ContentTools.dll";
+    private delegate void ProgressCallback(int value, int maxValue);
+
+    [DllImport(_contentToolsDll, EntryPoint = "create_primitive_mesh")]
+    private static extern void CreatePrimitiveMesh([In, Out] SceneData data, PrimitiveInitInfo info);
+
+    [DllImport(_contentToolsDll, EntryPoint = "import_fbx")]
+    private static extern void ImportFbx(string file, [In, Out] SceneData data, ProgressCallback? callback);
+
+    [DllImport(_contentToolsDll, EntryPoint = "import")]
+    private static extern void Import([In, Out] TextureData data);
+
+    [DllImport(_contentToolsDll, EntryPoint = "decompress")]
+    private static extern void Decompress([In, Out] TextureData data);
+
+    [DllImport(_contentToolsDll, EntryPoint = "shutdown_content_tools")]
+    public static extern void ShutdownContentTools();
+
+    [DllImport(_contentToolsDll, EntryPoint = "prefilter_diffuse_ibl")]
+    public static extern void PrefilterDiffuseIBL([In, Out] TextureData data);
+
+    [DllImport(_contentToolsDll, EntryPoint = "prefilter_specular_ibl")]
+    public static extern void PrefilterSpecularIBL([In, Out] TextureData data);
+
+    [DllImport(_contentToolsDll, EntryPoint = "compute_brdf_integration_lut")]
+    private static extern void ComputeBRDFIntegrationLUT([In, Out] TextureData data);
+
+    public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
+        GeometryFromSceneData(
+            geometry,
+            (sceneData) => CreatePrimitiveMesh(sceneData, info),
+            $"Failed to create {info.Type} primitive mesh."
+        );
+
+    public static void ImportFbx(string file, Geometry geometry)
     {
-        private const string _contentToolsDll = "ContentTools.dll";
-        private delegate void ProgressCallback(int value, int maxValue);
+        var item = ImportingItemCollection.GetItem(geometry);
+        ProgressCallback? callback = item is not null ? item.SetProgress : null;
 
-        [DllImport(_contentToolsDll, EntryPoint = "create_primitive_mesh")]
-        private static extern void CreatePrimitiveMesh([In, Out] SceneData data, PrimitiveInitInfo info);
+        GeometryFromSceneData(geometry, (sceneData) =>
+            ImportFbx(file, sceneData, callback), $"Failed to import from FBX file: {file}");
+    }
 
-        [DllImport(_contentToolsDll, EntryPoint = "import_fbx")]
-        private static extern void ImportFbx(string file, [In, Out] SceneData data, ProgressCallback callback);
+    public static void Import(Texture texture)
+    {
+        Debug.Assert(texture.ImportSettings.Sources.Any());
 
-        [DllImport(_contentToolsDll, EntryPoint = "import")]
-        private static extern void Import([In, Out] TextureData data);
+        using var textureData = new TextureData();
 
-        [DllImport(_contentToolsDll, EntryPoint = "decompress")]
-        private static extern void Decompress([In, Out] TextureData data);
-
-        [DllImport(_contentToolsDll, EntryPoint = "shutdown_content_tools")]
-        public static extern void ShutdownContentTools();
-
-        [DllImport(_contentToolsDll, EntryPoint = "prefilter_diffuse_ibl")]
-        public static extern void PrefilterDiffuseIBL([In, Out] TextureData data);
-
-        [DllImport(_contentToolsDll, EntryPoint = "prefilter_specular_ibl")]
-        public static extern void PrefilterSpecularIBL([In, Out] TextureData data);
-
-        [DllImport(_contentToolsDll, EntryPoint = "compute_brdf_integration_lut")]
-        private static extern void ComputeBRDFIntegrationLUT([In, Out] TextureData data);
-
-        public static void CreatePrimitiveMesh(Geometry geometry, PrimitiveInitInfo info) =>
-            GeometryFromSceneData(
-                geometry,
-                (sceneData) => CreatePrimitiveMesh(sceneData, info),
-                $"Failed to create {info.Type} primitive mesh."
-            );
-
-        public static void ImportFbx(string file, Geometry geometry)
+        try
         {
-            var item = ImportingItemCollection.GetItem(geometry);
-            ProgressCallback callback = item is not null ? item.SetProgress : null;
+            textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
 
-            GeometryFromSceneData(geometry, (sceneData) =>
-                ImportFbx(file, sceneData, callback), $"Failed to import from FBX file: {file}");
-        }
+            Import(textureData);
 
-        public static void Import(Texture texture)
-        {
-            Debug.Assert(texture.ImportSettings.Sources.Any());
-
-            using var textureData = new TextureData();
-
-            try
+            if (textureData.Info.ImportError != 0)
             {
-                textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
+                Logger.LogAsync(
+                    LogLevel.ERROR,
+                    $"Texture import error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
+                );
 
-                Import(textureData);
-
-                if (textureData.Info.ImportError != 0)
-                {
-                    Logger.LogAsync(
-                        LogLevel.ERROR,
-                        $"Texture import error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
-                    );
-
-                    throw new Exception($"Error while trying to import image. Error code: {textureData.Info.ImportError}");
-                }
-
-                Texture diffuseIBLCubemap = null;
-
-                if (
-                    texture.ImportSettings.PrefilterCubemap &&
-                    ((TextureFlags)textureData.Info.Flags).HasFlag(TextureFlags.IS_CUBE_MAP)
-                )
-                {
-                    using var diffuseData = textureData.Clone(texture.ImportSettings);
-
-                    var diffuseResult = Task.Run(() => PrefilterDiffuseIBL(diffuseData));
-                    var specularResult = Task.Run(() => PrefilterSpecularIBL(textureData));
-
-                    diffuseIBLCubemap = texture.IBLPair ?? new();
-
-                    diffuseResult.Wait();
-                    IAssetImportSettings.CopyImportSettings(texture.ImportSettings, diffuseIBLCubemap.ImportSettings);
-                    diffuseIBLCubemap.ImportSettings.Sources.Clear();
-                    diffuseData.GetTextureInfo(diffuseIBLCubemap);
-                    diffuseIBLCubemap.SetData(diffuseData.GetSlices(), diffuseData.GetIcon(), texture);
-                    specularResult.Wait();
-                }
-
-                textureData.GetTextureInfo(texture);
-
-                if (!texture.SetData(textureData.GetSlices(), textureData.GetIcon(), diffuseIBLCubemap))
-                {
-                    throw new InvalidDataException();
-                }
+                throw new Exception($"Error while trying to import image. Error code: {textureData.Info.ImportError}");
             }
-            catch (Exception ex)
+
+            Texture? diffuseIBLCubemap = null;
+
+            if (
+                texture.ImportSettings.PrefilterCubemap &&
+                ((TextureFlags)textureData.Info.Flags).HasFlag(TextureFlags.IS_CUBE_MAP)
+            )
             {
-                Logger.LogAsync(LogLevel.ERROR, $"Failed to import from {texture.FileName}");
-                Debug.WriteLine(ex.Message);
+                using var diffuseData = textureData.Clone(texture.ImportSettings);
+
+                var diffuseResult = Task.Run(() => PrefilterDiffuseIBL(diffuseData));
+                var specularResult = Task.Run(() => PrefilterSpecularIBL(textureData));
+
+                diffuseIBLCubemap = texture.IBLPair ?? new();
+
+                diffuseResult.Wait();
+
+                IAssetImportSettings.CopyImportSettings(
+                    texture.ImportSettings,
+                    diffuseIBLCubemap.ImportSettings
+                );
+                
+                diffuseIBLCubemap.ImportSettings.Sources.Clear();
+                diffuseData.GetTextureInfo(diffuseIBLCubemap);
+                diffuseIBLCubemap.SetData(diffuseData.GetSlices(), diffuseData.GetIcon(), texture);
+                specularResult.Wait();
+            }
+
+            textureData.GetTextureInfo(texture);
+
+            if (!texture.SetData(textureData.GetSlices(), textureData.GetIcon(), diffuseIBLCubemap))
+            {
+                throw new InvalidDataException();
             }
         }
-
-        public static SliceArray3D Decompress(Texture texture)
+        catch (Exception ex)
         {
-            Debug.Assert(texture.ImportSettings.Compress);
-
-            using var textureData = new TextureData();
-
-            try
-            {
-                textureData.GetTextureDataInfo(texture);
-                textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
-                textureData.SetSubresourceData(texture.Slices);
-
-                Decompress(textureData);
-
-                if (textureData.Info.ImportError != 0)
-                {
-                    Logger.LogAsync(
-                        LogLevel.ERROR,
-                        $"Error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
-                    );
-
-                    throw new Exception(
-                        $"Error while trying to decompress image. Error code: {textureData.Info.ImportError}"
-                    );
-                }
-
-                return textureData.GetSlices();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogAsync(LogLevel.ERROR, $"Failed to decompress {texture.FileName}");
-                Debug.WriteLine(ex.Message);
-
-                return new();
-            }
+            Logger.LogAsync(LogLevel.ERROR, $"Failed to import from {texture.FileName}");
+            Debug.WriteLine(ex.Message);
         }
+    }
 
-        public static void ComputeBRDFIntegrationLUT(Texture texture)
+    public static SliceArray3D Decompress(Texture texture)
+    {
+        Debug.Assert(texture.ImportSettings.Compress);
+
+        using var textureData = new TextureData();
+
+        try
         {
-            using var textureData = new TextureData();
+            textureData.GetTextureDataInfo(texture);
+            textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
+            textureData.SetSubresourceData(texture.Slices);
 
-            try
+            Decompress(textureData);
+
+            if (textureData.Info.ImportError != 0)
             {
-                texture.ImportSettings.Compress = false;
-                texture.ImportSettings.MipLevels = 1;
-                textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
+                Logger.LogAsync(
+                    LogLevel.ERROR,
+                    $"Error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
+                );
 
-                ComputeBRDFIntegrationLUT(textureData);
-
-                if (textureData.Info.ImportError != 0)
-                {
-                    Logger.LogAsync(
-                        LogLevel.ERROR,
-                        $"Error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
-                    );
-
-                    throw new Exception(
-                        $"Error while trying to compute BRDF integration LUT. Error code {textureData.Info.ImportError}"
-                    );
-                }
-
-                textureData.GetTextureInfo(texture);
-                texture.SetData(textureData.GetSlices(), null, null);
+                throw new Exception(
+                    $"Error while trying to decompress image. Error code: {textureData.Info.ImportError}"
+                );
             }
-            catch (Exception ex)
-            {
-                Logger.LogAsync(LogLevel.ERROR, $"Failed to compute BRDF integration LUT {texture.FileName}");
-                Debug.WriteLine(ex.Message);
-            }
+
+            return textureData.GetSlices();
         }
-
-        private static void GeometryFromSceneData(
-            Geometry geometry,
-            Action<SceneData> sceneDataGenerator,
-            string failureMessage
-        )
+        catch (Exception ex)
         {
-            Debug.Assert(geometry is not null);
+            Logger.LogAsync(LogLevel.ERROR, $"Failed to decompress {texture.FileName}");
+            Debug.WriteLine(ex.Message);
 
-            using var sceneData = new SceneData();
+            return new();
+        }
+    }
 
-            try
+    public static void ComputeBRDFIntegrationLUT(Texture texture)
+    {
+        using var textureData = new TextureData();
+
+        try
+        {
+            texture.ImportSettings.Compress = false;
+            texture.ImportSettings.MipLevels = 1;
+            textureData.ImportSettings.FromContentSettings(texture.ImportSettings);
+
+            ComputeBRDFIntegrationLUT(textureData);
+
+            if (textureData.Info.ImportError != 0)
             {
-                sceneData.ImportSettings.FromContentSettings(geometry);
-                sceneDataGenerator(sceneData);
+                Logger.LogAsync(
+                    LogLevel.ERROR,
+                    $"Error: {EnumExtension.GetDescription((TextureImportError)textureData.Info.ImportError)}"
+                );
 
-                if (sceneData.Data == IntPtr.Zero || sceneData.DataSize == 0) throw new Exception(failureMessage);
+                throw new Exception(
+                    $"Error while trying to compute BRDF integration LUT. Error code {textureData.Info.ImportError}"
+                );
+            }
 
-                var data = new byte[sceneData.DataSize];
-                Marshal.Copy(sceneData.Data, data, 0, sceneData.DataSize);
-                geometry.FromRawData(data);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogAsync(LogLevel.ERROR, failureMessage);
-                Debug.WriteLine(ex.Message);
-            }
+            textureData.GetTextureInfo(texture);
+            texture.SetData(textureData.GetSlices(), null, null);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogAsync(LogLevel.ERROR, $"Failed to compute BRDF integration LUT {texture.FileName}");
+            Debug.WriteLine(ex.Message);
+        }
+    }
+
+    private static void GeometryFromSceneData(
+        Geometry geometry,
+        Action<SceneData> sceneDataGenerator,
+        string failureMessage
+    )
+    {
+        Debug.Assert(geometry is not null);
+
+        using var sceneData = new SceneData();
+
+        try
+        {
+            sceneData.ImportSettings.FromContentSettings(geometry);
+            sceneDataGenerator(sceneData);
+
+            if (sceneData.Data == IntPtr.Zero || sceneData.DataSize == 0) throw new Exception(failureMessage);
+
+            var data = new byte[sceneData.DataSize];
+            Marshal.Copy(sceneData.Data, data, 0, sceneData.DataSize);
+            geometry.FromRawData(data);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogAsync(LogLevel.ERROR, failureMessage);
+            Debug.WriteLine(ex.Message);
         }
     }
 }

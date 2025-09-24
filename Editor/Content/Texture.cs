@@ -6,273 +6,357 @@ using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
 
-namespace Editor.Content
+namespace Editor.Content;
+
+public class Texture : Asset
 {
-    public class Texture : Asset
+    private SliceArray3D? _slices;
+    private int _width;
+    private int _height;
+    private int _arraySize;
+    private TextureFlags _flags;
+    private int _mipLevels;
+    private DXGIFormat _format;
+    private bool _isSaving;
+    private Texture? _iblPair;
+    private bool _isPrefilteredIBL;
+
+    public static int MaxMipLevels => 14;
+    public static int MaxArraySize => 2048;
+    public static int Max3DSize => 2048;
+    public static AssetInfo? Default => DefaultAssets.DefaultTexture;
+
+    public TextureImportSettings ImportSettings { get; } = new();
+
+    public SliceArray3D Slices
     {
-        private SliceArray3D _slices;
-        private int _width;
-        private int _height;
-        private int _arraySize;
-        private TextureFlags _flags;
-        private int _mipLevels;
-        private DXGIFormat _format;
-        private bool _isSaving;
-        private Texture _iblPair;
-        private bool _isPrefilteredIBL;
-
-        public static int MaxMipLevels => 14;
-        public static int MaxArraySize => 2048;
-        public static int Max3DSize => 2048;
-        public static AssetInfo Default => DefaultAssets.DefaultTexture;
-
-        public TextureImportSettings ImportSettings { get; } = new();
-
-        public SliceArray3D Slices
+        get => _slices!;
+        private set
         {
-            get => _slices;
-            private set
+            if (_slices != value)
             {
-                if (_slices != value)
-                {
-                    _slices = value;
-                    OnPropertyChanged(nameof(Slices));
-                }
+                _slices = value;
+                OnPropertyChanged(nameof(Slices));
             }
         }
+    }
 
-        public int Width
+    public int Width
+    {
+        get => _width;
+        set
         {
-            get => _width;
-            set
+            if (_width != value)
             {
-                if (_width != value)
-                {
-                    _width = value;
-                    OnPropertyChanged(nameof(Width));
-                }
+                _width = value;
+                OnPropertyChanged(nameof(Width));
             }
         }
+    }
 
-        public int Height
+    public int Height
+    {
+        get => _height;
+        set
         {
-            get => _height;
-            set
+            if (_height != value)
             {
-                if (_height != value)
-                {
-                    _height = value;
-                    OnPropertyChanged(nameof(Height));
-                }
+                _height = value;
+                OnPropertyChanged(nameof(Height));
             }
         }
+    }
 
-        public int ArraySize
+    public int ArraySize
+    {
+        get => _arraySize;
+        set
         {
-            get => _arraySize;
-            set
+            if (_arraySize != value)
             {
-                if (_arraySize != value)
-                {
-                    Debug.Assert(!(IsCubeMap && (value % 6) != 0));
-                    _arraySize = value;
-                    OnPropertyChanged(nameof(ArraySize));
-                }
+                Debug.Assert(!(IsCubeMap && (value % 6) != 0));
+                _arraySize = value;
+                OnPropertyChanged(nameof(ArraySize));
             }
         }
+    }
 
-        public TextureFlags Flags
+    public TextureFlags Flags
+    {
+        get => _flags;
+        set
         {
-            get => _flags;
-            set
+            if (_flags != value)
             {
-                if (_flags != value)
-                {
-                    _flags = value;
-                    OnPropertyChanged(nameof(IsHDR));
-                    OnPropertyChanged(nameof(HasAlpha));
-                    OnPropertyChanged(nameof(IsPremultipliedAlpha));
-                    OnPropertyChanged(nameof(IsNormalMap));
-                    OnPropertyChanged(nameof(IsCubeMap));
-                    OnPropertyChanged(nameof(IsVolumeMap));
-                    OnPropertyChanged(nameof(IsSRGB));
-                }
+                _flags = value;
+                OnPropertyChanged(nameof(IsHDR));
+                OnPropertyChanged(nameof(HasAlpha));
+                OnPropertyChanged(nameof(IsPremultipliedAlpha));
+                OnPropertyChanged(nameof(IsNormalMap));
+                OnPropertyChanged(nameof(IsCubeMap));
+                OnPropertyChanged(nameof(IsVolumeMap));
+                OnPropertyChanged(nameof(IsSRGB));
             }
         }
+    }
 
-        public int MipLevels
+    public int MipLevels
+    {
+        get => _mipLevels;
+        set
         {
-            get => _mipLevels;
-            set
+            if (_mipLevels != value)
             {
-                if (_mipLevels != value)
-                {
-                    Debug.Assert(value >= 1 && value <= MaxMipLevels);
-                    _mipLevels = value;
-                    OnPropertyChanged(nameof(MipLevels));
-                }
+                Debug.Assert(value >= 1 && value <= MaxMipLevels);
+                _mipLevels = value;
+                OnPropertyChanged(nameof(MipLevels));
             }
         }
+    }
 
-        public Texture IBLPair
+    public Texture? IBLPair
+    {
+        get => _iblPair;
+        set
         {
-            get => _iblPair;
-            set
+            if (_iblPair != value)
             {
-                if (_iblPair != value)
-                {
-                    _iblPair = value;
-                    OnPropertyChanged(nameof(IBLPair));
-                }
+                _iblPair = value;
+                OnPropertyChanged(nameof(IBLPair));
             }
         }
+    }
 
-        public bool IsPrefilteredIBL
+    public bool IsPrefilteredIBL
+    {
+        get => _isPrefilteredIBL;
+        set
         {
-            get => _isPrefilteredIBL;
-            set
+            if (_isPrefilteredIBL != value)
             {
-                if (_isPrefilteredIBL != value)
-                {
-                    _isPrefilteredIBL = value;
-                    OnPropertyChanged(nameof(IsPrefilteredIBL));
-                }
+                _isPrefilteredIBL = value;
+                OnPropertyChanged(nameof(IsPrefilteredIBL));
             }
         }
+    }
 
-        public DXGIFormat Format
+    public DXGIFormat Format
+    {
+        get => _format;
+        set
         {
-            get => _format;
-            set
+            if (_format != value)
             {
-                if (_format != value)
-                {
-                    _format = value;
-                    OnPropertyChanged(nameof(Format));
-                    OnPropertyChanged(nameof(FormatName));
-                }
+                _format = value;
+                OnPropertyChanged(nameof(Format));
+                OnPropertyChanged(nameof(FormatName));
             }
         }
+    }
 
-        public bool IsHDR => Flags.HasFlag(TextureFlags.IS_HDR);
-        public bool HasAlpha => Flags.HasFlag(TextureFlags.HAS_ALPHA);
-        public bool IsPremultipliedAlpha => Flags.HasFlag(TextureFlags.IS_PREMULTIPLIED_ALPHA);
-        public bool IsNormalMap => Flags.HasFlag(TextureFlags.IS_IMPORTED_AS_NORMAL_MAP);
-        public bool IsCubeMap => Flags.HasFlag(TextureFlags.IS_CUBE_MAP);
-        public bool IsVolumeMap => Flags.HasFlag(TextureFlags.IS_VOLUME_MAP);
-        public string FormatName => ImportSettings.Compress ? ((BCFormat)Format).GetDescription() : Format.GetDescription();
-        public bool IsSRGB => Flags.HasFlag(TextureFlags.IS_SRGB);
+    public bool IsHDR => Flags.HasFlag(TextureFlags.IS_HDR);
+    public bool HasAlpha => Flags.HasFlag(TextureFlags.HAS_ALPHA);
+    public bool IsPremultipliedAlpha => Flags.HasFlag(TextureFlags.IS_PREMULTIPLIED_ALPHA);
+    public bool IsNormalMap => Flags.HasFlag(TextureFlags.IS_IMPORTED_AS_NORMAL_MAP);
+    public bool IsCubeMap => Flags.HasFlag(TextureFlags.IS_CUBE_MAP);
+    public bool IsVolumeMap => Flags.HasFlag(TextureFlags.IS_VOLUME_MAP);
+    public string FormatName => ImportSettings.Compress ? ((BCFormat)Format).GetDescription() : Format.GetDescription();
+    public bool IsSRGB => Flags.HasFlag(TextureFlags.IS_SRGB);
 
-        public Texture() : base(AssetType.TEXTURE) { }
+    public Texture() : base(AssetType.TEXTURE) { }
 
-        public Texture(IAssetImportSettings importSettings) : this()
+    public Texture(IAssetImportSettings importSettings) : this()
+    {
+        Debug.Assert(importSettings is TextureImportSettings);
+
+        ImportSettings = (TextureImportSettings)importSettings;
+    }
+
+    public Texture(AssetInfo assetInfo) : this()
+    {
+        Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
+        Debug.Assert(File.Exists(assetInfo.FullPath) && assetInfo.Type == Type);
+
+        Load(assetInfo.FullPath);
+    }
+
+    public override bool Load(string file)
+    {
+        Debug.Assert(File.Exists(file));
+        Debug.Assert(Path.GetExtension(file).ToLower() == AssetFileExtension);
+
+        try
         {
-            Debug.Assert(importSettings is TextureImportSettings);
+            using var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read));
 
-            ImportSettings = (TextureImportSettings)importSettings;
-        }
+            ReadAssetFileHeader(reader);
+            ImportSettings.FromBinary(reader);
 
-        public Texture(AssetInfo assetInfo) : this()
-        {
-            Debug.Assert(assetInfo is not null && assetInfo.Guid != Guid.Empty);
-            Debug.Assert(File.Exists(assetInfo.FullPath) && assetInfo.Type == Type);
+            Width = reader.ReadInt32();
+            Height = reader.ReadInt32();
+            ArraySize = reader.ReadInt32();
+            Flags = (TextureFlags)reader.ReadInt32();
+            MipLevels = reader.ReadInt32();
+            Format = (DXGIFormat)reader.ReadInt32();
 
-            Load(assetInfo.FullPath);
-        }
+            var iblPairGuid = new Guid(reader.ReadString());
 
-        public override bool Load(string file)
-        {
-            Debug.Assert(File.Exists(file));
-            Debug.Assert(Path.GetExtension(file).ToLower() == AssetFileExtension);
-
-            try
+            if (iblPairGuid != Guid.Empty)
             {
-                using var reader = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read));
+                IsPrefilteredIBL = true;
 
-                ReadAssetFileHeader(reader);
-                ImportSettings.FromBinary(reader);
+                var iblFile = AssetRegistry.GetAssetInfo(iblPairGuid)?.FullPath;
 
-                Width = reader.ReadInt32();
-                Height = reader.ReadInt32();
-                ArraySize = reader.ReadInt32();
-                Flags = (TextureFlags)reader.ReadInt32();
-                MipLevels = reader.ReadInt32();
-                Format = (DXGIFormat)reader.ReadInt32();
-
-                var iblPairGuid = new Guid(reader.ReadString());
-
-                if (iblPairGuid != Guid.Empty)
+                if (string.IsNullOrEmpty(iblFile))
                 {
-                    IsPrefilteredIBL = true;
+                    Logger.LogAsync(LogLevel.ERROR, $"Unable to open IBL pair asset. File: {file}");
 
-                    var iblFile = AssetRegistry.GetAssetInfo(iblPairGuid)?.FullPath;
+                    return false;
+                }
 
-                    if (string.IsNullOrEmpty(iblFile))
+                if (IBLPair is null)
+                {
+                    IBLPair = new()
                     {
-                        Logger.LogAsync(LogLevel.ERROR, $"Unable to open IBL pair asset. File: {file}");
+                        IBLPair = this,
+                    };
 
-                        return false;
-                    }
-
-                    if (IBLPair is null)
-                    {
-                        IBLPair = new()
-                        {
-                            IBLPair = this,
-                        };
-
-                        if (!IBLPair.Load(iblFile)) return false;
-                    }
+                    if (!IBLPair.Load(iblFile)) return false;
                 }
-
-                var compressedLength = reader.ReadInt32();
-
-                Debug.Assert(compressedLength > 0);
-
-                var compressed = reader.ReadBytes(compressedLength);
-
-                DecompressContent(compressed);
-                HasValidDimensions(Width, Height, ArraySize, IsVolumeMap, file);
-
-                FullPath = file;
-
-                // TEMP
-                // PackForEngine();
-                // TEMP
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Logger.LogAsync(LogLevel.ERROR, $"Failed to load texture asset from file {file}");
             }
 
-            return false;
+            var compressedLength = reader.ReadInt32();
+
+            Debug.Assert(compressedLength > 0);
+
+            var compressed = reader.ReadBytes(compressedLength);
+
+            DecompressContent(compressed);
+            HasValidDimensions(Width, Height, ArraySize, IsVolumeMap, file);
+
+            FullPath = file;
+
+            // TEMP
+            // PackForEngine();
+            // TEMP
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Logger.LogAsync(LogLevel.ERROR, $"Failed to load texture asset from file {file}");
         }
 
-        /// <summary>
-        /// Pack the texture into a byte array wich can be used by the Engine.
-        /// </summary>
-        /// <returns>
-        /// struct {
-        ///     u32 width,
-        ///     u32 height,
-        ///     u32 array_size_or_depth,
-        ///     u32 flags,
-        ///     u32 mip_levels,
-        ///     u32 format,
-        ///     
-        ///     struct {
-        ///         u32 row_pitch,
-        ///         u32 slice_pitch,
-        ///         u8 image[mip_level][slice_pitch * depth_per_mip]
-        ///     } Images[]
-        /// } Texture
-        /// </returns>
-        public override byte[] PackForEngine()
+        return false;
+    }
+
+    /// <summary>
+    /// Pack the texture into a byte array wich can be used by the Engine.
+    /// </summary>
+    /// <returns>
+    /// struct {
+    ///     u32 width,
+    ///     u32 height,
+    ///     u32 array_size_or_depth,
+    ///     u32 flags,
+    ///     u32 mip_levels,
+    ///     u32 format,
+    ///     
+    ///     struct {
+    ///         u32 row_pitch,
+    ///         u32 slice_pitch,
+    ///         u8 image[mip_level][slice_pitch * depth_per_mip]
+    ///     } Images[]
+    /// } Texture
+    /// </returns>
+    public override byte[] PackForEngine()
+    {
+        using var writer = new BinaryWriter(new MemoryStream());
+
+        writer.Write(Width);
+        writer.Write(Height);
+        writer.Write(ArraySize);
+        writer.Write((int)Flags);
+        writer.Write(MipLevels);
+        writer.Write((int)Format);
+
+        Debug.Assert(Slices?.Any() == true);
+
+        foreach (var arraySlice in Slices)
         {
-            using var writer = new BinaryWriter(new MemoryStream());
+            foreach (var mipLevel in arraySlice)
+            {
+                writer.Write(mipLevel[0].RowPitch);
+                writer.Write(mipLevel[0].SlicePitch);
+                foreach (var slice in mipLevel)
+                {
+                    writer.Write(slice.RawContent);
+                }
+            }
+        }
+
+        writer.Flush();
+
+        var data = (writer.BaseStream as MemoryStream)?.ToArray();
+
+        Debug.Assert(data?.Length > 0);
+
+        // TEMP
+        /*using (var fs = new FileStream(@"..\..\x64\texture.lngasset", FileMode.Create))
+        {
+            fs.Write(data, 0, data.Length);
+        }*/
+        // TEMP
+
+        return data;
+    }
+
+    public override IEnumerable<string> Save(string file)
+    {
+        _isSaving = true;
+
+        try
+        {
+            if (TryGetAssetInfo(file) is AssetInfo info && info.Type == Type) Guid = info.Guid;
+            else file = AssetRegistry.GetAssetInfo(Guid)?.FullPath ?? file;
+
+            if (IBLPair?.IBLPair?.Guid == Guid && !IBLPair._isSaving)
+            {
+                var pairFile = string.IsNullOrEmpty(IBLPair.FullPath) ?
+                    file.Replace(AssetFileExtension, $"_diffuse_ibl{AssetFileExtension}") :
+                    IBLPair.FullPath;
+
+                if (IsCubeMap && ImportSettings.PrefilterCubemap)
+                {
+                    IBLPair.Save(pairFile);
+
+                    Debug.Assert(IBLPair is not null && IBLPair.IBLPair?.Guid == Guid && IBLPair.IsCubeMap && IsCubeMap);
+                }
+
+                else
+                {
+                    var fileName = AssetRegistry.GetAssetInfo(IBLPair.Guid)?.FullPath;
+
+                    if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
+                    {
+                        IBLPair = null;
+
+                        File.Delete(pairFile);
+                    }
+                }
+            }
+
+            var compressed = CompressContent();
+
+            Debug.Assert(compressed?.Length > 0);
+
+            Hash = ContentHelper.ComputeHash(compressed);
+
+            using var writer = new BinaryWriter(File.Open(file, FileMode.Create, FileAccess.Write));
+
+            WriteAssetFileHeader(writer);
+            ImportSettings.ToBinary(writer);
 
             writer.Write(Width);
             writer.Write(Height);
@@ -280,240 +364,155 @@ namespace Editor.Content
             writer.Write((int)Flags);
             writer.Write(MipLevels);
             writer.Write((int)Format);
+            writer.Write(IBLPair is not null ? IBLPair.Guid.ToString() : Guid.Empty.ToString());
+            writer.Write(compressed.Length);
+            writer.Write(compressed);
 
-            Debug.Assert(Slices?.Any() == true);
+            FullPath = file;
 
-            foreach (var arraySlice in Slices)
-            {
-                foreach (var mipLevel in arraySlice)
-                {
-                    writer.Write(mipLevel[0].RowPitch);
-                    writer.Write(mipLevel[0].SlicePitch);
-                    foreach (var slice in mipLevel)
-                    {
-                        writer.Write(slice.RawContent);
-                    }
-                }
-            }
+            Logger.LogAsync(LogLevel.INFO, $"Saved texture to {file}");
 
-            writer.Flush();
+            var savedFiles = new List<string>() { file };
 
-            var data = (writer.BaseStream as MemoryStream)?.ToArray();
-
-            Debug.Assert(data?.Length > 0);
-
-            // TEMP
-            /*using (var fs = new FileStream(@"..\..\x64\texture.lngasset", FileMode.Create))
-            {
-                fs.Write(data, 0, data.Length);
-            }*/
-            // TEMP
-
-            return data;
+            return savedFiles;
         }
-
-        public override IEnumerable<string> Save(string file)
+        catch (Exception ex)
         {
-            _isSaving = true;
+            Debug.WriteLine(ex.Message);
+            Logger.LogAsync(LogLevel.ERROR, $"Failed to save texture to {file}");
 
-            try
-            {
-                if (TryGetAssetInfo(file) is AssetInfo info && info.Type == Type) Guid = info.Guid;
-                else file = AssetRegistry.GetAssetInfo(Guid)?.FullPath ?? file;
-
-                if (IBLPair?.IBLPair?.Guid == Guid && !IBLPair._isSaving)
-                {
-                    var pairFile = string.IsNullOrEmpty(IBLPair.FullPath) ?
-                        file.Replace(AssetFileExtension, $"_diffuse_ibl{AssetFileExtension}") :
-                        IBLPair.FullPath;
-
-                    if (IsCubeMap && ImportSettings.PrefilterCubemap)
-                    {
-                        IBLPair.Save(pairFile);
-
-                        Debug.Assert(IBLPair is not null && IBLPair.IBLPair?.Guid == Guid && IBLPair.IsCubeMap && IsCubeMap);
-                    }
-
-                    else
-                    {
-                        var fileName = AssetRegistry.GetAssetInfo(IBLPair.Guid)?.FullPath;
-
-                        if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
-                        {
-                            IBLPair = null;
-
-                            File.Delete(pairFile);
-                        }
-                    }
-                }
-
-                var compressed = CompressContent();
-
-                Debug.Assert(compressed?.Length > 0);
-
-                Hash = ContentHelper.ComputeHash(compressed);
-
-                using var writer = new BinaryWriter(File.Open(file, FileMode.Create, FileAccess.Write));
-
-                WriteAssetFileHeader(writer);
-                ImportSettings.ToBinary(writer);
-
-                writer.Write(Width);
-                writer.Write(Height);
-                writer.Write(ArraySize);
-                writer.Write((int)Flags);
-                writer.Write(MipLevels);
-                writer.Write((int)Format);
-                writer.Write(IBLPair is not null ? IBLPair.Guid.ToString() : Guid.Empty.ToString());
-                writer.Write(compressed.Length);
-                writer.Write(compressed);
-
-                FullPath = file;
-
-                Logger.LogAsync(LogLevel.INFO, $"Saved texture to {file}");
-
-                var savedFiles = new List<string>() { file };
-
-                return savedFiles;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Logger.LogAsync(LogLevel.ERROR, $"Failed to save texture to {file}");
-
-                return [];
-            }
-            finally
-            {
-                _isSaving = false;
-            }
+            return [];
         }
-
-        public override bool Import(string file)
+        finally
         {
-            Debug.Assert(File.Exists(file));
-
-            try
-            {
-                Logger.LogAsync(LogLevel.INFO, $"Importing image file {file}");
-                ContentToolsAPI.Import(this);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-
-                var message = $"Failed to import {file}";
-
-                Debug.WriteLine(message);
-
-                Logger.LogAsync(LogLevel.ERROR, message);
-            }
-
-            return false;
+            _isSaving = false;
         }
+    }
 
-        public override TextureMetadata GetMetadata()
+    public override bool Import(string file)
+    {
+        Debug.Assert(File.Exists(file));
+
+        try
         {
-            return new()
-            {
-                Width = Width,
-                Height = Height,
-                DepthOrArraySize = ArraySize,
-                Format = Format,
-                MipLevels = MipLevels,
-                Dimension = ImportSettings.Dimension,
-            };
-        }
-
-        private static bool HasValidDimensions(int width, int height, int arrayOrDepth, bool is3D, string file)
-        {
-            bool result = true;
-
-            if (width > (1 << MaxMipLevels) || height > (1 << MaxMipLevels))
-            {
-                Logger.LogAsync(LogLevel.ERROR, $"Image dimension greater than {1 << MaxMipLevels}! (file: {file})");
-                result = false;
-            }
-
-            if (width % 4 != 0 || height % 4 != 0)
-            {
-                Logger.LogAsync(LogLevel.ERROR, $"Image dimensions not a multiple of 4! (file: {file})");
-                result = false;
-            }
-
-            if (is3D && (width > Max3DSize || height > Max3DSize || arrayOrDepth > Max3DSize))
-            {
-                Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {Max3DSize}! (file: {file})");
-                result = false;
-            }
-            else if (arrayOrDepth > MaxArraySize)
-            {
-                Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {MaxArraySize}! (file: {file})");
-                result = false;
-            }
-
-            if (width != height)
-            {
-                Logger.LogAsync(LogLevel.WARNING, $"Non-square image (width and height not equal)! (file: {file})");
-            }
-
-            if (!MathUtilities.IsPowOf2(width) || !MathUtilities.IsPowOf2(height))
-            {
-                Logger.LogAsync(LogLevel.WARNING, $"Image dimensions not a power of 2! (file: {file})");
-            }
-
-            return result;
-        }
-
-        public bool SetData(SliceArray3D slices, Slice icon, Texture iblPair)
-        {
-            Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
-
-            if (slices.Any() && slices.First().Any() && slices.First().First().Any()) Slices = slices;
-            else return false;
-
-            var firstMip = Slices[0][0][0];
-
-            if (!HasValidDimensions(firstMip.Width, firstMip.Height, ArraySize, IsVolumeMap, FullPath)) return false;
-
-            if (icon is null)
-            {
-                Debug.Assert(!ImportSettings.Compress);
-
-                icon = firstMip;
-            }
-
-            Icon = BitmapHelper.CreateThumbnail(
-                BitmapHelper.ImageFromSlice(icon, Format, IsNormalMap),
-                ContentInfo.IconWidth,
-                ContentInfo.IconWidth
-            );
-
-            IsPrefilteredIBL = iblPair is not null;
-
-            if (IsPrefilteredIBL) IBLPair = iblPair;
+            Logger.LogAsync(LogLevel.INFO, $"Importing image file {file}");
+            ContentToolsAPI.Import(this);
 
             return true;
         }
-
-        private byte[] CompressContent()
+        catch (Exception ex)
         {
-            Debug.Assert(Slices.First().Any() && Slices.First().Count == MipLevels);
+            Debug.WriteLine(ex.Message);
 
-            var data = TextureData.SlicesToBinary(Slices);
+            var message = $"Failed to import {file}";
 
-            Debug.Assert(data?.Length > 0);
+            Debug.WriteLine(message);
 
-            return CompressionHelper.Compress(data);
+            Logger.LogAsync(LogLevel.ERROR, message);
         }
 
-        private void DecompressContent(byte[] compressed)
-        {
-            var decompressed = CompressionHelper.Decompress(compressed);
+        return false;
+    }
 
-            Slices = TextureData.SlicesFromBinary(decompressed, ArraySize, MipLevels, IsVolumeMap);
+    public override TextureMetadata GetMetadata()
+    {
+        return new()
+        {
+            Width = Width,
+            Height = Height,
+            DepthOrArraySize = ArraySize,
+            Format = Format,
+            MipLevels = MipLevels,
+            Dimension = ImportSettings.Dimension,
+        };
+    }
+
+    private static bool HasValidDimensions(int width, int height, int arrayOrDepth, bool is3D, string file)
+    {
+        bool result = true;
+
+        if (width > (1 << MaxMipLevels) || height > (1 << MaxMipLevels))
+        {
+            Logger.LogAsync(LogLevel.ERROR, $"Image dimension greater than {1 << MaxMipLevels}! (file: {file})");
+            result = false;
         }
+
+        if (width % 4 != 0 || height % 4 != 0)
+        {
+            Logger.LogAsync(LogLevel.ERROR, $"Image dimensions not a multiple of 4! (file: {file})");
+            result = false;
+        }
+
+        if (is3D && (width > Max3DSize || height > Max3DSize || arrayOrDepth > Max3DSize))
+        {
+            Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {Max3DSize}! (file: {file})");
+            result = false;
+        }
+        else if (arrayOrDepth > MaxArraySize)
+        {
+            Logger.LogAsync(LogLevel.ERROR, $"3D texture dimension greater than {MaxArraySize}! (file: {file})");
+            result = false;
+        }
+
+        if (width != height)
+        {
+            Logger.LogAsync(LogLevel.WARNING, $"Non-square image (width and height not equal)! (file: {file})");
+        }
+
+        if (!MathUtilities.IsPowOf2(width) || !MathUtilities.IsPowOf2(height))
+        {
+            Logger.LogAsync(LogLevel.WARNING, $"Image dimensions not a power of 2! (file: {file})");
+        }
+
+        return result;
+    }
+
+    public bool SetData(SliceArray3D slices, Slice? icon, Texture? iblPair)
+    {
+        Debug.Assert(slices.Any() && slices.First().Any() && slices.First().First().Any());
+
+        if (slices.Any() && slices.First().Any() && slices.First().First().Any()) Slices = slices;
+        else return false;
+
+        var firstMip = Slices[0][0][0];
+
+        if (!HasValidDimensions(firstMip.Width, firstMip.Height, ArraySize, IsVolumeMap, FullPath)) return false;
+
+        if (icon is null)
+        {
+            Debug.Assert(!ImportSettings.Compress);
+
+            icon = firstMip;
+        }
+
+        Icon = BitmapHelper.CreateThumbnail(
+            BitmapHelper.ImageFromSlice(icon, Format, IsNormalMap)!,
+            ContentInfo.IconWidth,
+            ContentInfo.IconWidth
+        );
+
+        IsPrefilteredIBL = iblPair is not null;
+
+        if (IsPrefilteredIBL) IBLPair = iblPair;
+
+        return true;
+    }
+
+    private byte[] CompressContent()
+    {
+        Debug.Assert(Slices.First().Any() && Slices.First().Count == MipLevels);
+
+        var data = TextureData.SlicesToBinary(Slices);
+
+        Debug.Assert(data?.Length > 0);
+
+        return CompressionHelper.Compress(data);
+    }
+
+    private void DecompressContent(byte[] compressed)
+    {
+        var decompressed = CompressionHelper.Decompress(compressed);
+
+        Slices = TextureData.SlicesFromBinary(decompressed, ArraySize, MipLevels, IsVolumeMap);
     }
 }

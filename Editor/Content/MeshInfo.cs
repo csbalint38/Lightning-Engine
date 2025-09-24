@@ -1,26 +1,25 @@
 ﻿using Editor.Common;
 
-namespace Editor.Content
+namespace Editor.Content;
+
+public class MeshInfo : ViewModelBase
 {
-    public class MeshInfo : ViewModelBase
+    private byte[]? _icon;
+
+    public string? Name { get; init; }
+    public int IndexCount { get; init; }
+    public int VertexCount { get; init; }
+    public int TriangleCount { get; init; }
+
+    public byte[] Icon
     {
-        private byte[] _icon;
-
-        public string Name { get; init; }
-        public int IndexCount { get; init; }
-        public int VertexCount { get; init; }
-        public int TriangleCount { get; init; }
-
-        public byte[] Icon
+        get => _icon!;
+        set
         {
-            get => _icon;
-            set
+            if (_icon != value)
             {
-                if (_icon != value)
-                {
-                    _icon = value;
-                    OnPropertyChanged(nameof(Icon));
-                }
+                _icon = value;
+                OnPropertyChanged(nameof(Icon));
             }
         }
     }

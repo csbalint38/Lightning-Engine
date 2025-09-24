@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnMainWindowClosing(object sender, CancelEventArgs e)
+    private void OnMainWindowClosing(object? sender, CancelEventArgs e)
     {
         if (DataContext is null)
         {

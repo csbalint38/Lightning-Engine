@@ -27,7 +27,7 @@ namespace Editor.Content.ImportSettingsConfig
 
             FilteredItems.Filter += (s, e) =>
             {
-                var type = (e.Item as ImportingItem).Asset.Type;
+                var type = (e.Item as ImportingItem)?.Asset.Type;
                 e.Accepted = type == _itemFilter;
             };
         }
@@ -68,7 +68,7 @@ namespace Editor.Content.ImportSettingsConfig
             }
         }
 
-        public static ImportingItem GetItem(Asset asset)
+        public static ImportingItem? GetItem(Asset asset)
         {
             lock (_lock)
             {

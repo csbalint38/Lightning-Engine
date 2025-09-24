@@ -1,8 +1,7 @@
-﻿namespace Editor.Content
+﻿namespace Editor.Content;
+
+internal class RefCountMaterial
 {
-    internal class RefCountMaterial
-    {
-        public int ReferenceCount { get; set; }
-        public Material Material { get; set; }
-    }
+    public int ReferenceCount { get; set; }
+    public Material? Material { get; set; }
 }

@@ -18,7 +18,7 @@ static class AssetRegistry
 
     public static ReadOnlyObservableCollection<AssetInfo> Assets { get; } = new(_assets);
 
-    public static AssetInfo GetAssetInfo(string file)
+    public static AssetInfo? GetAssetInfo(string file)
     {
         lock (_lock)
         {
@@ -26,7 +26,7 @@ static class AssetRegistry
         }
     }
 
-    public static AssetInfo GetAssetInfo(Guid guid)
+    public static AssetInfo? GetAssetInfo(Guid guid)
     {
         lock (_lock)
         {
@@ -50,7 +50,7 @@ static class AssetRegistry
         {
             RegisterAllAssets(contentFolder);
 
-            DefaultAssets.DefaultAssetsList.ForEach(x => RegisterAsset(x.FullPath, x));
+            DefaultAssets.DefaultAssetsList.ForEach(x => RegisterAsset(x.FullPath!, x));
         }
 
         ContentWatcher.ContentModified += OnContentModified;
@@ -69,7 +69,7 @@ static class AssetRegistry
         }
     }
 
-    private static void RegisterAsset(string file, AssetInfo info = null)
+    private static void RegisterAsset(string file, AssetInfo? info = null)
     {
         Debug.Assert(File.Exists(file));
 
@@ -116,7 +116,7 @@ static class AssetRegistry
         }
     }
 
-    private static void OnContentModified(object sender, ContentModifiedEventArgs e)
+    private static void OnContentModified(object? sender, ContentModifiedEventArgs e)
     {
         lock (_lock)
         {
@@ -129,7 +129,7 @@ static class AssetRegistry
                 RegisterAsset(e.FullPath);
             }
 
-            _assets.Where(x => !File.Exists(x.FullPath)).ToList().ForEach(x => UnregisterAsset(x.FullPath));
+            _assets.Where(x => !File.Exists(x.FullPath)).ToList().ForEach(x => UnregisterAsset(x.FullPath!));
         }
     }
 
@@ -167,7 +167,7 @@ static class AssetRegistry
                 writer.Write((int)info.Type);
                 writer.Write(info.Icon.Length);
                 writer.Write(info.Icon);
-                writer.Write(info.FullPath);
+                writer.Write(info.FullPath!);
                 writer.Write(info.RegisterTime.ToBinary());
                 writer.Write(info.ImportDate.ToBinary());
                 writer.Write(info.Guid.ToString());
@@ -176,7 +176,7 @@ static class AssetRegistry
 
                 writer.Write(hashSize);
 
-                if (hashSize > 0) writer.Write(info.Hash);
+                if (hashSize > 0) writer.Write(info.Hash!);
             }
         }
         catch (Exception ex)

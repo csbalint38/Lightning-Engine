@@ -27,7 +27,7 @@ namespace Editor.Utilities.Converters
             return string.Format("{0:n" + decimalPlaces + "} {1}", adjustedSize, _sizeSuffixes[mag]);
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return (value is long size) ? SizeSuffix(size, 0) : null;
         }

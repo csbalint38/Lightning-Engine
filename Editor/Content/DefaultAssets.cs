@@ -10,10 +10,10 @@ namespace Editor.Content
 {
     static class DefaultAssets
     {
-        public static AssetInfo BRDFIntegrationLUT { get; private set; }
-        public static AssetInfo DefaultGeometry { get; private set; }
-        public static AssetInfo DefaultMaterial { get; private set; }
-        public static AssetInfo DefaultTexture { get; private set; }
+        public static AssetInfo? BRDFIntegrationLUT { get; private set; }
+        public static AssetInfo? DefaultGeometry { get; private set; }
+        public static AssetInfo? DefaultMaterial { get; private set; }
+        public static AssetInfo? DefaultTexture { get; private set; }
         public static List<AssetInfo> DefaultAssetsList => [
             BRDFIntegrationLUT,
             DefaultGeometry,

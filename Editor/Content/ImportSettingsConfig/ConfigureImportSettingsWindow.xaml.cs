@@ -16,7 +16,7 @@ namespace Editor.Content.ImportSettingsConfig
 
             Loaded += (_, __) =>
             {
-                var vm = DataContext as ConfigureImportSettings;
+                var vm = (ConfigureImportSettings)DataContext;
 
                 TCAssetTypes.SelectedIndex = vm.GeometryImportSettingsConfigurator.GeometryProxies.Any() ?
                     0 :
@@ -46,14 +46,14 @@ namespace Editor.Content.ImportSettingsConfig
             if (files?.Length > 0)
             {
                 var destFolder = listBox.HasItems ?
-                    (listBox.Items[^1] as AssetProxy).DestinationFolder :
+                    ((AssetProxy)listBox.Items[^1]).DestinationFolder :
                     dataContext.LastDestinationFolder;
 
                 dataContext.AddFiles(files, destFolder);
             }
         }
 
-        private void TCAssetTypes_SelectionChanged_1(object sender, SelectionChangedEventArgs e) =>
-            ImportingItemCollection.SetItemFilter((AssetType)(TCAssetTypes.SelectedItem as TabItem)?.Tag);
+        private void TCAssetTypes_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+            ImportingItemCollection.SetItemFilter((AssetType)(TCAssetTypes.SelectedItem as TabItem)?.Tag!);
     }
 }

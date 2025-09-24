@@ -73,7 +73,7 @@ namespace Editor.DLLs
             GameEntityDescriptor desc = new();
 
             {
-                var c = entity.GetComponent<Transform>();
+                var c = entity.GetComponent<Transform>()!;
                 desc.Transform.Position = c.Position;
                 desc.Transform.Rotation = c.Rotation;
                 desc.Transform.Scale = c.Scale;
