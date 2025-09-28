@@ -23,10 +23,10 @@ public class Project : ViewModelBase
 
     private Scene _activeScene;
     private int _buildConfig;
-    private string[] _availableScripts;
+    private string[] _availableScripts = [];
 
     public static readonly string Extension = ".lng";
-    public static Project Current { get; private set; }
+    public static Project? Current { get; private set; }
     public static UndoRedo UndoRedo { get; } = new UndoRedo();
 
     [DataMember]
@@ -133,6 +133,8 @@ public class Project : ViewModelBase
     {
         Name = name;
         Path = path;
+        Scenes = new ReadOnlyObservableCollection<Scene>(_scenes);
+        ActiveScene = _activeScene = Scenes.First();
 
         Debug.Assert(File.Exists((Path + Name + Extension).ToLower()));
 

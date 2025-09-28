@@ -324,9 +324,13 @@ namespace lightning::tools {
 			lod.meshes.emplace_back(create_uv_sphere(info));
 			scene.lod_groups.emplace_back(lod);
 		};
+		// TODO: implement these
+		#pragma warning(push)
+		#pragma warning(disable: 4100)
 		void create_ico_sphere(Scene& scene, const PrimitiveInitInfo& info) {};
 		void create_cylinder(Scene& scene, const PrimitiveInitInfo& info) {};
 		void create_capsule(Scene& scene, const PrimitiveInitInfo& info) {};
+		#pragma warning(pop)
 	}
 
 	EDITOR_INTERFACE void create_primitive_mesh(SceneData* data, PrimitiveInitInfo* info) {

@@ -30,7 +30,7 @@ public partial class GeometryComponentView : UserControl
             x.Geometry.SetGeometry(x.Guid);
         });
 
-        MSEntity.CurrentSelection?.GetMSComponent<MSGeometry>().Refresh();
+        MSEntity.CurrentSelection?.GetMSComponent<MSGeometry>()?.Refresh();
     }
 
     private async void BrdGeometry_DropAsync(object sender, System.Windows.DragEventArgs e)

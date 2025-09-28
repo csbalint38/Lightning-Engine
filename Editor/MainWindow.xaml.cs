@@ -16,7 +16,7 @@ namespace Editor;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public static string EnginePath { get; private set; }
+    public static string? EnginePath { get; private set; }
 
     public MainWindow()
     {

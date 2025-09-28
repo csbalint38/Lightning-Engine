@@ -26,7 +26,7 @@ public partial class TransformComponentView : UserControl
     private void OnTransformViewLoaded(object sender, RoutedEventArgs e)
     {
         Loaded -= OnTransformViewLoaded;
-        (DataContext as MSTransform).PropertyChanged += (_, __) => _propertyChanged = true;
+        ((MSTransform)DataContext).PropertyChanged += (_, __) => _propertyChanged = true;
     }
 
     private void VbPosition_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -40,7 +40,7 @@ public partial class TransformComponentView : UserControl
         _undoAction = GetPositionAction();
     }
 
-    private void VbPosition_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) =>
+    private void VbPosition_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs? e) =>
         RecordActions(GetPositionAction(), "Position changed");
 
     private void VbRotation_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -54,7 +54,7 @@ public partial class TransformComponentView : UserControl
         _undoAction = GetRotationAction();
     }
 
-    private void VbRotation_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) =>
+    private void VbRotation_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs? e) =>
         RecordActions(GetRotationAction(), "Rotation changed");
 
     private void VbScale_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -68,7 +68,7 @@ public partial class TransformComponentView : UserControl
         _undoAction = GetScaleAction();
     }
 
-    private void VbScale_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) =>
+    private void VbScale_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs? e) =>
         RecordActions(GetScaleAction(), "Scale changed");
 
     private Action? GetAction(
@@ -89,7 +89,7 @@ public partial class TransformComponentView : UserControl
         return new Action(() =>
         {
             selection.ForEach(x => forEachAction(x));
-            (EntityView.Instance.DataContext as MSEntity)?.GetMSComponent<MSTransform>().Refresh();
+            ((MSEntity)EntityView.Instance!.DataContext)?.GetMSComponent<MSTransform>()?.Refresh();
         });
     }
 

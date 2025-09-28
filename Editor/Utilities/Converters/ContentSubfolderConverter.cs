@@ -9,7 +9,7 @@ namespace Editor.Utilities.Converters
     {
         public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var contentFolder = Project.Current.ContentPath;
+            var contentFolder = Project.Current!.ContentPath;
 
             if (value is string folder && !string.IsNullOrEmpty(folder) && folder.Contains(contentFolder))
             {

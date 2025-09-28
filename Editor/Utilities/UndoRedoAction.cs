@@ -9,13 +9,18 @@ namespace Editor.Utilities
 
         public string Name { get; }
 
-        public UndoRedoAction(string name) => Name = name;
+        public UndoRedoAction(string name)
+        {
+            Name = name;
+            _undoAction = () => { };
+            _redoAction = () => { };
+        }
 
         public UndoRedoAction(string prop, object instance, object oldValue, object newValue, string name) :
             this(
                 name,
-                () => instance.GetType().GetProperty(prop).SetValue(instance, oldValue),
-                () => instance.GetType().GetProperty(prop).SetValue(instance, newValue)
+                () => instance?.GetType()?.GetProperty(prop)?.SetValue(instance, oldValue),
+                () => instance?.GetType()?.GetProperty(prop)?.SetValue(instance, newValue)
             )
         { }
 

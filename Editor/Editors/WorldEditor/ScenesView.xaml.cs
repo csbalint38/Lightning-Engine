@@ -25,10 +25,10 @@ public partial class ScenesView : UserControl
 
     private void BtnAddEntity_Click(object sender, RoutedEventArgs e)
     {
-        var btn = sender as Button;
-        var scene = btn.DataContext as Scene;
+        var btn = (Button)sender;
+        var scene = (Scene)btn.DataContext;
 
-        scene.AddEntityCommand.Execute(new Entity(scene)
+        scene.AddEntityCommand?.Execute(new Entity(scene)
         {
             Name = "Empty Game Entity"
         });
@@ -36,9 +36,9 @@ public partial class ScenesView : UserControl
 
     private void LbEntities_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        EntityView.Instance.DataContext = null;
-        var listBox = sender as ListBox;
-        var vm = listBox.DataContext as Scene;
+        EntityView.Instance!.DataContext = null;
+        var listBox = (ListBox)sender;
+        var vm = (Scene)listBox.DataContext;
         var newSelection = listBox.SelectedItems.Cast<Entity>().ToList();
         var newSelectedIndices = newSelection.Select(item => vm.Entities.IndexOf(item)).ToList();
         var previousSelectetedIndices = _previousSelectedIndices.ToList();
@@ -73,7 +73,7 @@ public partial class ScenesView : UserControl
             }
         ));
 
-        MSEntity msEntities = null;
+        MSEntity? msEntities = null;
 
         if (newSelection.Count != 0)
         {
@@ -84,7 +84,7 @@ public partial class ScenesView : UserControl
 
     private void BtnRenameScene_Click(object sender, RoutedEventArgs e)
     {
-        var textBox = (TextBox)(sender as Button).Tag;
+        var textBox = (TextBox)((Button)sender).Tag;
 
         textBox.Visibility = Visibility.Visible;
         textBox.Focus();
@@ -92,7 +92,7 @@ public partial class ScenesView : UserControl
 
     private void LbEntities_Loaded(object sender, RoutedEventArgs e)
     {
-        var gameEntityListBox = sender as ListBox;
+        var gameEntityListBox = (ListBox)sender;
 
         if (gameEntityListBox.IsEnabled)
         {
@@ -107,7 +107,7 @@ public partial class ScenesView : UserControl
             }
             else
             {
-                EntityView.Instance.DataContext = null;
+                EntityView.Instance!.DataContext = null;
             }
         }
     }
@@ -129,7 +129,7 @@ public partial class ScenesView : UserControl
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-            var fileList = files?
+            var fileList = files
                 .Where(x =>
                     Path.GetExtension(x).ToLower() == Asset.AssetFileExtension
                     && Asset.TryGetAssetInfo(x)?.Type == AssetType.MESH
@@ -150,7 +150,7 @@ public partial class ScenesView : UserControl
                     {
                         var entity = new Entity(scene)
                         {
-                            Name = assetInfo.FileName.Trim()
+                            Name = assetInfo.FileName?.Trim() ?? string.Empty
                         };
 
                         entity.IsActive = true;
@@ -160,7 +160,7 @@ public partial class ScenesView : UserControl
                 }
             });
 
-            entities.ForEach(entity => scene.AddEntityCommand.Execute(entity));
+            entities.ForEach(entity => scene.AddEntityCommand?.Execute(entity));
         }
     }
 }

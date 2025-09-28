@@ -342,6 +342,8 @@ public class TextureEditor : ViewModelBase, IAssetEditor
         _sliceBitmaps.Clear();
         _cubemap = null;
 
+        if (_slices is null) return;
+
         foreach (var arraySlice in _slices)
         {
             List<List<BitmapSource>> mipmapsBitmaps = new();

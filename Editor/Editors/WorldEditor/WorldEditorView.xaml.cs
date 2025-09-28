@@ -50,7 +50,7 @@ namespace Editor.Editors
         private void ContentBrowserView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (
-                (sender as FrameworkElement).DataContext is ContentBrowser cb &&
+                ((FrameworkElement)sender).DataContext is ContentBrowser cb &&
                 string.IsNullOrEmpty(cb.SelectedFolder?.Trim())
             )
             {
@@ -92,8 +92,8 @@ namespace Editor.Editors
             Process.Start(psi);
         }
 
-        private void BtnOpenEditor_Click(object sender, RoutedEventArgs e) =>
-            ICodeEditor.Current.ShowWindow(Project.Current.Solution);
+        private void BtnOpenEditor_Click(object sender, RoutedEventArgs e) => 
+            ICodeEditor.Current.ShowWindow(Project.Current!.Solution);
 
         private void Options_Click(object sender, RoutedEventArgs e)
         {

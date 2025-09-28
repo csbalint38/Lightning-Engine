@@ -10,7 +10,7 @@ namespace Editor.Utilities
         private readonly List<object> _data = [];
         private DateTime _lastEventTime = DateTime.Now;
 
-        public event EventHandler<DelayEventTimerArgs> Triggered;
+        public event EventHandler<DelayEventTimerArgs>? Triggered;
 
         public DelayEventTimer(TimeSpan delay, DispatcherPriority priority = DispatcherPriority.Normal)
         {
@@ -22,7 +22,7 @@ namespace Editor.Utilities
             _timer.Tick += OnTick;
         }
 
-        public void Trigger(object data = null)
+        public void Trigger(object? data = null)
         {
             if (data is not null) _data.Add(data);
 

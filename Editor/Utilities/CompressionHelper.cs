@@ -10,7 +10,7 @@ namespace Editor.Utilities
         {
             Debug.Assert(data?.Length > 0);
 
-            byte[] compressedData = null;
+            byte[]? compressedData = null;
 
             using (var output = new MemoryStream())
             {
@@ -29,7 +29,7 @@ namespace Editor.Utilities
         {
             Debug.Assert(data?.Length > 0);
 
-            byte[] decompressedData = null;
+            byte[]? decompressedData = null;
 
             using (var output = new MemoryStream())
             {

@@ -136,7 +136,7 @@ public static class ContentHelper
         var name = Path.GetFileNameWithoutExtension(file).ToLower();
         var ext = Path.GetExtension(file).ToLower();
 
-        Asset asset = ext switch
+        Asset? asset = ext switch
         {
             { } when MeshFileExtensions.Contains(ext) => new Geometry(settings),
             { } when ImageFileExtensions.Contains(ext) => new Texture(settings),
@@ -154,7 +154,7 @@ public static class ContentHelper
 
     private static void Import(Asset asset, string name, string file, string destination)
     {
-        destination = destination?.Trim();
+        destination = destination.Trim();
 
         Debug.Assert(asset is not null);
         Debug.Assert(!string.IsNullOrEmpty(destination) && Directory.Exists(destination));

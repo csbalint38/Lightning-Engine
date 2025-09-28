@@ -42,7 +42,7 @@ namespace Editor.Utilities
         {
             FilteredMessages.Filter += (s, e) =>
             {
-                var type = (int)(e.Item as LogMessage).LogLevel;
+                var type = (int)((LogMessage)e.Item).LogLevel;
                 e.Accepted = (type & _messageFilter) != 0;
             };
         }

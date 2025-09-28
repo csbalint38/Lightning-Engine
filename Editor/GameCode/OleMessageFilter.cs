@@ -22,12 +22,13 @@ namespace Editor.GameCode
 
         public static void Revoke()
         {
-            int hr = CoRegisterMessageFilter(null, out var oldFilter);
+            int hr = CoRegisterMessageFilter(null!, out var oldFilter);
 
             Debug.Assert(hr >= 0, "Unregistering COM IMessageFilter failed");
         }
 
-        public int HandleInComingCall(int dwCallType, IntPtr hTaskCaller, int dwTickCount, IntPtr lpInterfaceInfo) => SERVERCALL_ISHANDLED;
+        public int HandleInComingCall(int dwCallType, IntPtr hTaskCaller, int dwTickCount, IntPtr lpInterfaceInfo)
+            => SERVERCALL_ISHANDLED;
 
         public int RetryRejectedCall(IntPtr hTaskCallee, int dwTickCount, int dwRejectType)
         {

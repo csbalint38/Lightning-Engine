@@ -30,7 +30,7 @@ namespace Editor.GameCode
 
             var name = TbScriptName.Text.Trim();
 
-            TbMessage.Text = $"{name}.h and {name}.cpp will be added to {Project.Current.Name}";
+            TbMessage.Text = $"{name}.h and {name}.cpp will be added to {Project.Current!.Name}";
         }
 
         private void TbPath_TextChanged(object sender, TextChangedEventArgs e) => Validate();
@@ -45,7 +45,7 @@ namespace Editor.GameCode
             try
             {
                 var name = TbScriptName.Text.Trim();
-                var path = Path.GetFullPath(Path.Combine(Project.Current.Path, TbPath.Text.Trim()));
+                var path = Path.GetFullPath(Path.Combine(Project.Current!.Path, TbPath.Text.Trim()));
                 var solution = Project.Current.Solution;
                 var projectName = Project.Current.Name;
 
@@ -92,7 +92,7 @@ namespace Editor.GameCode
                 errorMessage = "Invalid character(s) used in path";
             }
             else if (
-                !Path.GetFullPath(Path.Combine(Project.Current.Path, path)).Contains(Path.Combine(Project.Current.Path, @"Code\"))
+                !Path.GetFullPath(Path.Combine(Project.Current!.Path, path)).Contains(Path.Combine(Project.Current.Path, @"Code\"))
             )
             {
                 errorMessage = "Script must be placed in the Code folder or in one of its subfolder.";
@@ -155,7 +155,7 @@ namespace Editor.GameCode
 
         private static string GetNamespaceFromProjectName()
         {
-            var projectName = Project.Current.Name.Trim().ToLower();
+            var projectName = Project.Current!.Name.Trim().ToLower();
 
             if (string.IsNullOrEmpty(projectName)) return string.Empty;
 

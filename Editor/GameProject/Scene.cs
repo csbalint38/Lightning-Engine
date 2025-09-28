@@ -11,10 +11,10 @@ namespace Editor.GameProject;
 [DataContract]
 public class Scene : ViewModelBase
 {
-    private string _name;
+    private string? _name;
     private bool _isActive;
 
-    public ICommand RenameCommand { get; private set; }
+    public ICommand? RenameCommand { get; private set; }
 
     [DataMember(Name = nameof(Entities))]
     private ObservableCollection<Entity> _entities = [];
@@ -22,10 +22,14 @@ public class Scene : ViewModelBase
     [DataMember]
     public Project Project { get; private set; }
 
+    public ReadOnlyObservableCollection<Entity> Entities { get; private set; }
+    public ICommand? AddEntityCommand { get; private set; }
+    public ICommand? RemoveEntityCommand { get; private set; }
+
     [DataMember]
     public string Name
     {
-        get => _name;
+        get => _name!;
         set
         {
             if (_name != value)
@@ -52,17 +56,13 @@ public class Scene : ViewModelBase
         }
     }
 
-    public ReadOnlyObservableCollection<Entity> Entities { get; private set; }
-
-    public ICommand AddEntityCommand { get; private set; }
-    public ICommand RemoveEntityCommand { get; private set; }
-
     public Scene(Project project, string name)
     {
         Debug.Assert(project != null);
 
         Project = project;
         Name = name;
+        Entities = new ReadOnlyObservableCollection<Entity>(_entities);
 
         OnDeserialized(new StreamingContext());
     }
@@ -76,11 +76,11 @@ public class Scene : ViewModelBase
             OnPropertyChanged(nameof(Entities));
         }
 
-        foreach (var entity in _entities) entity.IsActive = IsActive;
+        foreach (var entity in _entities!) entity.IsActive = IsActive;
 
         RenameCommand = new RelayCommand<string>(x =>
         {
-            var oldName = _name;
+            var oldName = _name!;
             Name = x;
 
             Project.UndoRedo.Add(

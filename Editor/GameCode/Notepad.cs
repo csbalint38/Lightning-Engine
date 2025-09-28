@@ -62,7 +62,7 @@ namespace Editor.GameCode
             {
 
                 var exePath = Path.Combine(_solutionDir!, "x64", "Debug");
-                var exe = Path.Combine(exePath, $"{Project.Current.Name}.exe");
+                var exe = Path.Combine(exePath, $"{Project.Current!.Name}.exe");
 
                 try
                 {

@@ -562,7 +562,7 @@ public class Geometry : Asset
     {
         Logger.LogAsync(LogLevel.INFO, $"Importing FBX file {file}");
 
-        var tempPath = Application.Current.Dispatcher.Invoke(() => Project.Current.TempFolder);
+        var tempPath = Application.Current.Dispatcher.Invoke(() => Project.Current?.TempFolder);
 
         if (string.IsNullOrEmpty(tempPath)) return false;
 

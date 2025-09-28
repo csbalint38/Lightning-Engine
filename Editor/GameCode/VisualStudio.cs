@@ -94,9 +94,9 @@ public class VisualStudio : ICodeEditor
 
     private static void OpenVisualStudioInternal(string solutionPath)
     {
-        IRunningObjectTable rot = null;
-        IEnumMoniker monikerTable = null;
-        IBindCtx bindCtx = null;
+        IRunningObjectTable? rot = null;
+        IEnumMoniker? monikerTable = null;
+        IBindCtx? bindCtx = null;
 
         try
         {

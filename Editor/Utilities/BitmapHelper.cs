@@ -36,7 +36,7 @@ static class BitmapHelper
         var bytesPerChannel = BytesPerChannel(slice_format);
         var stride = slice.Width * bytesPerPixel;
         var format = PixelFormats.Default;
-        byte[] bgrData = null;
+        byte[]? bgrData = null;
 
         if (bytesPerPixel == 16) format = PixelFormats.Rgba128Float;
         else if (bytesPerPixel == 4) format = PixelFormats.Bgra32;
@@ -83,7 +83,7 @@ static class BitmapHelper
 
                 writer.Flush();
 
-                bgrData = (writer.BaseStream as MemoryStream).ToArray();
+                bgrData = ((MemoryStream)writer.BaseStream).ToArray();
                 format = PixelFormats.Rgba128Float;
                 stride = slice.Width * 16;
             }
@@ -106,7 +106,7 @@ static class BitmapHelper
                 }
 
                 writer.Flush();
-                bgrData = (writer.BaseStream as MemoryStream).ToArray();
+                bgrData = ((MemoryStream)writer.BaseStream).ToArray();
                 format = PixelFormats.Rgba128Float;
                 stride = slice.Width * 16;
             }
@@ -167,13 +167,13 @@ static class BitmapHelper
 
                 writer.Flush();
 
-                bgrData = (writer.BaseStream as MemoryStream).ToArray();
+                bgrData = ((MemoryStream)writer.BaseStream).ToArray();
                 format = PixelFormats.Rgba128Float;
                 stride = slice.Width * 16;
             }
         }
 
-        BitmapSource image = null;
+        BitmapSource? image = null;
 
         if (bgrData is not null) image = BitmapSource.Create(slice.Width, slice.Height, 96.0, 96.0, format, null, bgrData, stride);
 
