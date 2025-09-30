@@ -64,7 +64,7 @@ namespace lightning::graphics::direct3d12 {
 				u32 height{ 0 };
 				ID3D12Fence* fence{ nullptr };
 				u32 fence_value{ 0 };
-				u32 total_bytes{ 0 };
+				u64 total_bytes{ 0 };
 			};
 
 			#if USE_STL_VECTOR

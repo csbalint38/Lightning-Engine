@@ -124,17 +124,17 @@ namespace lightning::graphics {
 	struct CameraInitInfo {
 		id::id_type entity_id{ id::invalid_id };
 		Camera::Type type{};
-		math::v3 up;
+		math::v3 up{};
 		union {
-			f32 field_of_view;
+			f32 field_of_view{};
 			f32 view_width;
 		};
 		union {
-			f32 aspect_ratio;
+			f32 aspect_ratio{};
 			f32 view_height;
 		};
-		f32 near_z;
-		f32 far_z;
+		f32 near_z{};
+		f32 far_z{};
 	};
 
 	struct PerspectiveCameraInitInfo : public CameraInitInfo {

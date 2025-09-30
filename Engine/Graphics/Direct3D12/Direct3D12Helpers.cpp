@@ -94,7 +94,7 @@ namespace lightning::graphics::direct3d12::d3dx {
 		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		desc.Flags = is_cpu_accessible ? D3D12_RESOURCE_FLAG_NONE : flags;
 
-		assert(desc.Flags == D3D12_RESOURCE_FLAG_NONE || desc.Flags == D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+		assert((desc.Flags & ~(D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)) == D3D12_RESOURCE_FLAG_NONE);
 
 		ID3D12Resource* resource{ nullptr };
 		const D3D12_RESOURCE_STATES resource_state{ is_cpu_accessible ? D3D12_RESOURCE_STATE_GENERIC_READ : state };

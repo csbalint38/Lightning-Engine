@@ -668,7 +668,7 @@ namespace lightning::graphics::direct3d12::light {
 
 			void resize_buffer(LightBuffer::Type type, u32 size, [[maybe_unused]] u32 frame_index) {
 				assert(type < LightBuffer::count);
-				if (!size || _buffers[type].buffer.size() >= math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(size)) return;
+				if (!size || type >= LightBuffer::count || _buffers[type].buffer.size() >= math::align_size_up<D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT>(size)) return;
 
 				_buffers[type].buffer = D3D12Buffer{ ConstantBuffer::get_default_init_info(size),true };
 				NAME_D3D12_OBJECT_INDEXED(_buffers[type].buffer.buffer(), frame_index, type == LightBuffer::NON_CULLABLE_LIGHT ? L"Non-cullable Light Buffer" : type == LightBuffer::CULLABLE_LIGHT ? L"Cullable Light Buffer" : type == LightBuffer::CULLING_INFO ? L"Light Culling Info Buffer" : L"Bounding Spheres Buffer");

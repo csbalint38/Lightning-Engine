@@ -315,7 +315,10 @@ namespace lightning::graphics::direct3d12::content {
 
 		PsoId create_pso(id::id_type material_id, D3D12_PRIMITIVE_TOPOLOGY primitive_topology, u32 elements_type) {
 			constexpr u64 aligned_stream_size{ math::align_size_up<sizeof(u64)>(sizeof(d3dx::D3D12PipelineStateSubobjectStream)) };
-			u8* const stream_ptr{ (u8* const)alloca(aligned_stream_size) };
+			u8* const stream_ptr{ (u8* const)_malloca(aligned_stream_size) };
+
+			if (!stream_ptr) throw std::bad_alloc();
+
 			ZeroMemory(stream_ptr, aligned_stream_size);
 			new (stream_ptr) d3dx::D3D12PipelineStateSubobjectStream{};
 
@@ -680,7 +683,10 @@ namespace lightning::graphics::direct3d12::content {
 			assert(id::is_valid(entity_id) && id::is_valid(geometry_content_id));
 			assert(material_count && material_ids);
 
-			id::id_type* const gpu_ids{ (id::id_type* const)alloca(material_count * sizeof(id::id_type)) };
+			id::id_type* const gpu_ids{ (id::id_type* const)_malloca(material_count * sizeof(id::id_type)) };
+
+			if (!gpu_ids) throw std::bad_alloc();
+
 			lightning::content::get_submesh_gpu_ids(geometry_content_id, material_count, gpu_ids);
 
 			submesh::ViewsCache views_cache{
@@ -693,12 +699,16 @@ namespace lightning::graphics::direct3d12::content {
 
 			submesh::get_views(gpu_ids, material_count, views_cache);
 
-			std::unique_ptr<id::id_type[]> items{ std::make_unique<id::id_type[]>(sizeof(id::id_type) * (1 + (u64)material_count + 1)) };
+			std::unique_ptr<id::id_type[]> items{
+				std::make_unique<id::id_type[]>(sizeof(id::id_type) * (1 + (u64)material_count + 1))
+			};
 
 			items[0] = geometry_content_id;
 			id::id_type* const item_ids{ &items[1] };
 
-			D3D12RenderItem* const d3d12_items{ (D3D12RenderItem* const)alloca(material_count * sizeof(D3D12RenderItem)) };
+			D3D12RenderItem* const d3d12_items{ (D3D12RenderItem* const)_malloca(material_count * sizeof(D3D12RenderItem)) };
+
+			if (!d3d12_items) throw std::bad_alloc();
 
 			for (u32 i{ 0 }; i < material_count; ++i) {
 				D3D12RenderItem& item{ d3d12_items[i] };

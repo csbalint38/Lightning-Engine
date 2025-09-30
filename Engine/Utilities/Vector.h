@@ -196,8 +196,9 @@ namespace lightning::util {
 
 			[[nodiscard]] constexpr T* end() {
 				assert(!(_data == nullptr && _size > 0));
-				return std::addressof(_data[_size]);
+				return _data + _size;
 			}
+
 			[[nodiscard]] constexpr const T* end() const {
 				assert(!(_data == nullptr && _size > 0));
 				return std::addressof(_data[_size]);

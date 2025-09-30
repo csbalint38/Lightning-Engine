@@ -148,7 +148,9 @@ EDITOR_INTERFACE id::id_type add_shader_group(ShaderGroupData* data) {
 
 	blob.skip(count * sizeof(u32));
 
-	const u8** shader_pointers{ (const u8**)alloca(count * sizeof(u8*)) };
+	const u8** shader_pointers{ (const u8**)_malloca(count * sizeof(u8*)) };
+
+	if (!shader_pointers) throw std::bad_alloc();
 
 	for (u32 i{ 0 }; i < count; ++i) {
 		const u32 block_size{ sizeof(u64) + content::CompiledShader::hash_length + *(u32*)blob.position() };
@@ -158,7 +160,10 @@ EDITOR_INTERFACE id::id_type add_shader_group(ShaderGroupData* data) {
 
 	assert(blob.position() == (data->data + data->data_size));
 
-	return content::add_shader_group(shader_pointers, count, keys);
+	id::id_type group_id = content::add_shader_group(shader_pointers, count, keys);
+	_freea(shader_pointers);
+	
+	return group_id;
 }
 
 EDITOR_INTERFACE void remove_shader_group(id::id_type id) {

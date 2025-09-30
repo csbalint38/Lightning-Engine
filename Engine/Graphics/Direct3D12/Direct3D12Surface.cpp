@@ -57,7 +57,7 @@ namespace lightning::graphics::direct3d12 {
 
 			if (x <= .0031308f) return 12.92f * x;
 
-			return 1.055 * powf(x, 1.f / 2.4f) - .055f;
+			return 1.055f * powf(x, 1.f / 2.4f) - .055f;
 		}
 	}
 
@@ -226,7 +226,7 @@ namespace lightning::graphics::direct3d12 {
 		_capture_state.total_bytes = total_bytes;
 
 		if (!_capture_state.fence) {
-			core::device()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_capture_state.fence));
+			DXCall(core::device()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&_capture_state.fence)));
 			_capture_state.fence_value = 0;
 		}
 	}
@@ -241,15 +241,24 @@ namespace lightning::graphics::direct3d12 {
 		if (_capture_state.fence->GetCompletedValue() < v) {
 			HANDLE event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 			
-			_capture_state.fence->SetEventOnCompletion(v, event);
+			if (!event) return;
+
+			HRESULT hr = _capture_state.fence->SetEventOnCompletion(v, event);
+
+			if (FAILED(hr)) {
+				CloseHandle(event);
+
+				return;
+			}
+
 			WaitForSingleObject(event, INFINITE);
 			CloseHandle(event);
 		}
 
 		u8* bytes{ nullptr };
-		D3D12_RANGE r{ 0, (SIZE_T)_capture_state.total_bytes};
+		D3D12_RANGE range{ 0, (SIZE_T)_capture_state.total_bytes};
 
-		if (SUCCEEDED(_capture_state.readback->Map(0, &r, reinterpret_cast<void**>(&bytes))) && bytes) {
+		if (SUCCEEDED(_capture_state.readback->Map(0, &range, reinterpret_cast<void**>(&bytes))) && bytes) {
 			const u32 dest_stride = _capture_state.width * 4;
 			util::vector<u8> out(dest_stride * _capture_state.height);
 

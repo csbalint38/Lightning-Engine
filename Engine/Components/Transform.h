@@ -21,12 +21,12 @@ namespace lightning::transform {
     };
 
     struct ComponentCache {
-        math::v4 rotation;
-        math::v3 orientation;
-        math::v3 position;
-        math::v3 scale;
-        transform_id id;
-        u32 flags;
+        math::v4 rotation{};
+        math::v3 orientation{};
+        math::v3 position{};
+        math::v3 scale{};
+        transform_id id{};
+        u32 flags{};
     };
 
     Component create(InitInfo info, game_entity::Entity entity);
