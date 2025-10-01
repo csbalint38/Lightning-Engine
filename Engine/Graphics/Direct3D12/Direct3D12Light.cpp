@@ -853,6 +853,9 @@ namespace lightning::graphics::direct3d12::light {
 		assert(data && data_size);
 		assert(light_sets.count(light_set_key));
 		assert(parameter < LightParameter::count && set_functions[parameter] != empty_set);
+
+		if (parameter >= LightParameter::count || set_functions[parameter] == empty_set) [[unlikely]] return;
+
 		set_functions[parameter](light_sets[light_set_key], id, data, data_size);
 	}
 
@@ -860,6 +863,9 @@ namespace lightning::graphics::direct3d12::light {
 		assert(data && data_size);
 		assert(light_sets.count(light_set_key));
 		assert(parameter < LightParameter::count);
+
+		if (parameter >= LightParameter::count) [[unlikely]] return;
+
 		get_functions[parameter](light_sets[light_set_key], id, data, data_size);
 	}
 

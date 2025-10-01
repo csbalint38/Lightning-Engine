@@ -98,9 +98,9 @@ namespace {
 		ShaderCompiler() {
 
 			HRESULT hr{ S_OK };
-			DXCall(hr = DxcCreateInstance2(nullptr, CLSID_DxcCompiler, IID_PPV_ARGS(&_compiler)));
+			DXCall(hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&_compiler)));
 			if (FAILED(hr)) return;
-			DXCall(hr = DxcCreateInstance2(nullptr, CLSID_DxcUtils, IID_PPV_ARGS(&_utils)));
+			DXCall(hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&_utils)));
 			if (FAILED(hr)) return;
 			DXCall(hr = _utils->CreateDefaultIncludeHandler(&_include_handler));
 			if (FAILED(hr)) return;

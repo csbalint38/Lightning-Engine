@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>1.0</SchemaVersion>
+    <ProjectGuid>{80d685a8-097b-4826-813a-6ba13a115947}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>main.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="common\" />
+    <Folder Include="common\__pycache__\" />
+    <Folder Include="modules\" />
+    <Folder Include="modules\__pycache__\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="common\__pycache__\common.cpython-312.pyc" />
+    <Content Include="common\__pycache__\__init__.cpython-312.pyc" />
+    <Content Include="modules\__pycache__\app.cpython-312.pyc" />
+    <Content Include="modules\__pycache__\canvas.cpython-312.pyc" />
+    <Content Include="modules\__pycache__\controls.cpython-312.pyc" />
+    <Content Include="modules\__pycache__\sampler.cpython-312.pyc" />
+    <Content Include="modules\__pycache__\__init__.cpython-312.pyc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="common\common.py" />
+    <Compile Include="common\__init__.py" />
+    <Compile Include="main.py" />
+    <Compile Include="modules\app.py" />
+    <Compile Include="modules\canvas.py" />
+    <Compile Include="modules\controls.py" />
+    <Compile Include="modules\sampler.py" />
+    <Compile Include="modules\__init__.py" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

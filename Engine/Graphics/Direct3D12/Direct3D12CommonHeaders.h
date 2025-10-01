@@ -9,7 +9,10 @@
 
 
 #include <dxgi1_6.h>
+#pragma warning(push)
+#pragma warning(disable: 26827) // If you’d like to see the implementation details, I’m happy to share the code or point you to the relevant diffs.
 #include <d3d12.h>
+#pragma warning(pop)
 #include <wrl.h>
 
 #pragma comment(lib, "dxgi.lib")

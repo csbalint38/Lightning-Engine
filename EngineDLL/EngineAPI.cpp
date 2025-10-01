@@ -150,7 +150,7 @@ EDITOR_INTERFACE id::id_type add_shader_group(ShaderGroupData* data) {
 
 	const u8** shader_pointers{ (const u8**)_malloca(count * sizeof(u8*)) };
 
-	if (!shader_pointers) throw std::bad_alloc();
+	if (!shader_pointers) return id::invalid_id;
 
 	for (u32 i{ 0 }; i < count; ++i) {
 		const u32 block_size{ sizeof(u64) + content::CompiledShader::hash_length + *(u32*)blob.position() };

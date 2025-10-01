@@ -258,6 +258,9 @@ namespace lightning::graphics::direct3d12::camera {
 	void set_parameter(camera_id id, CameraParameter::Parameter parameter, const void* const data, u32 data_size) {
 		assert(data && data_size);
 		assert(parameter < CameraParameter::count);
+
+		if (parameter >= CameraParameter::count) [[unlikely]] return;
+
 		D3D12Camera& camera{ get(id) };
 		set_functions[parameter](camera, data, data_size);
 	}
@@ -265,6 +268,9 @@ namespace lightning::graphics::direct3d12::camera {
 	void get_parameter(camera_id id, CameraParameter::Parameter parameter, void* const data, u32 data_size) {
 		assert(data && data_size);
 		assert(parameter < CameraParameter::count);
+
+		if (parameter >= CameraParameter::count) [[unlikely]] return;
+
 		D3D12Camera& camera{ get(id) };
 		get_functions[parameter](camera, data, data_size);
 	}

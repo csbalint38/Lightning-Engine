@@ -18,7 +18,7 @@ namespace lightning::util {
 				*this = o;
 			}
 
-			constexpr vector(vector&& o) : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data } {
+			constexpr vector(vector&& o) noexcept : _capacity{ o._capacity }, _size{ o._size }, _data{ o._data } {
 				o.reset();
 			}
 
@@ -33,7 +33,7 @@ namespace lightning::util {
 				return *this;
 			}
 
-			constexpr vector& operator=(vector&& o) {
+			constexpr vector& operator=(vector&& o) noexcept {
 				assert(this != std::addressof(o));
 				if (this != std::addressof(o)) {
 					destroy();
@@ -201,7 +201,7 @@ namespace lightning::util {
 
 			[[nodiscard]] constexpr const T* end() const {
 				assert(!(_data == nullptr && _size > 0));
-				return std::addressof(_data[_size]);
+				return _data + _size;
 			}
 
 			~vector() {

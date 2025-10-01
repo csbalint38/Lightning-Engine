@@ -49,6 +49,9 @@ namespace lightning::graphics::direct3d12::shaders {
 
 	D3D12_SHADER_BYTECODE get_engine_shader(EngineShader::Id id) {
 		assert(id < EngineShader::count);
+
+		if (id >= EngineShader::count) [[unlikely]] return {};
+
 		const content::compiled_shader_ptr shader{ engine_shaders[id] };
 		assert(shader && shader->byte_code_size());
 

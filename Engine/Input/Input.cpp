@@ -120,6 +120,8 @@ namespace lightning::input {
 			get(source.source_type, (InputCode::Code)source.code, sub_value);
 			assert(source.axis <= Axis::Z);
 
+			if (source.axis > Axis::Z) [[unlikely]] return;
+
 			if (source.source_type == InputSource::MOUSE) {
 				const f32 current{ (&sub_value.current.x)[source.source_axis] };
 				const f32 previous{ (&sub_value.previous.x)[source.source_axis] };

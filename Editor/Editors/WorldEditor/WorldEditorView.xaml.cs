@@ -92,7 +92,7 @@ namespace Editor.Editors
             Process.Start(psi);
         }
 
-        private void BtnOpenEditor_Click(object sender, RoutedEventArgs e) => 
+        private void BtnOpenEditor_Click(object sender, RoutedEventArgs e) =>
             ICodeEditor.Current.ShowWindow(Project.Current!.Solution);
 
         private void Options_Click(object sender, RoutedEventArgs e)

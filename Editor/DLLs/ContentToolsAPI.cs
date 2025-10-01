@@ -96,7 +96,7 @@ static class ContentToolsAPI
                     texture.ImportSettings,
                     diffuseIBLCubemap.ImportSettings
                 );
-                
+
                 diffuseIBLCubemap.ImportSettings.Sources.Clear();
                 diffuseData.GetTextureInfo(diffuseIBLCubemap);
                 diffuseIBLCubemap.SetData(diffuseData.GetSlices(), diffuseData.GetIcon(), texture);

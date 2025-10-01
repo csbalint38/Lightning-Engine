@@ -70,9 +70,9 @@ namespace lightning::graphics::direct3d12 {
 			D3D12Buffer() = default;
 			explicit D3D12Buffer(const D3D12BufferInitInfo& info, bool is_cpu_accessible);
 			DISABLE_COPY(D3D12Buffer);
-			constexpr D3D12Buffer(D3D12Buffer&& o) : _buffer{ o._buffer }, _gpu_address{ o._gpu_address }, _size{ o._size } { o.reset(); }
+			constexpr D3D12Buffer(D3D12Buffer&& o) noexcept : _buffer{ o._buffer }, _gpu_address{ o._gpu_address }, _size{ o._size } { o.reset(); }
 
-			constexpr D3D12Buffer& operator=(D3D12Buffer&& o) {
+			constexpr D3D12Buffer& operator=(D3D12Buffer&& o) noexcept {
 				assert(this != &o);
 				if (this != &o) {
 					release();
@@ -162,11 +162,11 @@ namespace lightning::graphics::direct3d12 {
 			explicit UAVClearebleBuffer(const D3D12BufferInitInfo& info);
 			DISABLE_COPY(UAVClearebleBuffer);
 
-			constexpr UAVClearebleBuffer(UAVClearebleBuffer&& o) : _buffer{ std::move(o._buffer) }, _uav{ o._uav }, _uav_shader_visible{ o._uav_shader_visible } {
+			constexpr UAVClearebleBuffer(UAVClearebleBuffer&& o) noexcept : _buffer{ std::move(o._buffer) }, _uav{ o._uav }, _uav_shader_visible{ o._uav_shader_visible } {
 				o.reset();
 			}
 
-			constexpr UAVClearebleBuffer& operator=(UAVClearebleBuffer&& o) {
+			constexpr UAVClearebleBuffer& operator=(UAVClearebleBuffer&& o) noexcept {
 				assert(this != &o);
 				if (this != &o) {
 					release();
@@ -245,11 +245,11 @@ namespace lightning::graphics::direct3d12 {
 			D3D12Texture() = default;
 			explicit D3D12Texture(D3D12TextureInitInfo info);
 			DISABLE_COPY(D3D12Texture);
-			constexpr D3D12Texture(D3D12Texture&& o) : _resource{ o._resource }, _srv{ o._srv } {
+			constexpr D3D12Texture(D3D12Texture&& o) noexcept : _resource{ o._resource }, _srv{ o._srv } {
 				o.reset();
 			}
 
-			constexpr D3D12Texture& operator=(D3D12Texture&& o) {
+			constexpr D3D12Texture& operator=(D3D12Texture&& o) noexcept {
 				assert(this != &o);
 				if (this != &o) {
 					release();
@@ -285,12 +285,12 @@ namespace lightning::graphics::direct3d12 {
 			D3D12RenderTexture() = default;
 			explicit D3D12RenderTexture(D3D12TextureInitInfo info);
 			DISABLE_COPY(D3D12RenderTexture);
-			constexpr D3D12RenderTexture(D3D12RenderTexture&& o) : _texture{ std::move(o._texture) }, _mip_count{ o._mip_count } {
+			constexpr D3D12RenderTexture(D3D12RenderTexture&& o) noexcept : _texture{ std::move(o._texture) }, _mip_count{ o._mip_count } {
 				for (u32 i{ 0 }; i < _mip_count; ++i) _rtv[i] = o._rtv[1];
 				o.reset();
 			}
 
-			constexpr D3D12RenderTexture& operator=(D3D12RenderTexture&& o) {
+			constexpr D3D12RenderTexture& operator=(D3D12RenderTexture&& o) noexcept {
 				assert(this != &o);
 				if (this != &o) {
 					release();
@@ -330,11 +330,11 @@ namespace lightning::graphics::direct3d12 {
 			D3D12DepthBuffer() = default;
 			explicit D3D12DepthBuffer(D3D12TextureInitInfo info);
 			DISABLE_COPY(D3D12DepthBuffer);
-			constexpr D3D12DepthBuffer(D3D12DepthBuffer&& o) : _texture{ std::move(o._texture) }, _dsv{ o._dsv } {
+			constexpr D3D12DepthBuffer(D3D12DepthBuffer&& o) noexcept : _texture{ std::move(o._texture) }, _dsv{ o._dsv } {
 				o._dsv = {};
 			}
 
-			constexpr D3D12DepthBuffer& operator=(D3D12DepthBuffer&& o) {
+			constexpr D3D12DepthBuffer& operator=(D3D12DepthBuffer&& o) noexcept {
 				assert(this != &o);
 				if (this != &o) {
 					_texture = std::move(o._texture);
