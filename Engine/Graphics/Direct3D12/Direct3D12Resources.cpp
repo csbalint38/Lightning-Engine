@@ -192,6 +192,9 @@ namespace lightning::graphics::direct3d12 {
 		if (info.resource) {
 			_resource = info.resource;
 		}
+
+		if (!info.desc) [[unlikely]] return;
+
 		else if (info.heap) {
 			assert(info.desc);
 			DXCall(device->CreatePlacedResource(info.heap, info.allocation_info.Offset, info.desc, info.initial_state, clear_value, IID_PPV_ARGS(&_resource)));

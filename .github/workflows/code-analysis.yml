@@ -1,0 +1,119 @@
+name: Code Analysis
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vs-analysis-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: MSVC + .NET Analysis
+    runs-on: windows-latest
+
+    env:
+      SOLUTION_FILE: Engine.sln
+      EDITOR: Editor/Editor.csproj
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Cache MikkTSpace
+        id: cache-mikktspace
+        uses: actions/cache@v4
+        with:
+          path: packages/MikkTSpace
+          key: mikktspace-${{ runner.os }}-${{ hashFiles('packages/MikkTSpace/**/*') }}
+          restore-keys: mikktspace-${{ runner.os }}-
+
+      - name: Add MikkTSpace
+        if: steps.cache-mikktspace.outputs.cache-hit != 'true'
+        run: git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/mmikk/MikkTSpace.git packages/MikkTSpace
+
+      - name: Cache FBX SDK
+        id: cache-fbx
+        uses: actions/cache@v4
+        with:
+          path: "packages/FBX SDK"
+          key: fbx-sdk-${{ runner.os }}-${{ hashFiles('packages/FBX SDK/**/*') }}
+          restore-keys: fbx-sdk-${{ runner.os }}-
+
+      - name: Download and extract FBX SDK
+        if: steps.cache-fbx.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $url = 'https://drive.usercontent.google.com/download?id=1dIRXQ8U8Pjk46p5yAZy8NV-UPtT0utZu&export=download&authuser=0&confirm=t&uuid=780e7af0-71a7-40cb-92a4-da1f27aaf7a7&at=AN8xHop1oRwI7kHy5S5dObJuMOLc%3A1753290243197'
+          $zip = 'FBX SDK.zip'
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath 'packages/FBX SDK'
+
+      - name: Cache NuGet packages
+        id: cache-nuget
+        uses: actions/cache@v4
+        with:
+          path: C:\Users\runneradmin\.nuget\packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.sln') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v2
+        with:
+          nuget-version: 'latest'
+
+      - name: Restore NuGet packages
+        run: nuget restore ${{ env.SOLUTION_FILE }}
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: 'latest'
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore .NET packages
+        run: dotnet restore ${{ env.EDITOR }}
+
+      - name: Build .NET with analyzers
+        run: >
+          dotnet build ${{ env.EDITOR }}
+          -c ReleaseEditor
+          -warnaserror
+          -p:EnableNETAnalyzers=true
+          -p:AnalysisLevel=latest
+          -p:TreatWarningsAsErrors=true
+          -v minimal
+
+      - name: Build solution with analyzer
+        shell: pwsh
+        run: >
+          msbuild $env:SOLUTION_FILE
+          /t:Rebuild
+          /p:Configuration=ReleaseEditor
+          /p:Platform=x64
+          /p:RunNativeCodeAnalysis=true
+          /p:EnableCppCoreCheck=true
+          /p:CodeAnalysisTreatWarningsAsErrors=true
+          /p:TreatWarningAsError=true
+          /m
+          /clp:Summary
+          /fl
+          /flp:logfile=msbuild-native.log;
+
+      - name: Upload analysis logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-logs-${{ github.sha }}
+          path: msbuild-native.log
+          retention-days: 7

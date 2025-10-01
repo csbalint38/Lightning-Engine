@@ -88,6 +88,8 @@ EDITOR_INTERFACE u32 load_game_code_dll(const char* dll_path) {
 	game_code_dll = LoadLibraryA(dll_path);
 	assert(game_code_dll);
 
+	if (!game_code_dll) [[unlikely]] return FALSE;
+
 	script_creator = (_get_script_creator)GetProcAddress(game_code_dll, "get_script_creator_from_engine");
 	script_names = (_get_script_names)GetProcAddress(game_code_dll, "get_script_names_from_engine");
 
@@ -203,6 +205,8 @@ EDITOR_INTERFACE u32 compile_shader(ShaderData* data) {
 	assert(buffer_size);
 
 	data->byte_code_error_assembly_hash = (u8*)CoTaskMemAlloc(buffer_size);
+
+	if (!data->byte_code_error_assembly_hash) [[unlikely]] return FALSE;
 
 	assert(data->byte_code_error_assembly_hash);
 

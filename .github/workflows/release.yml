@@ -19,11 +19,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Cache MikkTSpace
         id: cache-mikktspace
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: packages/MikkTSpace
           key: mikktspace-${{ runner.os }}-${{ hashFiles('packages/MikkTSpace/**/*') }}
@@ -35,7 +35,7 @@ jobs:
 
       - name: Cache FBX SDK
         id: cache-fbx
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: "packages/FBX SDK"
           key: fbx-sdk-${{ runner.os }}-${{ hashFiles('packages/FBX SDK/**/*') }}
@@ -52,14 +52,14 @@ jobs:
 
       - name: Cache NuGet packages
         id: cache-nuget
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: C:\Users\runneradmin\.nuget\packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.sln') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Setup NuGet
-        uses: nuget/setup-nuget@v1
+        uses: nuget/setup-nuget@v2
         with:
           nuget-version: 'latest'
 
@@ -67,14 +67,14 @@ jobs:
         run: nuget restore ${{ env.SOLUTION_FILE }}
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v2
         with:
           vs-version: 'latest'
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '9.x'
       
       - name: Clean up previous builds
         shell: pwsh
@@ -207,7 +207,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create-release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

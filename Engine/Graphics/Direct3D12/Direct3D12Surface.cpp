@@ -18,7 +18,9 @@ namespace lightning::graphics::direct3d12 {
 
 		static void save_png(const wchar_t* path, u32 width, u32 height, u32 stride, const u8* rgba8) {
 			IWICImagingFactory* factory;
-			DXCall(CoCreateInstance(CLSID_WICImagingFactory2, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory)));
+			HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory2, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory));
+
+			if (FAILED(hr)) return;
 
 			IWICStream* stream;
 			factory->CreateStream(&stream);
