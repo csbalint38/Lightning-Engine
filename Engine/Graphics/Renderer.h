@@ -14,6 +14,15 @@
 #endif
 
 namespace lightning::graphics {
+	struct RendererOptions {
+		enum Option : u64 {
+			VSYNC,
+			RAYTRACING,
+			MSAA,
+
+			count
+		};
+	};
 
 	struct FrameInfo {
 		id::id_type* render_item_ids{ nullptr };
@@ -244,6 +253,9 @@ namespace lightning::graphics {
 
 	bool initialize(GraphicsPlatform platform);
 	void shutdown();
+
+	void set_option(RendererOptions::Option option, const void* const parameter, u32 parameter_size);
+	void get_option(RendererOptions::Option option, void* const parameter, u32 parameter_size);
 
 	const char* get_engine_shaders_path();
 	const char* get_engine_shaders_path(graphics::GraphicsPlatform platform);

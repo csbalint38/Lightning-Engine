@@ -97,7 +97,7 @@ namespace lightning::graphics::direct3d12 {
 
 		const u32 frame_idx{ core::current_frame_index() };
 		_deferred_free_indicies[frame_idx].push_back(index);
-		core::set_deferred_release_flag();
+		core::set_deferred_release_flag(frame_idx);
 
 		handle = {};
 	}
@@ -192,8 +192,6 @@ namespace lightning::graphics::direct3d12 {
 		if (info.resource) {
 			_resource = info.resource;
 		}
-
-		if (!info.desc) [[unlikely]] return;
 
 		else if (info.heap) {
 			assert(info.desc);

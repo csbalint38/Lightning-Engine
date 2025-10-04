@@ -25,16 +25,14 @@ namespace lightning::graphics::direct3d12::upload {
 		ID3D12CommandQueue* upload_cmd_queue{ nullptr };
 		ID3D12Fence1* upload_fence{ nullptr };
 		u64 upload_fence_value{ 0 };
-		HANDLE fence_event{};
 		std::mutex frame_mutex{};
 		std::mutex queue_mutex{};
 
 		void UploadFrame::wait_and_reset() {
-			assert(upload_fence && fence_event);
+			assert(upload_fence);
 
 			if (upload_fence->GetCompletedValue() < fence_value) {
-				DXCall(upload_fence->SetEventOnCompletion(fence_value, fence_event));
-				WaitForSingleObject(fence_event, INFINITE);
+				DXCall(upload_fence->SetEventOnCompletion(fence_value, nullptr));
 			}
 
 			core::release(upload_buffer);
@@ -151,21 +149,12 @@ namespace lightning::graphics::direct3d12::upload {
 
 		NAME_D3D12_OBJECT(upload_fence, L"Upload Fence");
 
-		fence_event = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-		assert(fence_event);
-		if (!fence_event) return init_failed();
-
 		return true;
 	}
 
 	void shutdown() {
 		for (u32 i{ 0 }; i < upload_frame_count; ++i) {
 			upload_frames[i].release();
-		}
-
-		if (fence_event) {
-			CloseHandle(fence_event);
-			fence_event = nullptr;
 		}
 
 		core::release(upload_cmd_queue);

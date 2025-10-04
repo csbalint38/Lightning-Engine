@@ -7,6 +7,8 @@ namespace lightning::graphics {
 	struct PlatformInterface {
 		bool(*initialize)(void);
 		void(*shutdown)(void);
+		void(*set_option)(RendererOptions::Option, const void* const, u32);
+		void(*get_option)(RendererOptions::Option, void* const, u32);
 
 		struct {
 			Surface(*create)(platform::Window);

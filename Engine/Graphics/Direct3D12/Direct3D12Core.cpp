@@ -48,10 +48,6 @@ namespace lightning::graphics::direct3d12::core {
 				if (FAILED(hr)) goto _error;
 				NAME_D3D12_OBJECT(_fence, L"D3D12 Fence");
 
-				_fence_event = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-				assert(_fence_event);
-				if (!_fence_event) goto _error;
-
 				return;
 
 			_error:
@@ -64,7 +60,7 @@ namespace lightning::graphics::direct3d12::core {
 
 			void begin_frame() {
 				CommandFrame& frame{ _cmd_frames[_frame_index] };
-				frame.wait(_fence_event, _fence);
+				frame.wait(_fence);
 				DXCall(frame.cmd_allocator->Reset());
 				DXCall(_cmd_list->Reset(frame.cmd_allocator, nullptr));
 			}
@@ -86,7 +82,7 @@ namespace lightning::graphics::direct3d12::core {
 
 			void flush() {
 				for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
-					_cmd_frames[i].wait(_fence_event, _fence);
+					_cmd_frames[i].wait(_fence);
 				}
 				_frame_index = 0;
 			}
@@ -95,9 +91,6 @@ namespace lightning::graphics::direct3d12::core {
 				flush();
 				core::release(_fence);
 				_fence_value = 0;
-
-				CloseHandle(_fence_event);
-				_fence_event = nullptr;
 
 				core::release(_cmd_queue);
 				core::release(_cmd_list);
@@ -116,12 +109,11 @@ namespace lightning::graphics::direct3d12::core {
 				ID3D12CommandAllocator* cmd_allocator{ nullptr };
 				u64 fence_value{ 0 };
 
-				void wait(HANDLE fence_event, ID3D12Fence1* fence) {
-					assert(fence && fence_event);
+				void wait(ID3D12Fence1* fence) const {
+					assert(fence);
 
 					if (fence->GetCompletedValue() < fence_value) {
-						DXCall(fence->SetEventOnCompletion(fence_value, fence_event));
-						WaitForSingleObject(fence_event, INFINITE);
+						DXCall(fence->SetEventOnCompletion(fence_value, nullptr));
 					}
 				}
 
@@ -136,12 +128,11 @@ namespace lightning::graphics::direct3d12::core {
 			ID3D12Fence1* _fence{ nullptr };
 			u64 _fence_value{ 0 };
 			CommandFrame _cmd_frames[FRAME_BUFFER_COUNT]{};
-			HANDLE _fence_event{ nullptr };
 			u32 _frame_index{ 0 };
 		};
 
-		constexpr UINT d3d12_sdk_version = 615;
-		constexpr const char* d3d12_sdk_path = ".\\D3D12\\";
+		constexpr UINT d3d12_sdk_version{ 615 };
+		constexpr const char* d3d12_sdk_path{ ".\\D3D12\\" };
 		constexpr D3D_FEATURE_LEVEL minimum_feature_level{ D3D_FEATURE_LEVEL_11_0 };
 
 		using surface_collection = util::free_list<D3D12Surface>;
@@ -163,6 +154,14 @@ namespace lightning::graphics::direct3d12::core {
 		util::vector<IUnknown*> deferred_releases[FRAME_BUFFER_COUNT]{};
 		u32 deferred_release_flag[FRAME_BUFFER_COUNT]{};
 		std::mutex deferred_releases_mutex{};
+
+		b32 is_tearing_supported{ 0 };
+
+		struct Options {
+			bool enable_vsync{ true };
+			bool enable_dxr{ false };
+			u32 masaa_samples{ 1 };
+		} options;
 
 		bool failed_init() {
 			shutdown();
@@ -199,8 +198,11 @@ namespace lightning::graphics::direct3d12::core {
 			return feature_level_info.MaxSupportedFeatureLevel;
 		}
 
-		void __declspec(noinline) process_deferred_releases(u32 frame_idx) {
+		void __declspec(noinline) process_deferred_releases(u32 frame_idx, bool force_release = false) {
 			std::lock_guard lock{ deferred_releases_mutex };
+
+			if (!force_release && ++deferred_release_flag[frame_idx] < FRAME_BUFFER_COUNT) return;
+
 			deferred_release_flag[frame_idx] = 0;
 
 			rtv_desc_heap.process_deferred_free(frame_idx);
@@ -215,23 +217,23 @@ namespace lightning::graphics::direct3d12::core {
 			}
 		}
 
-		D3D12FrameInfo get_d3d12_frame_info(const FrameInfo& info, ConstantBuffer& cbuffer, const D3D12Surface& surface, u32 frame_index, f32 delta_time) {
+		D3D12FrameInfo get_d3d12_frame_info(const FrameInfo& info, ConstantBuffer& cbuffer, const D3D12Surface& surface, u32 frame_index) {
 			camera::D3D12Camera& camera{ camera::get(info.camera_id) };
 			camera.update();
 			hlsl::GlobalShaderData data{};
 
 			using namespace DirectX;
-			XMStoreFloat4x4A(&data.view, camera.view());
-			XMStoreFloat4x4A(&data.projection, camera.projection());
-			XMStoreFloat4x4A(&data.inverse_projection, camera.inverse_projection());
-			XMStoreFloat4x4A(&data.view_projection, camera.view_projection());
-			XMStoreFloat4x4A(&data.inv_view_projection, camera.inverse_view_projection());
+			XMStoreFloat4x4(&data.view, camera.view());
+			XMStoreFloat4x4(&data.projection, camera.projection());
+			XMStoreFloat4x4(&data.inverse_projection, camera.inverse_projection());
+			XMStoreFloat4x4(&data.view_projection, camera.view_projection());
+			XMStoreFloat4x4(&data.inv_view_projection, camera.inverse_view_projection());
 			XMStoreFloat3(&data.camera_position, camera.position());
 			XMStoreFloat3(&data.camera_direction, camera.direction());
 			data.view_width = surface.viewport().Width;
 			data.view_height = surface.viewport().Height;
 			data.num_directional_lights = light::non_cullable_light_count(info.light_set_key);
-			data.delta_time = delta_time;
+			data.delta_time = info.average_frame_time;
 			data.ambient_light = light::ambient_light(info.light_set_key);
 
 			hlsl::GlobalShaderData* const shader_data{ cbuffer.allocate<hlsl::GlobalShaderData>() };
@@ -245,7 +247,6 @@ namespace lightning::graphics::direct3d12::core {
 				surface.height(),
 				surface.light_culling_id(),
 				frame_index,
-				delta_time
 			};
 
 			return frame_info;
@@ -254,10 +255,10 @@ namespace lightning::graphics::direct3d12::core {
 
 	namespace detail {
 		void deferred_release(IUnknown* resource) {
-			const u32 frame_idx{ current_frame_index() };
 			std::lock_guard lock{ deferred_releases_mutex };
+			const u32 frame_idx{ current_frame_index() };
 			deferred_releases[frame_idx].push_back(resource);
-			set_deferred_release_flag();
+			deferred_release_flag[frame_idx] = 1;
 		}
 	}
 
@@ -296,6 +297,14 @@ namespace lightning::graphics::direct3d12::core {
 		DXCall(hr = CreateDXGIFactory2(dxgi_factory_flags, IID_PPV_ARGS(&dxgi_factory)));
 
 		if (FAILED(hr)) return failed_init();
+
+		is_tearing_supported = 0;
+
+		#if 1
+		DXCall(dxgi_factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &is_tearing_supported, sizeof(is_tearing_supported)));
+		#else
+		#pragma message("TEARING SUPPORT HAS BEEN DISABLED IN D3D12CORE::INITIALIZE()")
+		#endif
 
 		ComPtr<IDXGIAdapter4> main_adapter;
 		main_adapter.Attach(determine_main_adapter());
@@ -363,7 +372,7 @@ namespace lightning::graphics::direct3d12::core {
 		gfx_command.release();
 
 		for (u32 i{ 0 }; i < FRAME_BUFFER_COUNT; ++i) {
-			process_deferred_releases(i);
+			process_deferred_releases(i, true);
 		}
 
 		delight::shutdown();
@@ -387,7 +396,7 @@ namespace lightning::graphics::direct3d12::core {
 		srv_desc_heap.release();
 		uav_desc_heap.release();
 
-		process_deferred_releases(0);
+		process_deferred_releases(0, true);
 
 		#ifdef _DEBUG
 		if (main_device) {
@@ -412,7 +421,67 @@ namespace lightning::graphics::direct3d12::core {
 		release(d3d12_sdk_config);
 	}
 
-	id3d12_device* const device() { return main_device; }
+	void set_option(RendererOptions::Option option, const void* const parameter, [[maybe_unused]] u32 parameter_size) {
+		assert(option < RendererOptions::count);
+		assert(parameter && parameter_size);
+
+		switch (option) {
+			case RendererOptions::VSYNC: {
+				assert(parameter_size == sizeof(bool));
+
+				const bool enable{ *(const bool*)parameter };
+				options.enable_vsync = enable || !is_tearing_supported;
+			}
+				break;
+			case RendererOptions::RAYTRACING: {
+				assert(parameter_size = sizeof(bool));
+
+				const bool enable{ *(const bool*)parameter };
+				options.enable_dxr = enable;
+			}
+				break;
+			case RendererOptions::MSAA: {
+				assert(parameter_size == sizeof(u32));
+
+				const u32 msaa_samples{ *(const u32*)parameter };
+
+				if (msaa_samples == 1 || msaa_samples == 2 || msaa_samples == 4 || msaa_samples == 8) {
+					options.masaa_samples = msaa_samples;
+				}
+			}
+		}
+	}
+
+	void get_option(RendererOptions::Option option, void* const parameter, [[maybe_unused]] u32 parameter_size) {
+		assert(option < RendererOptions::count);
+		assert(parameter && parameter_size);
+
+		switch (option)
+		{
+			case lightning::graphics::RendererOptions::VSYNC: {
+				assert(parameter_size == sizeof(bool));
+
+				*(bool*)parameter = options.enable_vsync;
+			}
+				break;
+			case lightning::graphics::RendererOptions::RAYTRACING: {
+				assert(parameter_size == sizeof(bool));
+
+				*(bool*)parameter = options.enable_dxr;
+			}
+				break;
+			case lightning::graphics::RendererOptions::MSAA: {
+				assert(parameter_size == sizeof(u32));
+
+				*(u32*)parameter = options.masaa_samples;
+			}
+				break;
+			default:
+				break;
+		}
+	}
+
+	id3d12_device* device() { return main_device; }
 	DescriptorHeap& rtv_heap() { return rtv_desc_heap; }
 	DescriptorHeap& dsv_heap() { return dsv_desc_heap; }
 	DescriptorHeap& srv_heap() { return srv_desc_heap; }
@@ -420,8 +489,18 @@ namespace lightning::graphics::direct3d12::core {
 	ConstantBuffer& c_buffer() { return constant_buffers[current_frame_index()]; }
 	u32 current_frame_index() { return gfx_command.frame_index(); }
 
-	void set_deferred_release_flag() {
-		deferred_release_flag[current_frame_index()] = 1;
+	void set_deferred_release_flag(u32 frame_index) {
+		std::lock_guard lock{ deferred_releases_mutex };
+
+		deferred_release_flag[frame_index] = 1;
+	}
+
+	bool allow_tearing() {
+		return is_tearing_supported;
+	}
+
+	bool vsync_enabled() {
+		return options.enable_vsync;
 	}
 
 	Surface create_surface(platform::Window window) {
@@ -460,7 +539,7 @@ namespace lightning::graphics::direct3d12::core {
 		ID3D12Resource* const current_back_buffer{ surface.back_buffer() };
 
 		const D3D12FrameInfo frame_info{
-			get_d3d12_frame_info(info, c_buffer, surface, frame_idx, 16.7f)
+			get_d3d12_frame_info(info, c_buffer, surface, frame_idx)
 		};
 
 		gpass::set_size({ frame_info.surface_width, frame_info.surface_height });
@@ -479,9 +558,9 @@ namespace lightning::graphics::direct3d12::core {
 		gpass::set_render_targets_for_depth_prepass(cmd_list);
 		gpass::depth_prepass(cmd_list, frame_info);
 
+		gpass::add_transitions_for_gpass(barriers);
 		light::update_light_buffers(frame_info);
 		delight::cull_lights(cmd_list, frame_info, barriers);
-		gpass::add_transitions_for_gpass(barriers);
 		barriers.apply(cmd_list);
 		gpass::set_render_targets_for_gpass(cmd_list);
 		gpass::render(cmd_list, frame_info);

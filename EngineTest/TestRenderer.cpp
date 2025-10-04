@@ -137,6 +137,15 @@
 						}
 					}
 				}
+				else if (wparam == VK_SPACE) {
+					bool vsync{ false };
+					
+					graphics::get_option(graphics::RendererOptions::VSYNC, &vsync, sizeof(bool));
+
+					vsync = !vsync;
+
+					graphics::set_option(graphics::RendererOptions::VSYNC, &vsync, sizeof(bool));
+				}
 		}
 
 		if ((resized && GetKeyState(VK_LBUTTON) >= 0) || toggle_fullscreen) {
@@ -306,7 +315,6 @@
 		//if ((counter % 90) == 0) light_set_key = (light_set_key + 1) % 2;
 
 		timer.begin();
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		const f32 dt{ timer.dt_avg() };
 		script::update(dt);
 		//test_lights(dt);

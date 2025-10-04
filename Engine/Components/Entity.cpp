@@ -61,6 +61,55 @@ namespace lightning::game_entity {
 
         return new_entity;
     }
+
+    bool update_component(entity_id id, EntityInfo info, ComponentType::Type type) {
+        assert(is_alive(id) && type != ComponentType::TRANSFORM);
+
+        if (type == ComponentType::TRANSFORM) return false;
+
+        Entity entity{ id };
+        const id::id_type index{ id::index(id) };
+
+        if (type == ComponentType::SCRIPT) {
+            if (scripts[index].is_valid()) {
+                script::remove(scripts[index]);
+                scripts[index] = {};
+            }
+
+            if (info.script && info.script->script_creator) {
+                script::Component new_script{ script::create(*info.script, entity) };
+
+                assert(new_script.is_valid());
+
+                if (new_script.is_valid()) {
+                    scripts[index] = new_script;
+
+                    return true;
+                }
+            }
+        }
+        else if (type == ComponentType::GEOMETRY) {
+            if (geometries[index].is_valid()) {
+                geometry::remove(geometries[index]);
+                geometries[index] = {};
+            }
+
+            if (info.geometry) {
+                geometry::Component new_geometry{ geometry::create(*info.geometry, entity) };
+
+                assert(new_geometry.is_valid());
+
+                if (new_geometry.is_valid()) {
+                    geometries[index] = new_geometry;
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     void remove(entity_id  id) {
         const id::id_type index{ id::index(id) };
         assert(is_alive(id));
@@ -82,6 +131,7 @@ namespace lightning::game_entity {
             free_ids.push_back(id);
         }
     }
+
     bool is_alive(entity_id id) {
         assert(id::is_valid(id));
         const id::id_type index{ id::index(id) };

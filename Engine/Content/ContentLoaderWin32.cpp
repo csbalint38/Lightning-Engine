@@ -13,12 +13,6 @@
 
 namespace lightning::content {
 	namespace {
-		enum ComponentType {
-			TRANSFORM,
-			SCRIPT,
-			count
-		};
-
 		void ShowTransformInfo(const transform::InitInfo* transform_info) {
 			if (transform_info) {
 				std::ostringstream oss;
@@ -92,10 +86,13 @@ namespace lightning::content {
 			return script_info.script_creator != nullptr;
 		}
 
+		bool read_geometry(const u8*&, game_entity::EntityInfo&) { return false; }
+
 		using component_reader = bool(*)(const u8*&, game_entity::EntityInfo&);
 		component_reader component_readers[] {
 			read_transform,
 			read_script,
+			read_geometry
 		};
 		static_assert(_countof(component_readers) == ComponentType::count);
 

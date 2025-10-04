@@ -11,6 +11,8 @@ namespace lightning::graphics::direct3d12 {
 	void get_platform_interface(PlatformInterface& pi) {
 		pi.initialize = core::initialize;
 		pi.shutdown = core::shutdown;
+		pi.set_option = core::set_option;
+		pi.get_option = core::get_option;
 
 		pi.surface.create = core::create_surface;
 		pi.surface.remove = core::remove_surface;

@@ -29,6 +29,15 @@ namespace lightning::graphics {
 
 	bool initialize(GraphicsPlatform platform) { return set_platform_interface(platform, gfx) && gfx.initialize(); }
 	void shutdown() { if (gfx.platform != (GraphicsPlatform)-1) gfx.shutdown(); }
+
+	void set_option(RendererOptions::Option option, const void* const parameter, u32 parameter_size) {
+		gfx.set_option(option, parameter, parameter_size);
+	}
+
+	void get_option(RendererOptions::Option option, void* const parameter, u32 parameter_size) {
+		gfx.get_option(option, parameter, parameter_size);
+	}
+
 	Surface create_surface(platform::Window window) { return gfx.surface.create(window); }
 
 	void remove_surface(surface_id id) {

@@ -15,6 +15,7 @@ using s16 = int16_t;
 using s8 = int8_t;
 
 using f32 = float;
+using b32 = u32;
 
 constexpr u64 u64_invalid_id{ 0xffff'ffff'ffff'ffff };
 constexpr u32 u32_invalid_id{ 0xffff'ffff };

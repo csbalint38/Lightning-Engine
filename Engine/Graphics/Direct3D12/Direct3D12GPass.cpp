@@ -98,9 +98,9 @@ namespace lightning::graphics::direct3d12::gpass {
 				const u64 new_buffer_size{ items_count * struct_size };
 				const u64 old_buffer_size{ _buffer.size() };
 
-				if (new_buffer_size > old_buffer_size) _buffer.resize(new_buffer_size);
-
 				if (new_buffer_size != old_buffer_size) {
+					_buffer.resize(new_buffer_size);
+
 					entity_ids = (id::id_type*)_buffer.data();
 					submesh_gpu_ids = (id::id_type*)&entity_ids[items_count];
 					material_ids = (id::id_type*)&submesh_gpu_ids[items_count];
@@ -179,7 +179,7 @@ namespace lightning::graphics::direct3d12::gpass {
 			{
 				D3D12TextureInitInfo info{};
 				info.desc = &desc;
-				info.initial_state = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+				info.initial_state = D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 				info.clear_value.Format = desc.Format;
 				info.clear_value.DepthStencil.Depth = 0.f;
 				info.clear_value.DepthStencil.Stencil = 0;
@@ -380,12 +380,12 @@ namespace lightning::graphics::direct3d12::gpass {
 
 	void add_transitions_for_depth_prepass(d3dx::D3D12ResourceBarrier& barriers) {
 		barriers.add(gpass_main_buffer.resource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_BEGIN_ONLY);
-		barriers.add(gpass_depth_buffer.resource(), D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		barriers.add(gpass_depth_buffer.resource(), D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	}
 
 	void add_transitions_for_gpass(d3dx::D3D12ResourceBarrier& barriers) {
 		barriers.add(gpass_main_buffer.resource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_BARRIER_FLAG_END_ONLY);
-		barriers.add(gpass_depth_buffer.resource(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_DEPTH_READ | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+		barriers.add(gpass_depth_buffer.resource(), D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_DEPTH_READ| D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	}
 
 	void add_transitions_for_post_process(d3dx::D3D12ResourceBarrier& barriers) {
