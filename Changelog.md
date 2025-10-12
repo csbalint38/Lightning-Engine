@@ -1,4 +1,6 @@
 # v0.3.12-beta - 2025.10.14
+## General
+ - Improved GitHub Workflows
 
 ## Engine
 - VSync

@@ -1,0 +1,63 @@
+name: Publish to itch.io
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  itchio:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+       
+    env:
+      ITCH_TARGET: csbalint/lightning-engine
+      USER_VERSION: ${{ github.event.release.tag_name || github.ref_name }}
+
+    steps:
+      - name: Download latest release assets
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: ${{ github.repository }}
+          fileName: '*'
+          latest: true
+          preRelease: true
+          out-file-path: "dist"
+          token: ${{ github.token }}
+      
+      - name: Setup Butler
+        uses: remarkablegames/setup-butler@v2
+
+      - name: Push assets to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          CHANNEL_ZIP="windows-zip"
+          CHANNEL_MSI="windows-msi"
+          CHANNEL_EXE="windows-exe"
+
+          found=0
+          for f in dist/*.zip dist/*.msi dist/*.exe; do
+            [ -e "$f" ] || continue
+            found=$((found+1))
+
+            case "${f##*.}" in 
+              zip) channel="$CHANNEL_ZIP" ;;
+              msi) channel="$CHANNEL_MSI" ;;
+              exe) channel="$CHANNEL_EXE" ;;
+              *) continue ;;
+            esac
+
+            echo "Pushing $f -> ${ITCH_TARGET}:${channel} (version: ${USER_VERSION})"
+
+            butler push "$f" "${ITCH_TARGET}:${channel}" --userversion "${USER_VERSION}" --if-changed
+          done
+
+          if [ "$found" -eq 0 ]; then
+            exit 1
+          fi
+          
