@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
     <OutputName>Lightning-Setup</OutputName>
+    <UserSecretsId>2423a513-2469-4381-9e31-3a6b1bf61f46</UserSecretsId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <BindFiles>false</BindFiles>
@@ -10,8 +11,8 @@
     <None Include="GetHashAndLength.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="6.0.1" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.1" />
+    <PackageReference Include="WixToolset.BootstrapperApplications.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Installer\Installer.wixproj" />

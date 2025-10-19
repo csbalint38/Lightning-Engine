@@ -29,10 +29,10 @@
   </PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="envdte" Version="17.13.40008" />
-    <PackageReference Include="envdte80" Version="17.13.40008" />
-    <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.2.1" />
-    <PackageReference Include="Microsoft.Build" Version="17.14.8" />
+    <PackageReference Include="envdte" Version="17.14.40260" />
+    <PackageReference Include="envdte80" Version="17.14.40260" />
+    <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.3.0" />
+    <PackageReference Include="Microsoft.Build" Version="17.14.28" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
   </ItemGroup>
 	
