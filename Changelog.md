@@ -1,3 +1,13 @@
+# v0.3.13-beta - 2025.10.28.
+## General
+ - Fixed GitHub Workflow
+
+## Engine
+ - Temporary directional lights and camera for Editor integration
+
+## Editor
+ - Global exception handling
+
 # v0.3.12-beta - 2025.10.14
 ## General
  - Improved GitHub Workflows

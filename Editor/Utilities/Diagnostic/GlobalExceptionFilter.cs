@@ -72,12 +72,12 @@ public static class GlobalExceptionFilter
         var appName = string.IsNullOrEmpty(_options!.AppName) ? proc.ProcessName : _options.AppName;
 
         var folder = string.IsNullOrEmpty(_options.LogFolder)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName, "Crashes")
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName, "Logs")
             : _options.LogFolder;
 
         Directory.CreateDirectory(folder);
 
-        var file = Path.Combine(folder, $"crash_{now:yyyyMMdd_HHmmss}.log");
+        var file = Path.Combine(folder, $"crash_{now:yyyyMMddHHmmss}.log");
         var sb = new StringBuilder(8 * 1024);
 
         sb.AppendLine($"UTC: {now:O}");

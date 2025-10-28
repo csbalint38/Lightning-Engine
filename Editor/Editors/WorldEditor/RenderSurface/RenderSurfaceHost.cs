@@ -14,7 +14,6 @@ namespace Editor.Editors.WorldEditor.RenderSurface
         private readonly int _height = 600;
         private IntPtr _handle = IntPtr.Zero;
         private DelayEventTimer _resizeTimer;
-        private int _times = 0;
 
         public int SurfaceId { get; private set; } = Id.InvalidId;
 
@@ -56,11 +55,7 @@ namespace Editor.Editors.WorldEditor.RenderSurface
         {
             e.RepeatEvent = GetAsyncKeyState(VK_LBUTTON) < 0;
 
-            if (_times > 1)
-            {
-                if (!e.RepeatEvent) EngineAPI.ResizeRenderSurface(SurfaceId);
-            }
-            _times++;
+            if (!e.RepeatEvent) EngineAPI.ResizeRenderSurface(SurfaceId);
         }
     }
 }
