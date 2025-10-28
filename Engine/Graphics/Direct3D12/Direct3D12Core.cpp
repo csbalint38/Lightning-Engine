@@ -346,17 +346,7 @@ namespace lightning::graphics::direct3d12::core {
 		new (&gfx_command) D3D12Command(main_device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 		if (!gfx_command.command_queue()) return failed_init();
 
-		//TEMP
-		shaders::initialize();
-		gpass::initialize();
-		fx::initialize();
-		upload::initialize();
-		content::initialize();
-		delight::initialize();
-
-		/*
 		if (!(shaders::initialize() && gpass::initialize() && fx::initialize() && upload::initialize() && content::initialize() && delight::initialize())) return failed_init();
-		*/
 	
 		NAME_D3D12_OBJECT(main_device, L"Main D3D12 Device");
 		NAME_D3D12_OBJECT(rtv_desc_heap.heap(), L"RTV Descriptor Heap");

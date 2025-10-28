@@ -8,6 +8,8 @@ namespace lightning::math {
 	constexpr f32 HALF_PI{ PI * .5f };
 	constexpr f32 INV_TWO_PI{ 1.f / TWO_PI };
 	constexpr f32 EPSILON{ 1e-5f };
+	constexpr f32 TO_RAD{ PI * (1.f / 180.f) };
+	constexpr f32 TO_DEG{ INV_PI * 180.f };
 	
 	#if defined(_WIN64)
 	using v2 = DirectX::XMFLOAT2;

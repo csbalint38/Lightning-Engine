@@ -99,4 +99,12 @@ namespace lightning::math {
 		}
 		return 0;
 	}
+
+	constexpr math::v3 to_radians(math::v3 degrees) {
+		return { degrees.x * TO_RAD, degrees.y * TO_RAD, degrees.z * TO_RAD };
+	}
+
+	constexpr math::v3 to_degrees(math::v3 radians) {
+		return { radians.x * TO_DEG, radians.y * TO_DEG, radians.z * TO_DEG };
+	}
 }
