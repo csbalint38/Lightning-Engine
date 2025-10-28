@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
 
-          CHANNEL_ZIP="windows-zip"
+          CHANNEL_ZIP="windows"
           CHANNEL_MSI="windows-msi"
           CHANNEL_EXE="windows-exe"
 
