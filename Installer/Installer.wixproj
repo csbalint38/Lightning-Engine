@@ -11,14 +11,14 @@
     <PublishedDir Condition="'$(CI)' != 'true'">$(SolutionDir)$(Platform)\$(Configuration)Editor</PublishedDir>
   </PropertyGroup>
   <PropertyGroup>
-  	<Version Condition="'$(Version)'==''"/>
-  	<DefineConstants>$(DefineConstants);Version=$(Version)</DefineConstants>
+    <Version Condition="'$(Version)'==''" />
+    <DefineConstants>$(DefineConstants);Version=$(Version)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Heat" Version="6.0.1" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.1" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.1" />
-    <PackageReference Include="WixToolset.VisualStudio.wixext" Version="6.0.1" />
+    <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.VisualStudio.wixext" Version="6.0.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Editor\Editor.csproj" />
