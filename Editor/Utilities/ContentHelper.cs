@@ -11,9 +11,9 @@ namespace Editor.Utilities;
 
 public static class ContentHelper
 {
-    public static string[] MeshFileExtensions { get; } = { ".fbx" };
+    public static string[] MeshFileExtensions { get; } = [".fbx"];
 
-    public static string[] ImageFileExtensions { get; } = {
+    public static string[] ImageFileExtensions { get; } = [
         ".bmp",
         ".png",
         ".jpg",
@@ -23,9 +23,9 @@ public static class ContentHelper
         ".tga",
         ".dds",
         ".hdr"
-    };
+    ];
 
-    public static string[] AudioFileExtensions { get; } = { ".ogg", ".waw" };
+    public static string[] AudioFileExtensions { get; } = [".ogg", ".waw"];
 
     internal static IEnumerable<string> SaveAsset(this Asset asset)
     {
@@ -42,7 +42,7 @@ public static class ContentHelper
             Debug.WriteLine($"Failed to save asset {asset.FullPath}");
             Debug.WriteLine(ex.Message);
 
-            return new List<string>();
+            return [];
         }
         finally
         {
@@ -54,7 +54,7 @@ public static class ContentHelper
     {
         Debug.Assert(!string.IsNullOrEmpty(name));
 
-        var path = new StringBuilder(name.Substring(0, name.LastIndexOf(Path.DirectorySeparatorChar) + 1));
+        var path = new StringBuilder(name[..(name.LastIndexOf(Path.DirectorySeparatorChar) + 1)]);
         var file = new StringBuilder(name[(name.LastIndexOf(Path.DirectorySeparatorChar) + 1)..]);
 
         foreach (var c in Path.GetInvalidPathChars()) path.Replace(c, '_');
@@ -90,17 +90,15 @@ public static class ContentHelper
 
     public static async Task<List<Asset>> ImportFilesAsync(IEnumerable<AssetProxy> proxies)
     {
-        List<Asset> assets = new();
+        List<Asset> assets = [];
 
         try
         {
             ImportingItemCollection.Init();
             ContentWatcher.EnableFileWatcher(false);
 
-            var tasks = proxies.Select(async proxy => await Task.Run(() =>
-            {
-                assets.Add(Import(proxy.FileInfo.FullName, proxy.ImportSettings, proxy.DestinationFolder)!);
-            }));
+            var tasks = proxies.Select(proxy => Task.Run(() =>
+                assets.Add(Import(proxy.FileInfo.FullName, proxy.ImportSettings, proxy.DestinationFolder)!)));
 
             await Task.WhenAll(tasks);
         }

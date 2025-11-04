@@ -55,7 +55,7 @@ public class Entity : ViewModelBase
                 }
                 else if (Id.IsValid(EntityId))
                 {
-                    EngineAPI.RemoveGameEntity(this);
+                    EngineAPI.RemoveGameEntity(EntityId);
 
                     _components.ToList().ForEach(x => x.Unload());
 

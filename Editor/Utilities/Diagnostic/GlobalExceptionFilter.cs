@@ -34,7 +34,8 @@ public static class GlobalExceptionFilter
         try
         {
             e.SetObserved();
-        } catch { }
+        }
+        catch { }
 
         Crash("Task", e.Exception);
     }
@@ -85,14 +86,14 @@ public static class GlobalExceptionFilter
         sb.AppendLine($"Process: {proc.ProcessName}");
         sb.AppendLine($"OS: {Environment.OSVersion}");
         sb.AppendLine($"Bitness: {Environment.Is64BitProcess}");
-        sb.AppendLine($"CmdLine: { Environment.CommandLine}");
+        sb.AppendLine($"CmdLine: {Environment.CommandLine}");
         sb.AppendLine();
 
         if (_options.MetadataProvider is not null)
         {
             var extra = _options.MetadataProvider.Invoke();
 
-            if(!string.IsNullOrEmpty(extra))
+            if (!string.IsNullOrEmpty(extra))
             {
                 sb.AppendLine("Metadata:");
                 sb.AppendLine(extra);
@@ -100,14 +101,14 @@ public static class GlobalExceptionFilter
             }
         }
 
-        if(ex is not null)
+        if (ex is not null)
         {
             sb.AppendLine("Exception:");
             sb.AppendLine(ex.ToString());
             sb.AppendLine();
         }
 
-        if(_options.IncludeLoadedModules)
+        if (_options.IncludeLoadedModules)
         {
             sb.AppendLine("LoadedModules:");
 

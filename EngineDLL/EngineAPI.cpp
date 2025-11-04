@@ -79,8 +79,7 @@ namespace {
 		return (u8*)blob.position();
 	}
 
-	void calculate_thresholds(const id::id_type* const geometry_ids, game_entity::entity_id* const entity_ids, f32* const thresholds, u32 count, u32 surface_id) {
-		geometry::get_entity_ids(geometry_ids, entity_ids, count);
+	void calculate_thresholds(const game_entity::entity_id* const entity_ids, f32* const thresholds, u32 count, u32 surface_id) {
 		game_entity::Entity camera{ game_entity::entity_id{surfaces[surface_id].camera.entity_id()} };
 
 		using namespace DirectX;
@@ -428,8 +427,11 @@ EDITOR_INTERFACE void render_frame(u32 surface_id, id::id_type camera_id, u64 li
 	game_entity::entity_id* entity_ids{ (game_entity::entity_id*)(frame_info_buffer.data() + item_id_buffer_size + threshold_buffer_size) };
 
 	if (count) {
+		const id::id_type* const geometry_ids{ surface.geometry_ids.data() };
+
+		geometry::get_entity_ids(geometry_ids, entity_ids, count);
 		geometry::get_render_item_ids(surface.geometry_ids.data(), item_ids, count);
-		calculate_thresholds(surface.geometry_ids.data(), entity_ids, thresholds, count, surface_id);
+		calculate_thresholds(entity_ids, thresholds, count, surface_id);
 	}
 
 	graphics::FrameInfo info{};

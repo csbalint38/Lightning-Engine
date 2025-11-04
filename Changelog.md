@@ -1,3 +1,7 @@
+# v0.3.14-beta - 2025.11.11.
+## Editor
+- Added Render Thread
+
 # v0.3.13-beta - 2025.10.28.
 ## General
  - Fixed GitHub Workflow

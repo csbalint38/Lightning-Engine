@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 
 namespace Editor.DLLs;
 
-static class ContentToolsAPI
+static partial class ContentToolsAPI
 {
     private const string _contentToolsDll = "ContentTools.dll";
     private delegate void ProgressCallback(int value, int maxValue);
@@ -26,8 +26,8 @@ static class ContentToolsAPI
     [DllImport(_contentToolsDll, EntryPoint = "decompress")]
     private static extern void Decompress([In, Out] TextureData data);
 
-    [DllImport(_contentToolsDll, EntryPoint = "shutdown_content_tools")]
-    public static extern void ShutdownContentTools();
+    [LibraryImport(_contentToolsDll, EntryPoint = "shutdown_content_tools")]
+    public static partial void ShutdownContentTools();
 
     [DllImport(_contentToolsDll, EntryPoint = "prefilter_diffuse_ibl")]
     public static extern void PrefilterDiffuseIBL([In, Out] TextureData data);

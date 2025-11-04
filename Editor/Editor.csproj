@@ -10,10 +10,11 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.13-beta</InformationalVersion>
-	<FileVersion>0.3.13.0</FileVersion>
-	<AssemblyVersion>0.3.13</AssemblyVersion>
+	<InformationalVersion>0.3.14-beta</InformationalVersion>
+	<FileVersion>0.3.14.0</FileVersion>
+	<AssemblyVersion>0.3.14</AssemblyVersion>
 	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
+	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">

@@ -25,9 +25,11 @@ public partial class RenderSurfaceView : UserControl, IDisposable
     {
         Loaded -= OnRenderSurfaceViewLoaded;
 
+        /*
         _host = new RenderSurfaceHost(ActualWidth, ActualHeight);
         _host.MessageHook += new HwndSourceHook(HostMsgFilter);
         Content = _host;
+        */
     }
 
     private IntPtr HostMsgFilter(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

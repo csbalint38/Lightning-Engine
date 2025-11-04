@@ -6,21 +6,20 @@ using Editor.GameProject;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 
 namespace Editor.DLLs
 {
-    static class EngineAPI
+    static partial class EngineAPI
     {
-        private static readonly Lock _lock = new();
-
         private const string _engineDll = "EngineDLL.dll";
 
         [DllImport(_engineDll, EntryPoint = "create_game_entity")]
         private static extern IdType CreateGameEntity(GameEntityDescriptor desc);
 
-        [DllImport(_engineDll, EntryPoint = "remove_game_entity")]
-        private static extern void RemoveGameEntity(IdType id);
+        [LibraryImport(_engineDll, EntryPoint = "remove_game_entity")]
+        public static partial void RemoveGameEntity(IdType id);
 
         [DllImport(_engineDll, EntryPoint = "compile_shader")]
         private static extern int CompileShader([In, Out] ShaderData data);
@@ -28,49 +27,71 @@ namespace Editor.DLLs
         [DllImport(_engineDll, EntryPoint = "add_shader_group")]
         private static extern IdType AddShaderGroup([In] ShaderGroupData data);
 
-        [DllImport(_engineDll, EntryPoint = "initialize_engine")]
-        public static extern EngineInitError InitializeEngine(); // Add parameter if Engine will support multiple APIs
+        [LibraryImport(_engineDll, EntryPoint = "initialize_engine")]
+        public static partial EngineInitError InitializeEngine(); // Add parameter if Engine will support multiple APIs
 
-        [DllImport(_engineDll, EntryPoint = "shutdown_engine")]
-        public static extern void ShutdownEngine();
+        [LibraryImport(_engineDll, EntryPoint = "shutdown_engine")]
+        public static partial void ShutdownEngine();
 
-        [DllImport(_engineDll, EntryPoint = "load_game_code_dll", CharSet = CharSet.Ansi)]
-        public static extern int LoadGameCodeDll(string path);
+        [LibraryImport(
+            _engineDll,
+            EntryPoint = "load_game_code_dll",
+            StringMarshalling = StringMarshalling.Custom,
+            StringMarshallingCustomType = typeof(AnsiStringMarshaller)
+        )]
+        public static partial int LoadGameCodeDll(string path);
 
-        [DllImport(_engineDll, EntryPoint = "unload_game_code_dll")]
-        public static extern int UnloadGameCodeDll();
+        [LibraryImport(_engineDll, EntryPoint = "unload_game_code_dll")]
+        public static partial int UnloadGameCodeDll();
 
         [DllImport(_engineDll, EntryPoint = "get_script_names")]
         [return: MarshalAs(UnmanagedType.SafeArray)]
         public static extern string[] GetScriptNames();
 
-        [DllImport(_engineDll, EntryPoint = "get_script_creator")]
-        public static extern IntPtr GetScriptCreator(string name);
+        [LibraryImport(
+            _engineDll,
+            EntryPoint = "get_script_creator",
+            StringMarshalling = StringMarshalling.Custom,
+            StringMarshallingCustomType = typeof(AnsiStringMarshaller)
+        )]
+        public static partial IntPtr GetScriptCreator(string name);
 
-        [DllImport(_engineDll, EntryPoint = "create_renderer_surface")]
-        public static extern int CreateRendererSurface(IntPtr host, int width, int height);
+        [LibraryImport(_engineDll, EntryPoint = "create_renderer_surface")]
+        public static partial int CreateRendererSurface(IntPtr host, int width, int height);
 
-        [DllImport(_engineDll, EntryPoint = "remove_renderer_surface")]
-        public static extern void RemoveRendererSurface(int surfaceId);
+        [LibraryImport(_engineDll, EntryPoint = "remove_renderer_surface")]
+        public static partial void RemoveRendererSurface(int surfaceId);
 
-        [DllImport(_engineDll, EntryPoint = "get_window_handle")]
-        public static extern IntPtr GetWindowHandle(int surfaceId);
+        [LibraryImport(_engineDll, EntryPoint = "get_window_handle")]
+        public static partial IntPtr GetWindowHandle(int surfaceId);
 
-        [DllImport(_engineDll, EntryPoint = "resize_renderer_surface")]
-        public static extern void ResizeRenderSurface(int SurfaceId);
+        [LibraryImport(_engineDll, EntryPoint = "resize_renderer_surface")]
+        public static partial void ResizeRenderSurface(int SurfaceId);
 
-        [DllImport(_engineDll, EntryPoint = "remove_shader_group")]
-        public static extern void RemoveShaderGroup(IdType id);
+        [LibraryImport(_engineDll, EntryPoint = "remove_shader_group")]
+        public static partial void RemoveShaderGroup(IdType id);
 
-        [DllImport(_engineDll, EntryPoint = "create_resource")]
-        private static extern IdType CreateResource(IntPtr data, int type);
+        [LibraryImport(_engineDll, EntryPoint = "create_resource")]
+        public static partial IdType CreateResource([In] byte[] data, int type);
 
-        [DllImport(_engineDll, EntryPoint = "destroy_resource")]
-        public static extern void DestroyResource(IdType id, int type);
+        [LibraryImport(_engineDll, EntryPoint = "destroy_resource")]
+        public static partial void DestroyResource(IdType id, int type);
+
+        [LibraryImport(_engineDll, EntryPoint = "set_geometry_ids")]
+        public static partial void SetGeometryIds(int surfaceId, [In] IdType[] geometryComponentIds, int count);
+
+        [LibraryImport(_engineDll, EntryPoint = "render_frame")]
+        public static partial void RenderFrame(int surfaceId, IdType cameraId, ulong lightSet);
+
+        [DllImport(_engineDll, EntryPoint = "update_component")]
+        private static extern int UpdateComponent(IdType entityId, GameEntityDescriptor desc, ComponentType type);
+
+        [LibraryImport(_engineDll, EntryPoint = "get_component_id")]
+        public static partial IdType GetComponentId(IdType entityId, ComponentType type);
 
         public static IdType CreateGameEntity(Entity entity)
         {
-            GameEntityDescriptor desc = new();
+            using GameEntityDescriptor desc = new();
 
             {
                 var c = entity.GetComponent<Transform>()!;
@@ -79,9 +100,7 @@ namespace Editor.DLLs
                 desc.Transform.Scale = c.Scale;
             }
             {
-                var c = entity.GetComponent<Script>();
-
-                if (c is not null && Project.Current is not null)
+                if (entity.GetComponent<Script>() is Script c && Project.Current is not null)
                 {
                     if (Project.Current.AvailableScripts.Contains(c.Name))
                     {
@@ -97,28 +116,15 @@ namespace Editor.DLLs
                 }
             }
             {
-                var c = entity.GetComponent<Components.Geometry>();
-
-                if (c is not null)
+                if (entity.GetComponent<Components.Geometry>() is Components.Geometry c)
                 {
-                    Debug.Assert(c.Materials.Count > 0);
+                    Debug.Assert(c.Materials.Count > 0 && Id.IsValid(c.ContentId));
 
                     desc.Geometry = new(c);
                 }
             }
 
-            lock (_lock)
-            {
-                return CreateGameEntity(desc);
-            }
-        }
-
-        public static void RemoveGameEntity(Entity entity)
-        {
-            lock (_lock)
-            {
-                RemoveGameEntity(entity.EntityId);
-            }
+            return CreateGameEntity(desc);
         }
 
         public static IdType AddShaderGroup(ShaderGroup shaderGroup)
@@ -226,22 +232,52 @@ namespace Editor.DLLs
             }
         }
 
-        public static IdType CreateResource(byte[] resourceData, AssetType type)
+        public static bool UpdateComponent(Entity entity, ComponentType type)
         {
-            IntPtr data = IntPtr.Zero;
+            Debug.Assert(Id.IsValid(entity?.EntityId ?? Id.InvalidId));
+            Debug.Assert(type != ComponentType.TRANSFORM);
 
-            try
+            using GameEntityDescriptor desc = new();
+
+            switch (type)
             {
-                data = Marshal.AllocCoTaskMem(resourceData.Length);
+                case ComponentType.TRANSFORM: return false;
+                case ComponentType.SCRIPT:
+                    {
+                        if(entity.GetComponent<Script>() is Script c)
+                        {
+                            Debug.Assert(Project.Current is not null);
 
-                Marshal.Copy(resourceData, 0, data, resourceData.Length);
+                            if(Project.Current.AvailableScripts.Contains(c.Name))
+                            {
+                                desc.Script.ScriptCreator = GetScriptCreator(c.Name);
+                            }
+                            else
+                            {
+                                Logger.LogAsync(
+                                    LogLevel.ERROR,
+                                    $"Unable to find script with name {c.Name}. Script component will not be updated!"
+                                );
+                            }
+                        }
+                    }
 
-                return CreateResource(data, (int)type);
+                    break;
+                case ComponentType.GEOMETRY:
+                    {
+                        if(entity.GetComponent<Components.Geometry>() is Components.Geometry c)
+                        {
+                            Debug.Assert(c.Materials.Count > 0 && Id.IsValid(c.ContentId));
+
+                            desc.Geometry = new(c);
+                        }  
+                    }
+                    break;
+                default:
+                    break;
             }
-            finally
-            {
-                Marshal.FreeCoTaskMem(data);
-            }
+
+            return UpdateComponent(entity.EntityId, desc, type) != 0;
         }
     }
 }

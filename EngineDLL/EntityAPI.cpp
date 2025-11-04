@@ -105,7 +105,7 @@ EDITOR_INTERFACE void remove_game_entity(id::id_type id) {
 	game_entity::remove(game_entity::entity_id{ id });
 }
 
-EDITOR_INTERFACE u32 update_component(id::id_type entity_id, EntityDescriptor* e, ComponentType::Type type) {
+EDITOR_INTERFACE b32 update_component(id::id_type entity_id, EntityDescriptor* e, ComponentType::Type type) {
 	std::lock_guard lock{ mutex };
 
 	assert(id::is_valid(entity_id) && e && type != ComponentType::TRANSFORM);
@@ -120,7 +120,7 @@ EDITOR_INTERFACE u32 update_component(id::id_type entity_id, EntityDescriptor* e
 		id::is_valid(desc.geometry.geometry_content_id) ? &geometry_info : nullptr
 	};
 
-	return game_entity::update_component(game_entity::entity_id{ entity_id }, entity_info, type);
+	return game_entity::update_component(game_entity::entity_id{ entity_id }, entity_info, type) ? 1 : 0;
 }
 
 EDITOR_INTERFACE id::id_type get_component_id(id::id_type entity_id, ComponentType::Type type) {
