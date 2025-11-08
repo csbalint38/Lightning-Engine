@@ -38,11 +38,17 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <Content Include="Resources\CodeTemplates\cpp.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="Resources\CodeTemplates\Legacy\cpp.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Resources\CodeTemplates\h.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="Resources\CodeTemplates\Legacy\h.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\CodeTemplates\Module\cpp.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\CodeTemplates\Module\ixx.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Icon.ico" />
     <Resource Include="Resources\CubeTexture.png">
@@ -67,6 +73,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\CodeTemplates\Legacy\cpp.txt" />
+	  <None Remove="Resources\CodeTemplates\Legacy\h.txt" />
+	  <None Remove="Resources\CodeTemplates\Module\cpp.txt" />
+	  <None Remove="Resources\CodeTemplates\Module\cppm.txt" />
+	  <None Remove="Resources\CodeTemplates\Module\ixx.txt" />
 	  <None Remove="Resources\CubeTexture.png" />
 	</ItemGroup>
 </Project>

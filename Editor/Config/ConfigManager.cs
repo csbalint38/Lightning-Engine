@@ -118,7 +118,8 @@ namespace Editor.Config
             CodeConfig = new()
             {
                 CodeEditor = CodeEditor.NOTEPAD,
-                MSBuildPath = MSBuild.FindMSBuild() ?? string.Empty
+                MSBuildPath = MSBuild.FindMSBuild() ?? string.Empty,
+                CppTemplate = CppTemplate.MODULE,
             }
         };
 

@@ -9,8 +9,8 @@ namespace Editor.Content.ContentBrowser
 {
     static class ContentWatcher
     {
-        private static readonly DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMilliseconds(250));
-        private static readonly FileSystemWatcher _contentWatcher = new FileSystemWatcher()
+        private static readonly DelayEventTimer _refreshTimer = new(TimeSpan.FromMilliseconds(250));
+        private static readonly FileSystemWatcher _contentWatcher = new()
         {
             IncludeSubdirectories = true,
             Filter = string.Empty,

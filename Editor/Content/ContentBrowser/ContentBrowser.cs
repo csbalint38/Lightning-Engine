@@ -11,7 +11,7 @@ namespace Editor.Content.ContentBrowser
 {
     public class ContentBrowser : ViewModelBase, IDisposable
     {
-        private readonly DelayEventTimer _refreshTimer = new DelayEventTimer(TimeSpan.FromMilliseconds(250));
+        private readonly DelayEventTimer _refreshTimer = new(TimeSpan.FromMilliseconds(250));
 
         private readonly ObservableCollection<ContentInfo> _folderContent = [];
 

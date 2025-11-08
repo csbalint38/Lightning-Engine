@@ -10,6 +10,7 @@ namespace Editor.Config
     {
         private CodeEditor _codeEditor;
         private string _msbuildPath = string.Empty;
+        private CppTemplate _cppTemplate;
 
         public string Error => string.Empty;
 
@@ -49,6 +50,20 @@ namespace Editor.Config
                 {
                     _msbuildPath = value;
                     OnPropertyChanged(nameof(MSBuildPath));
+                }
+            }
+        }
+
+        [JsonPropertyName("cpp_template")]
+        public CppTemplate CppTemplate
+        {
+            get => _cppTemplate;
+            set
+            {
+                if (_cppTemplate != value)
+                {
+                    _cppTemplate = value;
+                    OnPropertyChanged(nameof(CppTemplate));
                 }
             }
         }

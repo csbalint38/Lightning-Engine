@@ -244,11 +244,11 @@ namespace Editor.DLLs
                 case ComponentType.TRANSFORM: return false;
                 case ComponentType.SCRIPT:
                     {
-                        if(entity.GetComponent<Script>() is Script c)
+                        if (entity?.GetComponent<Script>() is Script c)
                         {
                             Debug.Assert(Project.Current is not null);
 
-                            if(Project.Current.AvailableScripts.Contains(c.Name))
+                            if (Project.Current.AvailableScripts.Contains(c.Name))
                             {
                                 desc.Script.ScriptCreator = GetScriptCreator(c.Name);
                             }
@@ -265,19 +265,19 @@ namespace Editor.DLLs
                     break;
                 case ComponentType.GEOMETRY:
                     {
-                        if(entity.GetComponent<Components.Geometry>() is Components.Geometry c)
+                        if (entity?.GetComponent<Components.Geometry>() is Components.Geometry c)
                         {
                             Debug.Assert(c.Materials.Count > 0 && Id.IsValid(c.ContentId));
 
                             desc.Geometry = new(c);
-                        }  
+                        }
                     }
                     break;
                 default:
                     break;
             }
 
-            return UpdateComponent(entity.EntityId, desc, type) != 0;
+            return UpdateComponent(entity?.EntityId ?? Id.InvalidId, desc, type) != 0;
         }
     }
 }

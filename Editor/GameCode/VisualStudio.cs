@@ -1,6 +1,7 @@
 ﻿using Editor.Common.Enums;
 using Editor.Utilities;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 
@@ -65,6 +66,14 @@ public class VisualStudio : ICodeEditor
         lock (_lock)
         {
             StopInternal();
+        }
+    }
+
+    public static bool AddFilesToSolution(string solution, string projectName, string[] files)
+    {
+        lock (_lock)
+        {
+            return AddFilesToSolutionInternal(solution, projectName, files);
         }
     }
 
@@ -260,5 +269,55 @@ public class VisualStudio : ICodeEditor
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         thread.Join();
+    }
+
+    private static bool AddFilesToSolutionInternal(string solution, string projectName, string[] files)
+    {
+        Debug.Assert(files?.Length > 0);
+
+        OpenVisualStudioInternal(solution);
+
+        try
+        {
+            if (_vsInstance is not null)
+            {
+                CallOnSTAThread(() =>
+                {
+                    if (!_vsInstance.Solution.IsOpen) _vsInstance.Solution.Open(solution);
+                    else _vsInstance.ExecuteCommand("File.SaveAll");
+
+                    foreach (EnvDTE.Project project in _vsInstance.Solution.Projects)
+                    {
+                        if (project.UniqueName.Contains(projectName))
+                        {
+                            foreach (var file in files)
+                            {
+                                project.ProjectItems.AddFromFile(file);
+                            }
+                        }
+                    }
+
+                    var cpp = files.FirstOrDefault(x => Path.GetExtension(x) == ".cpp");
+
+                    if (!string.IsNullOrEmpty(cpp))
+                    {
+                        _vsInstance.ItemOperations.OpenFile(cpp, EnvDTE.Constants.vsViewKindTextView).Visible = true;
+                    }
+
+                    _vsInstance.MainWindow.Activate();
+
+                    _vsInstance.MainWindow.Visible = true;
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            Debug.WriteLine("Failed to add files to Visual Studio project");
+
+            return false;
+        }
+
+        return true;
     }
 }

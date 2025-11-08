@@ -1,0 +1,15 @@
+import {1}.{0};
+
+namespace {1} {{
+	void {0}::begin_play() {{
+
+		// Called once, when the game starts
+
+	}}
+
+	void {0}::update(float dt) {{
+
+		// Called every frame
+
+	}}
+}} // namespace {1}

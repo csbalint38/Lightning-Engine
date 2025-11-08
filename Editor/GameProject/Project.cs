@@ -261,20 +261,19 @@ public class Project : ViewModelBase
         var config = MSBuild.GetConfigurationName(StandaloneBuildConfig);
         var bin = $@"{Path}x64\{config}\game.bin";
 
-        using (var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write)))
+        using var bw = new BinaryWriter(File.Open(bin, FileMode.Create, FileAccess.Write));
+
+        bw.Write(ActiveScene.Entities.Count);
+
+        foreach (var entity in ActiveScene.Entities)
         {
-            bw.Write(ActiveScene.Entities.Count);
+            bw.Write(0);
+            bw.Write(entity.Components.Count);
 
-            foreach (var entity in ActiveScene.Entities)
+            foreach (var component in entity.Components)
             {
-                bw.Write(0);
-                bw.Write(entity.Components.Count);
-
-                foreach (var component in entity.Components)
-                {
-                    bw.Write((int)component.ToEnumType());
-                    component.WriteToBinary(bw);
-                }
+                bw.Write((int)component.ToEnumType());
+                component.WriteToBinary(bw);
             }
         }
     }

@@ -322,7 +322,7 @@ public class Geometry : Asset
 
         foreach (var lod in lodGroup.LODs)
         {
-            LodInfo lodInfo = new LodInfo()
+            LodInfo lodInfo = new()
             {
                 Name = lod.Name,
                 Threshold = lod.LODThreshold,

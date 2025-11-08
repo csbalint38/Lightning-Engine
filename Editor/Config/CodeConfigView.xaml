@@ -19,12 +19,20 @@
                 <x:Type TypeName="enums:CodeEditor"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+        <ObjectDataProvider x:Key="CppTemplateValues"
+                            MethodName="GetValues"
+                            ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enums:CppTemplate"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
         <converters:ShoutingSnakeCaseToTitleCaseConverter x:Key="snakeToTitle"/>
         <converters:ValidationErrorConverter x:Key="validationErrorConverter"/>
     </UserControl.Resources>
     <Grid Background="{StaticResource Editor.BackgroundBrush2}"
           Margin="5">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -80,5 +88,24 @@
                    Text="{Binding ElementName=TBMSBuild, Path=(Validation.Errors), Converter={StaticResource validationErrorConverter}}"
                    Foreground="{StaticResource Editor.RedBrush}">
         </TextBlock>
+        <TextBlock Text="C++ Template"
+                   Grid.Row="3"
+                   Foreground="{StaticResource Editor.FontBrush}"
+                   Margin="5"
+                   VerticalAlignment="Center"
+                   FontWeight="SemiBold"/>
+        <ComboBox Grid.Column="1"
+                  Grid.Row="3"
+                  VerticalAlignment="Stretch"
+                  Margin="5"
+                  Style="{StaticResource ComboBoxFlatStyle}"
+                  ItemsSource="{Binding Source={StaticResource CppTemplateValues}}"
+                  SelectedItem="{Binding CppTemplate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Converter={StaticResource snakeToTitle}}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
     </Grid>
 </UserControl>

@@ -89,7 +89,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <AdditionalIncludeDirectories>$(LightningIncludePath)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>GameEntity.h</ForcedIncludeFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +107,7 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <AdditionalIncludeDirectories>$(LightningIncludePath)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>GameEntity.h</ForcedIncludeFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -127,7 +127,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(LightningIncludePath)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>GameEntity.h</ForcedIncludeFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,7 +149,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(LightningIncludePath)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>GameEntity.h</ForcedIncludeFiles>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

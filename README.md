@@ -13,11 +13,11 @@ Download `lightning-engine-v?.?.?.zip` if you want to handle installation manual
 | language | files | lines |
 | :--- | ---: | ---: |
 | C++ | 107 | 16,285 |
-| C# | 213 |  15,660 |
-| XAML | 38 | 8,274 |
-| XML | 27 | 2,068 |
+| C# | 214 |  15,800 |
+| XAML | 38 | 8,301 |
+| XML | 27 | 2,079 |
 | HLSL | 15 |  1,892 |
-| Markdown | 5 | 423 |
+| Markdown | 5 | 426 |
 | YAML | 3 | 406 |
 | Python | 8 | 277 |
 ... +2 others (less than 100 lines)

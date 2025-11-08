@@ -9,7 +9,7 @@ internal static class RenderThread
     private static readonly List<RenderFrameCallback> _callbacks = [];
     private static readonly List<int> _frameCounts = [];
     private static readonly Lock _lock = new();
-    
+
     private static Thread? _renderThread;
     private static bool _isRunning;
 
@@ -19,7 +19,7 @@ internal static class RenderThread
     {
         lock (_lock)
         {
-            if(!_callbackMap.ContainsKey(hwnd))
+            if (!_callbackMap.ContainsKey(hwnd))
             {
                 _callbackMap[hwnd] = callback;
 
@@ -35,7 +35,7 @@ internal static class RenderThread
     {
         lock (_lock)
         {
-            if(_callbackMap.TryGetValue(hwnd, out var callback))
+            if (_callbackMap.TryGetValue(hwnd, out var callback))
             {
                 var inndex = _callbacks.IndexOf(callback);
 
@@ -68,7 +68,7 @@ internal static class RenderThread
 
     private static void Stop()
     {
-        if(_renderThread is not null)
+        if (_renderThread is not null)
         {
             _isRunning = false;
 
@@ -86,7 +86,7 @@ internal static class RenderThread
         {
             lock (_lock)
             {
-                for(int i = 0; i < _callbacks.Count; i++)
+                for (int i = 0; i < _callbacks.Count; i++)
                 {
                     var info = _callbacks[i](_frameCounts[i]++);
 

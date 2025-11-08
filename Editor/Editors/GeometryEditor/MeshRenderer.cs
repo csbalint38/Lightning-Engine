@@ -9,307 +9,305 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace Editor.Editors
+namespace Editor.Editors;
+
+// This is also temporary.
+public class MeshRenderer : ViewModelBase
 {
-    // This is also temporary.
-    public class MeshRenderer : ViewModelBase
+    private readonly int _totalPositionCount = 0;
+    private readonly int _totalIndicesCount = 0;
+
+    private Vector3D _cameraDirection = new(0, 0, -10);
+    private Point3D _cameraPosition = new(0, 0, 10);
+    private Point3D _cameraTarget = new(0, 0, 0);
+    private Color _keyLight = (Color)ColorConverter.ConvertFromString("#FFAEAEAE");
+    private Color _skyLight = (Color)ColorConverter.ConvertFromString("#FF111B30");
+    private Color _groundLight = (Color)ColorConverter.ConvertFromString("#FF3F2F1E");
+    private Color _ambientLight = (Color)ColorConverter.ConvertFromString("#FF3B3B3B");
+    private int _displayPositionCount = 0;
+    private int _displayIndiciesCount = 0;
+
+    public ObservableCollection<MeshRendererVertexData> Meshes { get; } = [];
+
+    public Vector3D CameraDirection
     {
-        private readonly int _totalPositionCount = 0;
-        private readonly int _totalIndicesCount = 0;
-
-        private Vector3D _cameraDirection = new(0, 0, -10);
-        private Point3D _cameraPosition = new(0, 0, 10);
-        private Point3D _cameraTarget = new(0, 0, 0);
-        private Color _keyLight = (Color)ColorConverter.ConvertFromString("#FFAEAEAE");
-        private Color _skyLight = (Color)ColorConverter.ConvertFromString("#FF111B30");
-        private Color _groundLight = (Color)ColorConverter.ConvertFromString("#FF3F2F1E");
-        private Color _ambientLight = (Color)ColorConverter.ConvertFromString("#FF3B3B3B");
-        private int _displayPositionCount = 0;
-        private int _displayIndiciesCount = 0;
-
-        public ObservableCollection<MeshRendererVertexData> Meshes { get; } = [];
-
-        public Vector3D CameraDirection
+        get => _cameraDirection;
+        set
         {
-            get => _cameraDirection;
-            set
+            if (_cameraDirection != value)
             {
-                if (_cameraDirection != value)
-                {
-                    _cameraDirection = value;
-                    OnPropertyChanged(nameof(CameraDirection));
-                }
+                _cameraDirection = value;
+                OnPropertyChanged(nameof(CameraDirection));
             }
         }
+    }
 
-        public Point3D CameraPosition
+    public Point3D CameraPosition
+    {
+        get => _cameraPosition;
+        set
         {
-            get => _cameraPosition;
-            set
+            if (_cameraPosition != value)
             {
-                if (_cameraPosition != value)
-                {
-                    _cameraPosition = value;
-                    CameraDirection = new Vector3D(-value.X, -value.Y, -value.Z);
-                    OnPropertyChanged(nameof(OffsetCameraPosition));
-                    OnPropertyChanged(nameof(CameraPosition));
-                }
+                _cameraPosition = value;
+                CameraDirection = new Vector3D(-value.X, -value.Y, -value.Z);
+                OnPropertyChanged(nameof(OffsetCameraPosition));
+                OnPropertyChanged(nameof(CameraPosition));
             }
         }
+    }
 
-        public Point3D CameraTraget
+    public Point3D CameraTraget
+    {
+        get => _cameraTarget;
+        set
         {
-            get => _cameraTarget;
-            set
+            if (_cameraTarget != value)
             {
-                if (_cameraTarget != value)
-                {
-                    _cameraTarget = value;
-                    OnPropertyChanged(nameof(OffsetCameraPosition));
-                    OnPropertyChanged(nameof(CameraTraget));
-                }
+                _cameraTarget = value;
+                OnPropertyChanged(nameof(OffsetCameraPosition));
+                OnPropertyChanged(nameof(CameraTraget));
             }
         }
+    }
 
-        public Color KeyLight
+    public Color KeyLight
+    {
+        get => _keyLight;
+        set
         {
-            get => _keyLight;
-            set
+            if (_keyLight != value)
             {
-                if (_keyLight != value)
-                {
-                    _keyLight = value;
-                    OnPropertyChanged(nameof(KeyLight));
-                }
+                _keyLight = value;
+                OnPropertyChanged(nameof(KeyLight));
             }
         }
+    }
 
-        public Color SkyLight
+    public Color SkyLight
+    {
+        get => _skyLight;
+        set
         {
-            get => _skyLight;
-            set
+            if (_skyLight != value)
             {
-                if (_skyLight != value)
-                {
-                    _skyLight = value;
-                    OnPropertyChanged(nameof(SkyLight));
-                }
+                _skyLight = value;
+                OnPropertyChanged(nameof(SkyLight));
             }
         }
+    }
 
-        public Color GroundLight
+    public Color GroundLight
+    {
+        get => _groundLight;
+        set
         {
-            get => _groundLight;
-            set
+            if (_groundLight != value)
             {
-                if (_groundLight != value)
-                {
-                    _groundLight = value;
-                    OnPropertyChanged(nameof(GroundLight));
-                }
+                _groundLight = value;
+                OnPropertyChanged(nameof(GroundLight));
             }
         }
+    }
 
-        public Color AmbientLight
+    public Color AmbientLight
+    {
+        get => _ambientLight;
+        set
         {
-            get => _ambientLight;
-            set
+            if (_ambientLight != value)
             {
-                if (_ambientLight != value)
-                {
-                    _ambientLight = value;
-                    OnPropertyChanged(nameof(AmbientLight));
-                }
+                _ambientLight = value;
+                OnPropertyChanged(nameof(AmbientLight));
             }
         }
-        public Point3D OffsetCameraPosition =>
-            new(CameraPosition.X + CameraTraget.X, CameraPosition.Y + CameraTraget.Y, CameraPosition.Z + CameraTraget.Z);
+    }
+    public Point3D OffsetCameraPosition =>
+        new(CameraPosition.X + CameraTraget.X, CameraPosition.Y + CameraTraget.Y, CameraPosition.Z + CameraTraget.Z);
 
-        public int DisplayPositionCount
+    public int DisplayPositionCount
+    {
+        get => _displayPositionCount;
+        private set
         {
-            get => _displayPositionCount;
-            private set
+            if (_displayPositionCount != value)
             {
-                if (_displayPositionCount != value)
-                {
-                    _displayPositionCount = value;
-                    OnPropertyChanged(nameof(DisplayPositionCount));
-                }
+                _displayPositionCount = value;
+                OnPropertyChanged(nameof(DisplayPositionCount));
             }
         }
+    }
 
-        public int DisplayIndiciesCount
+    public int DisplayIndiciesCount
+    {
+        get => _displayIndiciesCount;
+        private set
         {
-            get => _displayIndiciesCount;
-            private set
+            if (_displayIndiciesCount != value)
             {
-                if (_displayIndiciesCount != value)
-                {
-                    _displayIndiciesCount = value;
-                    OnPropertyChanged(nameof(DisplayIndiciesCount));
-                }
+                _displayIndiciesCount = value;
+                OnPropertyChanged(nameof(DisplayIndiciesCount));
             }
         }
+    }
 
-        public MeshRenderer(MeshLOD? lod, MeshRenderer? old)
+    public MeshRenderer(MeshLOD? lod, MeshRenderer? old)
+    {
+        Debug.Assert(lod?.Meshes.Any() == true);
+
+        double minX, minY, minZ;
+        double maxX, maxY, maxZ;
+
+        minX = minY = minZ = double.MaxValue;
+        maxX = maxY = maxZ = double.MinValue;
+
+        Vector3D avgNormal = new();
+        var intervals = 2.0f / ((1 << 16) - 1);
+
+        foreach (var mesh in lod.Meshes)
         {
-            Debug.Assert(lod?.Meshes.Any() == true);
-
-            double minX, minY, minZ;
-            double maxX, maxY, maxZ;
-
-            minX = minY = minZ = double.MaxValue;
-            maxX = maxY = maxZ = double.MinValue;
-
-            Vector3D avgNormal = new();
-            var intervals = 2.0f / ((1 << 16) - 1);
-
-            foreach (var mesh in lod.Meshes)
+            var vertexData = new MeshRendererVertexData()
             {
-                var vertexData = new MeshRendererVertexData()
-                {
-                    Name = mesh.Name,
-                };
+                Name = mesh.Name,
+            };
 
-                using (var reader = new BinaryReader(new MemoryStream(mesh.Positions)))
+            using (var reader = new BinaryReader(new MemoryStream(mesh.Positions)))
+            {
+                for (int i = 0; i < mesh.VertexCount; ++i)
                 {
-                    for (int i = 0; i < mesh.VertexCount; ++i)
+                    var posX = reader.ReadSingle();
+                    var posY = reader.ReadSingle();
+                    var posZ = reader.ReadSingle();
+
+                    vertexData.Positions.Add(new Point3D(posX, posY, posZ));
+
+                    minX = Math.Min(minX, posX);
+                    minY = Math.Min(minY, posY);
+                    minZ = Math.Min(minZ, posZ);
+
+                    maxX = Math.Max(maxX, posX);
+                    maxY = Math.Max(maxY, posY);
+                    maxZ = Math.Max(maxZ, posZ);
+                }
+            }
+
+            if (mesh.ElementsType.HasFlag(ElementsType.STATIC_NORMAL))
+            {
+                var tSpaceOffset = 0;
+
+                if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL)) tSpaceOffset = sizeof(short) * 4;
+
+                using var reader = new BinaryReader(new MemoryStream(mesh.Elements));
+
+                for (int i = 0; i < mesh.VertexCount; ++i)
+                {
+                    var signs = (reader.ReadUInt32() >> 24) & 0x000000ff;
+
+                    reader.BaseStream.Position += tSpaceOffset;
+
+                    var normalX = reader.ReadUInt16() * intervals - 1.0f;
+                    var normalY = reader.ReadUInt16() * intervals - 1.0f;
+                    var normalZ = Math.Sqrt(
+                        Math.Clamp(1f - (normalX * normalX + normalY * normalY), 0f, 1f)
+                    ) * (((signs & 0x4) >> 1) - 1f);
+
+                    var normal = new Vector3D(normalX, normalY, normalZ);
+
+                    normal.Normalize();
+                    vertexData.Normals.Add(normal);
+                    avgNormal += normal;
+
+                    if (mesh.ElementsType.HasFlag(ElementsType.STATIC_NORMAL_TEXTURE))
                     {
-                        var posX = reader.ReadSingle();
-                        var posY = reader.ReadSingle();
-                        var posZ = reader.ReadSingle();
+                        reader.BaseStream.Position += sizeof(short) * 2;
 
-                        vertexData.Positions.Add(new Point3D(posX, posY, posZ));
+                        var u = reader.ReadSingle();
+                        var v = reader.ReadSingle();
 
-                        minX = Math.Min(minX, posX);
-                        minY = Math.Min(minY, posY);
-                        minZ = Math.Min(minZ, posZ);
+                        vertexData.UVs.Add(new Point(u, v));
+                    }
 
-                        maxX = Math.Max(maxX, posX);
-                        maxY = Math.Max(maxY, posY);
-                        maxZ = Math.Max(maxZ, posZ);
+                    if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL_COLOR))
+                    {
+                        reader.BaseStream.Position += 4;
                     }
                 }
-
-                if (mesh.ElementsType.HasFlag(ElementsType.STATIC_NORMAL))
-                {
-                    var tSpaceOffset = 0;
-
-                    if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL)) tSpaceOffset = sizeof(short) * 4;
-
-                    using (var reader = new BinaryReader(new MemoryStream(mesh.Elements)))
-                    {
-                        for (int i = 0; i < mesh.VertexCount; ++i)
-                        {
-                            var signs = (reader.ReadUInt32() >> 24) & 0x000000ff;
-
-                            reader.BaseStream.Position += tSpaceOffset;
-
-                            var normalX = reader.ReadUInt16() * intervals - 1.0f;
-                            var normalY = reader.ReadUInt16() * intervals - 1.0f;
-                            var normalZ = Math.Sqrt(
-                                Math.Clamp(1f - (normalX * normalX + normalY * normalY), 0f, 1f)
-                            ) * (((signs & 0x4) >> 1) - 1f);
-
-                            var normal = new Vector3D(normalX, normalY, normalZ);
-
-                            normal.Normalize();
-                            vertexData.Normals.Add(normal);
-                            avgNormal += normal;
-
-                            if (mesh.ElementsType.HasFlag(ElementsType.STATIC_NORMAL_TEXTURE))
-                            {
-                                reader.BaseStream.Position += sizeof(short) * 2;
-
-                                var u = reader.ReadSingle();
-                                var v = reader.ReadSingle();
-
-                                vertexData.UVs.Add(new Point(u, v));
-                            }
-
-                            if (mesh.ElementsType.HasFlag(ElementsType.SKELETAL_COLOR))
-                            {
-                                reader.BaseStream.Position += 4;
-                            }
-                        }
-                    }
-                }
-
-                using (var reader = new BinaryReader(new MemoryStream(mesh.Indicies)))
-                {
-                    if (mesh.IndexSize == sizeof(short))
-                    {
-                        for (int i = 0; i < mesh.IndexCount; ++i) vertexData.Indices.Add(reader.ReadUInt16());
-                    }
-                    else
-                    {
-                        for (int i = 0; i < mesh.IndexCount; ++i) vertexData.Indices.Add(reader.ReadInt32());
-                    }
-                }
-
-                vertexData.Positions.Freeze();
-                vertexData.Normals.Freeze();
-                vertexData.UVs.Freeze();
-                vertexData.Indices.Freeze();
-                vertexData.PropertyChanged += OnMeshPropertyChanged;
-
-                Meshes.Add(vertexData);
-
-                _totalPositionCount += vertexData.Positions.Count;
-                _totalIndicesCount += vertexData.Indices.Count;
             }
 
-            if (old is not null)
+            using (var reader = new BinaryReader(new MemoryStream(mesh.Indicies)))
             {
-                CameraTraget = old.CameraTraget;
-                CameraPosition = old.CameraPosition;
-
-                foreach (var mesh in old.Meshes) mesh.IsHighlighted = false;
-                foreach (var mesh in Meshes) mesh.Diffuse = old.Meshes.First().Diffuse;
-            }
-            else
-            {
-                var width = maxX - minX;
-                var height = maxY - minY;
-                var depth = maxZ - minZ;
-                var radius = new Vector3D(height, width, depth).Length + 1.2;
-
-                if (avgNormal.Length > 0.8)
+                if (mesh.IndexSize == sizeof(short))
                 {
-                    avgNormal.Normalize();
-                    avgNormal *= radius;
-                    CameraPosition = new Point3D(avgNormal.X, avgNormal.Y, avgNormal.Z);
+                    for (int i = 0; i < mesh.IndexCount; ++i) vertexData.Indices.Add(reader.ReadUInt16());
                 }
-                else CameraPosition = new Point3D(width, height * 0.5, radius);
-
-                CameraTraget = new Point3D(minX + width * 0.5, minY + height * 0.5, minZ + depth * 0.5);
+                else
+                {
+                    for (int i = 0; i < mesh.IndexCount; ++i) vertexData.Indices.Add(reader.ReadInt32());
+                }
             }
 
-            DisplayPositionCount = _totalPositionCount;
+            vertexData.Positions.Freeze();
+            vertexData.Normals.Freeze();
+            vertexData.UVs.Freeze();
+            vertexData.Indices.Freeze();
+            vertexData.PropertyChanged += OnMeshPropertyChanged;
+
+            Meshes.Add(vertexData);
+
+            _totalPositionCount += vertexData.Positions.Count;
+            _totalIndicesCount += vertexData.Indices.Count;
+        }
+
+        if (old is not null)
+        {
+            CameraTraget = old.CameraTraget;
+            CameraPosition = old.CameraPosition;
+
+            foreach (var mesh in old.Meshes) mesh.IsHighlighted = false;
+            foreach (var mesh in Meshes) mesh.Diffuse = old.Meshes.First().Diffuse;
+        }
+        else
+        {
+            var width = maxX - minX;
+            var height = maxY - minY;
+            var depth = maxZ - minZ;
+            var radius = new Vector3D(height, width, depth).Length + 1.2;
+
+            if (avgNormal.Length > 0.8)
+            {
+                avgNormal.Normalize();
+                avgNormal *= radius;
+                CameraPosition = new Point3D(avgNormal.X, avgNormal.Y, avgNormal.Z);
+            }
+            else CameraPosition = new Point3D(width, height * 0.5, radius);
+
+            CameraTraget = new Point3D(minX + width * 0.5, minY + height * 0.5, minZ + depth * 0.5);
+        }
+
+        DisplayPositionCount = _totalPositionCount;
+        DisplayIndiciesCount = _totalIndicesCount;
+    }
+
+    private void OnMeshPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var m = sender as MeshRendererVertexData;
+
+        bool isActiveChanged =
+            (e.PropertyName == nameof(m.IsHighlighted) && m!.IsHighlighted) ||
+            (e.PropertyName == nameof(m.IsIsolated) && m!.IsIsolated);
+
+        if (isActiveChanged)
+        {
+            DisplayPositionCount = m!.Positions.Count;
+            DisplayIndiciesCount = m!.Indices.Count;
+
+            return;
+        }
+
+        if (Meshes.All(x => !x.IsHighlighted && !x.IsIsolated))
+        {
+            DisplayPositionCount = _totalIndicesCount;
             DisplayIndiciesCount = _totalIndicesCount;
-        }
-
-        private void OnMeshPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            var m = sender as MeshRendererVertexData;
-
-            bool isActiveChanged =
-                (e.PropertyName == nameof(m.IsHighlighted) && m!.IsHighlighted) ||
-                (e.PropertyName == nameof(m.IsIsolated) && m!.IsIsolated);
-
-            if (isActiveChanged)
-            {
-                DisplayPositionCount = m!.Positions.Count;
-                DisplayIndiciesCount = m!.Indices.Count;
-
-                return;
-            }
-
-            if (Meshes.All(x => !x.IsHighlighted && !x.IsIsolated))
-            {
-                DisplayPositionCount = _totalIndicesCount;
-                DisplayIndiciesCount = _totalIndicesCount;
-            }
         }
     }
 }

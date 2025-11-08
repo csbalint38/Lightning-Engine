@@ -1,6 +1,9 @@
 # v0.3.14-beta - 2025.11.11.
 ## Editor
 - Added Render Thread
+- Support for C++ modules and C++20
+- Code cleanup (3)
+- Minior fixes (8)
 
 # v0.3.13-beta - 2025.10.28.
 ## General
