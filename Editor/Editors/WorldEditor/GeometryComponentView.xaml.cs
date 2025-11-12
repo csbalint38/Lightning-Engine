@@ -55,12 +55,14 @@ public partial class GeometryComponentView : UserControl
                 if (assetInfo is not null)
                 {
                     var undoSelection = vm.SelectedComponents
+                        .OfType<Components.Geometry>()
                         .Select(x => (x, x.GeometryGuid, x.Materials))
                         .ToList();
 
                     await Task.Run(() => vm.SetGeometry(assetInfo.Guid));
 
                     var redoSelection = vm.SelectedComponents
+                        .OfType<Components.Geometry>()
                         .Select(x => (x, assetInfo.Guid, x.Materials))
                         .ToList();
 

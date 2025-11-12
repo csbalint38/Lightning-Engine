@@ -16,7 +16,7 @@ namespace Editor.Components
         {
             Debug.Assert(msEntity?.SelectedEntities?.Count > 0);
 
-            SelectedComponents = [.. msEntity.SelectedEntities.Select(entity => entity.GetComponent<T>())];
+            SelectedComponents = [.. msEntity.SelectedEntities.Select(static entity => entity.GetComponent<T>()).OfType<T>()];
 
             PropertyChanged += (s, e) =>
             {

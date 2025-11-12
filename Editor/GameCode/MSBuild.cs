@@ -50,6 +50,10 @@ namespace Editor.GameCode
 
             var candidates = new[]
             {
+                Path.Combine(pf, "Microsoft Visual Studio", "18", "Community", "MSBuild", "Current", "Bin", "MSBuild.exe"),
+                Path.Combine(pf, "Microsoft Visual Studio", "18", "Professional", "MSBuild", "Current", "Bin", "MSBuild.exe"),
+                Path.Combine(pf, "Microsoft Visual Studio", "18", "Enterprise", "MSBuild", "Current", "Bin", "MSBuild.exe"),
+                Path.Combine(pf, "Microsoft Visual Studio", "18", "BuildTools", "MSBuild", "Current", "Bin", "MSBuild.exe"),
                 Path.Combine(pf, "Microsoft Visual Studio", "2022", "Community", "MSBuild", "Current", "Bin", "MSBuild.exe"),
                 Path.Combine(pf, "Microsoft Visual Studio", "2022", "Professional", "MSBuild", "Current", "Bin", "MSBuild.exe"),
                 Path.Combine(pf, "Microsoft Visual Studio", "2022", "Enterprise", "MSBuild", "Current", "Bin", "MSBuild.exe"),
@@ -89,7 +93,7 @@ namespace Editor.GameCode
                 {
                     var path = Path.GetRelativePath(projectDir, file).Replace('/', '\\');
 
-                    if (path.StartsWith(@".\")) path = path.Substring(2);
+                    if (path.StartsWith(@".\")) path = path[2..];
 
                     var attr = new XAttribute("Include", path);
 

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -10,23 +10,27 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.14-beta</InformationalVersion>
-	<FileVersion>0.3.14.0</FileVersion>
-	<AssemblyVersion>0.3.14</AssemblyVersion>
+	<InformationalVersion>0.3.15-beta</InformationalVersion>
+	<FileVersion>0.3.15.0</FileVersion>
+	<AssemblyVersion>0.3.15</AssemblyVersion>
 	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
 	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<StartupObject>Editor.App</StartupObject>
+	<AnalysisLevel>none</AnalysisLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugEditor|x64'">
 	<OutputPath>..\x64\DebugEditor\</OutputPath>
 	<PlatformTarget>x64</PlatformTarget>
 	<DefineConstants>DEBUG;TRACE</DefineConstants>
+	<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseEditor|x64'">
 	<PlatformTarget>x64</PlatformTarget>
 	<OutputPath>..\x64\ReleaseEditor\</OutputPath>
 	<Optimize>True</Optimize>
+	<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
   </PropertyGroup>
 	
   <ItemGroup>
@@ -34,7 +38,6 @@
     <PackageReference Include="envdte80" Version="17.14.40260" />
     <PackageReference Include="MaterialDesignThemes.MahApps" Version="5.3.0" />
     <PackageReference Include="Microsoft.Build" Version="17.14.28" />
-    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
   </ItemGroup>
 	
   <ItemGroup>

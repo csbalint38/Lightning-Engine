@@ -1,3 +1,11 @@
+# v0.3.15-beta - 2025.11.25.
+## Editor
+ - Update to .NET 10
+ - Migrate project templates to VisualStudio 18.0 and MSBuild 18
+ - Add support for Visual Studio 2026
+ - Minior fixes (22)
+ - Code cleanup (3)
+
 # v0.3.14-beta - 2025.11.11.
 ## Editor
 - Added Render Thread

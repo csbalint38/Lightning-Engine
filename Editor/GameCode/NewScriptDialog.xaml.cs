@@ -70,7 +70,7 @@ namespace Editor.GameCode
             var name = TbScriptName.Text.Trim();
             var path = TbPath.Text.Trim();
             string errorMessage = string.Empty;
-            var nameRegex = new Regex(@"^[A-Za-z_][A-Za-z0-9_]*$");
+            var nameRegex = NameRegex();
 
             if (string.IsNullOrEmpty(name))
             {
@@ -214,5 +214,8 @@ namespace Editor.GameCode
 
             return [cpp, ixx];
         }
+
+        [GeneratedRegex(@"^[A-Za-z_][A-Za-z0-9_]*$")]
+        private static partial Regex NameRegex();
     }
 }

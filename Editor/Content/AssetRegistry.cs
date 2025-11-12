@@ -50,7 +50,7 @@ static class AssetRegistry
         {
             RegisterAllAssets(contentFolder);
 
-            DefaultAssets.DefaultAssetsList.ForEach(x => RegisterAsset(x.FullPath!, x));
+            DefaultAssets.DefaultAssetsList.ForEach(static x => RegisterAsset(x?.FullPath!, x));
         }
 
         ContentWatcher.ContentModified += OnContentModified;
@@ -204,9 +204,10 @@ static class AssetRegistry
 
                 for (int i = 0; i < numEntities; i++)
                 {
-                    var info = new AssetInfo();
-
-                    info.Type = (AssetType)reader.ReadInt32();
+                    var info = new AssetInfo
+                    {
+                        Type = (AssetType)reader.ReadInt32()
+                    };
 
                     var IconSize = reader.ReadInt32();
 

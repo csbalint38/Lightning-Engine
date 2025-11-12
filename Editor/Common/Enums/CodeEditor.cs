@@ -2,7 +2,8 @@
 {
     public enum CodeEditor
     {
-        VISUAL_STUDIO,
+        VISUAL_STUDIO_2022,
+        VISUAL_STUDIO_2026,
         NOTEPAD
     }
 }

@@ -14,7 +14,7 @@ namespace Editor.Content
         public static AssetInfo? DefaultGeometry { get; private set; }
         public static AssetInfo? DefaultMaterial { get; private set; }
         public static AssetInfo? DefaultTexture { get; private set; }
-        public static List<AssetInfo> DefaultAssetsList => [
+        public static List<AssetInfo?> DefaultAssetsList => [
             BRDFIntegrationLUT,
             DefaultGeometry,
             DefaultMaterial,

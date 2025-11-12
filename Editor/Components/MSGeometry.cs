@@ -27,7 +27,7 @@ sealed class MSGeometry : MSComponent<Geometry>
 
     public void SetGeometry(Guid guid)
     {
-        SelectedComponents.ForEach(x => x.SetGeometry(guid));
+        SelectedComponents.ForEach(x => x?.SetGeometry(guid));
         Refresh();
     }
 
@@ -36,11 +36,11 @@ sealed class MSGeometry : MSComponent<Geometry>
     protected override bool UpdateMSComponent()
     {
         var contentId = MSEntity.GetMixedValue(
-            SelectedComponents,
+            [.. SelectedComponents.OfType<Geometry>()],
             new Func<Geometry, IdType>(x => x.ContentId)
         );
 
-        GeometryWithMaterials = contentId.HasValue ? SelectedComponents.First().GeometryWithMaterials : null;
+        GeometryWithMaterials = contentId.HasValue ? SelectedComponents.First()?.GeometryWithMaterials : null;
 
         return true;
     }

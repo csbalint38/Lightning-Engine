@@ -11,35 +11,35 @@
     </BootstrapperApplication>
     <util:FileSearch Id="MSBuildCommunity"
 					 Variable="MS_BUILD_COM"
-					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\Community\MSBuild\Current\Bin\MSBuild.exe"
 					 Result="exists" />
 	<util:FileSearch Id="MSBuildProfessional"
 					 Variable="MS_BUILD_PRO"
-					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
+					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe"
 					 Result="exists" />
 	<util:FileSearch Id="MSBuildEnterprise"
 					 Variable="MS_BUILD_ENT"
-					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
 					 Result="exists" />
 	<util:FileSearch Id="MSBuildBuildTools"
 					 Variable="MS_BUILD_TOOLS"
-					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+					 Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
 					 Result="exists" />
 	<util:DirectorySearch Id="VCToolsetCommunity"
 						  Variable="VC_COM"
-						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\Community\VC\Tools\MSVC"
+						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\Community\VC\Tools\MSVC"
 						  Result="exists" />
 	<util:DirectorySearch Id="VCToolsetProfessional"
 						  Variable="VC_PRO"
-						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC"
+						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\Professional\VC\Tools\MSVC"
 						  Result="exists" />
 	<util:DirectorySearch Id="VCToolsetEnterprise"
 						  Variable="VC_ENT"
-						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
+						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC"
 						  Result="exists" />
 	<util:DirectorySearch Id="VCBuildTools"
 						  Variable="VC_BUILD_TOOLS"
-						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC"
+						  Path="[ProgramFiles64Folder]Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC"
 						  Result="exists" />
     <Chain>
 	  <ExePackage Id="vs_BuildTools"
@@ -50,13 +50,12 @@
 				InstallArguments="--quiet --wait --norestart --nocache --add Microsoft.Component.MSBuild --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64">
 	  	<ExePackagePayload Id="vs_BuildTools Download"
 						   Name="vs_BuildTools.exe"
-						   DownloadUrl="https://aka.ms/vs/17/release/vs_BuildTools.exe"
+						   DownloadUrl="https://aka.ms/vs/stable/vs_BuildTools.exe"
 						   Hash="57F0AE0090384543E05FCBB5618AAF2ED3FB9F07E357E3020987409F648B87E67073C8E7C49955B1C7E03F7B1FAD5DC0963274D7E488B5DD360ABFFC0BA0208C"
 						   Size="4465872"/>
 	  </ExePackage>
 	  <MsiPackage Id="LightningInstaller"
 				  SourceFile="$(var.Installer.TargetPath)"/>
     </Chain>
-
   </Bundle>
 </Wix>

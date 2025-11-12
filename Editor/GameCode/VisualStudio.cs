@@ -7,10 +7,10 @@ using System.Runtime.InteropServices.ComTypes;
 
 namespace Editor.GameCode;
 
-public class VisualStudio : ICodeEditor
+public class VisualStudio(int version) : ICodeEditor
 {
-    private static readonly string _progId = "VisualStudio.DTE.17.0";
     private static readonly Lock _lock = new();
+    private readonly string _progId = $"VisualStudio.DTE.{version}.0";
     private static EnvDTE80.DTE2? _vsInstance = null;
 
     public bool CanDebug => true;
@@ -77,7 +77,7 @@ public class VisualStudio : ICodeEditor
         }
     }
 
-    private static void ShowWindowInternal(string solution, string? file = null)
+    private void ShowWindowInternal(string solution, string? file = null)
     {
         OpenVisualStudioInternal(solution);
 
@@ -101,7 +101,7 @@ public class VisualStudio : ICodeEditor
         }
     }
 
-    private static void OpenVisualStudioInternal(string solutionPath)
+    private void OpenVisualStudioInternal(string solutionPath)
     {
         IRunningObjectTable? rot = null;
         IEnumMoniker? monikerTable = null;
@@ -217,7 +217,7 @@ public class VisualStudio : ICodeEditor
         return result;
     }
 
-    private static void RunInternal(bool debug)
+    private void RunInternal(bool debug)
     {
         CallOnSTAThread(() =>
         {
@@ -274,8 +274,6 @@ public class VisualStudio : ICodeEditor
     private static bool AddFilesToSolutionInternal(string solution, string projectName, string[] files)
     {
         Debug.Assert(files?.Length > 0);
-
-        OpenVisualStudioInternal(solution);
 
         try
         {

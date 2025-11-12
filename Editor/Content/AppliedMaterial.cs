@@ -67,7 +67,7 @@ public class AppliedMaterial : Asset
     }
 
     public override List<AssetInfo> GetReferencedAssets() =>
-        [.. Inputs.Where(x => x.Asset is not null && x.Asset.Guid != Guid.Empty).Select(x => x.Asset)];
+        [.. Inputs.Where(static x => x.Asset is not null && x.Asset.Guid != Guid.Empty).Select(static x => x.Asset!)];
 
     public override MaterialMetadata GetMetadata() => new()
     {

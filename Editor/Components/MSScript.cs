@@ -26,7 +26,7 @@ sealed class MSScript : MSComponent<Script>
     {
         if (propertyName == nameof(Name) && _name is not null)
         {
-            SelectedComponents.ForEach(c => c.Name = _name);
+            SelectedComponents.ForEach(c => c?.Name = _name);
             return true;
         }
 
@@ -35,7 +35,7 @@ sealed class MSScript : MSComponent<Script>
 
     protected override bool UpdateMSComponent()
     {
-        Name = MSEntity.GetMixedValue(SelectedComponents, new Func<Script, string>(x => x.Name));
+        Name = MSEntity.GetMixedValue([.. SelectedComponents.OfType<Script>()], new Func<Script, string>(x => x.Name));
 
         return true;
     }

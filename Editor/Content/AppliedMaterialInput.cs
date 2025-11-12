@@ -5,10 +5,10 @@ namespace Editor.Content;
 
 public class AppliedMaterialInput : MaterialInput
 {
-    private AssetInfo? _asset = Texture.Default;
+    private AssetInfo _asset = Texture.Default!;
     private UploadedAsset? _uploadedAsset;
 
-    public AssetInfo? Asset
+    public AssetInfo Asset
     {
         get => _asset;
         private set

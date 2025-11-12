@@ -16,7 +16,8 @@ namespace Editor.GameCode
 
         public static void SetCurrent(CodeEditor editor) => _current = editor switch
         {
-            CodeEditor.VISUAL_STUDIO => new VisualStudio(),
+            CodeEditor.VISUAL_STUDIO_2022 => new VisualStudio(17),
+            CodeEditor.VISUAL_STUDIO_2026 => new VisualStudio(18),
             CodeEditor.NOTEPAD => new Notepad(),
             _ => new Notepad(),
         };
