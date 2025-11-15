@@ -106,7 +106,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>17.0</VCProjectVersion>
+    <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{22081d25-8133-45d4-b608-20e2660f768b}</ProjectGuid>
     <RootNamespace>Engine</RootNamespace>

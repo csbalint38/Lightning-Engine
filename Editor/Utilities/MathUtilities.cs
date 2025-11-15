@@ -1,50 +1,60 @@
 ﻿using System.Diagnostics;
 
-namespace Editor.Utilities
+namespace Editor.Utilities;
+
+public static class MathUtilities
 {
-    public static class MathUtilities
+    public static float Epsilon => 1e-5f;
+    public static float Pi => (float)Math.PI;
+    public static float HalfPi => Pi * .5f;
+
+    public static bool IsEqual(this float value, float other) => Math.Abs(value - other) < Epsilon;
+    public static bool IsEqual(this double value, double other) => Math.Abs(value - other) < Epsilon;
+
+    public static bool IsEqual(this float? value, float? other)
     {
-        public static float Epsilon => .00001f;
+        if (!value.HasValue || !other.HasValue) return false;
 
-        public static bool IsEqual(this float value, float other) => Math.Abs(value - other) < Epsilon;
-        public static bool IsEqual(this double value, double other) => Math.Abs(value - other) < Epsilon;
+        return IsEqual(value.Value, other.Value);
+    }
 
-        public static bool IsEqual(this float? value, float? other)
-        {
-            if (!value.HasValue || !other.HasValue) return false;
+    public static bool IsEqual(this double? value, double? other)
+    {
+        if (!value.HasValue || !other.HasValue) return false;
 
-            return IsEqual(value.Value, other.Value);
-        }
+        return IsEqual(value, other);
+    }
 
-        public static bool IsEqual(this double? value, double? other)
-        {
-            if (!value.HasValue || !other.HasValue) return false;
+    public static long AlignSizeUp(long size, long alignment)
+    {
+        Debug.Assert(alignment > 0, "Alignment must be non-zero.");
 
-            return IsEqual(value, other);
-        }
+        long mask = alignment - 1;
 
-        public static long AlignSizeUp(long size, long alignment)
-        {
-            Debug.Assert(alignment > 0, "Alignment must be non-zero.");
+        Debug.Assert((alignment & mask) == 0, "Alignment should be a power of 2.");
 
-            long mask = alignment - 1;
+        return ((size + mask) & ~mask);
+    }
 
-            Debug.Assert((alignment & mask) == 0, "Alignment should be a power of 2.");
+    public static long AlignSizeDown(long size, long alignment)
+    {
+        Debug.Assert(alignment > 0, "Alignment must be non-zero.");
 
-            return ((size + mask) & ~mask);
-        }
+        long mask = alignment - 1;
 
-        public static long AlignSizeDown(long size, long alignment)
-        {
-            Debug.Assert(alignment > 0, "Alignment must be non-zero.");
+        Debug.Assert((alignment & mask) == 0, "Alignement should be a power of 2.");
 
-            long mask = alignment - 1;
+        return (size & ~mask);
+    }
 
-            Debug.Assert((alignment & mask) == 0, "Alignement should be a power of 2.");
+    public static bool IsPowOf2(int x) => (x != 0) && (x & (x - 1)) == 0;
 
-            return (size & ~mask);
-        }
+    public static float WrapAngle(float angle)
+    {
+        angle %= 360f;
 
-        public static bool IsPowOf2(int x) => (x != 0) && (x & (x - 1)) == 0;
+        if(angle < 0) angle += 360f;
+
+        return angle;
     }
 }

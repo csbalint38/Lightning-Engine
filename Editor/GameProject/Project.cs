@@ -155,6 +155,8 @@ public class Project : ViewModelBase
         Current = null;
     }
 
+    public void UpdateScene() => throw new NotImplementedException();
+
     [OnDeserialized]
     private async void OnDeserializedAsync(StreamingContext context)
     {
