@@ -14,7 +14,7 @@
              Focusable="True"
              mc:Ignorable="d"
              Background="AliceBlue"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="720" d:DesignWidth="1280">
     <UserControl.Resources>
         <sys:Boolean x:Key="True">True</sys:Boolean>
         <sys:Boolean x:Key="False">False</sys:Boolean>
@@ -315,13 +315,13 @@
         </StackPanel>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="10*"/>
+                <ColumnDefinition Width="1*" MinWidth="250" />
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
+                    <RowDefinition Height="3*" MinHeight="333"/>
+                    <RowDefinition Height="1*" MinHeight="333"/>
                 </Grid.RowDefinitions>
                 <GridSplitter Grid.Row="1"
                               Height="5"
@@ -330,12 +330,12 @@
                               Background="Transparent"/>
                 <Grid Grid.Row="0">
                     <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
+                        <RowDefinition MinHeight="100"/>
+                        <RowDefinition MinHeight="100"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition MinWidth="100"/>
+                        <ColumnDefinition MinWidth="100"/>
                     </Grid.ColumnDefinitions>
                     <GridSplitter Grid.Row="0"
                                   Grid.RowSpan="2"
@@ -351,19 +351,34 @@
                                   VerticalAlignment="Top"
                                   HorizontalAlignment="Stretch"
                                   Height="5"/>
-                    <local:RenderSurfaceView Margin="0,0,5,0"/>
+                    <local:RenderSurfaceView Margin="0,0,5,0"
+                                             x:Name="sv1"
+                                             KeyDown="OnProjectLayoutView_KeyDown"/>
                     <local:RenderSurfaceView Grid.Column="1"
-                                             Margin="0,0,0,0"/>
+                                             Margin="0,0,0,0"
+                                             x:Name="sv2"
+                                             KeyDown="OnProjectLayoutView_KeyDown"/>
                     <local:RenderSurfaceView Grid.Row="1"
-                                             Margin="0,5,5,0"/>
+                                             Margin="0,5,5,0"
+                                             x:Name="sv3"
+                                             KeyDown="OnProjectLayoutView_KeyDown"/>
                     <local:RenderSurfaceView Grid.Column="1"
                                              Grid.Row="1"
-                                             Margin="0,5,0,0"/>
+                                             x:Name="sv4"
+                                             Margin="0,5,0,0"
+                                             KeyDown="OnProjectLayoutView_KeyDown"/>
                 </Grid>
+                <GridSplitter Grid.Row="1"
+                              Height="5"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Top"
+                              Background="Transparent"/>
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="3*"
+                                          MinWidth="140"/>
+                        <ColumnDefinition Width="4*"
+                                          MinWidth="260"/>
                     </Grid.ColumnDefinitions>
                     <content:ContentBrowserView AllowImport="True"
                                                 AllowDrop="True"
@@ -393,15 +408,17 @@
                           Background="Transparent"/>
             <Grid Grid.Column="1" MinWidth="250">
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
+                    <RowDefinition Height="1*"
+                                   MinHeight="330"/>
+                    <RowDefinition Height="2*"
+                                   MinHeight="330"/>
                 </Grid.RowDefinitions>
                 <GridSplitter Grid.Row="1"
                               Height="5"
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Top"
                               Background="Transparent"/>
-                <local:ScenesView/>
+                <local:ScenesView KeyDown="OnProjectLayoutView_KeyDown"/>
                 <local:EntityView Grid.Row="1"
                                   Margin="0,5,0,0"/>
             </Grid>

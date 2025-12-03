@@ -10,9 +10,9 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.15-beta</InformationalVersion>
-	<FileVersion>0.3.15.0</FileVersion>
-	<AssemblyVersion>0.3.15</AssemblyVersion>
+	<InformationalVersion>0.3.16-beta</InformationalVersion>
+	<FileVersion>0.3.16.0</FileVersion>
+	<AssemblyVersion>0.3.16</AssemblyVersion>
 	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
 	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	<StartupObject>Editor.App</StartupObject>
@@ -55,16 +55,23 @@
     </Content>
     <Content Include="Resources\Icon.ico" />
     <Resource Include="Resources\CubeTexture.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Resources\FolderBig.png" />
-    <Resource Include="Resources\FolderSmall.png" />
+    <Resource Include="Resources\DefaultAssets\DefaultTexture.lngasset">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\FolderBig.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\FolderSmall.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Resources\MaterialEditor\DefaultMaterialShaders.hlsl" />
     <Resource Include="Resources\PlaneTexture.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\SphereUvChecker.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\TextureEditor\ChannelSelect.cso" />
     <Resource Include="Resources\TextureEditor\Checkerboard.png" />
@@ -82,5 +89,6 @@
 	  <None Remove="Resources\CodeTemplates\Module\cppm.txt" />
 	  <None Remove="Resources\CodeTemplates\Module\ixx.txt" />
 	  <None Remove="Resources\CubeTexture.png" />
+	  <None Remove="Resources\DefaultAssets\DefaultTexture.lngasset" />
 	</ItemGroup>
 </Project>

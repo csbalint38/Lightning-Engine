@@ -4,6 +4,7 @@
                     xmlns:opt="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
                     xmlns:converters="clr-namespace:Editor.Utilities.Converters"
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:rs="clr-namespace:Editor.Editors.WorldEditor.RenderSurface"
                     xmlns:controls="clr-namespace:Editor.Common.Controls"
                     xmlns:enums="clr-namespace:Editor.Common.Enums">
     <sys:Double x:Key="AssetIconWidth">90</sys:Double>
@@ -2154,6 +2155,17 @@
                             <DropShadowEffect Opacity=".6" BlurRadius="15" ShadowDepth="2"/>
                         </Expander.Effect>
                     </Expander>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="{x:Type rs:RenderSurfaceControl}" x:Key="{x:Type rs:RenderSurfaceControl}">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type rs:RenderSurfaceControl}">
+                        <ContentPresenter/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

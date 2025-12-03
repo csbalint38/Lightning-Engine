@@ -3,7 +3,55 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:Editor.Editors"
+             xmlns:local="clr-namespace:Editor.Editors.WorldEditor.RenderSurface"
              mc:Ignorable="d" 
+             UseLayoutRounding="True"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style TargetType="{x:Type TextBlock}"
+               BasedOn="{StaticResource LightTextBlockStyle}" />
+    </UserControl.Resources>
+    <Border BorderThickness="2" d:BorderBrush="pink">
+        <Border.Style>
+            <Style TargetType="{x:Type Border}">
+                <Setter Property="BorderBrush"
+                        Value="Transparent"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsFocused, ElementName=renderSurfaceControl}"
+                                 Value="True">
+                        <Setter Property="BorderBrush"
+                                Value="{StaticResource Editor.SecretBrush}"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <local:RenderSurfaceControl x:Name="renderSurfaceControl"
+                                        Grid.Row="1"
+                                        x:FieldModifier="private"/>
+            <Border Background="{StaticResource Editor.BackgroundBrush2}"
+                    BorderThickness="0,0,0,2"
+                    BorderBrush="{StaticResource Editor.BackgroundBrush3}">
+                <Grid Margin="10, 1">
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="Delta time: "/>
+                        <TextBlock x:Name="TbFrameTime"
+                                   Text=" -- ms"
+                                   Foreground="{StaticResource Editor.LightningBrush}"/>
+                        <TextBlock Text="|"
+                                   Margin="10, 0"/>
+                        <TextBlock Text="FPS: "/>
+                        <TextBlock x:Name="TbFrameRate"
+                                   Text=" -- Hz"
+                                   Foreground="{StaticResource Editor.LightningBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
 </UserControl>

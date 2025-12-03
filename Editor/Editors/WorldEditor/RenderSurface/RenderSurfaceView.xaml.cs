@@ -1,5 +1,4 @@
-﻿using Editor.Common.Enums;
-using Editor.Editors.WorldEditor.RenderSurface;
+﻿using Editor.Editors.WorldEditor.RenderSurface;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -8,10 +7,9 @@ namespace Editor.Editors;
 /// <summary>
 /// Interaction logic for RenderSurfaceView.xaml
 /// </summary>
-public partial class RenderSurfaceView : UserControl, IDisposable
+public partial class RenderSurfaceView : UserControl
 {
-    private RenderSurfaceHost? _host = null;
-    private bool _disposedValue;
+    internal RenderSurfaceControl RenderSurfaceControl => renderSurfaceControl;
 
     public RenderSurfaceView()
     {
@@ -24,48 +22,13 @@ public partial class RenderSurfaceView : UserControl, IDisposable
     {
         Loaded -= OnRenderSurfaceViewLoaded;
 
-        /*
-        _host = new RenderSurfaceHost(ActualWidth, ActualHeight);
-        _host.MessageHook += new HwndSourceHook(HostMsgFilter);
-        Content = _host;
-        */
-    }
-
-    private IntPtr HostMsgFilter(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-    {
-        switch ((Win32Msg)msg)
+        renderSurfaceControl.FrameStatsUpdated += (_, e) =>
         {
-            case Win32Msg.WM_SIZING: throw new Exception();
-            case Win32Msg.WM_ENTERSIZEMOVE: throw new Exception();
-            case Win32Msg.WM_EXITSIZEMOVE: throw new Exception();
-            case Win32Msg.WM_SIZE:
-                break;
-            default:
-                break;
-        }
-
-        return IntPtr.Zero;
-    }
-
-    #region IDisposable
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposedValue)
-        {
-            if (disposing)
+            _ = Application.Current.Dispatcher.BeginInvoke(() =>
             {
-                _host?.Dispose();
-            }
-
-            _disposedValue = true;
-        }
+                TbFrameTime.Text = $"{e.AverageFrameTime * 1000F:F1} ms";
+                TbFrameRate.Text = $"{e.FPS} Hz";
+            });
+        };
     }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-    #endregion
 }

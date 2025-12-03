@@ -1,3 +1,8 @@
+# v0.3.16-beta - 2025.12.9.
+## Editor
+ - Scene view
+ - Fixed some scaling issues
+ 
 # v0.3.15-beta - 2025.11.26.
 ## Editor
  - Update to .NET 10

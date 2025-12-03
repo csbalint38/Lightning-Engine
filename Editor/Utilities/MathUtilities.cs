@@ -53,7 +53,7 @@ public static class MathUtilities
     {
         angle %= 360f;
 
-        if(angle < 0) angle += 360f;
+        if (angle < 0) angle += 360f;
 
         return angle;
     }

@@ -1,5 +1,4 @@
 ﻿using Editor.Utilities;
-using MahApps.Metro.Controls;
 using System.Numerics;
 using System.Windows.Input;
 
@@ -153,7 +152,7 @@ internal class EditorCamera
         _desiredRotation.X = theta;
         _desiredRotation.Y = phi;
 
-        if(!slide)
+        if (!slide)
         {
             _position = _desiredPosition;
             _rotation = _desiredRotation;

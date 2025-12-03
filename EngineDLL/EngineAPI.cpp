@@ -11,6 +11,7 @@
 #include "Components/Entity.h"
 #include "Components/Geometry.h"
 #include "Components/Transform.h"
+#include "Utilities/Threading.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -188,7 +189,7 @@ namespace {
 	// ENDTEMP
 }
 
-extern std::mutex mutex;
+extern util::TicketMutex mutex;
 
 math::v4 to_quat(math::v3 angles, bool is_degrees);
 

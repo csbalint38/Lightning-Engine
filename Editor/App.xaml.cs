@@ -16,12 +16,12 @@ public partial class App : Application
             AppName = "LightningEngine",
             CrashReporterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CrashReporter.exe"),
             LaunchCrashReporter = false,
-            #if DEBUG
+#if DEBUG
             FailFast = false,
-            #else
+#else
             FailFast = true,
-            #endif
-            SkipFailFastWhenDebugging = false,
+#endif
+            SkipFailFastWhenDebugging = true,
         });
 
         base.OnStartup(e);

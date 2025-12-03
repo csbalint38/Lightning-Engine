@@ -1,14 +1,15 @@
-﻿using static Editor.Utilities.KeyboardHelper;
-using Editor.Common.Enums;
+﻿using Editor.Common.Enums;
 using Editor.DLLs;
 using Editor.GameProject;
+using Editor.Utilities;
 using System.Diagnostics;
+using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Numerics;
-using Editor.Utilities;
+using static Editor.Utilities.KeyboardHelper;
+using static Editor.Utilities.MouseHelper;
 
 namespace Editor.Editors.WorldEditor.RenderSurface;
 
@@ -149,10 +150,17 @@ public class RenderSurfaceControl : ContentControl, IDisposable
     {
         Debug.Assert(componentIds is not null);
 
-        if(_host?.HostReady == true)
+        if (_host?.HostReady == true)
         {
             EngineAPI.SetGeometryIds(_host.SurfaceId, [.. componentIds], componentIds.Count);
         }
+    }
+
+    public void UseLightSet(ulong lightSetKey) => _lightSetKey = lightSetKey;
+
+    public void FocusPosition(Vector3 position)
+    {
+        if (_isMouseOver || IsFocused) _camera.GoTo(position);
     }
 
     private static void OnXYLockedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
@@ -185,6 +193,13 @@ public class RenderSurfaceControl : ContentControl, IDisposable
         return moveDir;
     }
 
+    private static (short, short) SplitParam(IntPtr param)
+    {
+        var p = param.ToInt64();
+
+        return ((short)(p & 0xffff), (short)((p >> 16) & 0xffff));
+    }
+
     private async void OnDataContextChangedAsync(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (e.NewValue is not null && _host is null)
@@ -201,7 +216,7 @@ public class RenderSurfaceControl : ContentControl, IDisposable
 
             _disposedValue = false;
         }
-        else if(e.NewValue is null && _host is not null)
+        else if (e.NewValue is null && _host is not null)
         {
             SetComponentIds([]);
 
@@ -213,7 +228,7 @@ public class RenderSurfaceControl : ContentControl, IDisposable
 
     private FrameInfo OnRenderFrame(int frame)
     {
-        if(_frameTimer.MeasureFrameTime())
+        if (_frameTimer.MeasureFrameTime())
         {
             FrameStatsUpdated?.Invoke(this, new(_frameTimer.AverageFrameTime, _frameTimer.FPS));
         }
@@ -239,13 +254,75 @@ public class RenderSurfaceControl : ContentControl, IDisposable
 
     private IntPtr HostMsgFilter(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        switch((Win32Msg)msg)
+        switch ((Win32Msg)msg)
         {
-            case Win32Msg.WM_SIZING: throw new Exception();
-            case Win32Msg.WM_ENTERSIZEMOVE: throw new Exception();
-            case Win32Msg.WM_EXITSIZEMOVE: throw new Exception();
-            case Win32Msg.WM_SIZE: break;
-            default: break;
+            case Win32Msg.WM_SIZING:
+                break;
+            case Win32Msg.WM_ENTERSIZEMOVE:
+                break;
+            case Win32Msg.WM_EXITSIZEMOVE:
+                break;
+            case Win32Msg.WM_SIZE:
+                break;
+
+            case Win32Msg.WM_LBUTTONDOWN:
+                {
+                    var (x, y) = SplitParam(lParam);
+
+                    OnRenderHostMouseLBD(x, y);
+                }
+                break;
+
+            case Win32Msg.WM_LBUTTONUP:
+                OnRenderHostMouseLBU();
+                break;
+
+            case Win32Msg.WM_MBUTTONDOWN:
+                break;
+            case Win32Msg.WM_MBUTTONUP:
+                break;
+
+            case Win32Msg.WM_RBUTTONDOWN:
+                if (_isXYLocked || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+                {
+                    var (x, y) = SplitParam(lParam);
+
+                    OnRenderHostMouseRBD(x, y);
+                }
+                break;
+
+            case Win32Msg.WM_RBUTTONUP:
+                if (_isXYLocked || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) OnRenderHostMouseRBU();
+                break;
+
+            case Win32Msg.WM_MOUSEHOVER:
+                _isMouseOver = true;
+                break;
+
+            case Win32Msg.WM_MOUSELEAVE:
+                _isMouseOver = false;
+                break;
+
+            case Win32Msg.WM_MOUSEMOVE:
+                {
+                    var (x, y) = SplitParam(lParam);
+                    OnRenderHostMouseMove(x, y);
+                }
+                break;
+
+            case Win32Msg.WM_MOUSEWHEEL:
+                {
+                    var (_, high) = SplitParam(wParam);
+
+                    OnRenderHostMouseWheel(Math.Sign(high));
+                }
+                break;
+            case Win32Msg.WM_KEYDOWN:
+                break;
+            case Win32Msg.WM_KEYUP:
+                break;
+            default:
+                break;
         }
 
         return IntPtr.Zero;
@@ -253,6 +330,67 @@ public class RenderSurfaceControl : ContentControl, IDisposable
 
     private void OnRenderSurfaceControl_KeyDown(object sender, KeyEventArgs e) =>
         e.Handled = e.Key == Key.System && e.OriginalSource is RenderSurfaceControl;
+
+    private void OnRenderHostMouseLBD(int x, int y)
+    {
+        Focus();
+
+        _clickPosition = new(x, y);
+        _captureLeft = true;
+
+        SetCapture(_host!.Handle);
+    }
+
+    private void OnRenderHostMouseLBU()
+    {
+        _captureLeft = false;
+
+        ReleaseCapture();
+    }
+
+    private void OnRenderHostMouseRBD(int x, int y)
+    {
+        Focus();
+
+        _clickPosition = new(x, y);
+        _captureRight = true;
+
+        SetCapture(_host!.Handle);
+    }
+
+    private void OnRenderHostMouseRBU()
+    {
+        _captureRight = false;
+
+        ReleaseCapture();
+    }
+
+    private void OnRenderHostMouseMove(int x, int y)
+    {
+        var currentPosition = new Point(x, y);
+        var d = currentPosition - _clickPosition;
+
+        _clickPosition = currentPosition;
+
+        if (_captureLeft)
+        {
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt) || _isXYLocked) _camera.Orbit(d.X, d.Y, 0);
+            else _camera.ChangeDirection(d.X, d.Y);
+        }
+        else if (_captureRight && (_isXYLocked || Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)))
+        {
+            var target = _camera.Target;
+
+            target.Y += (float)d.Y * .0005f * _camera.OrbitRadius;
+
+            _camera.GoTo(target);
+        }
+    }
+
+    private void OnRenderHostMouseWheel(int sign)
+    {
+        if (_isXYLocked || (IsFocused && Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))) _camera.Orbit(0, 0, sign);
+    }
 
     #region IDisposable
     protected virtual void Dispose(bool disposing)

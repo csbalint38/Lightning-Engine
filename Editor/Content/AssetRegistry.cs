@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace Editor.Content;
+
 static class AssetRegistry
 {
     private static readonly Lock _lock = new();

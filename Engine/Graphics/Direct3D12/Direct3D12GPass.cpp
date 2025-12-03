@@ -245,10 +245,11 @@ namespace lightning::graphics::direct3d12::gpass {
 
 		void prepare_render_frame(const D3D12FrameInfo& info) {
 			assert(info.info && info.camera);
-			assert(info.info->render_item_ids && info.info->render_item_count);
 
 			GPassCache& cache{ frame_cache };
 			cache.clear();
+
+			if (!info.info->render_item_ids || !info.info->render_item_count) return;
 
 			using namespace content;
 			render_item::get_d3d12_render_items_id(*info.info, cache.d3d12_render_item_ids);

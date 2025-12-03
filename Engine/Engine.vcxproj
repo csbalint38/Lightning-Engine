@@ -68,6 +68,7 @@
     <ClInclude Include="Utilities\Logger.h" />
     <ClInclude Include="Utilities\Math.h" />
     <ClInclude Include="Utilities\MathTypes.h" />
+    <ClInclude Include="Utilities\Threading.h" />
     <ClInclude Include="Utilities\Utilities.h" />
     <ClInclude Include="Utilities\Vector.h" />
   </ItemGroup>
@@ -138,6 +139,7 @@
     <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

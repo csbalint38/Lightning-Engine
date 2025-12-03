@@ -144,7 +144,7 @@ namespace Editor.Content
 
             var psKeys = new[]
             {
-                (uint)Id.InvalidId,
+                unchecked((uint)Id.InvalidId),
             };
 
             try

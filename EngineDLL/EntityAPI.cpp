@@ -5,6 +5,7 @@
 #include "Components/Transform.h"
 #include "Components/Script.h"
 #include "Components/Geometry.h"
+#include "Utilities/Threading.h"
 
 using namespace lightning;
 
@@ -79,7 +80,7 @@ namespace {
 	}
 }
 
-std::mutex mutex{};
+util::TicketMutex mutex{};
 
 EDITOR_INTERFACE id::id_type create_game_entity(EntityDescriptor* entity) {
 	std::lock_guard lock{ mutex };

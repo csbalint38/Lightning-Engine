@@ -17,14 +17,15 @@ internal class FrameTimer
         var timerEnd = Stopwatch.GetTimestamp();
         var elapsed = Stopwatch.GetElapsedTime(_timerStart, timerEnd);
 
-        LastFrameTime = (float)(elapsed.TotalMicroseconds * 1e-6f);
+        LastFrameTime = (float)(elapsed.TotalMicroseconds * 1e-6);
         _timerStart = timerEnd;
-        _avgFrameTimeMicroseconds += (float)(elapsed.TotalMicroseconds - _avgFrameTimeMicroseconds) / _timerCount;
+        _avgFrameTimeMicroseconds += (float)(elapsed.TotalMicroseconds - _avgFrameTimeMicroseconds) / _timerCount++;
 
-        if(AverageFrameTime * _timerCount > 1)
+        if (AverageFrameTime * _timerCount > 1)
         {
             AverageFrameTime = _avgFrameTimeMicroseconds * 1e-6f;
             FPS = _timerCount;
+            _timerCount = 1;
             _avgFrameTimeMicroseconds = 0f;
 
             return true;
