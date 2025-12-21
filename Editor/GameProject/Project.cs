@@ -28,11 +28,11 @@ public class Project : ViewModelBase
     public static readonly string Extension = ".lng";
     public static Project? Current { get; private set; }
     public static UndoRedo UndoRedo { get; } = new UndoRedo();
+    public static event EventHandler? SceneUpdated;
 
     [DataMember]
     public string Name { get; private set; } = "New Project";
 
-    [DataMember]
     public string Path { get; private set; }
     public string FullPath => $@"{Path}{Name}{Extension}";
     public string Solution => $@"{Path}{Name}.sln";
@@ -81,14 +81,14 @@ public class Project : ViewModelBase
         }
     }
 
-    public string[] AvailableScripts
+    public string[]? AvailableScripts
     {
         get => _availableScripts;
         private set
         {
             if (_availableScripts != value)
             {
-                _availableScripts = value;
+                _availableScripts = value!;
                 OnPropertyChanged(nameof(AvailableScripts));
             }
         }
@@ -115,6 +115,8 @@ public class Project : ViewModelBase
 
             project.Path = path;
             Current = project;
+
+            project.UpdateScene();
 
             return project;
         }
@@ -143,10 +145,14 @@ public class Project : ViewModelBase
 
     public void Unload()
     {
+        ActiveScene.Entities.ToList().ForEach(entity => entity.IsEnabled = false);
+
+        UpdateScene();
+
         ActiveScene.IsActive = false;
 
         UnloadGameCodeDLL();
-        Task.Run(ICodeEditor.Current.Close);
+        ICodeEditor.Current.Close();
         AssetRegistry.Save();
         UndoRedo.Reset();
         Logger.ClearAsync();
@@ -155,7 +161,10 @@ public class Project : ViewModelBase
         Current = null;
     }
 
-    public void UpdateScene() { }
+    public void UpdateScene()
+    {
+        if (Current is not null) SceneUpdated?.Invoke(ActiveScene, new());
+    }
 
     [OnDeserialized]
     private async void OnDeserializedAsync(StreamingContext context)
@@ -200,10 +209,11 @@ public class Project : ViewModelBase
     {
         try
         {
-            UnloadGameCodeDLL();
+            var scriptNames = UnloadGameCodeDLL();
+
             await Task.Run(() => MSBuild.BuildSolution(this, DLLBuildConfig));
 
-            if (MSBuild.BuildSucceeded) LoadGameCodeDll();
+            if (MSBuild.BuildSucceeded) LoadGameCodeDll(scriptNames);
         }
         catch (Exception ex)
         {
@@ -216,7 +226,7 @@ public class Project : ViewModelBase
         }
     }
 
-    private void LoadGameCodeDll()
+    private void LoadGameCodeDll(List<(Entity, string)> scriptNames)
     {
         var configName = MSBuild.GetConfigurationName(DLLBuildConfig);
         var dll = $@"{Path}x64\{configName}\{Name}.dll";
@@ -228,6 +238,7 @@ public class Project : ViewModelBase
             AvailableScripts = EngineAPI.GetScriptNames();
             ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = true);
             Logger.LogAsync(LogLevel.INFO, "Game code DLL loaded successfully");
+            AddScriptComponents(scriptNames);
         }
         else
         {
@@ -235,12 +246,18 @@ public class Project : ViewModelBase
         }
     }
 
-    private void UnloadGameCodeDLL()
+    private List<(Entity, string)> UnloadGameCodeDLL()
     {
-        ActiveScene.Entities.Where(x => x.GetComponent<Script>() is not null).ToList().ForEach(x => x.IsActive = false);
+        var scriptNames = RemoveScriptComponents();
 
-        if (EngineAPI.UnloadGameCodeDll() != 0) Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
-        AvailableScripts = [];
+        if (EngineAPI.UnloadGameCodeDll() != 0)
+        {
+            Logger.LogAsync(LogLevel.INFO, "Game code DLL unloaded");
+
+            AvailableScripts = null;
+        }
+
+        return scriptNames;
     }
 
     private async Task RunGameAsync(bool debug)
@@ -353,5 +370,49 @@ public class Project : ViewModelBase
 
             Directory.Delete(TempFolder, true);
         }
+    }
+
+    private void AddScriptComponents(List<(Entity, string)> scriptNames) =>
+        _ = Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            foreach (var (entity, scriptName) in scriptNames)
+            {
+                if (!Id.IsValid(entity.EntityId)) continue;
+
+                Debug.Assert(entity.GetComponent<Script>() is null && !string.IsNullOrEmpty(scriptName));
+
+                var script = ComponentFactory.GetCreationFunction(ComponentType.SCRIPT)(entity, scriptName);
+
+                entity.AddComponent(script);
+            }
+
+            MSEntity.CurrentSelection?.Refresh();
+        });
+
+    private List<(Entity, string)> RemoveScriptComponents()
+    {
+        _ = Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            if (!ActiveScene.IsActive) return [];
+
+            var scriptNames = new List<(Entity, string)>();
+
+            foreach (var entity in ActiveScene.Entities)
+            {
+                if (Id.IsValid(entity.EntityId) && entity.GetComponent<Script>() is Script script)
+                {
+                    Debug.Assert(entity.IsActive && Id.IsValid(entity.EntityId));
+
+                    scriptNames.Add((entity, script.Name));
+                    entity.RemoveComponent(script);
+                }
+            }
+
+            MSEntity.CurrentSelection?.Refresh();
+
+            return scriptNames;
+        });
+
+        return [];
     }
 }

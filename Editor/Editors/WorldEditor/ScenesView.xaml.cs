@@ -28,10 +28,9 @@ public partial class ScenesView : UserControl
         var btn = (Button)sender;
         var scene = (Scene)btn.DataContext;
 
-        scene.AddEntityCommand?.Execute(new Entity(scene)
-        {
+        scene.AddEntities([new(scene) {
             Name = "Empty Game Entity"
-        });
+        }]);
     }
 
     private void LbEntities_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -73,7 +72,8 @@ public partial class ScenesView : UserControl
             }
         ));
 
-        MSEntity? msEntities = null;
+        MSEntityBase? msEntities = null;
+        MSEntityBase.Reset();
 
         if (newSelection.Count != 0)
         {
@@ -116,11 +116,18 @@ public partial class ScenesView : UserControl
     {
         if (e.Key is Key.Delete)
         {
-            // TODO: Implement delete
+            var listBox = (ListBox)sender;
+            var entities = new List<Entity>();
+
+            foreach (Entity entity in listBox.SelectedItems) entities.Add(entity);
+
+            listBox.UnselectAll();
+
+            if (entities.Count > 0) RemoveEntities(entities);
         }
     }
 
-    private async void LbEntities_Drop(object sender, DragEventArgs e)
+    private async void LbEntities_DropAsync(object sender, DragEventArgs e)
     {
         if (e.Data.GetDataPresent(DataFormats.FileDrop) && sender is FrameworkElement
             {
@@ -129,38 +136,51 @@ public partial class ScenesView : UserControl
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
-            var fileList = files
-                .Where(x =>
-                    Path.GetExtension(x).ToLower() == Asset.AssetFileExtension
-                    && Asset.TryGetAssetInfo(x)?.Type == AssetType.MESH
-                )
-                .ToList();
-
             List<Entity> entities = [];
 
             await Task.Run(() =>
             {
+                var fileList = files
+                    .Where(x =>
+                        Path.GetExtension(x).ToLower() == Asset.AssetFileExtension
+                        && Asset.TryGetAssetInfo(x)?.Type == AssetType.MESH
+                    );
+
                 foreach (var file in fileList)
                 {
-                    Debug.Assert(!string.IsNullOrEmpty(file.Trim()));
+                    Debug.Assert(!string.IsNullOrEmpty(file?.Trim()));
 
-                    var assetInfo = Asset.TryGetAssetInfo(file);
-
-                    if (assetInfo is not null)
+                    if (Asset.TryGetAssetInfo(file) is AssetInfo assetInfo)
                     {
                         var entity = new Entity(scene)
                         {
-                            Name = assetInfo.FileName?.Trim() ?? string.Empty
+                            Name = assetInfo.FileName?.Trim() ?? string.Empty,
+                            IsActive = true
                         };
 
-                        entity.IsActive = true;
                         entity.AddComponent(new Components.Geometry(entity, assetInfo));
                         entities.Add(entity);
                     }
                 }
             });
 
-            entities.ForEach(entity => scene.AddEntityCommand?.Execute(entity));
+            if (entities.Count > 0) scene.AddEntities(entities);
         }
+    }
+
+    private void RemoveEntities(List<Entity> entities)
+    {
+        if (DataContext is Project
+            {
+                ActiveScene: Scene scene
+            }) scene.RemoveEntities(entities);
+    }
+
+    private void BtnRemoveEntity_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button
+            {
+                DataContext: Entity entity
+            }) RemoveEntities([entity]);
     }
 }

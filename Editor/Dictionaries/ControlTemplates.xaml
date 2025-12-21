@@ -1186,6 +1186,8 @@
     <Style x:Key="LightningWindowStyle" TargetType="{x:Type Window}">
         <Setter Property="BorderBrush" Value="{StaticResource Editor.BlueBrush}"/>
         <Setter Property="Background" Value="{StaticResource Editor.BackgroundBrush1}"/>
+        <Setter Property="AllowsTransparency" Value="True" />
+        <Setter Property="WindowStyle" Value="None" />
         <Setter Property="WindowChrome.WindowChrome">
             <Setter.Value>
                 <WindowChrome CornerRadius="0"

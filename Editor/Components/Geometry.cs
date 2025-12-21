@@ -1,5 +1,6 @@
 ﻿using Editor.Common.Enums;
 using Editor.Content;
+using Editor.DLLs;
 using Editor.Utilities;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +13,7 @@ public class Geometry : Component
 {
     private GeometryWithMaterials? _geometryWithMaterials;
     private UploadedAsset? _geometry;
+    private IdType _componentId = Id.InvalidId;
 
     [DataMember(Name = "Materials")]
     private List<AppliedMaterial> _materials = [];
@@ -80,6 +82,7 @@ public class Geometry : Component
         GeometryWithMaterials = null;
         UploadedAsset.RemoveFromScene(_geometry);
         _geometry = null;
+        _componentId = Id.InvalidId;
     }
 
     public void SetGeometry(Guid guid)
@@ -93,6 +96,18 @@ public class Geometry : Component
 
             ParentEntity.IsActive = true;
         }
+    }
+
+    public IdType GetComponentId()
+    {
+        if (!Id.IsValid(_componentId) && Id.IsValid(ParentEntity.EntityId))
+        {
+            _componentId = EngineAPI.GetComponentId(ParentEntity.EntityId, ComponentType.GEOMETRY);
+
+            Debug.Assert(Id.IsValid(_componentId));
+        }
+
+        return _componentId;
     }
 
     private static AppliedMaterial CreateAndUploadAppliedMaterial(AssetInfo material)

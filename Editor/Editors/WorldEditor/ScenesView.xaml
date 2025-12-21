@@ -114,7 +114,7 @@
                                      Loaded="LbEntities_Loaded"
                                      KeyDown="LbEntities_KeyDown"
                                      SelectionChanged="LbEntities_SelectionChanged"
-                                     Drop="LbEntities_Drop">
+                                     Drop="LbEntities_DropAsync">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="{x:Type ListBoxItem}"
                                            BasedOn="{StaticResource {x:Type ListBoxItem}}">
@@ -139,8 +139,8 @@
                                                      Padding="1,0,0,0"
                                                      Visibility="Collapsed"/>
                                             <Button Grid.Column="1"
-                                                    Command="{Binding ParentScene.RemoveEntityCommand}"
-                                                    CommandParameter="{Binding}"
+                                                    x:Name="BtnRemoveEntity"
+                                                    Click="BtnRemoveEntity_Click"
                                                     Margin="0,1,10,1"
                                                     Style="{StaticResource IconButton}">
                                                 <Button.Content>

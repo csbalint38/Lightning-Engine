@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-    contents: write
+  contents: write
 
 jobs:
   build-and-release:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Cache MikkTSpace
         id: cache-mikktspace
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packages/MikkTSpace
           key: mikktspace-${{ runner.os }}-${{ hashFiles('packages/MikkTSpace/**/*') }}
@@ -35,7 +35,7 @@ jobs:
 
       - name: Cache FBX SDK
         id: cache-fbx
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: "packages/FBX SDK"
           key: fbx-sdk-${{ runner.os }}-${{ hashFiles('packages/FBX SDK/**/*') }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache NuGet packages
         id: cache-nuget
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: C:\Users\runneradmin\.nuget\packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.sln') }}

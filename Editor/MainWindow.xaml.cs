@@ -7,6 +7,7 @@ using Editor.Utilities;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 
 namespace Editor;
@@ -70,6 +71,8 @@ public partial class MainWindow : Window
     {
         Project.Current?.Unload();
 
+        Hide();
+
         var projectBrowser = new ProjectBrowserDialog();
         if (projectBrowser.ShowDialog() == false || projectBrowser.DataContext is null)
         {
@@ -84,6 +87,8 @@ public partial class MainWindow : Window
 
             DataContext = project;
         }
+
+        Show();
     }
 
     private void GetEnginePath()

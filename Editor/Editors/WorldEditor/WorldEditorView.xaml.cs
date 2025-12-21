@@ -20,7 +20,26 @@ public partial class WorldEditorView : UserControl
     public WorldEditorView()
     {
         InitializeComponent();
-        Loaded += WorldEditorView_OnLoaded;
+
+        Project.SceneUpdated += OnSceneUpdated;
+        DataContextChanged += OnWorldEditorDataContextChanged;
+    }
+
+    private void OnWorldEditorDataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => Focus();
+
+    private void OnSceneUpdated(object? sender, EventArgs e)
+    {
+        Debug.Assert((sender as Scene)?.Project == Project.Current);
+
+        if (sender is Scene scene)
+        {
+            var ids = scene.IsActive ? scene.GetGeometryComponentIds() : [];
+
+            sv1.RenderSurfaceControl.SetComponentIds(ids);
+            sv2.RenderSurfaceControl.SetComponentIds(ids);
+            sv3.RenderSurfaceControl.SetComponentIds(ids);
+            sv4.RenderSurfaceControl.SetComponentIds(ids);
+        }
     }
 
     private void WorldEditorView_OnLoaded(object sender, RoutedEventArgs e)
@@ -30,12 +49,7 @@ public partial class WorldEditorView : UserControl
     }
 
     private void BtnNewScript_Click(object sender, RoutedEventArgs e) => new NewScriptDialog().ShowDialog();
-
-    private void BtnPrimitiveMesh_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new PrimitiveMeshDialog();
-        dialog.ShowDialog();
-    }
+    private void BtnPrimitiveMesh_Click(object sender, RoutedEventArgs e) => new PrimitiveMeshDialog().ShowDialog();
 
     private void MINewProject_Executed(object sender, ExecutedRoutedEventArgs e)
     {
@@ -67,15 +81,12 @@ public partial class WorldEditorView : UserControl
         var mainWindow = Application.Current.MainWindow;
 
         foreach (Window win in Application.Current.Windows)
-        {
-            if (win != mainWindow)
-            {
-                win.DataContext = null;
-                win.Close();
-            }
-        }
+            if (win != mainWindow) win.Close();
 
         mainWindow.DataContext = null;
+
+        Project.Current?.Unload();
+
         mainWindow.Close();
     }
 

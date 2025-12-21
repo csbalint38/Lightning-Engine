@@ -1,8 +1,12 @@
-# v0.3.16-beta - 2025.12.9.
+# v0.3.17-beta - 2025.12.26.
+# Editor
+ - Modified adding and removing game entities
+
+# v0.3.16-beta - 2025.12.18.
 ## Editor
  - Scene view
  - Fixed some scaling issues
- 
+
 # v0.3.15-beta - 2025.11.26.
 ## Editor
  - Update to .NET 10

@@ -106,6 +106,11 @@ abstract public class MSEntityBase : ViewModelBase
         return objects.Skip(1).Any(x => !getProperty(x).Equals(value)) ? null : value;
     }
 
+    public static void Reset()
+    {
+        CurrentSelection = null;
+    }
+
     public void Refresh()
     {
         _enableUpdates = false;

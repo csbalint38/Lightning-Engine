@@ -10,9 +10,9 @@
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Platforms>x64</Platforms>
     <Configurations>DebugEditor;ReleaseEditor</Configurations>
-	<InformationalVersion>0.3.16-beta</InformationalVersion>
-	<FileVersion>0.3.16.0</FileVersion>
-	<AssemblyVersion>0.3.16</AssemblyVersion>
+	<InformationalVersion>0.3.17-beta</InformationalVersion>
+	<FileVersion>0.3.17.0</FileVersion>
+	<AssemblyVersion>0.3.17</AssemblyVersion>
 	<ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
 	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	<StartupObject>Editor.App</StartupObject>
