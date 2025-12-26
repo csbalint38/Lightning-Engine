@@ -23,18 +23,7 @@ public class Entity : ViewModelBase
     [DataMember(Name = nameof(Components))]
     private readonly ObservableCollection<Component> _components = [];
 
-    public IdType EntityId
-    {
-        get => _entityId;
-        private set
-        {
-            if (_entityId != value)
-            {
-                _entityId = value;
-                OnPropertyChanged(nameof(EntityId));
-            }
-        }
-    }
+    public IdType EntityId { get; private set; } = Id.InvalidId;
 
     public bool IsActive
     {
@@ -128,11 +117,11 @@ public class Entity : ViewModelBase
 
         if (!Components.Any(x => x.GetType() == component.GetType()))
         {
-            var wasActive = IsActive;
+            component.Load();
 
-            IsActive = false;
             _components.Add(component);
-            IsActive = wasActive;
+
+            EngineAPI.UpdateComponent(this, component.ToEnumType());
 
             return true;
         }
@@ -145,13 +134,10 @@ public class Entity : ViewModelBase
     {
         Debug.Assert(component is not null);
 
-        if (component is Transform) return;
+        if (component is Transform || !_components.Contains(component)) return;
 
-        if (_components.Contains(component))
-        {
-            IsActive = false;
-            _components.Remove(component);
-            IsActive = true;
-        }
+        _components.Remove(component);
+        EngineAPI.UpdateComponent(this, component.ToEnumType());
+        component.Unload();
     }
 }

@@ -27,7 +27,12 @@ sealed class MSGeometry : MSComponent<Geometry>
 
     public void SetGeometry(Guid guid)
     {
+        var scene = SelectedComponents[0].ParentEntity.ParentScene;
+        var enableList = scene.DisableAndUpdate(MSEntity.CurrentSelection?.SelectedEntities ?? []);
+
         SelectedComponents.ForEach(x => x?.SetGeometry(guid));
+
+        scene.EnableAndUpdate(enableList);
         Refresh();
     }
 

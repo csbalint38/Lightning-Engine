@@ -33,7 +33,7 @@ namespace {
 			using namespace DirectX;
 			transform::InitInfo info{};
 			memcpy(&info.position[0], &position[0], sizeof(position));
-			memcpy(&info.scale[0], &position[0], sizeof(position));
+			memcpy(&info.scale[0], &scale[0], sizeof(scale));
 			math::v3 rot{ &rotation[0] };
 			math::v4 rot_quat{ to_quat(rot, true) };
 			memcpy(&info.rotation[0], &rot_quat.x, sizeof(info.rotation));

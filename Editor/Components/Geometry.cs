@@ -87,15 +87,7 @@ public class Geometry : Component
 
     public void SetGeometry(Guid guid)
     {
-        if (_geometry?.AssetInfo?.Guid != guid)
-        {
-            ParentEntity.IsActive = false;
-            GeometryGuid = guid;
-
-            _materials.Clear();
-
-            ParentEntity.IsActive = true;
-        }
+        if (_geometry?.AssetInfo?.Guid != guid) UpdateComponent(null, guid);
     }
 
     public IdType GetComponentId()
@@ -120,6 +112,9 @@ public class Geometry : Component
 
         return appliedMaterial;
     }
+
+    [OnDeserialized]
+    private void OnDeserialized(StreamingContext context) => _componentId = Id.InvalidId;
 
     [OnSerializing]
     private void OnSerializing(StreamingContext context)
@@ -159,5 +154,41 @@ public class Geometry : Component
         }
 
         Debug.Assert(GeometryWithMaterials is not null && GeometryWithMaterials.LODs.Count > 0);
+    }
+
+    private bool UpdateComponent(List<AppliedMaterial>? materials, Guid guid)
+    {
+        var oldGeometryWithMaterials = GeometryWithMaterials;
+        var oldMaterials = Materials;
+        var oldGeometry = _geometry;
+        var oldGeometryId = _geometry?.ContentId ?? Id.InvalidId;
+        var oldComponentId = _componentId;
+
+        GeometryWithMaterials = null;
+        GeometryGuid = guid;
+        _materials = materials ?? [];
+        _geometry = null;
+        _componentId = Id.InvalidId;
+
+        Load();
+
+        if (Id.IsValid(_geometry?.ContentId ?? Id.InvalidId))
+        {
+            EngineAPI.UpdateComponent(ParentEntity, ComponentType.GEOMETRY);
+
+            oldMaterials.ForEach(x => x.UnloadFromEngine());
+
+            UploadedAsset.RemoveFromScene(oldGeometry!);
+
+            return true;
+        }
+
+        GeometryWithMaterials = oldGeometryWithMaterials;
+        GeometryGuid = oldGeometry?.AssetInfo?.Guid ?? Guid.Empty;
+        _geometry = oldGeometry;
+        _materials = oldMaterials;
+        _componentId = oldComponentId;
+
+        return false;
     }
 }

@@ -306,7 +306,7 @@ public class MeshRenderer : ViewModelBase
 
         if (Meshes.All(x => !x.IsHighlighted && !x.IsIsolated))
         {
-            DisplayPositionCount = _totalIndicesCount;
+            DisplayPositionCount = _totalPositionCount;
             DisplayIndiciesCount = _totalIndicesCount;
         }
     }

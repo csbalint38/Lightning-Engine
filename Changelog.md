@@ -1,3 +1,6 @@
+# v0.3.18-beta - 2026.1.6.
+ - Editor viewport fix
+
 # v0.3.17-beta - 2025.12.26.
 # Editor
  - Modified adding and removing game entities

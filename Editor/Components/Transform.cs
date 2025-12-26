@@ -9,7 +9,7 @@ namespace Editor.Components
     {
         private Vector3 _position;
         private Vector3 _rotation;
-        private Vector3 _scale;
+        private Vector3 _scale = Vector3.One;
 
         [DataMember]
         public Vector3 Position

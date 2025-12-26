@@ -162,15 +162,15 @@ float3 Cook_Torrence_BRDF(Surface s, float3 l)
     const float v_o_h = saturate(dot(s.v, h));
     const float d = d_ggx(n_o_h, s.a2);
     const float g = v_Smith_ggx_correlated(n_o_v, n_o_l, s.a2);
-    const float3 f = f_Schlick(s.specular_color, n_o_v);
+    const float3 f = f_Schlick(s.specular_color, v_o_h);
 
     float3 specular_brdf = (d * g) * f;
     float3 rho = 1.f - f;
     float3 diffuse_brdf = diffuse_Lambert() * s.diffuse_color * rho;
-    float2 brdf_lut = sample(global_data.ambient_light.brdf_lut_srv_index, linear_sampler, float2(n_o_v, s.perceptual_roughness), 0).rg;
-    float3 energy_compensation = 1.f + s.specular_color * (rcp(brdf_lut.x) - 1.f);
+    //float2 brdf_lut = sample(global_data.ambient_light.brdf_lut_srv_index, linear_sampler, float2(n_o_v, s.perceptual_roughness), 0).rg;
+    //loat3 energy_compensation = 1.f + s.specular_color * (rcp(brdf_lut.x) - 1.f);
 
-    specular_brdf *= energy_compensation;
+    //specular_brdf *= energy_compensation;
     
     return (diffuse_brdf + s.specular_strength * specular_brdf) * n_o_l;
 }
@@ -256,12 +256,12 @@ Surface get_surface(VertexOut ps_in, float3 v)
 {
     Surface s;
     
-    s.base_color = per_object_buffer.base_color.rgb;
-    s.metallic = per_object_buffer.metallic;
+    s.base_color = 1.f; //per_object_buffer.base_color.rgb;
+    s.metallic = 0.f; //per_object_buffer.metallic;
     s.normal = normalize(ps_in.world_normal);
-    s.perceptual_roughness = max(per_object_buffer.roughness, .045f);
-    s.emissive_color = per_object_buffer.emissive;
-    s.emissive_intensity = per_object_buffer.emissive_intensity;
+    s.perceptual_roughness = .9f;  //max(per_object_buffer.roughness, .045f);
+    s.emissive_color = 0.f; //per_object_buffer.emissive;
+    s.emissive_intensity = 0.f; //per_object_buffer.emissive_intensity;
     s.ambient_occlusion = 1.f;
     s.v = v;
     
