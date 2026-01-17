@@ -1,8 +1,14 @@
-# v0.3.18-beta - 2026.1.6.
+# v0.3.19-beta - 2026.1.20.
+## Editor
+ - Reverted window style changes
+ - Viewport camera movement
+
+# v0.3.18-beta - 2026.1.16.
+## Editor
  - Editor viewport fix
 
 # v0.3.17-beta - 2025.12.26.
-# Editor
+## Editor
  - Modified adding and removing game entities
 
 # v0.3.16-beta - 2025.12.18.

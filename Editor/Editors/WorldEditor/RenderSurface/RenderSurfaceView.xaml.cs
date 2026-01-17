@@ -31,4 +31,6 @@ public partial class RenderSurfaceView : UserControl
             });
         };
     }
+
+    private void TgBtnCameraSettings_Click(object sender, RoutedEventArgs e) => PpCameraSettings.IsOpen = true;
 }

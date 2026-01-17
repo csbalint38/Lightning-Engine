@@ -1,6 +1,7 @@
-﻿using Editor.Utilities;
+﻿using Editor.Common.Enums;
+using Editor.DLLs;
+using Editor.Utilities;
 using System.Numerics;
-using System.Windows.Input;
 
 namespace Editor.Editors.WorldEditor.RenderSurface;
 
@@ -41,7 +42,12 @@ internal class EditorCamera
         {
             value = Math.Clamp(value, _minFov, _maxFov);
 
-            if (!field.IsEqual(value)) field = value;
+            if (!field.IsEqual(value))
+            {
+                field = value;
+
+                EngineAPI.SetCameraFov(_surfaceId, field);
+            }
         }
     } = 45f;
 
@@ -50,9 +56,14 @@ internal class EditorCamera
         get => field;
         set
         {
-            value = Math.Clamp(value, _minNearZ, _minDiffNearZFarZ - _minDiffNearZFarZ);
+            value = Math.Clamp(value, _minNearZ, FarZ - _minDiffNearZFarZ);
 
-            if (!field.IsEqual(value)) field = value;
+            if (!field.IsEqual(value))
+            {
+                field = value;
+
+                EngineAPI.SetCameraRange(_surfaceId, field, FarZ);
+            }
         }
     } = .1f;
 
@@ -63,7 +74,12 @@ internal class EditorCamera
         {
             value = Math.Max(value, NearZ + _minDiffNearZFarZ);
 
-            if (!field.IsEqual(value)) field = value;
+            if (!field.IsEqual(value))
+            {
+                field = value;
+
+                EngineAPI.SetCameraRange(_surfaceId, NearZ, field);
+            }
         }
     } = 100f;
 
@@ -95,7 +111,7 @@ internal class EditorCamera
         if (_acceleration < 1f) _acceleration += .02f * dtScale;
 
         var v = Vector3.Transform(
-            direction * Speed * dtScale * (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? .1f : .01f),
+            direction * Speed * dtScale * (KeyboardHelper.GetAsyncKeyState(VKey.Shift) < 0 ? .1f : .01f),
             rotationMatrix
         ) * _acceleration;
 
@@ -119,7 +135,7 @@ internal class EditorCamera
         Target = _desiredPosition + v;
         _desiredRotation.X = theta;
         _desiredRotation.Y = phi;
-        _updatePosition = true;
+        _updateRotation = true;
     }
 
     public void Update(float dt)
@@ -130,11 +146,13 @@ internal class EditorCamera
     public void SetSurfaceId(int surfaceId)
     {
         _surfaceId = surfaceId;
+
+        EngineAPI.UpdateEditorCamera(_surfaceId, _position, _rotation);
     }
 
     private void Orbit(double dx, double dy, int dz, bool slide)
     {
-        var theta = _desiredRotation.Y + (float)dy * .005f;
+        var theta = _desiredRotation.X + (float)dy * .005f;
 
         theta = Math.Clamp(theta, .0001f - MathUtilities.HalfPi, MathUtilities.HalfPi - 0.0001f);
 
@@ -156,6 +174,8 @@ internal class EditorCamera
         {
             _position = _desiredPosition;
             _rotation = _desiredRotation;
+
+            EngineAPI.UpdateEditorCamera(_surfaceId, _position, _rotation);
         }
         else
         {
@@ -192,5 +212,7 @@ internal class EditorCamera
             _updateRotation = o.LengthSquared() > 1e-8f;
             _rotation = _updateRotation ? _rotation + o * dtScale : _desiredRotation;
         }
+
+        EngineAPI.UpdateEditorCamera(_surfaceId, _position, _rotation);
     }
 }

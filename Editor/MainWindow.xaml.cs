@@ -70,8 +70,6 @@ public partial class MainWindow : Window
     {
         Project.Current?.Unload();
 
-        Hide();
-
         var projectBrowser = new ProjectBrowserDialog();
         if (projectBrowser.ShowDialog() == false || projectBrowser.DataContext is null)
         {
@@ -86,8 +84,6 @@ public partial class MainWindow : Window
 
             DataContext = project;
         }
-
-        Show();
     }
 
     private void GetEnginePath()

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:local="clr-namespace:Editor.Editors.WorldEditor.RenderSurface"
              mc:Ignorable="d" 
              UseLayoutRounding="True"
@@ -50,8 +51,100 @@
                                    Text=" -- Hz"
                                    Foreground="{StaticResource Editor.LightningBrush}"/>
                     </StackPanel>
+                    <ToggleButton Padding="2"
+                                  x:Name="TgBtnCameraSettings"
+                                  HorizontalAlignment="Right"
+                                  IsChecked="{Binding IsOpen, ElementName=PpCameraSettings, Mode=OneWay}"
+                                  Click="TgBtnCameraSettings_Click"
+                                  Focusable="False"
+                                  Style="{StaticResource IconToggleButtonOutlined}"
+                                  VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="Video"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Margin="3"/>
+                    </ToggleButton>
                 </Grid>
             </Border>
+            <Popup x:Name="PpCameraSettings"
+                   AllowsTransparency="True"
+                   PopupAnimation="Fade"
+                   DataContext="{Binding ElementName=renderSurfaceControl}"
+                   PlacementTarget="{Binding ElementName=TgBtnCameraSettings}"
+                   Placement="Bottom"
+                   StaysOpen="False"
+                   HorizontalOffset="-220"
+                   VerticalOffset="5">
+                <Border CornerRadius="5"
+                        ClipToBounds="True"
+                        Width="250"
+                        BorderBrush="{StaticResource Editor.BackgroundBrush5}"
+                        BorderThickness="1">
+                    <Border.Background>
+                        <SolidColorBrush Color="{StaticResource Editor.Background3}"
+                                         Opacity="0.8" />
+                    </Border.Background>
+                    <StackPanel Margin="10">
+                        <TextBox Text="Camera Settings"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,0,0,10"
+                                 FontWeight="Bold"/>
+                        <CheckBox Content="Lock Camera"
+                                  IsChecked="{Binding IsXZLocked}"
+                                  Foreground="{StaticResource Editor.FontBrush}" />
+                        <DockPanel>
+                            <TextBlock Text="Camera Speed"
+                                       Width="90"
+                                       Margin="0,5"/>
+                            <TextBlock Text="{Binding CameraSpeed}"
+                                       Width="32"
+                                       Margin="0,5"/>
+                            <Slider Minimum="1"
+                                    Maximum="10"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding CameraSpeed}"
+                                    TickFrequency="1"
+                                    TickPlacement="BottomRight"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="Camera FoV"
+                                       Width="90"
+                                       Margin="0,5"/>
+                            <TextBlock Text="{Binding CameraFoV, StringFormat=F1}"
+                                       Width="32"
+                                       Margin="0,5"/>
+                            <Slider Minimum="0.01"
+                                    Maximum="180"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding CameraFoV}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="Camera Near Z"
+                                       Width="90"
+                                       Margin="0,5"/>
+                            <TextBlock Text="{Binding CameraNearZ, StringFormat=F1}"
+                                       Width="32"
+                                       Margin="0,5"/>
+                            <Slider Minimum="0.001"
+                                    Maximum="{Binding CameraFarZ}"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding CameraNearZ}"/>
+                        </DockPanel>
+                        <DockPanel>
+                            <TextBlock Text="Camera Far Z"
+                                       Width="90"
+                                       Margin="0,5"/>
+                            <TextBlock Text="{Binding CameraFarZ, StringFormat=F1}"
+                                       Width="32"
+                                       Margin="0,5"/>
+                            <Slider Minimum="{Binding CameraNearZ}"
+                                    Maximum="10000"
+                                    VerticalAlignment="Center"
+                                    Value="{Binding CameraFarZ}"/>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+            </Popup>
         </Grid>
     </Border>
 </UserControl>

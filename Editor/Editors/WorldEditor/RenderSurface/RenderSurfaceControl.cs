@@ -56,12 +56,12 @@ public class RenderSurfaceControl : ContentControl, IDisposable
     private bool _isXYLocked = false;
     private ulong _lightSetKey;
 
-    public static readonly DependencyProperty IsXYLockedProperty =
+    public static readonly DependencyProperty IsXZLockedProperty =
         DependencyProperty.Register(
-            nameof(IsXYLocked),
+            nameof(IsXZLocked),
             typeof(bool),
-            typeof(RenderSurfaceHost),
-            new PropertyMetadata(false, new PropertyChangedCallback(OnXYLockedChanged))
+            typeof(RenderSurfaceControl),
+            new PropertyMetadata(false, new PropertyChangedCallback(OnXZLockedChanged))
         );
 
     public static readonly DependencyProperty CameraSpeedProperty =
@@ -98,10 +98,10 @@ public class RenderSurfaceControl : ContentControl, IDisposable
 
     public event EventHandler<RenderSurfaceFrameStatsArgs>? FrameStatsUpdated;
 
-    public bool IsXYLocked
+    public bool IsXZLocked
     {
-        get => (bool)GetValue(IsXYLockedProperty);
-        set => SetValue(IsXYLockedProperty, value);
+        get => (bool)GetValue(IsXZLockedProperty);
+        set => SetValue(IsXZLockedProperty, value);
     }
 
     public int CameraSpeed
@@ -163,7 +163,7 @@ public class RenderSurfaceControl : ContentControl, IDisposable
         if (_isMouseOver || IsFocused) _camera.GoTo(position);
     }
 
-    private static void OnXYLockedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
+    private static void OnXZLockedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
         (d as RenderSurfaceControl)?._isXYLocked = (bool)e.NewValue;
 
     private static void OnCameraSpeedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
@@ -197,7 +197,7 @@ public class RenderSurfaceControl : ContentControl, IDisposable
     {
         var p = param.ToInt64();
 
-        return ((short)(p & 0xffff), (short)((p >> 16) & 0xffff));
+        return (unchecked((short)(p & 0xffff)), unchecked((short)((p >> 16) & 0xffff)));
     }
 
     private async void OnDataContextChangedAsync(object sender, DependencyPropertyChangedEventArgs e)
@@ -237,10 +237,7 @@ public class RenderSurfaceControl : ContentControl, IDisposable
         {
             var moveDir = GetMoveDirection();
 
-            if (moveDir.LengthSquared() >= MathUtilities.Epsilon)
-            {
-                _ = Application.Current.Dispatcher.BeginInvoke(() => _camera.ChangePosition(moveDir, _frameTimer.AverageFrameTime));
-            }
+            if (moveDir.LengthSquared() >= MathUtilities.Epsilon) _camera.ChangePosition(moveDir, _frameTimer.AverageFrameTime);
         }
 
         _camera.Update(_frameTimer.AverageFrameTime);

@@ -256,12 +256,12 @@ Surface get_surface(VertexOut ps_in, float3 v)
 {
     Surface s;
     
-    s.base_color = 1.f; //per_object_buffer.base_color.rgb;
-    s.metallic = 0.f; //per_object_buffer.metallic;
+    s.base_color = per_object_buffer.base_color.rgb;
+    s.metallic = per_object_buffer.metallic;
     s.normal = normalize(ps_in.world_normal);
-    s.perceptual_roughness = .9f;  //max(per_object_buffer.roughness, .045f);
-    s.emissive_color = 0.f; //per_object_buffer.emissive;
-    s.emissive_intensity = 0.f; //per_object_buffer.emissive_intensity;
+    s.perceptual_roughness = max(per_object_buffer.roughness, .045f);
+    s.emissive_color = per_object_buffer.emissive;
+    s.emissive_intensity = per_object_buffer.emissive_intensity;
     s.ambient_occlusion = 1.f;
     s.v = v;
     
