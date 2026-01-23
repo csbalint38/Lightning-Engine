@@ -12,204 +12,110 @@ jobs:
     runs-on: windows-latest
     env:
       SOLUTION_FILE: Engine.sln
-      ENGINE_LIB: Engine/Engine.vcxproj
       EDITOR: Editor/Editor.csproj
-      PUBLIC_HEADERS_PATH: Engine
       DIST_DIR: dist
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Cache MikkTSpace
-        id: cache-mikktspace
-        uses: actions/cache@v5
-        with:
-          path: packages/MikkTSpace
-          key: mikktspace-${{ runner.os }}-${{ hashFiles('packages/MikkTSpace/**/*') }}
-          restore-keys: mikktspace-${{ runner.os }}-
-
       - name: Add MikkTSpace
-        if: steps.cache-mikktspace.outputs.cache-hit != 'true'
         run: git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/mmikk/MikkTSpace.git packages/MikkTSpace
 
-      - name: Cache FBX SDK
-        id: cache-fbx
-        uses: actions/cache@v5
-        with:
-          path: "packages/FBX SDK"
-          key: fbx-sdk-${{ runner.os }}-${{ hashFiles('packages/FBX SDK/**/*') }}
-          restore-keys: fbx-sdk-${{ runner.os }}-
-
       - name: Download and extract FBX SDK
-        if: steps.cache-fbx.outputs.cache-hit != 'true'
-        # Replace the URL with a S3 url.
         run: |
           $url = 'https://drive.usercontent.google.com/download?id=1dIRXQ8U8Pjk46p5yAZy8NV-UPtT0utZu&export=download&authuser=0&confirm=t&uuid=780e7af0-71a7-40cb-92a4-da1f27aaf7a7&at=AN8xHop1oRwI7kHy5S5dObJuMOLc%3A1753290243197'
-          $zip = 'FBX SDK.zip'
-          Invoke-WebRequest -Uri $url -OutFile $zip
-          Expand-Archive -Path $zip -DestinationPath 'packages/FBX SDK'
-
-      - name: Cache NuGet packages
-        id: cache-nuget
-        uses: actions/cache@v5
-        with:
-          path: C:\Users\runneradmin\.nuget\packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.sln') }}
-          restore-keys: nuget-${{ runner.os }}-
+          Invoke-WebRequest -Uri $url -OutFile 'FBX SDK.zip'
+          Expand-Archive -Path 'FBX SDK.zip' -DestinationPath 'packages/FBX SDK'
 
       - name: Setup NuGet
         uses: nuget/setup-nuget@v2
-        with:
-          nuget-version: 'latest'
 
       - name: Restore NuGet packages
         run: nuget restore ${{ env.SOLUTION_FILE }}
 
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-        with:
-          vs-version: 'latest'
+        run: |
+          $msbuildPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+            -version '[18.0,19.0)' -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | Select-Object -First 1
+          Write-Host "Found MSBuild at: $msbuildPath"
+          Add-Content -Path $env:GITHUB_PATH -Value (Split-Path $msbuildPath)
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.x'
-      
-      - name: Clean up previous builds
-        shell: pwsh
-        run: Remove-Item -Path ${{ env.DIST_DIR }} -Recurse -Force -ErrorAction Ignore
 
       - name: Restore .NET packages
         run: dotnet restore ${{ env.EDITOR }}
 
-      - name: Publish Editor self-contained
-        shell: bash
+      - name: Publish Editor
         run: |
-          dotnet publish ${{ env.EDITOR }} \
-          --configuration ReleaseEditor \
-          --runtime win-x64 \
-          --self-contained true \
-          --output ${{ env.DIST_DIR }} \
-          -p:PublishSingleFile=true \
-          -p:SatelliteResourceLanguages=en-US
+          dotnet publish ${{ env.EDITOR }} `
+            --configuration ReleaseEditor `
+            --runtime win-x64 `
+            --self-contained true `
+            --output ${{ env.DIST_DIR }} `
+            -p:PublishSingleFile=true `
+            -p:SatelliteResourceLanguages=en-US
 
-      - name: Build Solution in ReleaseEditor
+      - name: Build Solution
         run: msbuild ${{ env.SOLUTION_FILE }} /p:Configuration=ReleaseEditor /p:Platform=x64 /m
 
-      - name: Copy Engine binaries into dist
-        shell: pwsh
+      - name: Copy Engine binaries
         run: |
           $src = "x64\ReleaseEditor"
           $dst = "${{ env.DIST_DIR }}"
-          Copy-Item "$src\dxcompiler.dll" -Destination $dst -Force
-          Copy-Item "$src\dxil.dll" -Destination $dst -Force
-          Copy-Item "$src\ContentTools.dll" -Destination $dst -Force
-          Copy-Item "$src\EngineDLL.dll" -Destination $dst -Force
-          Copy-Item "$src\EngineDLL.lib" -Destination $dst -Force
-          Copy-Item "$src\Engine.lib" -Destination $dst -Force
+          'dxcompiler.dll', 'dxil.dll', 'ContentTools.dll', 'EngineDLL.dll', 'EngineDLL.lib', 'Engine.lib' | ForEach-Object {
+            Copy-Item "$src\$_" -Destination $dst -Force
+          }
           Copy-Item "$src\D3D12" -Destination $dst -Recurse -Force
+          
+          New-Item -ItemType Directory -Path "$dst\Engine\x64\ReleaseEditor" -Force | Out-Null
+          Copy-Item "Engine\x64\ReleaseEditor\Engine.lib" "$dst\Engine\x64\ReleaseEditor" -Force
+          Copy-Item "Engine\x64\ReleaseEditor\Engine.pdb" "$dst\Engine\x64\ReleaseEditor" -Force
 
-      - name: Build Engine.lib in all configurations
-        shell: pwsh
+      - name: Copy Headers and Shaders
         run: |
-          $configs = 'ReleaseEditor', 'DebugEditor', 'Release', 'Debug'
-          foreach ($cfg in $configs) {
-            Write-Host "-> Building Engine.lib in configuration $cfg"
-            msbuild ${{ env.ENGINE_LIB }} /p:Configuration=$cfg /p:Platform=x64 /m
-          }
-          New-Item -ItemType Directory -Path ${{ env.DIST_DIR }}\Engine\x64 -Force | Out-Null
-          $configs = 'ReleaseEditor', 'DebugEditor', 'Release', 'Debug'
-          foreach ($cfg in $configs) {
-            $src = "Engine\x64\$cfg\Engine.lib"
-            $dest = "${{ env.DIST_DIR }}\Engine\x64\$cfg"
-            New-Item -ItemType Directory -Path $dest -Force | Out-Null
-            Copy-Item $src $dest -Force
-            Copy-Item "Engine\x64\$cfg\Engine.pdb" $dest -Force
-          }
-        
-      - name: Copy Public Headers and Engine Shaders
-        shell: pwsh
+          robocopy Engine ${{ env.DIST_DIR }}\Engine *.h *.hlsl *.hlsli /E
+          if ($LASTEXITCODE -lt 8) { exit 0 } else { exit $LASTEXITCODE }
+
+      - name: Copy meta files
+        run: Copy-Item 'Changelog.md', 'LICENCE.md', 'README.md' -Destination ${{ env.DIST_DIR }} -Force
+
+      - name: Restore Wix packages
         run: |
-          robocopy ${{ env.PUBLIC_HEADERS_PATH }} ${{ env.DIST_DIR }}\Engine *.h *.hlsl *.hlsli /E
-          $result = $LASTEXITCODE
-          if ($result -ge 8) {
-            Write-Error "Robocopy failed with exit code $result"
-            exit $result
-          } else {
-            Write-Host "Robocopy succeeded with exit code $result"
-            exit 0
-          }
-      
-      - name: Copy over meta files
-        shell: pwsh
-        run: |
-          $metaFiles = 'Changelog.md', 'LICENCE.md', 'README.md'
-          foreach ($file in $metaFiles) {
-            Copy-Item -Path $file -Destination ${{ env.DIST_DIR }} -Force
-          }
-      
-      - name: Restore Wix project packages
-        run: dotnet restore Installer/Installer.wixproj
+          dotnet restore Installer/Installer.wixproj
+          dotnet restore Bundle/Bundle.wixproj
 
-      - name: Get AssemblyVersion
-        id: get-assembly-version
-        shell: pwsh
-        run: |
-          [xml]$proj = Get-Content ${{ env.EDITOR }}
-          $node = $proj.SelectSingleNode("//AssemblyVersion")
-          $version = $node.InnerText.Trim()
-          Write-Host "Assembly Version: $version"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "ASSEMBLY_VERSION=$version"
-
-      - name: Build Installer
-        shell: pwsh
-        run: msbuild Installer/Installer.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
-
-      - name: Restore Bundle packages
-        run: dotnet restore Bundle/Bundle.wixproj
-
-      - name: Build Bundle
-        shell: pwsh
-        run: msbuild Bundle/Bundle.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
-
-      - name: Restore Bundle packages
-        run: dotnet restore Installer/Installer.wixproj
-
-      - name: Build Bundle
-        shell: pwsh
-        run: msbuild Installer/Installer.wixproj /p:Configuration=ReleaseEditor /p:Platform=x64 /p:OutDir="$env:GITHUB_WORKSPACE\temp" /p:PublishedDir="$($env:GITHUB_WORKSPACE)\dist" /p:Version="${{ steps.get-assembly-version.outputs.ASSEMBLY_VERSION }}" /m
-
-      - name: Get InformationalVersion
+      - name: Get Version Info
         id: get-version
-        shell: pwsh
         run: |
           [xml]$proj = Get-Content ${{ env.EDITOR }}
-          $node = $proj.SelectSingleNode("//InformationalVersion")
-          $version = $node.InnerText.Trim()
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "INFO_VERSION=$version"
+          $asmVersion = $proj.SelectSingleNode("//AssemblyVersion").InnerText.Trim()
+          $infoVersion = $proj.SelectSingleNode("//InformationalVersion").InnerText.Trim()
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "ASSEMBLY_VERSION=$asmVersion"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "INFO_VERSION=$infoVersion"
 
-      - name: Get Release notes 
+      - name: Build Installer and Bundle
+        run: |
+          msbuild Installer/Installer.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$env:GITHUB_WORKSPACE\dist" /p:Version="${{ steps.get-version.outputs.ASSEMBLY_VERSION }}" /m
+          msbuild Bundle/Bundle.wixproj /p:Configuration=Release /p:Platform=x64 /p:PublishedDir="$env:GITHUB_WORKSPACE\dist" /p:Version="${{ steps.get-version.outputs.ASSEMBLY_VERSION }}" /m
+
+      - name: Get Release notes
         id: get-release-notes
         shell: bash
         run: |
-          version="${{ steps.get-version.outputs.INFO_VERSION }}"
           sed -n '0,/^# v/!d; /^# v/p; :a; n; /^# v/q; p; ba' Changelog.md > release-notes.md
           echo "body<<EOF" >> $GITHUB_OUTPUT
           cat release-notes.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Zip distribution directory
-        shell: pwsh
-        run: |
-          $zipFile = "lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}.zip"
-          Compress-Archive -Path ${{ env.DIST_DIR }}\* -DestinationPath $zipFile -Force
+      - name: Zip distribution
+        run: Compress-Archive -Path ${{ env.DIST_DIR }}\* -DestinationPath "lightning-engine-v${{ steps.get-version.outputs.INFO_VERSION }}.zip" -Force
 
       - name: Create GitHub Release
-        id: create-release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ steps.get-version.outputs.INFO_VERSION }}
           name: v${{ steps.get-version.outputs.INFO_VERSION }}
