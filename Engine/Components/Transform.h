@@ -13,16 +13,14 @@ namespace lightning::transform {
     struct ComponentFlags {
         enum Flags : u32 {
             ROTATION = 0x01,
-            ORIENTATION = 0x02,
             POSITION = 0x04,
             SCALE = 0x08,
-            ALL = ROTATION | ORIENTATION | POSITION | SCALE
+            ALL = ROTATION | POSITION | SCALE
         };
     };
 
     struct ComponentCache {
         math::v4 rotation{};
-        math::v3 orientation{};
         math::v3 position{};
         math::v3 scale{};
         transform_id id{};

@@ -165,11 +165,13 @@ namespace lightning::script {
 		cache.rotation = rotation_quaternion;
 	}
 
+	/*
 	void EntityScript::set_orientation(const game_entity::Entity* const entity, math::v3 orientation_vector) {
 		transform::ComponentCache& cache{ *get_cache_ptr(entity) };
 		cache.flags |= transform::ComponentFlags::ORIENTATION;
 		cache.orientation = orientation_vector;
 	}
+	*/
 
 	void EntityScript::set_position(const game_entity::Entity* const entity, math::v3 position) {
 		transform::ComponentCache& cache{ *get_cache_ptr(entity) };

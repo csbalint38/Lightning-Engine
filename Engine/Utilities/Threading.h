@@ -34,7 +34,7 @@ namespace lightning::util {
 			DISABLE_COPY_AND_MOVE(TicketMutex);
 
 			void lock() {
-				const u64 ticket{ _ticket.fetch_add(1, std::memory_order_relaxed) };
+				const u64 ticket{ _ticket.fetch_add(1, std::memory_order_acquire) };
 
 				while (_serving != ticket) {
 					_mm_pause();
@@ -42,7 +42,7 @@ namespace lightning::util {
 			}
 
 			void unlock() {
-				_serving.fetch_add(1, std::memory_order_relaxed);
+				_serving.fetch_add(1, std::memory_order_release);
 			}
 
 		private:

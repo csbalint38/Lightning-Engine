@@ -1,3 +1,7 @@
+# v0.3.20-beta - 2026.2.3
+## Engine
+ - Added local- and world-sapce position and rotation
+
 # v0.3.19-beta - 2026.1.20.
 ## Editor
  - Reverted window style changes

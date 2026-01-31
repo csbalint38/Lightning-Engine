@@ -152,7 +152,7 @@ namespace lightning::graphics::direct3d12::light {
 					if (owner.is_enabled) {
 						const game_entity::Entity entity{ game_entity::entity_id{ owner.entity_id } };
 						hlsl::DirectionalLightParameters& params{ _non_cullable_lights[owner.data_index] };
-						params.direction = entity.orientation();
+						params.direction = entity.front();
 					}
 				}
 
@@ -280,7 +280,7 @@ namespace lightning::graphics::direct3d12::light {
 				assert(owner.type == graphics::Light::SPOT);
 				assert(index < _cullable_lights.size());
 
-				umbra = math::clamp(umbra, 0.f, math::PI);
+				umbra = math::clamp(umbra, 0.f, math::PI - math::EPSILON);
 				_cullable_lights[index].cos_umbra = DirectX::XMScalarACos(umbra * .5f);
 				make_dirty(index);
 
@@ -421,7 +421,7 @@ namespace lightning::graphics::direct3d12::light {
 				XMVECTOR tip{ XMLoadFloat3(&params.position) };
 				XMVECTOR direction{ XMLoadFloat3(&params.direction) };
 				const f32 cone_cos{ params.cos_penumbra };
-				assert(cone_cos > 0.f);
+				assert(cone_cos > -0.001f);
 
 				if (cone_cos >= .707107f) {
 					sphere.radius = params.range / (2.f * cone_cos);
@@ -443,7 +443,7 @@ namespace lightning::graphics::direct3d12::light {
 				culling_info.position = _bounding_spheres[index].center = params.position;
 
 				if (_owners[_cullable_owners[index]].type == graphics::Light::SPOT) {
-					culling_info.direction = params.direction = entity.orientation();
+					culling_info.direction = params.direction = entity.front();
 					calculate_cone_bounding_sphere(params, _bounding_spheres[index]);
 				}
 

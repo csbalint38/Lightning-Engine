@@ -22,9 +22,12 @@ namespace lightning::game_entity {
 			[[nodiscard]] script::Component script() const;
 			[[nodiscard]] geometry::Component geometry() const;
 			[[nodiscard]] math::v4 rotation() const { return transform().rotation(); }
-			[[nodiscard]] math::v3 orientation() const { return transform().orientation(); }
 			[[nodiscard]] math::v3 position() const { return transform().position(); }
 			[[nodiscard]] math::v3 scale() const { return transform().scale(); }
+			[[nodiscard]] math::v3 right() const { return transform().right(); }
+			[[nodiscard]] math::v3 up() const { return transform().up(); }
+			[[nodiscard]] math::v3 front() const { return transform().front(); }
+			[[nodiscard]] math::m3x3 local_frame() const { return transform().local_frame(); }
 		};
 	}
 

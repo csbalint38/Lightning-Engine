@@ -1,12 +1,32 @@
-#include "Entity.h"
 #include "Transform.h"
 
 namespace lightning::transform {
 	namespace {
+
+		#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4201) // C4201: nonstandard extension used: nameless struct/union
+		#endif
+		struct LocalFrame {
+			union {
+				struct {
+					math::v3 right;
+					math::v3 up;
+					math::v3 front;
+				};
+				math::m3x3 frame;
+			};
+
+			LocalFrame() : right{ 1.f, 0.f, 0.f }, up{ 0.f, 1.f, 0.f }, front{ 0.f, 0.f, 1.f } {}
+		};
+		#ifdef _MSC_VER
+		#pragma warning(pop)
+		#endif
+
 		util::vector<math::m4x4> to_world;
 		util::vector<math::m4x4> inv_world;
 		util::vector<math::v3> positions;
-		util::vector<math::v3> orientations;
+		util::vector<LocalFrame> local_frames;
 		util::vector<math::v4> rotations;
 		util::vector<math::v3> scales;
 		util::vector<u8> has_transform;
@@ -34,24 +54,34 @@ namespace lightning::transform {
 		has_transform[index] = 1;
 	}
 
-	math::v3 calculate_orientation(math::v4 rotation) {
+	void calculate_local_frame(const math::v4& rotation, LocalFrame& result) {
 		using namespace DirectX;
+
+		LocalFrame frame{ };
+
+		XMVECTOR right{ XMLoadFloat3(&frame.right) };
+		XMVECTOR up{ XMLoadFloat3(&frame.up) };
+		XMVECTOR front{ XMLoadFloat3(&frame.front) };
 		XMVECTOR rotation_quat{ XMLoadFloat4(&rotation) };
-		XMVECTOR front{ XMVectorSet(0.f, 0.f, 1.f, 0.f) };
-		math::v3 orientation;
-		XMStoreFloat3(&orientation, XMVector3Normalize(XMVector3Rotate(front, rotation_quat)));
-		return orientation;
+
+		right = XMVector3Normalize(XMVector3Rotate(right, rotation_quat));
+		up = XMVector3Normalize(XMVector3Rotate(up, rotation_quat));
+		front = XMVector3Normalize(XMVector3Cross(right, up));
+
+		XMStoreFloat3(&result.right, right);
+		XMStoreFloat3(&result.up, up);
+		XMStoreFloat3(&result.front, front);
 	}
 
 	void set_rotation(transform_id id, const math::v4& rotaion_quaternion) {
 		const u32 index{ id::index(id) };
 		rotations[index] = rotaion_quaternion;
-		orientations[index] = calculate_orientation(rotaion_quaternion);
+
+		calculate_local_frame(rotaion_quaternion, local_frames[index]);
+
 		has_transform[index] = 0;
 		changes_from_previous_frame[index] |= ComponentFlags::ROTATION;
 	}
-
-	void set_orientation(transform_id, const math::v3&) {}
 
 	void set_position(transform_id id, const math::v3& position) {
 		const u32 index{ id::index(id) };
@@ -74,7 +104,9 @@ namespace lightning::transform {
 		if (positions.size() > entity_index) {
 			math::v4 rotation{ info.rotation };
 			rotations[entity_index] = rotation;
-			orientations[entity_index] = calculate_orientation(rotation);
+
+			calculate_local_frame(rotation, local_frames[entity_index]);
+
 			positions[entity_index] = math::v3{ info.position };
 			scales[entity_index] = math::v3{ info.scale };
 			has_transform[entity_index] = 0;
@@ -83,7 +115,10 @@ namespace lightning::transform {
 		else {
 			assert(positions.size() == entity_index);
 			rotations.emplace_back(info.rotation);
-			orientations.emplace_back(calculate_orientation(math::v4{ info.rotation }));
+			local_frames.emplace_back();
+			
+			calculate_local_frame(rotations.back(), local_frames.back());
+
 			positions.emplace_back(info.position);
 			scales.emplace_back(info.scale);
 			has_transform.emplace_back((u8)0);
@@ -135,10 +170,6 @@ namespace lightning::transform {
 				set_rotation(c.id, c.rotation);
 			}
 
-			if (c.flags & ComponentFlags::ORIENTATION) {
-				set_orientation(c.id, c.orientation);
-			}
-
 			if (c.flags & ComponentFlags::POSITION) {
 				set_position(c.id, c.position);
 			}
@@ -159,13 +190,96 @@ namespace lightning::transform {
 		return rotations[id::index(_id)];
 	}
 
-	math::v3 Component::orientation() const {
-		assert(is_valid());
-		return orientations[id::index(_id)];
-	}
-
 	math::v3 Component::scale() const {
 		assert(is_valid());
 		return scales[id::index(_id)];
+	}
+
+	math::v3 Component::right() const {
+		assert(is_valid());
+
+		return local_frames[id::index(_id)].right;
+	}
+
+	math::v3 Component::up() const {
+		assert(is_valid());
+
+		return local_frames[id::index(_id)].up;
+	}
+
+	math::v3 Component::front() const {
+		assert(is_valid());
+
+		return local_frames[id::index(_id)].front;
+	}
+
+	math::m3x3 Component::local_frame() const {
+		assert(is_valid());
+
+		return local_frames[id::index(_id)].frame;
+	}
+
+	DirectX::XMVECTOR Component::calculate_local_position(math::v3 delta) const {
+		assert(is_valid());
+
+		const id::id_type index{ id::index(_id) };
+
+		using namespace DirectX;
+
+		XMMATRIX frame{ XMLoadFloat3x3(&local_frames[index].frame) };
+		XMVECTOR l_pos{ XMLoadFloat3(&delta) };
+
+		l_pos = XMVector3Transform(l_pos, frame);
+
+		XMVECTOR w_pos{ XMLoadFloat3(&positions[index]) };
+
+		return w_pos + l_pos;
+	}
+
+	DirectX::XMVECTOR Component::calculate_absolute_rotation(math::v3 rotation) const {
+		assert(is_valid());
+
+		return DirectX::XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&rotation));
+	}
+
+	DirectX::XMVECTOR Component::calculate_local_rotation(math::v3 delta) const {
+		assert(is_valid());
+
+		const id::id_type index{ id::index(_id) };
+
+		using namespace DirectX;
+
+		XMVECTOR d{ DirectX::XMQuaternionRotationRollPitchYawFromVector(XMLoadFloat3(&delta)) };
+		XMVECTOR q{ XMLoadFloat4(&rotations[index]) };
+
+		return XMQuaternionMultiply(d, q);
+	}
+
+	DirectX::XMVECTOR Component::calculate_world_rotation(math::v3 delta) const {
+		assert(is_valid());
+
+		math::v3 axis{ 1.f,0.f,0.f };
+		f32 angle{ delta.x };
+
+		if (abs(delta.x) < math::EPSILON) {
+			if (abs(delta.z) < math::EPSILON) {
+				axis = { 0.f,1.f,0.f };
+				angle = delta.y;
+			}
+			else if (abs(delta.y) < math::EPSILON) {
+				axis = { 0.f,0.f,1.f };
+				angle = delta.z;
+			}
+		}
+
+		const id::id_type index{ id::index(_id) };
+
+		using namespace DirectX;
+
+		XMVECTOR a{ XMLoadFloat3(&axis) };
+		XMVECTOR d{ XMQuaternionRotationNormal(a, angle) };
+		XMVECTOR q{ XMLoadFloat4(&rotations[index]) };
+
+		return XMQuaternionMultiply(q, d);
 	}
 }
