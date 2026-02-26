@@ -4,7 +4,7 @@ A Windows-only learning project: a **C++ Game Engine** with a custom **WPF Edito
 
 > Note: This is an AI-free place. No AI was used to write code here.
 
-> Note: The Engine (C++ code) was made by following [Game Engine Programming Series](https://www.youtube.com/@GameEngineSeries) tutorial for learning purposes and the code (C++) is almost identical to it with minor changes only.
+> Note: The C++ engine closely follows the [Game Engine Programming Series](https://www.youtube.com/@GameEngineSeries) tutorials with only minor changes.
 
 > Note: This project uses VisualStudio 2026 which isn’t currently available on the default GitHub-hosted Windows runners. For this reason, the CI isn't working.
 
@@ -12,8 +12,8 @@ A Windows-only learning project: a **C++ Game Engine** with a custom **WPF Edito
 
 #### Project Browser
 <p align="center">
-  <img src="Images/image1.png" width="440"/>
-  <img src="Images/image2.png" width="440"/>
+  <img src="Images/image1.png" width="400"/>
+  <img src="Images/image2.png" width="400"/>
 </p>
 
 #### The main Editor UI
