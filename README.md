@@ -1,13 +1,61 @@
 # Lightning Engine
 
+A Windows-only learning project: a **C++ Game Engine** with a custom **WPF Editor**.
+
+> Note: This is an AI-free place. No AI was used to write code here.
+
+> Note: The Engine (C++ code) was made by following [Game Engine Programming Series](https://www.youtube.com/@GameEngineSeries) tutorial for learning purposes and the code (C++) is almost identical to it with minor changes only.
+
+> Note: This project uses VisualStudio 2026 which isn’t currently available on the default GitHub-hosted Windows runners. For this reason, the CI isn't working.
+
+## Highlights
+
+#### Project Browser
+<p align="center">
+  <img src="Images/image1.png" width="440"/>
+  <img src="Images/image2.png" width="440"/>
+</p>
+
+#### The main Editor UI
+<p align="center">
+  <img src="Images/image3.png" width="900"/>
+</p>
+
+#### Building the project with MSBuild - Visual Studio output redirected to Edotor's UI
+<p align="center">
+  <img src="Images/image7.gif" width="900"/>
+</p>
+
+#### Generic loading animation
+<p align="center">
+  <img src="Images/image5.gif" width="900"/>
+</p>
+
+#### Importing assets (FBX files and textures only)
+<p align="center">
+  <img src="Images/image4.gif" width="900"/>
+</p>
+
+#### Easy drag-and-drop Game Object creation
+<p align="center">
+  <img src="Images/image6.png" width="900"/>
+</p>
+
+#### Model inspector
+<p align="center">
+  <img src="Images/image8.png" width="900"/>
+</p>
+
+#### Installer
+<p align="center">
+  <img src="Images/image9.png" width="900"/>
+</p>
+
 ## Installation
 Download `Lightning Installer.msi` if you have *VisualStudio 2022* or *Visual Studio Build Tools* installed in your PC.\
-Download `Lightning Setup.exe` if you want all dependencies to be installed for you.\
+Download `Lightning Setup.exe` if you want all dependencies installed for you.\
 Download `lightning-engine-v?.?.?.zip` if you want to handle installation manually.\
 
-## FBX import settings
-- Forward:  -z
-- Up:        y
 
 ## Languages
 | language | files | lines |
@@ -22,60 +70,12 @@ Download `lightning-engine-v?.?.?.zip` if you want to handle installation manual
 | YAML | 3 | 269 |
 ... +2 others (less than 100 lines)
 
-## Requirements
-
-### Minimum
-**CPU:** Intel Pentium III 1000 MHz / AMD Athlon 64\
-**Storage:** 1 GB available space\
-**RAM:** 1 GB\
-**OS:** Windows 10\
-**GPU:** Integrated with 300 MB memory\
-**DirectX:** DirectX 12
-
-### Recommended
-**CPU:** Intel Pentium M 755 / AMD Athlon 64\
-**Storage:** 2GB SSD\
-**RAM:** 2 GB\
-**OS:** Windows 10 Home\
-**GPU:** NVidia GeForce GT 420\
-**DirectX:** DirectX 12
+```diff
++ If you made it this far, thank you for your time :)
+```
 
 ## Lightning+
  - Linux (Experimental)
-
-## Bug Types
-
-### 1 - Critical
-E.g.: crash, data corruption, data loss, security risk
-
-### 2 - Broken
-E.g.: malfunction, some features cannot be used, performance issues
-
-### 3 - Bug
-E.g. accessability issues, minior feature malfunction, UX/UI bugs
-
-### 4 - Needs improvement
-E.g. expecting better/faster... result, broken convenience features, typos, UX/UI inconsistency
-
-### 5 - Nice to have
-E.g. feature suggestions, documentation issues
-
-## Public headers
-`Engine/EngineAPI/Camera.h`\
-`Engine/EngineAPI/GameEntity.h`\
-`Engine/EngineAPI/GeometryComponent.h`\
-`Engine/EngineAPI/Input.h`\
-`Engine/EngineAPI/Light.h`\
-`Engine/EngineAPI/ScriptComponent.h`\
-`Engine/EngineAPI/TransformComponent.h`\
-`Engine/Common/CommonHeaders.h`\
-`Engine/Common/PrimitiveTypes.h`\
-`Engine/Common/Id.h`\
-`Engine/Utilities/Math.h`\
-`Engine/Utilities/MathTypes.h`\
-`Engine/Utilities/Utilities.h`\
-`Engine/Utilities/Vector.h`\
-`Engine/Components/ComponentsCommonHeader.h`\
 
 ## Copyright
 
