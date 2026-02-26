@@ -1,4 +1,8 @@
-# v0.3.20-beta - 2026.2.3
+# v0.3.21-beta - 2026.2.17.
+## Editor
+ - Local- and world-space position and rotation in the Editor
+ 
+# v0.3.20-beta - 2026.2.3.
 ## Engine
  - Added local- and world-sapce position and rotation
 

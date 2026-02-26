@@ -75,8 +75,76 @@ namespace {
 		GeometryComponentDescriptor geometry;
 	};
 
-	game_entity::Entity entity_from_id(id::id_type id) {
-		return game_entity::Entity{ game_entity::entity_id{id} };
+	util::vector<transform::ComponentCache>transform_cache{};
+
+	math::v3 get_euler_angles_from_local_frame(const math::m3x3& m) {
+		float pitch{ 0.f }, yaw{ 0.f }, roll{ 0.f };
+
+		if (m._32 < 1.f) {
+			if (m._32 - 1.f) {
+				pitch = asinf(-m._32);
+				yaw = atan2f(m._31, m._33);
+				roll = atan2f(m._12, m._22);
+			}
+			else {
+				pitch = math::HALF_PI;
+				yaw = -atan2f(-m._13, m._11);
+				roll = 0.f;
+			}
+		}
+		else {
+			pitch = -math::HALF_PI;
+			yaw = atan2f(-m._13, m._11);
+			roll = 0.f;
+		}
+
+		return math::v3{ pitch * math::TO_DEG, yaw * math::TO_DEG, roll * math::TO_DEG };
+	}
+
+	math::v3 get_local_pos(math::v3 pos, u32 id) {
+		transform::Component xfrom{ transform::transform_id{id} };
+		DirectX::XMVECTOR position{ xfrom.calculate_local_position(pos) };
+		math::v3 result{};
+
+		DirectX::XMStoreFloat3(&result, position);
+
+		return result;
+	}
+
+	math::v4 get_world_quat(math::v3 w, u32 id) {
+		w = math::to_radians(w);
+
+		transform::Component xfrom{ transform::transform_id{id} };
+		DirectX::XMVECTOR q{ xfrom.calculate_world_rotation(w) };
+		math::v4 result{};
+
+		DirectX::XMStoreFloat4(&result, q);
+
+		return result;
+	}
+
+	math::v4 get_local_quat(math::v3 w, u32 id) {
+		w = math::to_radians(w);
+
+		transform::Component xfrom{ transform::transform_id{id} };
+		DirectX::XMVECTOR q{ xfrom.calculate_local_rotation(w) };
+		math::v4 result{};
+
+		DirectX::XMStoreFloat4(&result, q);
+
+		return result;
+	}
+
+	math::v4 get_absolute_quat(math::v3 w, u32 id) {
+		w = math::to_radians(w);
+
+		transform::Component xfrom{ transform::transform_id{id} };
+		DirectX::XMVECTOR q{ xfrom.calculate_absolute_rotation(w) };
+		math::v4 result{};
+
+		DirectX::XMStoreFloat4(&result, q);
+
+		return result;
 	}
 }
 
@@ -137,4 +205,134 @@ EDITOR_INTERFACE id::id_type get_component_id(id::id_type entity_id, ComponentTy
 		case ComponentType::GEOMETRY: return entity.geometry().get_id();
 		default: return id::invalid_id;
 	}
+}
+
+EDITOR_INTERFACE void get_position(id::id_type* ids, f32* x, f32* y, f32* z, u32 count) {
+	assert(ids && count);
+
+	std::lock_guard lock{ mutex };
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		assert(transform::transform_id{ ids[i] } == game_entity::Entity{ game_entity::entity_id{ids[i]} }.transform().get_id());
+
+		const transform::transform_id id{ ids[i] };
+
+		transform::Component t{ id };
+		math::v3 pos{ t.position() };
+
+		x[i] = pos.x;
+		y[i] = pos.y;
+		z[i] = pos.z;
+	}
+}
+
+EDITOR_INTERFACE void get_rotation(id::id_type* ids, f32* x, f32* y, f32* z, u32 count) {
+	assert(ids && count);
+
+	std::lock_guard lock{ mutex };
+
+	using namespace DirectX;
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		assert(transform::transform_id{ ids[i] } == game_entity::Entity{ game_entity::entity_id{ids[i]} }.transform().get_id());
+
+		const transform::transform_id id{ ids[i] };
+
+		transform::Component t{ id };
+		math::v3 euler{ get_euler_angles_from_local_frame(t.local_frame()) };
+
+		x[i] = euler.x;
+		y[i] = euler.y;
+		z[i] = euler.z;
+	}
+}
+
+EDITOR_INTERFACE void get_scale(id::id_type* ids, f32* x, f32* y, f32* z, u32 count) {
+	assert(ids && count);
+
+	std::lock_guard lock{ mutex };
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		assert(transform::transform_id{ ids[i] } == game_entity::Entity{ game_entity::entity_id{ids[i]} }.transform().get_id());
+
+		const transform::transform_id id{ ids[i] };
+
+		transform::Component t{ id };
+		math::v3 scale{ t.scale() };
+
+		x[i] = scale.x;
+		y[i] = scale.y;
+		z[i] = scale.z;
+	}
+}
+
+EDITOR_INTERFACE void set_position(id::id_type* ids, f32* x, f32* y, f32* z, u32 count, b32 is_local) {
+	assert(ids, count);
+
+	std::lock_guard lock{ mutex };
+
+	transform_cache.resize(count);
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		math::v3 v{ x[i], y[i], z[i] };
+
+		transform_cache[i].position = !is_local ? v : get_local_pos(v, ids[i]);
+		transform_cache[i].flags = transform::ComponentFlags::POSITION;
+
+		assert(transform::transform_id{ids[i]} == game_entity::Entity{game_entity::entity_id{ids[i]}}.transform().get_id());
+
+		transform_cache[i].id = transform::transform_id{ ids[i] };
+	}
+
+	transform::update(transform_cache.data(), count);
+}
+
+EDITOR_INTERFACE void set_rotation(id::id_type* ids, f32* x, f32* y, f32* z, u32 count, u32 frame) {
+	assert(ids, count);
+
+	std::lock_guard lock{ mutex };
+
+	using frame_fn_ptr = math::v4(*)(math::v3, u32);
+
+	frame_fn_ptr frame_fn{ &get_absolute_quat };
+
+	if (frame == transform::Space::LOCAL) {
+		frame_fn = &get_local_quat;
+
+	}
+	else if (frame == transform::Space::WORLD) {
+		frame_fn = &get_world_quat;
+	}
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		math::v3 v{ x[i], y[i], z[i] };
+		
+		transform_cache[i].rotation = frame_fn(v, ids[i]);
+		transform_cache[i].flags = transform::ComponentFlags::ROTATION;
+
+		assert(transform::transform_id{ids[i]} == game_entity::Entity{game_entity::entity_id{ids[i]}}.transform().get_id());
+		
+		transform_cache[i].id = transform::transform_id{ ids[i] };
+	}
+
+	transform::update(transform_cache.data(), count);
+}
+
+EDITOR_INTERFACE void set_scale(id::id_type* ids, f32* x, f32* y, f32* z, u32 count, b32) {
+	assert(ids && count);
+
+	std::lock_guard lock{ mutex };
+
+	transform_cache.resize(count);
+
+	for (u32 i{ 0 }; i < count; ++i) {
+		transform_cache[i].scale = { x[i], y[i], z[i] };
+		transform_cache[i].flags = transform::ComponentFlags::SCALE;
+
+		assert(transform::transform_id{ ids[i] } == game_entity::Entity{ game_entity::entity_id{ids[i]} }.transform().get_id());
+
+		transform_cache[i].id = transform::transform_id{ ids[i] };
+	}
+
+	transform::update(transform_cache.data(), count);
 }

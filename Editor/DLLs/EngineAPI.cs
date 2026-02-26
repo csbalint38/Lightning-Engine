@@ -16,6 +16,8 @@ static partial class EngineAPI
 {
     private const string _engineDll = "EngineDLL.dll";
 
+    private delegate void GetTransformApi(IdType[] ids, float[] x, float[] y, float[] z, int count);
+
     [DllImport(_engineDll, EntryPoint = "create_game_entity")]
     private static extern IdType CreateGameEntity(GameEntityDescriptor desc);
 
@@ -106,6 +108,24 @@ static partial class EngineAPI
 
     [LibraryImport(_engineDll, EntryPoint = "set_camera_fov")]
     public static partial void SetCameraFov(int surfaceId, float fov);
+
+    [LibraryImport(_engineDll, EntryPoint = "get_position")]
+    private static partial void GetPosition([In] IdType[] ids, [Out] float[] x, [Out] float[] y, [Out] float[] z, int count);
+
+    [LibraryImport(_engineDll, EntryPoint = "get_rotation")]
+    private static partial void GetRotation([In] IdType[] ids, [Out] float[] x, [Out] float[] y, [Out] float[] z, int count);
+
+    [LibraryImport(_engineDll, EntryPoint = "get_scale")]
+    private static partial void GetScale([In] IdType[] ids, [Out] float[] x, [Out] float[] y, [Out] float[] z, int count);
+
+    [LibraryImport(_engineDll, EntryPoint = "set_position")]
+    public static partial void SetPosition([In] IdType[] ids, [In] float[] x, [In] float[] y, [In] float[] z, int count, int frame);
+
+    [LibraryImport(_engineDll, EntryPoint = "set_rotation")]
+    public static partial void SetRotation([In] IdType[] ids, [In] float[] x, [In] float[] y, [In] float[] z, int count, int frame);
+
+    [LibraryImport(_engineDll, EntryPoint = "set_scale")]
+    public static partial void SetScale([In] IdType[] ids, [In] float[] x, [In] float[] y, [In] float[] z, int count, int _);
 
     public static IdType CreateGameEntity(Entity entity)
     {
@@ -298,6 +318,36 @@ static partial class EngineAPI
         return UpdateComponent(entity?.EntityId ?? Id.InvalidId, desc, type) != 0;
     }
 
-    public static void UpdateEditorCamera(int surfaceId, Vector3 Position, Vector3 Rotation) =>
-        UpdateEditorCamera(surfaceId, Position.X, Position.Y, Position.Z, Rotation.X, Rotation.Y, Rotation.Z);
+    public static void UpdateEditorCamera(int surfaceId, Vector3 position, Vector3 rotation) =>
+        UpdateEditorCamera(surfaceId, position.X, position.Y, position.Z, rotation.X, rotation.Y, rotation.Z);
+
+    public static Vector3[] GetPosition(IdType[] ids) => GetTransform(ids, GetPosition);
+    public static Vector3[] GetRotation(IdType[] ids) => GetTransform(ids, GetRotation);
+    public static Vector3[] GetScale(IdType[] ids) => GetTransform(ids, GetScale);
+
+    private static Vector3[] GetTransform(IdType[] ids, GetTransformApi action, bool wrapAngles = false)
+    {
+        var count = ids.Length;
+        var x = new float[count];
+        var y = new float[count];
+        var z = new float[count];
+
+        action(ids, x, y, z, count);
+
+        if (wrapAngles)
+        {
+            for (int i = 0; i < count; ++i)
+            {
+                x[i] = MathUtilities.WrapAngle(x[i]);
+                y[i] = MathUtilities.WrapAngle(y[i]);
+                z[i] = MathUtilities.WrapAngle(z[i]);
+            }
+        }
+
+        var result = new Vector3[count];
+
+        for (int i = 0; i < count; ++i) result[i] = new(x[i], y[i], z[i]);
+
+        return result;
+    }
 }
